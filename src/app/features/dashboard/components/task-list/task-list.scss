@@ -1,0 +1,30 @@
+.completed {
+  opacity: 0.6;
+}
+
+.task-title.strike {
+  text-decoration: line-through;
+}
+
+.task-meta {
+  margin-top: 4px;
+}
+
+.reward-chip, .type-chip {
+  min-height: 24px;
+  font-size: 12px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: #666;
+  
+  .empty-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    color: #ccc;
+  }
+}
