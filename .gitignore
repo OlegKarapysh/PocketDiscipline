@@ -26,3 +26,28 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Speckit tool
+/.specify/templates/
+/.specify/scripts/
+/.specify/feature.json
+
+# IDEs and Editors
+/.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+# .vscode/*
+# !.vscode/settings.json
+# !.vscode/tasks.json
+# !.vscode/launch.json
+# !.vscode/extensions.json
+
+# System Files
+.DS_Store
+Thumbs.db
