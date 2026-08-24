@@ -1,0 +1,34 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Your Tasks</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <ng-container *ngIf="tasks$ | async as tasks">
+      <mat-list *ngIf="tasks.length > 0; else emptyState">
+        <mat-list-item *ngFor="let task of tasks" [class.completed]="task.isCompleted">
+          <mat-checkbox 
+            [checked]="task.isCompleted" 
+            [disabled]="task.isCompleted"
+            (change)="completeTask(task)"
+            matListItemTitle>
+            <span class="task-title" [class.strike]="task.isCompleted">{{ task.title }}</span>
+          </mat-checkbox>
+          <span matListItemLine class="task-meta">
+            <mat-chip-set>
+              <mat-chip class="reward-chip">+{{ task.rewardValue }} 💰</mat-chip>
+              <mat-chip class="type-chip">{{ task.type }}</mat-chip>
+            </mat-chip-set>
+          </span>
+        </mat-list-item>
+      </mat-list>
+    </ng-container>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <mat-icon class="empty-icon">check_circle_outline</mat-icon>
+        <p>You have no tasks yet.</p>
+        <button mat-raised-button color="primary" (click)="addDummyTask()">Add Initial Tasks</button>
+      </div>
+    </ng-template>
+  </mat-card-content>
+</mat-card>
