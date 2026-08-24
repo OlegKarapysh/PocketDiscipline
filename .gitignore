@@ -9,8 +9,6 @@
 
 # Node modules and dependency files
 /node_modules/
-/package-lock.json
-/yarn.lock
 
 # Environment files
 /.env
@@ -41,13 +39,10 @@ yarn-error.log*
 .settings/
 *.sublime-workspace
 
-# IDE - VSCode
-# .vscode/*
-# !.vscode/settings.json
-# !.vscode/tasks.json
-# !.vscode/launch.json
-# !.vscode/extensions.json
-
 # System Files
 .DS_Store
 Thumbs.db
+
+# Playwright
+playwright-report/
+test-results/
