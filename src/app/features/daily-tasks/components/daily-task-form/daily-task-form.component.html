@@ -1,0 +1,23 @@
+<div class="form-container">
+  <h3>Add New Daily Task</h3>
+  
+  <div class="form-group">
+    <label>Title:</label>
+    <input type="text" [(ngModel)]="title" placeholder="e.g. Morning Workout" />
+  </div>
+
+  <div class="difficulties-section">
+    <h4>Difficulties</h4>
+    <div *ngFor="let diff of difficulties; let i = index" class="difficulty-row">
+      <input type="text" [(ngModel)]="diff.name" placeholder="Name (e.g. Easy)" />
+      <input type="number" [(ngModel)]="diff.baseReward" placeholder="Reward" />
+      <button type="button" class="btn-remove" (click)="removeDifficulty(i)" [disabled]="difficulties.length === 1">Remove</button>
+    </div>
+    <button type="button" class="btn-add" (click)="addDifficulty()">+ Add Difficulty</button>
+  </div>
+
+  <div class="actions">
+    <button (click)="cancel.emit()">Cancel</button>
+    <button class="btn-primary" [disabled]="!title" (click)="submit()">Save Task</button>
+  </div>
+</div>
