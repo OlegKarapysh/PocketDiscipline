@@ -13,7 +13,6 @@ export class UserService {
     let user = await this.db.users.get(1);
     if (!user) {
       user = { id: 1, name: 'User', balance: 0, createdAt: Date.now(), updatedAt: Date.now() };
-      await this.db.users.add(user);
     }
     return user;
   });

@@ -1,0 +1,6 @@
+hooks:
+  after_implement:
+    - extension: "Run Test Suite"
+      command: "speckit.test"
+      description: "Ensure all unit and E2E tests pass after implementation."
+      optional: false

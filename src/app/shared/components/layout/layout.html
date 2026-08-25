@@ -9,6 +9,10 @@
         <mat-icon>dashboard</mat-icon>
         <span class="nav-label">Dashboard</span>
       </a>
+      <a mat-list-item routerLink="/goals" (click)="drawer.mode === 'over' ? drawer.close() : null">
+        <mat-icon>star</mat-icon>
+        <span class="nav-label">Goals</span>
+      </a>
       <a mat-list-item routerLink="/settings" (click)="drawer.mode === 'over' ? drawer.close() : null">
         <mat-icon>settings</mat-icon>
         <span class="nav-label">Settings</span>
