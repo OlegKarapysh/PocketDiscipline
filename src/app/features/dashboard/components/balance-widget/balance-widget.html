@@ -1,15 +1,15 @@
 <mat-card class="balance-card">
   <mat-card-content class="content">
     <div class="icon-container">
-      <mat-icon color="primary" class="coin-icon">monetization_on</mat-icon>
+      <mat-icon color="primary" class="coin-icon">account_balance_wallet</mat-icon>
     </div>
     <div class="balance-info">
       <span class="label">Current Balance</span>
       <h2 class="amount" *ngIf="user$ | async as user; else loading">
-        {{ user.balance | number:'1.0-0' }}
+        {{ user.balance | number:'1.0-0' }} ₴
       </h2>
       <ng-template #loading>
-        <h2 class="amount">--</h2>
+        <h2 class="amount">-- ₴</h2>
       </ng-template>
     </div>
   </mat-card-content>

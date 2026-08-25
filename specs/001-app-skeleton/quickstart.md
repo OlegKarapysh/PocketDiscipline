@@ -25,18 +25,20 @@ This guide explains how to validate the app skeleton feature end-to-end once imp
 
 ### Scenario 1: Responsive Core Navigation
 1. Open the app on a desktop browser window.
-   - **Expected**: A persistent side navigation or top navigation bar is visible, allowing routing between Dashboard and Settings.
+   - **Expected**: A persistent side navigation or top navigation bar is visible, allowing routing between Dashboard, Tasks, and Settings.
 2. Open Developer Tools and switch to a Mobile Device emulator (e.g., iPhone 12).
    - **Expected**: The layout adapts automatically. Navigation collapses into a hamburger menu or bottom tab bar.
 3. Click navigation links.
    - **Expected**: Routing works without layout breakage.
 
-### Scenario 2: Offline-First Dashboard & Rewards
-1. Navigate to the Dashboard.
-   - **Expected**: The UI displays a virtual money balance (initially 0) and a list of dummy/initial tasks.
+### Scenario 2: Offline-First Tasks, Dashboard & Rewards
+1. Navigate to the Tasks tab.
+   - **Expected**: The UI displays a list of dummy/initial tasks.
 2. Complete a task by clicking a checkbox/button.
-   - **Expected**: The task visually marks as completed, and the virtual money balance increases immediately by the task's reward value.
-3. Refresh the page (`F5`).
+   - **Expected**: The task visually marks as completed.
+3. Navigate to the Dashboard.
+   - **Expected**: The virtual money balance is increased by the task's reward value.
+4. Refresh the page (`F5`).
    - **Expected**: The data persists. The completed task remains completed, and the balance retains its increased value (validating Dexie.js IndexedDB storage).
 
 ### Scenario 3: Lighthouse Performance

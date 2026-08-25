@@ -46,29 +46,29 @@
 
 - [x] T007 [P] [US1] Create Layout Component in `src/app/shared/components/layout/layout.component.ts` using Angular Material Sidenav
 - [x] T008 [US1] Integrate Layout Component into `src/app/app.component.html`
-- [x] T009 [P] [US1] Generate dummy Dashboard and Settings components to enable routing (`src/app/features/dashboard/dashboard.component.ts`, `src/app/features/settings/settings.component.ts`)
-- [x] T010 [US1] Hook up Dashboard and Settings routes to the Layout Component's navigation links
+- [x] T009 [P] [US1] Generate dummy Dashboard, Tasks, and Settings components to enable routing (`src/app/features/dashboard/dashboard.component.ts`, `src/app/features/tasks/pages/tasks-page/tasks-page.component.ts`, `src/app/features/settings/settings.component.ts`)
+- [x] T010 [US1] Hook up Dashboard, Tasks, and Settings routes to the Layout Component's navigation links
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently. The app should have a responsive shell.
 
 ---
 
-## Phase 4: User Story 2 - Basic Discipline Tracking Dashboard (Priority: P2)
+## Phase 4: User Story 2 - Tasks and Dashboard (Priority: P2)
 
-**Goal**: See a main dashboard where I can view and interact with my daily discipline targets.
+**Goal**: See a Dashboard showing my balance and a Tasks tab where I can interact with my daily discipline targets.
 
-**Independent Test**: Load the main dashboard route and verify discipline tracking elements (tasks and virtual money balance) are present and interactive.
+**Independent Test**: Load the Dashboard to verify balance, and Tasks tab to verify discipline tracking elements.
 
 ### Implementation for User Story 2
 
 - [x] T011 [P] [US2] Create data model interfaces (`User`, `DisciplineItem`) in `src/app/core/models/data-models.ts`
 - [x] T012 [P] [US2] Implement UserService to manage virtual money balance in `src/app/core/services/user.service.ts`
 - [x] T013 [P] [US2] Implement TaskService to manage habits and one-off tasks in `src/app/core/services/task.service.ts`
-- [x] T014 [US2] Build TaskListComponent UI in `src/app/features/dashboard/components/task-list/task-list.component.ts` (including empty state call-to-action for zero items)
+- [x] T014 [US2] Build TaskListComponent UI in `src/app/features/tasks/components/task-list/task-list.component.ts` (including empty state call-to-action for zero items)
 - [x] T015 [US2] Build BalanceWidget UI in `src/app/features/dashboard/components/balance-widget/balance-widget.component.ts`
-- [x] T016 [US2] Integrate TaskList and BalanceWidget into `src/app/features/dashboard/dashboard.component.ts`
+- [x] T016 [US2] Integrate TaskList into `src/app/features/tasks/pages/tasks-page/tasks-page.component.ts` and BalanceWidget into `src/app/features/dashboard/dashboard.component.ts`
 
-**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently. The dashboard should be functional and data should persist locally.
+**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently. The tasks and dashboard should be functional and data should persist locally.
 
 ---
 

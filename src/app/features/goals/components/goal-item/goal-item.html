@@ -1,7 +1,7 @@
 <mat-card class="goal-card" [class.completed]="goal().status === 'COMPLETED'">
   <mat-card-header>
     <mat-card-title>{{ goal().title }}</mat-card-title>
-    <mat-card-subtitle>Reward: {{ goal().rewardValue }} pts</mat-card-subtitle>
+    <mat-card-subtitle>Reward: {{ goal().rewardValue }} ₴</mat-card-subtitle>
   </mat-card-header>
   <mat-card-actions align="end">
     @if (goal().status === 'ACTIVE') {

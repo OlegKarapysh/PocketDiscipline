@@ -20,4 +20,12 @@ describe('Layout', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should contain navigation links', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const links = Array.from(compiled.querySelectorAll('a[mat-list-item]')).map(a => a.getAttribute('routerLink'));
+    expect(links).toContain('/dashboard');
+    expect(links).toContain('/tasks');
+    expect(links).toContain('/goals');
+  });
 });

@@ -28,6 +28,6 @@ test.describe('Goals Flow', () => {
     
     // Verify it was added
     await expect(page.getByText('Playwright Test Goal')).toBeVisible();
-    await expect(page.getByText('Reward: 500 pts')).toBeVisible();
+    await expect(page.getByText('Reward: 500 ₴')).toBeVisible();
   });
 });

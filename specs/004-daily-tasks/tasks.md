@@ -44,7 +44,7 @@
 - [x] T004 [US1] Implement `DailyTasksService` in `src/app/features/daily-tasks/services/daily-tasks.service.ts` with methods to fetch tasks and mark them as completed (without streak logic).
 - [x] T005 [P] [US1] Create `DailyTaskListComponent` in `src/app/features/daily-tasks/components/daily-task-list/daily-task-list.component.ts|html|scss` to display available daily tasks.
 - [x] T006 [P] [US1] Create `DailyTaskItemComponent` in `src/app/features/daily-tasks/components/daily-task-item/daily-task-item.component.ts|html|scss` to render an individual task and difficulty selection buttons.
-- [x] T007 [US1] Integrate `DailyTaskListComponent` into the main application layout/routing (e.g., in `src/app/app.routes.ts` or main dashboard).
+- [x] T007 [US1] Integrate `DailyTaskListComponent` into the main application layout/routing (e.g., in `src/app/features/tasks/pages/tasks-page/tasks-page.component.ts`).
 - [x] T008 [US1] Connect `DailyTasksService` to the `UserService` (or equivalent) to update user balance upon task completion.
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently.
