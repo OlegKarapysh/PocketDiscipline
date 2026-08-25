@@ -9,7 +9,7 @@ This guide outlines how to manually validate that the Daily Tasks feature is fun
 
 ## Scenario 1: Creating a Daily Task
 
-1. Navigate to the Daily Tasks section of the app.
+1. Navigate to the Tasks tab of the app.
 2. Click "Add Daily Task".
 3. Enter the title: "Morning Workout".
 4. Add difficulties: "Easy" (Base Reward: 100) and "Hard" (Base Reward: 300).

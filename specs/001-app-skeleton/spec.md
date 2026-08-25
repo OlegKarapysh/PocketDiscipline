@@ -33,17 +33,18 @@ As a user, I want to access the application on both mobile and laptop devices se
 
 ---
 
-### User Story 2 - Basic Discipline Tracking Dashboard (Priority: P2)
+### User Story 2 - Tasks and Dashboard (Priority: P2)
 
-As a user, I want to see a main dashboard where I can view and interact with my daily discipline targets.
+As a user, I want to see a Dashboard showing my balance and a Tasks tab where I can interact with my daily discipline targets.
 
-**Why this priority**: Users need a central place to interact with their discipline goals.
+**Why this priority**: Users need a central place to interact with their discipline goals and see their progress.
 
-**Independent Test**: Can be tested by loading the main dashboard route and verifying placeholder or empty state discipline tracking elements are present.
+**Independent Test**: Can be tested by loading the Dashboard to verify balance, and Tasks tab to verify discipline tracking elements.
 
 **Acceptance Scenarios**:
 
-1. **Given** I have just opened the app, **When** I navigate to the dashboard, **Then** I see a summary of my daily discipline targets.
+1. **Given** I have just opened the app, **When** I navigate to the Dashboard, **Then** I see my current virtual money balance.
+2. **Given** I am on the app, **When** I navigate to the Tasks tab, **Then** I see my daily discipline targets.
 
 ### Edge Cases
 
@@ -56,7 +57,7 @@ As a user, I want to see a main dashboard where I can view and interact with my 
 ### Functional Requirements
 
 - **FR-001**: System MUST provide a responsive layout that adapts to screen sizes ranging from mobile to large desktop displays.
-- **FR-002**: System MUST include core navigation (e.g., Dashboard, Settings).
+- **FR-002**: System MUST include core navigation (e.g., Dashboard, Tasks, Settings).
 - **FR-003**: System MUST provide an initial discipline tracking mechanism via completion of both daily recurring habits and one-off to-do tasks, progress tracking, and rewarding users with virtual money for completed tasks.
 - **FR-004**: System MUST store user discipline data locally on the device (offline first approach).
 
