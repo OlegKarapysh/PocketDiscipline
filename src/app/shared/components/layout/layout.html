@@ -6,20 +6,20 @@
     <mat-toolbar>Menu</mat-toolbar>
     <mat-nav-list>
       <a mat-list-item routerLink="/dashboard" (click)="drawer.mode === 'over' ? drawer.close() : null">
-        <mat-icon>dashboard</mat-icon>
-        <span class="nav-label">Dashboard</span>
+        <mat-icon matListItemIcon>dashboard</mat-icon>
+        <span matListItemTitle class="nav-label">Dashboard</span>
       </a>
       <a mat-list-item routerLink="/tasks" (click)="drawer.mode === 'over' ? drawer.close() : null">
-        <mat-icon>checklist</mat-icon>
-        <span class="nav-label">Tasks</span>
+        <mat-icon matListItemIcon>checklist</mat-icon>
+        <span matListItemTitle class="nav-label">Tasks</span>
       </a>
       <a mat-list-item routerLink="/goals" (click)="drawer.mode === 'over' ? drawer.close() : null">
-        <mat-icon>star</mat-icon>
-        <span class="nav-label">Goals</span>
+        <mat-icon matListItemIcon>star</mat-icon>
+        <span matListItemTitle class="nav-label">Goals</span>
       </a>
       <a mat-list-item routerLink="/settings" (click)="drawer.mode === 'over' ? drawer.close() : null">
-        <mat-icon>settings</mat-icon>
-        <span class="nav-label">Settings</span>
+        <mat-icon matListItemIcon>settings</mat-icon>
+        <span matListItemTitle class="nav-label">Settings</span>
       </a>
     </mat-nav-list>
   </mat-sidenav>
