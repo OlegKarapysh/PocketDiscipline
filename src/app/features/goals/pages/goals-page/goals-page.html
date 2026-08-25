@@ -1,0 +1,14 @@
+<div class="page-container">
+  <div class="header-actions">
+    <button mat-fab extended color="primary" (click)="openAddDialog()"><mat-icon>add</mat-icon> Add Goal</button>
+  </div>
+
+  <app-goal-list
+    [activeGoals]="(activeGoals$ | async) || []"
+    [completedGoals]="(completedGoals$ | async) || []"
+    (complete)="completeGoal($event)"
+    (undo)="undoCompleteGoal($event)"
+    (edit)="openEditDialog($event)"
+    (delete)="deleteGoal($event)"
+  ></app-goal-list>
+</div>

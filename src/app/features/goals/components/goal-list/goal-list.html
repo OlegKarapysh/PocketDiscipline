@@ -1,0 +1,33 @@
+<div class="goals-container">
+  @if (activeGoals().length > 0) {
+    <div class="active-section">
+      <h2>Active Goals</h2>
+      @for (goal of activeGoals(); track goal.id) {
+        <app-goal-item
+          [goal]="goal"
+          (complete)="complete.emit($event)"
+          (edit)="edit.emit($event)"
+          (delete)="delete.emit($event)"
+        ></app-goal-item>
+      }
+    </div>
+  } @else {
+    <div class="empty-state">
+      <p>No active goals right now.</p>
+    </div>
+  }
+
+  @if (groupedCompletedGoals().length > 0) {
+    <div class="completed-section">
+      <h2>Completed Goals</h2>
+      @for (group of groupedCompletedGoals(); track group.month) {
+        <div class="month-group">
+          <h3>{{ group.month }}</h3>
+          @for (goal of group.goals; track goal.id) {
+            <app-goal-item [goal]="goal" (undo)="undo.emit($event)"></app-goal-item>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
