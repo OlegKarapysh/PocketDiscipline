@@ -20,6 +20,7 @@ export class DbService extends Dexie {
     });
 
     this.on('populate', () => {
+      this.users.add({ id: 1, name: 'User', balance: 0, createdAt: Date.now(), updatedAt: Date.now() });
       this.goals.bulkAdd([
         { id: crypto.randomUUID(), title: 'do 50 push-ups on fists', rewardValue: 2000, status: 'ACTIVE', completedAt: null, createdAt: Date.now() },
         { id: crypto.randomUUID(), title: 'do 100 squats', rewardValue: 1500, status: 'ACTIVE', completedAt: null, createdAt: Date.now() },
