@@ -24,6 +24,14 @@ export class UserService {
         balance: user.balance + amount,
         updatedAt: Date.now()
       });
+    } else {
+      await this.db.users.add({ 
+        id: 1, 
+        name: 'User', 
+        balance: amount, 
+        createdAt: Date.now(), 
+        updatedAt: Date.now() 
+      });
     }
   }
 }
