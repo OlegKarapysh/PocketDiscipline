@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import Dexie, { Table } from 'dexie';
 import { User, DisciplineItem } from '../models/data-models';
 import { Goal } from '../../features/goals/models/goal.model';
+import { DailyTask } from '../../features/daily-tasks/models/daily-task.model';
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +11,7 @@ export class DbService extends Dexie {
   users!: Table<User, number>;
   tasks!: Table<DisciplineItem, string>;
   goals!: Table<Goal, string>;
+  dailyTasks!: Table<DailyTask, string>;
 
   constructor() {
     super('pocket-discipline-db');
@@ -26,6 +28,10 @@ export class DbService extends Dexie {
       if (goalsCount === 0) {
         await tx.table('goals').bulkAdd(this.getInitialGoals());
       }
+    });
+
+    this.version(3).stores({
+      dailyTasks: 'id'
     });
 
     this.on('populate', () => {

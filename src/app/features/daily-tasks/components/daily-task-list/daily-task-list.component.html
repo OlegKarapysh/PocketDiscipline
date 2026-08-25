@@ -1,0 +1,22 @@
+<div class="daily-tasks-container">
+  <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h2 style="margin: 0;">Daily Tasks</h2>
+    <button *ngIf="!showForm" (click)="showForm = true" class="btn-add" style="padding: 0.5rem 1rem; cursor: pointer;">+ Add Daily Task</button>
+  </div>
+
+  <app-daily-task-form *ngIf="showForm" 
+    (taskCreated)="onTaskCreated($event)" 
+    (cancel)="showForm = false">
+  </app-daily-task-form>
+
+  <div class="task-list" *ngIf="(tasks$ | async) as tasks">
+    <app-daily-task-item 
+      *ngFor="let task of tasks" 
+      [task]="task"
+      (complete)="onCompleteTask(task, $event)">
+    </app-daily-task-item>
+    <div *ngIf="tasks.length === 0" class="empty-state">
+      No daily tasks configured yet.
+    </div>
+  </div>
+</div>

@@ -1,0 +1,16 @@
+<div class="task-item" [class.completed]="isCompletedToday">
+  <div class="header">
+    <h3>{{ task.title }}</h3>
+    <span class="streak-badge" *ngIf="task.streak > 0" title="Current streak">
+      🔥 {{ task.streak }} Day Streak
+    </span>
+  </div>
+  <div class="actions" *ngIf="!isCompletedToday">
+    <button *ngFor="let diff of task.difficulties" (click)="complete.emit(diff)">
+      {{ diff.name }} (+{{ diff.baseReward }})
+    </button>
+  </div>
+  <div class="completed-msg" *ngIf="isCompletedToday">
+    Completed for today!
+  </div>
+</div>
