@@ -94,7 +94,7 @@ As a user, I want to create, edit, or delete custom goals with specific rewards 
 ### Key Entities
 
 - **Goal**: Represents a difficult non-recurring task. Attributes include title, reward amount, status (active/completed), and completion date.
-- **Money Balance**: The user's total accumulated reward points across the application.
+- **Money Balance**: The user's total accumulated reward money (₴) across the application.
 
 ## Success Criteria *(mandatory)*
 
