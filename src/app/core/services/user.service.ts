@@ -2,12 +2,22 @@ import { Injectable, inject } from '@angular/core';
 import { DbService } from './db.service';
 import { User } from '../models/data-models';
 import { liveQuery } from 'dexie';
+import { EventBusService, RewardEarnedEvent } from './event-bus.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
   private db = inject(DbService);
+  private eventBus = inject(EventBusService);
+
+  constructor() {
+    this.eventBus.on<RewardEarnedEvent>('RewardEarned').subscribe(event => {
+      if (event.payload?.points) {
+        this.addBalance(event.payload.points);
+      }
+    });
+  }
 
   readonly user$ = liveQuery(async () => {
     let user = await this.db.users.get(1);

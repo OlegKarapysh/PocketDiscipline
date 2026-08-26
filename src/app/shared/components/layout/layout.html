@@ -17,6 +17,10 @@
         <mat-icon matListItemIcon>star</mat-icon>
         <span matListItemTitle class="nav-label">Goals</span>
       </a>
+      <a mat-list-item routerLink="/pomodoro" (click)="drawer.mode === 'over' ? drawer.close() : null">
+        <mat-icon matListItemIcon>timer</mat-icon>
+        <span matListItemTitle class="nav-label">Pomodoro</span>
+      </a>
       <a mat-list-item routerLink="/settings" (click)="drawer.mode === 'over' ? drawer.close() : null">
         <mat-icon matListItemIcon>settings</mat-icon>
         <span matListItemTitle class="nav-label">Settings</span>
