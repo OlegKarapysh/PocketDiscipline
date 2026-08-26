@@ -50,8 +50,9 @@ export class GoalsPage {
         try {
           await this.goalService.addGoal(result.title, result.rewardValue);
           this.snackBar.open('Goal added', 'Close', { duration: 3000 });
-        } catch (e: any) {
-          this.snackBar.open(e.message, 'Close', { duration: 3000 });
+        } catch (e: unknown) {
+          const message = e instanceof Error ? e.message : 'Unknown error occurred';
+          this.snackBar.open(message, 'Close', { duration: 3000 });
         }
       }
     });
@@ -68,8 +69,9 @@ export class GoalsPage {
         try {
           await this.goalService.updateGoal(goal.id, result.title, result.rewardValue);
           this.snackBar.open('Goal updated', 'Close', { duration: 3000 });
-        } catch (e: any) {
-          this.snackBar.open(e.message, 'Close', { duration: 3000 });
+        } catch (e: unknown) {
+          const message = e instanceof Error ? e.message : 'Unknown error occurred';
+          this.snackBar.open(message, 'Close', { duration: 3000 });
         }
       }
     });

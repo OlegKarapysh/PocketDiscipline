@@ -5,12 +5,11 @@
     </div>
     <div class="balance-info">
       <span class="label">Current Balance</span>
-      <h2 class="amount" *ngIf="user$ | async as user; else loading">
-        {{ user.balance | number:'1.0-0' }} ₴
-      </h2>
-      <ng-template #loading>
+      @if (user$ | async; as user) {
+        <h2 class="amount">{{ user.balance | number: '1.0-0' }} ₴</h2>
+      } @else {
         <h2 class="amount">-- ₴</h2>
-      </ng-template>
+      }
     </div>
   </mat-card-content>
 </mat-card>

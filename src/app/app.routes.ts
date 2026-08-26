@@ -9,5 +9,7 @@ export const routes: Routes = [
   { path: 'dashboard', component: Dashboard },
   { path: 'tasks', component: TasksPage },
   { path: 'goals', component: GoalsPage },
+  { path: 'pomodoro', loadChildren: () => import('./features/pomodoro/pomodoro.routes').then(m => m.POMODORO_ROUTES) },
   { path: 'settings', component: Settings }
 ];
+

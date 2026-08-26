@@ -15,5 +15,5 @@ import { Observable, from } from 'rxjs';
 })
 export class BalanceWidgetComponent {
   userService = inject(UserService);
-  user$ = from(this.userService.user$ as any) as Observable<User | undefined>;
+  user$ = from(this.userService.user$) as Observable<User | undefined>;
 }
