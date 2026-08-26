@@ -14,9 +14,9 @@ describe('DailyTaskItemComponent', () => {
     fixture = TestBed.createComponent(DailyTaskItemComponent);
     component = fixture.componentInstance;
     // mock required input
-    component.task = {
+    fixture.componentRef.setInput('task', {
       id: '1', title: 'Test', createdAt: Date.now(), streak: 0, lastCompletedAt: null, difficulties: []
-    };
+    });
     fixture.detectChanges();
   });
 

@@ -1,9 +1,9 @@
 <div class="daily-tasks-container">
   <div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem">
-    <h2 style="margin: 0">Daily Tasks</h2>
+    <h2 style="margin: 0" class="mat-h2">Daily Tasks</h2>
     @if (!showForm) {
-      <button (click)="showForm = true" class="btn-add" style="padding: 0.5rem 1rem; cursor: pointer">
-        + Add Daily Task
+      <button mat-flat-button color="primary" (click)="showForm = true">
+        <mat-icon>add</mat-icon> Add Daily Task
       </button>
     }
   </div>

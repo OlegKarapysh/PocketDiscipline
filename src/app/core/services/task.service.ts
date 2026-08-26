@@ -33,11 +33,13 @@ export class TaskService {
   async completeTask(id: string) {
     const task = await this.db.tasks.get(id);
     if (task && !task.isCompleted) {
-      await this.db.tasks.update(id, {
-        isCompleted: true,
-        lastCompletedAt: Date.now()
+      await this.db.transaction('rw', this.db.tasks, this.db.users, async () => {
+        await this.db.tasks.update(id, {
+          isCompleted: true,
+          lastCompletedAt: Date.now()
+        });
+        await this.userService.addBalance(task.rewardValue);
       });
-      await this.userService.addBalance(task.rewardValue);
     }
   }
 

@@ -1,5 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
 import { DailyTaskItemComponent } from '../daily-task-item/daily-task-item.component';
 import { DailyTask, DailyTaskDifficulty } from '../../models/daily-task.model';
@@ -8,7 +10,7 @@ import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.compo
 
 @Component({
   standalone: true,
-  imports: [CommonModule, DailyTaskItemComponent, DailyTaskFormComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, DailyTaskItemComponent, DailyTaskFormComponent],
   selector: 'app-daily-task-list',
   styleUrl: './daily-task-list.component.scss',
   templateUrl: './daily-task-list.component.html',

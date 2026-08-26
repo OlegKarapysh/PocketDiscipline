@@ -1,18 +1,22 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, output } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { DailyTaskDifficulty } from '../../models/daily-task.model';
 
 @Component({
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
   selector: 'app-daily-task-form',
   templateUrl: './daily-task-form.component.html',
   styleUrl: './daily-task-form.component.scss',
 })
 export class DailyTaskFormComponent {
-  @Output() taskCreated = new EventEmitter<{ title: string; difficulties: DailyTaskDifficulty[] }>();
-  @Output() cancelForm = new EventEmitter<void>();
+  taskCreated = output<{ title: string; difficulties: DailyTaskDifficulty[] }>();
+  cancelForm = output<void>();
 
   title = '';
   difficulties: DailyTaskDifficulty[] = [

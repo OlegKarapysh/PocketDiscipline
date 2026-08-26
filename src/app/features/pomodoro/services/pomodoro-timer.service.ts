@@ -175,10 +175,10 @@ export class PomodoroTimerService implements OnDestroy {
     const base = type === 'work' ? 25 : 20;
     let multiplier = 0;
     
-    if (duration >= 15 && duration <= 24) multiplier = 0.5;
-    else if (duration >= 25 && duration <= 45) multiplier = 1;
-    else if (duration >= 50 && duration <= 75) multiplier = 2;
-    else if (duration >= 80 && duration <= 120) multiplier = 3;
+    if (duration >= 15 && duration < 25) multiplier = 0.5;
+    else if (duration >= 25 && duration < 50) multiplier = 1;
+    else if (duration >= 50 && duration < 80) multiplier = 2;
+    else if (duration >= 80) multiplier = 3;
     
     return Math.trunc(base * multiplier);
   }

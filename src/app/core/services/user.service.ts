@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DbService } from './db.service';
 import { liveQuery } from 'dexie';
 import { EventBusService, RewardEarnedEvent } from './event-bus.service';
@@ -11,11 +12,13 @@ export class UserService {
   private eventBus = inject(EventBusService);
 
   constructor() {
-    this.eventBus.on<RewardEarnedEvent>('RewardEarned').subscribe(event => {
-      if (event.payload?.points) {
-        this.addBalance(event.payload.points);
-      }
-    });
+    this.eventBus.on<RewardEarnedEvent>('RewardEarned')
+      .pipe(takeUntilDestroyed())
+      .subscribe(event => {
+        if (event.payload?.points) {
+          this.addBalance(event.payload.points);
+        }
+      });
   }
 
   readonly user$ = liveQuery(async () => {

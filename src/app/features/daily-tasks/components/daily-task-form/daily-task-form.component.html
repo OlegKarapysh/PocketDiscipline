@@ -1,27 +1,37 @@
-<div class="form-container">
-  <h3>Add New Daily Task</h3>
+<div class="form-container mat-elevation-z2">
+  <h3 class="mat-h3" style="margin-top: 0;">Add New Daily Task</h3>
 
-  <div class="form-group">
-    <label for="taskTitle">Title:</label>
-    <input id="taskTitle" type="text" [(ngModel)]="title" placeholder="e.g. Morning Workout" />
-  </div>
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Title</mat-label>
+    <input matInput type="text" [(ngModel)]="title" placeholder="e.g. Morning Workout" />
+  </mat-form-field>
 
   <div class="difficulties-section">
-    <h4>Difficulties</h4>
+    <h4 class="mat-h4">Difficulties</h4>
     @for (diff of difficulties; track diff; let i = $index) {
       <div class="difficulty-row">
-        <input type="text" [(ngModel)]="diff.name" placeholder="Name (e.g. Easy)" />
-        <input type="number" [(ngModel)]="diff.baseReward" placeholder="Reward" />
-        <button type="button" class="btn-remove" (click)="removeDifficulty(i)" [disabled]="difficulties.length === 1">
-          Remove
+        <mat-form-field appearance="outline" class="diff-name">
+          <mat-label>Name</mat-label>
+          <input matInput type="text" [(ngModel)]="diff.name" placeholder="e.g. Easy" />
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline" class="diff-reward">
+          <mat-label>Reward</mat-label>
+          <input matInput type="number" [(ngModel)]="diff.baseReward" placeholder="Reward" />
+        </mat-form-field>
+
+        <button mat-icon-button color="warn" (click)="removeDifficulty(i)" [disabled]="difficulties.length === 1" aria-label="Remove difficulty">
+          <mat-icon>delete</mat-icon>
         </button>
       </div>
     }
-    <button type="button" class="btn-add" (click)="addDifficulty()">+ Add Difficulty</button>
+    <button mat-stroked-button color="primary" type="button" (click)="addDifficulty()">
+      <mat-icon>add</mat-icon> Add Difficulty
+    </button>
   </div>
 
   <div class="actions">
-    <button (click)="cancelForm.emit()">Cancel</button>
-    <button class="btn-primary" [disabled]="!title" (click)="submit()">Save Task</button>
+    <button mat-button (click)="cancelForm.emit()">Cancel</button>
+    <button mat-flat-button color="primary" [disabled]="!title" (click)="submit()">Save Task</button>
   </div>
 </div>

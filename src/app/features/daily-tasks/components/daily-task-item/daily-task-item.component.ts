@@ -1,22 +1,27 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, input, output, computed } from '@angular/core';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
 
 import { DailyTask, DailyTaskDifficulty } from '../../models/daily-task.model';
 
 @Component({
   standalone: true,
-  imports: [],
+  imports: [MatCardModule, MatButtonModule, MatIconModule, MatChipsModule],
   selector: 'app-daily-task-item',
   styleUrl: './daily-task-item.component.scss',
   templateUrl: './daily-task-item.component.html',
 })
 export class DailyTaskItemComponent {
-  @Input({ required: true }) task!: DailyTask;
-  @Output() complete = new EventEmitter<DailyTaskDifficulty>();
+  task = input.required<DailyTask>();
+  complete = output<DailyTaskDifficulty>();
 
-  get isCompletedToday(): boolean {
-    if (!this.task.lastCompletedAt) return false;
+  isCompletedToday = computed(() => {
+    const lastCompletedAt = this.task().lastCompletedAt;
+    if (!lastCompletedAt) return false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return this.task.lastCompletedAt >= today.getTime();
-  }
+    return lastCompletedAt >= today.getTime();
+  });
 }

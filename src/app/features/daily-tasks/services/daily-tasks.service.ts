@@ -79,11 +79,13 @@ export class DailyTasksService {
     const bonusMultiplier = 1 + Math.min(Math.max(newStreak - 1, 0), 10) * 0.10;
     const finalReward = Math.round(difficulty.baseReward * bonusMultiplier);
 
-    await this.db.dailyTasks.update(task.id, {
-      lastCompletedAt: now,
-      streak: newStreak
-    });
+    await this.db.transaction('rw', this.db.dailyTasks, this.db.users, async () => {
+      await this.db.dailyTasks.update(task.id, {
+        lastCompletedAt: now,
+        streak: newStreak
+      });
 
-    await this.userService.addBalance(finalReward);
+      await this.userService.addBalance(finalReward);
+    });
   }
 }
