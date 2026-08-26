@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -30,8 +30,6 @@ export interface CompletionDialogData {
   `]
 })
 export class CompletionDialog {
-  constructor(
-    public dialogRef: MatDialogRef<CompletionDialog>,
-    @Inject(MAT_DIALOG_DATA) public data: CompletionDialogData
-  ) {}
+  public dialogRef = inject(MatDialogRef<CompletionDialog>);
+  public data = inject<CompletionDialogData>(MAT_DIALOG_DATA);
 }

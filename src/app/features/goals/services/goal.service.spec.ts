@@ -6,7 +6,9 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 describe('GoalService', () => {
   let service: GoalService;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let dbMock: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let userMock: any;
 
   beforeEach(() => {

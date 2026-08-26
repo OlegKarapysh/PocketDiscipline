@@ -1,10 +1,10 @@
 import { Component, computed, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { GoalItem } from '../goal-item/goal-item';
 import { Goal } from '../../models/goal.model';
 
 @Component({
-  imports: [CommonModule, GoalItem],
+  imports: [GoalItem],
   selector: 'app-goal-list',
   styleUrl: './goal-list.scss',
   templateUrl: './goal-list.html',

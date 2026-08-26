@@ -4,7 +4,7 @@ import { filter } from 'rxjs/operators';
 
 export interface AppEvent {
   type: string;
-  payload?: any;
+  payload?: unknown;
   source?: string;
 }
 

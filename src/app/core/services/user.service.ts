@@ -1,6 +1,5 @@
 import { Injectable, inject } from '@angular/core';
 import { DbService } from './db.service';
-import { User } from '../models/data-models';
 import { liveQuery } from 'dexie';
 import { EventBusService, RewardEarnedEvent } from './event-bus.service';
 

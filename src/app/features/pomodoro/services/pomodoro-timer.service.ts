@@ -23,7 +23,7 @@ export class PomodoroTimerService implements OnDestroy {
   timeRemaining = signal<number>(25 * 60);
   currentSessionId = signal<string | null>(null);
   
-  private timerInterval: any = null;
+  private timerInterval: ReturnType<typeof setInterval> | null = null;
   private expectedEndTime = 0;
   private backgroundTimeStart: number | null = null;
   
@@ -235,7 +235,7 @@ export class PomodoroTimerService implements OnDestroy {
           reg.showNotification(title, {
             body,
             icon: '/assets/icons/icon-192x192.png',
-            // @ts-ignore
+            // @ts-expect-error - TimestampTrigger is an experimental API
             showTrigger: new TimestampTrigger(timestamp)
           });
         }

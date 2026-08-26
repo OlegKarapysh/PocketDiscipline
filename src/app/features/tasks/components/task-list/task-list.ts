@@ -27,7 +27,7 @@ import { Observable, from } from 'rxjs';
 })
 export class TaskListComponent {
   taskService = inject(TaskService);
-  tasks$ = from(this.taskService.tasks$ as any) as Observable<DisciplineItem[]>;
+  tasks$ = from(this.taskService.tasks$) as Observable<DisciplineItem[]>;
 
   completeTask(task: DisciplineItem) {
     if (!task.isCompleted) {
