@@ -57,21 +57,21 @@ describe('DailyScoresPageComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.loading).toBe(false);
-    expect(component.hasScoreToday).toBe(true);
-    expect(component.currentScore).toBe(TEST_SCORE_TEN);
-    expect(component.monthlyScores.length).toBe(1);
-    expect(component.weeklyScores.length).toBe(1);
-    expect(component.latestScore).toEqual(mockTodayScore);
+    expect(component.loading()).toBe(false);
+    expect(component.hasScoreToday()).toBe(true);
+    expect(component.currentScore()).toBe(TEST_SCORE_TEN);
+    expect(component.monthlyScores().length).toBe(1);
+    expect(component.weeklyScores().length).toBe(1);
+    expect(component.latestScore()).toEqual(mockTodayScore);
   });
 
   it('should set hasScoreToday to false when no score is recorded for today', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.loading).toBe(false);
-    expect(component.hasScoreToday).toBe(false);
-    expect(component.currentScore).toBeNull();
+    expect(component.loading()).toBe(false);
+    expect(component.hasScoreToday()).toBe(false);
+    expect(component.currentScore()).toBeNull();
   });
 
   it('should submit today score and show reward success message when reward > 0', async () => {
@@ -83,7 +83,7 @@ describe('DailyScoresPageComponent', () => {
     await fixture.whenStable();
 
     expect(dailyScoresServiceMock.saveTodayScore).toHaveBeenCalledWith(TEST_SCORE_TEN);
-    expect(component.successMessage).toContain('Awesome! You earned 500₴. Current high score streak: 1');
+    expect(component.successMessage()).toContain('Awesome! You earned 500₴. Current high score streak: 1');
   });
 
   it('should show encouragement message when score submitted earns no reward', async () => {
@@ -100,7 +100,7 @@ describe('DailyScoresPageComponent', () => {
     await fixture.whenStable();
 
     expect(dailyScoresServiceMock.saveTodayScore).toHaveBeenCalledWith(TEST_SCORE_SEVEN);
-    expect(component.successMessage).toBe('Score saved! Aim for a 9 or 10 tomorrow to earn rewards!');
+    expect(component.successMessage()).toBe('Score saved! Aim for a 9 or 10 tomorrow to earn rewards!');
   });
 
   it('should handle submission failure gracefully', async () => {
@@ -111,6 +111,6 @@ describe('DailyScoresPageComponent', () => {
 
     await component.onScoreSubmit(TEST_SCORE_TEN);
 
-    expect(component.loading).toBe(false);
+    expect(component.loading()).toBe(false);
   });
 });
