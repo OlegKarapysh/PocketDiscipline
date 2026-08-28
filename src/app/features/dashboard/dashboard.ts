@@ -7,6 +7,6 @@ import { BalanceWidgetComponent } from './components/balance-widget/balance-widg
   standalone: true,
   imports: [BalanceWidgetComponent],
   templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.scss'],
+  styleUrl: './dashboard.scss',
 })
 export class Dashboard {}

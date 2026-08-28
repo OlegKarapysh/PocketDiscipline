@@ -7,6 +7,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Goal } from '../../models/goal.model';
 
+const MIN_TITLE_LENGTH = 3;
+const MAX_TITLE_LENGTH = 100;
+const MIN_REWARD_VALUE = 1;
+const MAX_REWARD_VALUE = 10_000_000;
+
 export interface GoalFormDialogData {
   goal?: Goal;
 }
@@ -23,10 +28,13 @@ export class GoalFormDialog {
   private dialogRef = inject(MatDialogRef<GoalFormDialog>);
 
   form: FormGroup = this.fb.group({
-    title: [this.data.goal?.title || '', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+    title: [
+      this.data.goal?.title || '',
+      [Validators.required, Validators.minLength(MIN_TITLE_LENGTH), Validators.maxLength(MAX_TITLE_LENGTH)],
+    ],
     rewardValue: [
       this.data.goal?.rewardValue || null,
-      [Validators.required, Validators.min(1), Validators.max(10000000)],
+      [Validators.required, Validators.min(MIN_REWARD_VALUE), Validators.max(MAX_REWARD_VALUE)],
     ],
   });
 

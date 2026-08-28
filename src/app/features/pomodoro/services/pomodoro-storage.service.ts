@@ -1,17 +1,8 @@
 import { Injectable } from '@angular/core';
-import Dexie, { Table } from 'dexie';
 import { PomodoroSession } from '../models/pomodoro-session.model';
+import { PomodoroDatabase } from './pomodoro-database';
 
-export class PomodoroDatabase extends Dexie {
-  sessions!: Table<PomodoroSession, string>;
-
-  constructor() {
-    super('PomodoroDatabase');
-    this.version(1).stores({
-      sessions: 'id, startTime, status'
-    });
-  }
-}
+const ORDER_BY_FIELD = 'startTime';
 
 @Injectable({
   providedIn: 'root'
@@ -32,7 +23,7 @@ export class PomodoroStorageService {
   }
 
   async getAllSessions(): Promise<PomodoroSession[]> {
-    return this.db.sessions.orderBy('startTime').reverse().toArray();
+    return this.db.sessions.orderBy(ORDER_BY_FIELD).reverse().toArray();
   }
 
   async updateSession(id: string, changes: Partial<PomodoroSession>): Promise<void> {

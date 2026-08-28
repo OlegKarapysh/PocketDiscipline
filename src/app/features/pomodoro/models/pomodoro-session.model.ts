@@ -1,12 +1,24 @@
 export type PomodoroSessionStatus = 'active' | 'completed' | 'cancelled';
+
+export const POMODORO_SESSION_STATUS = {
+  ACTIVE: 'active',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+} as const;
+
 export type EngagementType = 'work' | 'study';
 
+export const ENGAGEMENT_TYPE = {
+  WORK: 'work',
+  STUDY: 'study',
+} as const;
+
 export interface PomodoroSession {
-  id: string; // UUID
-  durationMinutes: number; // 15-120
+  id: string;
+  durationMinutes: number;
   engagementType: EngagementType;
-  startTime: number; // timestamp
-  endTime?: number; // timestamp
+  startTime: number;
+  endTime?: number;
   status: PomodoroSessionStatus;
   rewardEarned?: number;
 }

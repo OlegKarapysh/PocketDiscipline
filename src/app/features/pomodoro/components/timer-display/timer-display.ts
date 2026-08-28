@@ -1,42 +1,18 @@
 import { Component, computed, inject } from '@angular/core';
-
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
+
+const SECONDS_IN_MINUTE = 60;
+const TIME_PAD_LENGTH = 2;
+const TIME_PAD_CHAR = '0';
+const STATUS_READY = 'Ready to start';
+const STATUS_FOCUSING_PREFIX = 'Focusing on ';
 
 @Component({
   selector: 'app-timer-display',
   standalone: true,
   imports: [],
-  template: `
-    <div class="timer-display">
-      <div class="time">{{ formattedTime() }}</div>
-      <div class="status" [class.active]="isActive()">
-        {{ isActive() ? 'Focusing on ' + engagementType() : 'Ready to start' }}
-      </div>
-    </div>
-  `,
-  styles: [
-    `
-      .timer-display {
-        text-align: center;
-        padding: 2rem;
-      }
-      .time {
-        font-size: 5rem;
-        font-family: monospace;
-        font-weight: bold;
-        line-height: 1;
-      }
-      .status {
-        margin-top: 1rem;
-        font-size: 1.2rem;
-        color: #666;
-      }
-      .status.active {
-        color: #e91e63;
-        font-weight: bold;
-      }
-    `,
-  ],
+  templateUrl: './timer-display.html',
+  styleUrl: './timer-display.scss',
 })
 export class TimerDisplay {
   private timerService = inject(PomodoroTimerService);
@@ -44,10 +20,16 @@ export class TimerDisplay {
   isActive = this.timerService.isActive;
   engagementType = this.timerService.engagementType;
 
+  statusText = computed(() => {
+    return this.isActive() ? `${STATUS_FOCUSING_PREFIX}${this.engagementType()}` : STATUS_READY;
+  });
+
   formattedTime = computed(() => {
     const totalSeconds = this.timerService.timeRemaining();
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const minutes = Math.floor(totalSeconds / SECONDS_IN_MINUTE);
+    const seconds = totalSeconds % SECONDS_IN_MINUTE;
+    const formattedMin = minutes.toString().padStart(TIME_PAD_LENGTH, TIME_PAD_CHAR);
+    const formattedSec = seconds.toString().padStart(TIME_PAD_LENGTH, TIME_PAD_CHAR);
+    return `${formattedMin}:${formattedSec}`;
   });
 }

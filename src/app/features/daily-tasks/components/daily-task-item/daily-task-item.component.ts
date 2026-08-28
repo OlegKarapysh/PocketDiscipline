@@ -6,6 +6,11 @@ import { MatChipsModule } from '@angular/material/chips';
 
 import { DailyTask, DailyTaskDifficulty } from '../../models/daily-task.model';
 
+const MIDNIGHT_HOUR = 0;
+const MIDNIGHT_MINUTE = 0;
+const MIDNIGHT_SECOND = 0;
+const MIDNIGHT_MILLISECOND = 0;
+
 @Component({
   standalone: true,
   imports: [MatCardModule, MatButtonModule, MatIconModule, MatChipsModule],
@@ -21,7 +26,7 @@ export class DailyTaskItemComponent {
     const lastCompletedAt = this.task().lastCompletedAt;
     if (!lastCompletedAt) return false;
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(MIDNIGHT_HOUR, MIDNIGHT_MINUTE, MIDNIGHT_SECOND, MIDNIGHT_MILLISECOND);
     return lastCompletedAt >= today.getTime();
   });
 }

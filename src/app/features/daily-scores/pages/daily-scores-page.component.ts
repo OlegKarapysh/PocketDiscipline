@@ -7,65 +7,16 @@ import { DailyScoresService } from '../services/daily-scores.service';
 import { DailyScore } from '../models/daily-score.model';
 import { forkJoin } from 'rxjs';
 
+const CURRENCY_SYMBOL = '₴';
+const MSG_SCORE_SAVED_NO_REWARD = 'Score saved! Aim for a 9 or 10 tomorrow to earn rewards!';
+const ERROR_FAILED_SAVE_SCORE = 'Failed to save score';
+
 @Component({
   selector: 'app-daily-scores-page',
   standalone: true,
   imports: [CommonModule, ScoreInputComponent, ScoresChartComponent, ScoresStatsComponent],
-  template: `
-    <div class="page-container">
-      <h1>Daily Scores</h1>
-      
-      @if (loading) {
-        <div class="loading-state">
-          Loading...
-        </div>
-      }
-
-      @if (!loading) {
-        <div>
-          <app-scores-stats 
-            [monthlyScores]="monthlyScores" 
-            [latestScore]="latestScore">
-          </app-scores-stats>
-
-          <app-scores-chart [scores]="weeklyScores"></app-scores-chart>
-
-          <app-score-input 
-            [readonly]="hasScoreToday"
-            [selectedScore]="currentScore"
-            (scoreSubmitted)="onScoreSubmit($event)">
-          </app-score-input>
-          
-          @if (successMessage) {
-            <div class="success-message">
-              {{ successMessage }}
-            </div>
-          }
-        </div>
-      }
-    </div>
-  `,
-  styles: [`
-    .page-container {
-      padding: 16px;
-    }
-    .loading-state {
-      padding: 24px;
-      text-align: center;
-    }
-    .success-message {
-      margin-top: 24px;
-      padding: 16px;
-      background-color: #4caf50;
-      color: white;
-      border-radius: 8px;
-      text-align: center;
-      font-weight: 500;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-  `]
+  templateUrl: './daily-scores-page.component.html',
+  styleUrl: './daily-scores-page.component.scss',
 })
 export class DailyScoresPageComponent implements OnInit {
   private dailyScoresService = inject(DailyScoresService);
@@ -123,13 +74,13 @@ export class DailyScoresPageComponent implements OnInit {
     try {
       const result = await this.dailyScoresService.saveTodayScore(score);
       if (result.reward > 0) {
-        this.successMessage = `Awesome! You earned ${result.reward}₴. Current high score streak: ${result.newStreak}`;
+        this.successMessage = `Awesome! You earned ${result.reward}${CURRENCY_SYMBOL}. Current high score streak: ${result.newStreak}`;
       } else {
-        this.successMessage = 'Score saved! Aim for a 9 or 10 tomorrow to earn rewards!';
+        this.successMessage = MSG_SCORE_SAVED_NO_REWARD;
       }
       this.loadData();
     } catch (e) {
-      console.error('Failed to save score', e);
+      console.error(ERROR_FAILED_SAVE_SCORE, e);
       this.loading = false;
     }
   }

@@ -2,6 +2,17 @@ import { Injectable, inject } from '@angular/core';
 import { DailyScoresService } from '../../features/daily-scores/services/daily-scores.service';
 import { firstValueFrom } from 'rxjs';
 
+const REMINDER_HOUR = 21;
+const REMINDER_MINUTE = 30;
+const REMINDER_SECOND = 0;
+const REMINDER_MILLISECOND = 0;
+const DAYS_INCREMENT = 1;
+const PERMISSION_GRANTED = 'granted';
+const PERMISSION_DENIED = 'denied';
+const APP_TITLE = 'Pocket Discipline';
+const NOTIFICATION_REMINDER_BODY = 'Time to set your daily score!';
+const NOTIFICATION_ICON_PATH = '/assets/icons/icon-192x192.png';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -14,14 +25,14 @@ export class NotificationService {
       return false;
     }
     
-    if (Notification.permission === 'granted') {
+    if (Notification.permission === PERMISSION_GRANTED) {
       return true;
     }
     
-    if (Notification.permission !== 'denied') {
+    if (Notification.permission !== PERMISSION_DENIED) {
       try {
         const permission = await Notification.requestPermission();
-        return permission === 'granted';
+        return permission === PERMISSION_GRANTED;
       } catch (e) {
         console.error('Error requesting notification permission', e);
         return false;
@@ -45,30 +56,27 @@ export class NotificationService {
 
     const now = new Date();
     const reminderTime = new Date(now);
-    reminderTime.setHours(21, 30, 0, 0);
+    reminderTime.setHours(REMINDER_HOUR, REMINDER_MINUTE, REMINDER_SECOND, REMINDER_MILLISECOND);
 
     if (now.getTime() > reminderTime.getTime()) {
-      // Already past 21:30 today, schedule for tomorrow
-      reminderTime.setDate(reminderTime.getDate() + 1);
+      reminderTime.setDate(reminderTime.getDate() + DAYS_INCREMENT);
     }
 
     const timeUntilReminder = reminderTime.getTime() - now.getTime();
     
     this.timerId = setTimeout(async () => {
       await this.checkAndNotify();
-      // Schedule the next day's check
       this.scheduleNextCheck();
     }, timeUntilReminder);
   }
 
   private async checkAndNotify() {
     try {
-      // Check if score is already set today
       const score = await firstValueFrom(this.dailyScoresService.getTodayScore());
       if (!score) {
-        new Notification('Pocket Discipline', {
-          body: 'Time to set your daily score!',
-          icon: '/assets/icons/icon-192x192.png'
+        new Notification(APP_TITLE, {
+          body: NOTIFICATION_REMINDER_BODY,
+          icon: NOTIFICATION_ICON_PATH
         });
       }
     } catch (e) {

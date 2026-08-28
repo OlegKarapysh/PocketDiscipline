@@ -1,8 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { DbService } from './db.service';
-import { DisciplineItem } from '../models/data-models';
+import { DisciplineItem, DisciplineItemType, DISCIPLINE_ITEM_TYPE } from '../models/data-models';
 import { UserService } from './user.service';
 import { liveQuery } from 'dexie';
+
+const MIDNIGHT_HOUR = 0;
+const MIDNIGHT_MINUTE = 0;
+const MIDNIGHT_SECOND = 0;
+const MIDNIGHT_MILLISECOND = 0;
+const TRANSACTION_READ_WRITE = 'rw';
 
 @Injectable({
   providedIn: 'root'
@@ -12,12 +18,11 @@ export class TaskService {
   private userService = inject(UserService);
 
   readonly tasks$ = liveQuery(async () => {
-    // Perform daily reset logic before returning tasks
     await this.performDailyReset();
     return await this.db.tasks.toArray();
   });
 
-  async addTask(title: string, type: 'HABIT' | 'ONEOFF', rewardValue: number) {
+  async addTask(title: string, type: DisciplineItemType, rewardValue: number) {
     const task: DisciplineItem = {
       id: crypto.randomUUID(),
       title,
@@ -33,7 +38,7 @@ export class TaskService {
   async completeTask(id: string) {
     const task = await this.db.tasks.get(id);
     if (task && !task.isCompleted) {
-      await this.db.transaction('rw', this.db.tasks, this.db.users, async () => {
+      await this.db.transaction(TRANSACTION_READ_WRITE, this.db.tasks, this.db.users, async () => {
         await this.db.tasks.update(id, {
           isCompleted: true,
           lastCompletedAt: Date.now()
@@ -45,14 +50,14 @@ export class TaskService {
 
   async performDailyReset() {
     const now = new Date();
-    now.setHours(0, 0, 0, 0);
+    now.setHours(MIDNIGHT_HOUR, MIDNIGHT_MINUTE, MIDNIGHT_SECOND, MIDNIGHT_MILLISECOND);
     const startOfDay = now.getTime();
 
-    const tasks = await this.db.tasks.where('type').equals('HABIT').toArray();
+    const tasks = await this.db.tasks.where('type').equals(DISCIPLINE_ITEM_TYPE.HABIT).toArray();
     const toReset = tasks.filter(t => t.isCompleted && t.lastCompletedAt && t.lastCompletedAt < startOfDay);
     
     if (toReset.length > 0) {
-      await this.db.transaction('rw', this.db.tasks, async () => {
+      await this.db.transaction(TRANSACTION_READ_WRITE, this.db.tasks, async () => {
         for (const t of toReset) {
           await this.db.tasks.update(t.id, { isCompleted: false });
         }

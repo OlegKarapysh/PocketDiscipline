@@ -8,6 +8,6 @@ import { DailyTaskListComponent } from '../../../daily-tasks/components/daily-ta
   standalone: true,
   imports: [TaskListComponent, DailyTaskListComponent],
   templateUrl: './tasks-page.html',
-  styleUrls: ['./tasks-page.scss'],
+  styleUrl: './tasks-page.scss',
 })
 export class TasksPage {}

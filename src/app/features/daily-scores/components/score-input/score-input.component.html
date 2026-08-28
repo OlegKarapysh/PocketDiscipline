@@ -1,0 +1,28 @@
+<div class="score-input-container">
+  <h2>How was your discipline today?</h2>
+  
+  @if (!readonly) {
+    <div class="score-buttons">
+      @for (score of availableScores; track score) {
+        <button mat-fab 
+                (click)="selectScore(score)"
+                [color]="internalSelectedScore === score ? 'accent' : 'primary'">
+          {{ score }}
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="readonly-score">
+      <div class="score-circle">
+        {{ internalSelectedScore }}
+      </div>
+      <p>Score set for today!</p>
+    </div>
+  }
+
+  @if (!readonly && internalSelectedScore !== null) {
+    <div class="actions">
+      <button mat-flat-button color="accent" (click)="submit()">Submit Score</button>
+    </div>
+  }
+</div>

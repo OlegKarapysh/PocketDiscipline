@@ -1,0 +1,24 @@
+@if (!isActive()) {
+  <div class="config-container">
+    <mat-form-field appearance="outline">
+      <mat-label>Duration (minutes)</mat-label>
+      <input
+        matInput
+        type="number"
+        [min]="minDuration"
+        [max]="maxDuration"
+        [step]="stepDuration"
+        [ngModel]="duration()"
+        (ngModelChange)="updateDuration($event)"
+        [disabled]="isActive()"
+      />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Engagement Type</mat-label>
+      <mat-select [ngModel]="engagementType()" (ngModelChange)="updateEngagement($event)" [disabled]="isActive()">
+        <mat-option [value]="engagementTypeWork">Work</mat-option>
+        <mat-option [value]="engagementTypeStudy">Study</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+}

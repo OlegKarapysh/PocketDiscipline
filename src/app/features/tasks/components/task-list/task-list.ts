@@ -7,8 +7,24 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { TaskService } from '../../../../core/services/task.service';
-import { DisciplineItem } from '../../../../core/models/data-models';
+import { DisciplineItem, DISCIPLINE_ITEM_TYPE } from '../../../../core/models/data-models';
 import { Observable, from } from 'rxjs';
+
+const DUMMY_TASK_WATER = {
+  title: 'Drink 2L Water',
+  type: DISCIPLINE_ITEM_TYPE.HABIT,
+  reward: 10,
+};
+const DUMMY_TASK_READ = {
+  title: 'Read 10 pages',
+  type: DISCIPLINE_ITEM_TYPE.HABIT,
+  reward: 20,
+};
+const DUMMY_TASK_BILL = {
+  title: 'Pay internet bill',
+  type: DISCIPLINE_ITEM_TYPE.ONEOFF,
+  reward: 5,
+};
 
 @Component({
   selector: 'app-task-list',
@@ -23,7 +39,7 @@ import { Observable, from } from 'rxjs';
     MatChipsModule
   ],
   templateUrl: './task-list.html',
-  styleUrls: ['./task-list.scss']
+  styleUrl: './task-list.scss'
 })
 export class TaskListComponent {
   taskService = inject(TaskService);
@@ -36,8 +52,8 @@ export class TaskListComponent {
   }
 
   addDummyTask() {
-    this.taskService.addTask('Drink 2L Water', 'HABIT', 10);
-    this.taskService.addTask('Read 10 pages', 'HABIT', 20);
-    this.taskService.addTask('Pay internet bill', 'ONEOFF', 5);
+    this.taskService.addTask(DUMMY_TASK_WATER.title, DUMMY_TASK_WATER.type, DUMMY_TASK_WATER.reward);
+    this.taskService.addTask(DUMMY_TASK_READ.title, DUMMY_TASK_READ.type, DUMMY_TASK_READ.reward);
+    this.taskService.addTask(DUMMY_TASK_BILL.title, DUMMY_TASK_BILL.type, DUMMY_TASK_BILL.reward);
   }
 }

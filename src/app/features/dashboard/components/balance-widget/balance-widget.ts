@@ -11,7 +11,7 @@ import { Observable, from } from 'rxjs';
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule],
   templateUrl: './balance-widget.html',
-  styleUrls: ['./balance-widget.scss']
+  styleUrl: './balance-widget.scss'
 })
 export class BalanceWidgetComponent {
   userService = inject(UserService);

@@ -3,6 +3,14 @@ import { Component, computed, input, output } from '@angular/core';
 import { GoalItem } from '../goal-item/goal-item';
 import { Goal } from '../../models/goal.model';
 
+const LOCALE_DEFAULT = 'default';
+const DATE_FORMAT_MONTH_YEAR: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' };
+
+export interface MonthGoalGroup {
+  month: string;
+  goals: Goal[];
+}
+
 @Component({
   imports: [GoalItem],
   selector: 'app-goal-list',
@@ -20,13 +28,13 @@ export class GoalList {
 
   groupedCompletedGoals = computed(() => {
     const goals = this.completedGoals();
-    const groups: { month: string; goals: Goal[] }[] = [];
+    const groups: MonthGoalGroup[] = [];
     const map = new Map<string, Goal[]>();
 
     for (const goal of goals) {
       if (!goal.completedAt) continue;
       const date = new Date(goal.completedAt);
-      const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+      const monthYear = date.toLocaleString(LOCALE_DEFAULT, DATE_FORMAT_MONTH_YEAR);
       if (!map.has(monthYear)) {
         map.set(monthYear, []);
         groups.push({ month: monthYear, goals: map.get(monthYear)! });

@@ -7,6 +7,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTaskDifficulty } from '../../models/daily-task.model';
 
+const DEFAULT_DIFFICULTIES: DailyTaskDifficulty[] = [
+  { id: 'easy', name: 'Easy', baseReward: 100 },
+  { id: 'medium', name: 'Medium', baseReward: 200 },
+  { id: 'hard', name: 'Hard', baseReward: 300 },
+];
+const DEFAULT_NEW_DIFFICULTY_NAME = 'New Difficulty';
+const DEFAULT_NEW_DIFFICULTY_REWARD = 100;
+const MIN_DIFFICULTIES_COUNT = 1;
+
 @Component({
   standalone: true,
   imports: [FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
@@ -19,22 +28,18 @@ export class DailyTaskFormComponent {
   cancelForm = output<void>();
 
   title = '';
-  difficulties: DailyTaskDifficulty[] = [
-    { id: 'easy', name: 'Easy', baseReward: 100 },
-    { id: 'medium', name: 'Medium', baseReward: 200 },
-    { id: 'hard', name: 'Hard', baseReward: 300 },
-  ];
+  difficulties: DailyTaskDifficulty[] = [...DEFAULT_DIFFICULTIES];
 
   addDifficulty() {
     this.difficulties.push({
       id: crypto.randomUUID(),
-      name: 'New Difficulty',
-      baseReward: 100,
+      name: DEFAULT_NEW_DIFFICULTY_NAME,
+      baseReward: DEFAULT_NEW_DIFFICULTY_REWARD,
     });
   }
 
   removeDifficulty(index: number) {
-    if (this.difficulties.length > 1) {
+    if (this.difficulties.length > MIN_DIFFICULTIES_COUNT) {
       this.difficulties.splice(index, 1);
     }
   }

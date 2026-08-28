@@ -1,5 +1,4 @@
 import { Component, inject } from '@angular/core';
-
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
@@ -8,29 +7,8 @@ import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
   selector: 'app-timer-controls',
   standalone: true,
   imports: [MatButtonModule, MatIconModule],
-  template: `
-    <div class="controls">
-      @if (!isActive()) {
-        <button mat-fab color="primary" (click)="start()" aria-label="Start Timer">
-          <mat-icon>play_arrow</mat-icon>
-        </button>
-      } @else {
-        <button mat-fab color="warn" (click)="stop()" aria-label="Stop Timer">
-          <mat-icon>stop</mat-icon>
-        </button>
-      }
-    </div>
-  `,
-  styles: [
-    `
-      .controls {
-        display: flex;
-        justify-content: center;
-        gap: 1rem;
-        padding: 1rem;
-      }
-    `,
-  ],
+  templateUrl: './timer-controls.html',
+  styleUrl: './timer-controls.scss',
 })
 export class TimerControls {
   private timerService = inject(PomodoroTimerService);
