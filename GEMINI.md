@@ -8,3 +8,4 @@
 - Always ensure the Angular CLI MCP server is used when developing this project to leverage its workspace awareness, CLI automation, and official documentation access. If the server is not active or configured, prompt the user to start it via `ng mcp`.
 - Do not commit code changes automatically. Let the user review and commit the changes manually.
 - **Database Schema**: Always refer to `docs/schema.md` when writing or modifying any data access code, Dexie queries, or adding new features that interact with local storage.
+- **Code Style**: Always adhere to the project's [Code Style Guidelines](docs/code_style.md).

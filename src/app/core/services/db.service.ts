@@ -3,6 +3,7 @@ import Dexie, { Table } from 'dexie';
 import { User, DisciplineItem } from '../models/data-models';
 import { Goal } from '../../features/goals/models/goal.model';
 import { DailyTask } from '../../features/daily-tasks/models/daily-task.model';
+import { DailyScore } from '../../features/daily-scores/models/daily-score.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,7 @@ export class DbService extends Dexie {
   tasks!: Table<DisciplineItem, string>;
   goals!: Table<Goal, string>;
   dailyTasks!: Table<DailyTask, string>;
+  dailyScores!: Table<DailyScore, string>;
 
   constructor() {
     super('pocket-discipline-db');
@@ -32,6 +34,10 @@ export class DbService extends Dexie {
 
     this.version(3).stores({
       dailyTasks: 'id'
+    });
+
+    this.version(4).stores({
+      dailyScores: 'date'
     });
 
     this.on('populate', () => {

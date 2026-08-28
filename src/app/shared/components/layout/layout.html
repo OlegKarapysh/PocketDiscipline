@@ -24,6 +24,10 @@
         <mat-icon matListItemIcon>timer</mat-icon>
         <span matListItemTitle class="nav-label">Pomodoro</span>
       </a>
+      <a mat-list-item routerLink="/daily-scores" (click)="drawer.mode === 'over' ? drawer.close() : null">
+        <mat-icon matListItemIcon>score</mat-icon>
+        <span matListItemTitle class="nav-label">Daily Scores</span>
+      </a>
       <a mat-list-item routerLink="/settings" (click)="drawer.mode === 'over' ? drawer.close() : null">
         <mat-icon matListItemIcon>settings</mat-icon>
         <span matListItemTitle class="nav-label">Settings</span>
