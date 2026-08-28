@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { describe, expect, it, beforeEach } from 'vitest';
 import { Settings } from './settings';
 
 describe('Settings', () => {
@@ -15,7 +16,9 @@ describe('Settings', () => {
     await fixture.whenStable();
   });
 
-  it('should create', () => {
+  it('should create settings component and render content', () => {
     expect(component).toBeTruthy();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('p')?.textContent).toContain('settings works!');
   });
 });
