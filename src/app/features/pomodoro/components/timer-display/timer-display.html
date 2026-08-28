@@ -1,0 +1,6 @@
+<div class="timer-display">
+  <div class="time">{{ formattedTime() }}</div>
+  <div class="status" [class.active]="isActive()">
+    {{ statusText() }}
+  </div>
+</div>

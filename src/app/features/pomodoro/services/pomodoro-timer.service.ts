@@ -1,9 +1,35 @@
 import { Injectable, signal, OnDestroy, inject } from '@angular/core';
-import { EventBusService } from '../../../core/services/event-bus.service';
+import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
-import { EngagementType, PomodoroSession } from '../models/pomodoro-session.model';
+import { EngagementType, PomodoroSession, POMODORO_SESSION_STATUS, ENGAGEMENT_TYPE } from '../models/pomodoro-session.model';
 import { MatDialog } from '@angular/material/dialog';
 import { CompletionDialog } from '../components/completion-dialog/completion-dialog';
+
+const DEFAULT_DURATION_MINUTES = 25;
+const SECONDS_IN_MINUTE = 60;
+const MILLISECONDS_IN_SECOND = 1000;
+const TIMER_INTERVAL_MS = 1000;
+
+const BASE_REWARD_WORK = 25;
+const BASE_REWARD_STUDY = 20;
+
+const DURATION_TIER_1_MIN = 15;
+const DURATION_TIER_2_MIN = 25;
+const DURATION_TIER_3_MIN = 50;
+const DURATION_TIER_4_MIN = 80;
+
+const MULTIPLIER_TIER_1 = 0.5;
+const MULTIPLIER_TIER_2 = 1;
+const MULTIPLIER_TIER_3 = 2;
+const MULTIPLIER_TIER_4 = 3;
+
+const EVENT_SOURCE_POMODORO = 'pomodoro';
+const NOTIFICATION_TITLE = 'Pomodoro Completed!';
+const NOTIFICATION_ICON_PATH = '/assets/icons/icon-192x192.png';
+const EVENT_VISIBILITY_CHANGE = 'visibilitychange';
+const VISIBILITY_STATE_VISIBLE = 'visible';
+const PERMISSION_DEFAULT = 'default';
+const PERMISSION_GRANTED = 'granted';
 
 export interface TimerConfig {
   durationMinutes: number;
@@ -14,13 +40,11 @@ export interface TimerConfig {
   providedIn: 'root'
 })
 export class PomodoroTimerService implements OnDestroy {
-  // Config
-  durationMinutes = signal<number>(25);
-  engagementType = signal<EngagementType>('work');
+  durationMinutes = signal<number>(DEFAULT_DURATION_MINUTES);
+  engagementType = signal<EngagementType>(ENGAGEMENT_TYPE.WORK);
 
-  // State
   isActive = signal<boolean>(false);
-  timeRemaining = signal<number>(25 * 60);
+  timeRemaining = signal<number>(DEFAULT_DURATION_MINUTES * SECONDS_IN_MINUTE);
   currentSessionId = signal<string | null>(null);
   
   private timerInterval: ReturnType<typeof setInterval> | null = null;
@@ -34,19 +58,19 @@ export class PomodoroTimerService implements OnDestroy {
   constructor() {
     this.restoreActiveSession();
     this.requestNotificationPermission();
-    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    document.addEventListener(EVENT_VISIBILITY_CHANGE, this.handleVisibilityChange);
   }
 
   ngOnDestroy() {
     this.clearInterval();
-    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    document.removeEventListener(EVENT_VISIBILITY_CHANGE, this.handleVisibilityChange);
   }
 
   private handleVisibilityChange = () => {
-    if (document.visibilityState === 'visible') {
+    if (document.visibilityState === VISIBILITY_STATE_VISIBLE) {
       this.cancelScheduledNotifications();
       if (this.backgroundTimeStart && this.isActive()) {
-        const remaining = Math.round((this.expectedEndTime - Date.now()) / 1000);
+        const remaining = Math.round((this.expectedEndTime - Date.now()) / MILLISECONDS_IN_SECOND);
         if (remaining <= 0) {
           this.timeRemaining.set(0);
           this.completeSession();
@@ -59,7 +83,7 @@ export class PomodoroTimerService implements OnDestroy {
       if (this.isActive()) {
         this.backgroundTimeStart = Date.now();
         const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
-        this.scheduleNotification('Pomodoro Completed!', `You earned ${reward} points for your ${this.engagementType()} session.`, this.expectedEndTime);
+        this.scheduleNotification(NOTIFICATION_TITLE, `You earned ${reward} points for your ${this.engagementType()} session.`, this.expectedEndTime);
       }
     }
   };
@@ -68,7 +92,7 @@ export class PomodoroTimerService implements OnDestroy {
     if (this.isActive()) return;
     this.durationMinutes.set(config.durationMinutes);
     this.engagementType.set(config.engagementType);
-    this.timeRemaining.set(config.durationMinutes * 60);
+    this.timeRemaining.set(config.durationMinutes * SECONDS_IN_MINUTE);
   }
 
   async startTimer() {
@@ -78,14 +102,14 @@ export class PomodoroTimerService implements OnDestroy {
     this.currentSessionId.set(id);
     this.isActive.set(true);
     
-    this.expectedEndTime = Date.now() + this.timeRemaining() * 1000;
+    this.expectedEndTime = Date.now() + this.timeRemaining() * MILLISECONDS_IN_SECOND;
     
     const session: PomodoroSession = {
       id,
       durationMinutes: this.durationMinutes(),
       engagementType: this.engagementType(),
       startTime: Date.now(),
-      status: 'active'
+      status: POMODORO_SESSION_STATUS.ACTIVE
     };
     
     await this.storage.saveSession(session);
@@ -100,7 +124,7 @@ export class PomodoroTimerService implements OnDestroy {
     const id = this.currentSessionId();
     if (id) {
       await this.storage.updateSession(id, {
-        status: 'cancelled',
+        status: POMODORO_SESSION_STATUS.CANCELLED,
         endTime: Date.now()
       });
     }
@@ -111,7 +135,7 @@ export class PomodoroTimerService implements OnDestroy {
   private startInterval() {
     this.clearInterval();
     this.timerInterval = setInterval(() => {
-      const remaining = Math.round((this.expectedEndTime - Date.now()) / 1000);
+      const remaining = Math.round((this.expectedEndTime - Date.now()) / MILLISECONDS_IN_SECOND);
       
       if (remaining <= 0) {
         this.timeRemaining.set(0);
@@ -119,7 +143,7 @@ export class PomodoroTimerService implements OnDestroy {
       } else {
         this.timeRemaining.set(remaining);
       }
-    }, 1000);
+    }, TIMER_INTERVAL_MS);
   }
 
   private clearInterval() {
@@ -137,14 +161,14 @@ export class PomodoroTimerService implements OnDestroy {
     const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
     
     await this.storage.updateSession(id, {
-      status: 'completed',
+      status: POMODORO_SESSION_STATUS.COMPLETED,
       endTime: Date.now(),
       rewardEarned: reward
     });
 
     this.completeTimer(reward);
 
-    this.showNotification('Pomodoro Completed!', `You earned ${reward} points for your ${this.engagementType()} session.`);
+    this.showNotification(NOTIFICATION_TITLE, `You earned ${reward} points for your ${this.engagementType()} session.`);
     
     this.dialog.open(CompletionDialog, {
       data: {
@@ -156,40 +180,44 @@ export class PomodoroTimerService implements OnDestroy {
     this.resetTimer();
   }
   
-  // F3: Emit RewardEarnedEvent on completion
   completeTimer(rewardPoints: number) {
     this.eventBus.emit({
-      type: 'RewardEarned',
+      type: EVENT_TYPE.REWARD_EARNED,
       payload: { points: rewardPoints },
-      source: 'pomodoro'
+      source: EVENT_SOURCE_POMODORO
     });
   }
 
   private resetTimer() {
     this.isActive.set(false);
     this.currentSessionId.set(null);
-    this.timeRemaining.set(this.durationMinutes() * 60);
+    this.timeRemaining.set(this.durationMinutes() * SECONDS_IN_MINUTE);
   }
 
   private calculateReward(duration: number, type: EngagementType): number {
-    const base = type === 'work' ? 25 : 20;
+    const base = type === ENGAGEMENT_TYPE.WORK ? BASE_REWARD_WORK : BASE_REWARD_STUDY;
     let multiplier = 0;
     
-    if (duration >= 15 && duration < 25) multiplier = 0.5;
-    else if (duration >= 25 && duration < 50) multiplier = 1;
-    else if (duration >= 50 && duration < 80) multiplier = 2;
-    else if (duration >= 80) multiplier = 3;
+    if (duration >= DURATION_TIER_1_MIN && duration < DURATION_TIER_2_MIN) {
+      multiplier = MULTIPLIER_TIER_1;
+    } else if (duration >= DURATION_TIER_2_MIN && duration < DURATION_TIER_3_MIN) {
+      multiplier = MULTIPLIER_TIER_2;
+    } else if (duration >= DURATION_TIER_3_MIN && duration < DURATION_TIER_4_MIN) {
+      multiplier = MULTIPLIER_TIER_3;
+    } else if (duration >= DURATION_TIER_4_MIN) {
+      multiplier = MULTIPLIER_TIER_4;
+    }
     
     return Math.trunc(base * multiplier);
   }
 
   private async restoreActiveSession() {
     const sessions = await this.storage.getAllSessions();
-    const active = sessions.find(s => s.status === 'active');
+    const active = sessions.find(s => s.status === POMODORO_SESSION_STATUS.ACTIVE);
     
     if (active) {
-      const expectedEnd = active.startTime + (active.durationMinutes * 60 * 1000);
-      const remaining = Math.round((expectedEnd - Date.now()) / 1000);
+      const expectedEnd = active.startTime + (active.durationMinutes * SECONDS_IN_MINUTE * MILLISECONDS_IN_SECOND);
+      const remaining = Math.round((expectedEnd - Date.now()) / MILLISECONDS_IN_SECOND);
       
       this.durationMinutes.set(active.durationMinutes);
       this.engagementType.set(active.engagementType);
@@ -208,18 +236,18 @@ export class PomodoroTimerService implements OnDestroy {
   }
 
   private async requestNotificationPermission() {
-    if ('Notification' in window && Notification.permission === 'default') {
+    if ('Notification' in window && Notification.permission === PERMISSION_DEFAULT) {
       await Notification.requestPermission();
     }
   }
 
   private showNotification(title: string, body: string) {
-    if ('Notification' in window && Notification.permission === 'granted') {
+    if ('Notification' in window && Notification.permission === PERMISSION_GRANTED) {
       navigator.serviceWorker.getRegistration().then(reg => {
         if (reg) {
           reg.showNotification(title, {
             body,
-            icon: '/assets/icons/icon-192x192.png'
+            icon: NOTIFICATION_ICON_PATH
           });
         } else {
           new Notification(title, { body });
@@ -229,12 +257,12 @@ export class PomodoroTimerService implements OnDestroy {
   }
 
   private scheduleNotification(title: string, body: string, timestamp: number) {
-    if ('Notification' in window && Notification.permission === 'granted' && 'showTrigger' in Notification.prototype) {
+    if ('Notification' in window && Notification.permission === PERMISSION_GRANTED && 'showTrigger' in Notification.prototype) {
       navigator.serviceWorker.getRegistration().then(reg => {
         if (reg) {
           reg.showNotification(title, {
             body,
-            icon: '/assets/icons/icon-192x192.png',
+            icon: NOTIFICATION_ICON_PATH,
             // @ts-expect-error - TimestampTrigger is an experimental API
             showTrigger: new TimestampTrigger(timestamp)
           });

@@ -1,0 +1,33 @@
+<div class="page-container">
+  <h1>Daily Scores</h1>
+  
+  @if (loading()) {
+    <div class="loading-state">
+      Loading...
+    </div>
+  }
+
+  @if (!loading()) {
+    <div>
+      <app-scores-stats 
+        [monthlyScores]="monthlyScores()" 
+        [latestScore]="latestScore()">
+      </app-scores-stats>
+
+      <app-scores-chart [scores]="weeklyScores()"></app-scores-chart>
+
+      <app-score-input 
+        [readonly]="hasScoreToday()"
+        [selectedScore]="currentScore()"
+        (scoreSubmitted)="onScoreSubmit($event)">
+      </app-score-input>
+      
+      @if (successMessage()) {
+        <div class="success-message">
+          {{ successMessage() }}
+        </div>
+      }
+    </div>
+  }
+</div>
+

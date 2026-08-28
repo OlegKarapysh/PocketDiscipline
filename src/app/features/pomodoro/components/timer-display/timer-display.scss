@@ -1,0 +1,22 @@
+.timer-display {
+  text-align: center;
+  padding: 2rem;
+}
+
+.time {
+  font-size: 5rem;
+  font-family: monospace;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.status {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.status.active {
+  color: #e91e63;
+  font-weight: bold;
+}

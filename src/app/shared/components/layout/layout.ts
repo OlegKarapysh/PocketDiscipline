@@ -24,7 +24,7 @@ import { MatButtonModule } from '@angular/material/button';
     MatButtonModule
   ],
   templateUrl: './layout.html',
-  styleUrls: ['./layout.scss']
+  styleUrl: './layout.scss'
 })
 export class LayoutComponent {
   private breakpointObserver = inject(BreakpointObserver);

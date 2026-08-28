@@ -1,3 +1,10 @@
+export type DisciplineItemType = 'HABIT' | 'ONEOFF';
+
+export const DISCIPLINE_ITEM_TYPE = {
+  HABIT: 'HABIT',
+  ONEOFF: 'ONEOFF',
+} as const;
+
 export interface User {
   id: number;
   name: string;
@@ -9,7 +16,7 @@ export interface User {
 export interface DisciplineItem {
   id: string;
   title: string;
-  type: 'HABIT' | 'ONEOFF';
+  type: DisciplineItemType;
   rewardValue: number;
   isCompleted: boolean;
   lastCompletedAt: number | null;

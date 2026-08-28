@@ -2,6 +2,10 @@ import { Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
+export const EVENT_TYPE = {
+  REWARD_EARNED: 'RewardEarned',
+} as const;
+
 export interface AppEvent {
   type: string;
   payload?: unknown;
@@ -9,7 +13,7 @@ export interface AppEvent {
 }
 
 export interface RewardEarnedEvent extends AppEvent {
-  type: 'RewardEarned';
+  type: typeof EVENT_TYPE.REWARD_EARNED;
   payload: {
     points: number;
   };
