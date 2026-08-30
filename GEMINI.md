@@ -9,3 +9,5 @@
 - Do not commit code changes automatically. Let the user review and commit the changes manually.
 - **Database Schema**: Always refer to `docs/schema.md` when writing or modifying any data access code, Dexie queries, or adding new features that interact with local storage.
 - **Code Style**: Always adhere to the project's [Code Style Guidelines](docs/code_style.md).
+- **Clarification and Context**: Always ask clarifying questions before proceeding if there is insufficient context, ambiguity, or missing information to understand the user's intention or task requirements.
+

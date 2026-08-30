@@ -10,7 +10,7 @@ test.describe('Goals Flow', () => {
     // Check for predefined goals
     await expect(page.getByText('do 50 push-ups on fists')).toBeVisible();
     await expect(page.getByText('do 100 squats')).toBeVisible();
-    await expect(page.getByText('do 12 pomodorro a day')).toBeVisible();
+    await expect(page.getByText('do 12 pomodoro a day')).toBeVisible();
   });
 
   test('should add a new goal', async ({ page }) => {
