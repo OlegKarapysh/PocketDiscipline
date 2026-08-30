@@ -2,19 +2,18 @@
 
 The application uses **Dexie.js** (IndexedDB wrapper) for local storage.
 
-There are currently two database instances in the application:
-1. `pocket-discipline-db` (`DbService`) - Main application database
-2. `PomodoroDatabase` (`PomodoroStorageService`) - Specific to the Pomodoro feature
+All application data is consolidated in a single database:
+- **`pocket-discipline-db`** (`DbService`) - Main application database
 
 ---
 
-## 1. Main Database (`pocket-discipline-db`)
+## Database (`pocket-discipline-db`)
 Defined in: `src/app/core/services/db.service.ts`
 
 ### Tables
 
 #### `users`
-**Primary Key**: `id`
+**Primary Key**: `id`  
 **Description**: Stores the user profile and their overall balance (virtual currency/reward points).
 
 ```typescript
@@ -28,8 +27,8 @@ export interface User {
 ```
 
 #### `goals`
-**Primary Key**: `id`
-**Indexed Properties**: `id`, `status`
+**Primary Key**: `id`  
+**Indexed Properties**: `id`, `status`  
 **Description**: Long-term or specific one-off goals with a fixed reward value.
 
 ```typescript
@@ -44,7 +43,7 @@ export interface Goal {
 ```
 
 #### `dailyTasks`
-**Primary Key**: `id`
+**Primary Key**: `id`  
 **Description**: Recurring daily tasks that users can complete on various difficulty levels to build streaks.
 
 ```typescript
@@ -61,37 +60,27 @@ export interface DailyTask {
   difficulties: DailyTaskDifficulty[];
   streak: number;
   lastCompletedAt: number | null;
-  // Note: the actual DB schema seems to just track 'id' for indexing.
 }
 ```
 
-#### `tasks` *(Legacy / Generic Discipline Items)*
-**Primary Key**: `id`
-**Indexed Properties**: `id`, `type`, `isCompleted`
+#### `dailyScores`
+**Primary Key**: `date`  
+**Description**: Daily self-assessment score tracking and streak bonuses.
 
 ```typescript
-export interface DisciplineItem {
-  id: string;
-  title: string;
-  type: 'HABIT' | 'ONEOFF';
-  rewardValue: number;
-  isCompleted: boolean;
-  lastCompletedAt: number | null;
-  createdAt: number;
+export interface DailyScore {
+  date: string;           // Format: YYYY-MM-DD
+  score: number;          // Rating 1-10
+  rewardEarned: number;
+  streakAtThisDay: number;
+  createdAt: number;      // Timestamp
 }
 ```
 
----
-
-## 2. Pomodoro Database (`PomodoroDatabase`)
-Defined in: `src/app/features/pomodoro/services/pomodoro-storage.service.ts`
-
-### Tables
-
-#### `sessions`
-**Primary Key**: `id`
-**Indexed Properties**: `id`, `startTime`, `status`
-**Description**: Tracks pomodoro focus sessions, their duration, and the reward earned.
+#### `pomodoroSessions`
+**Primary Key**: `id`  
+**Indexed Properties**: `id`, `startTime`, `status`  
+**Description**: Tracks Pomodoro focus sessions, duration, engagement type, completion status, and rewards earned.
 
 ```typescript
 export type PomodoroSessionStatus = 'active' | 'completed' | 'cancelled';
@@ -105,5 +94,21 @@ export interface PomodoroSession {
   endTime?: number;         // timestamp
   status: PomodoroSessionStatus;
   rewardEarned?: number;
+}
+```
+
+#### `tasks` *(Legacy / Generic Discipline Items)*
+**Primary Key**: `id`  
+**Indexed Properties**: `id`, `type`, `isCompleted`
+
+```typescript
+export interface DisciplineItem {
+  id: string;
+  title: string;
+  type: 'HABIT' | 'ONEOFF';
+  rewardValue: number;
+  isCompleted: boolean;
+  lastCompletedAt: number | null;
+  createdAt: number;
 }
 ```

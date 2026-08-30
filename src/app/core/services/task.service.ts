@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { DbService } from './db.service';
-import { DisciplineItem, DisciplineItemType, DISCIPLINE_ITEM_TYPE } from '../models/data-models';
+import { DisciplineItem } from '../models/discipline-item.model';
+import { DisciplineItemType } from '../models/discipline-item-type.enum';
 import { UserService } from './user.service';
 import { liveQuery } from 'dexie';
 
@@ -53,7 +54,7 @@ export class TaskService {
     now.setHours(MIDNIGHT_HOUR, MIDNIGHT_MINUTE, MIDNIGHT_SECOND, MIDNIGHT_MILLISECOND);
     const startOfDay = now.getTime();
 
-    const tasks = await this.db.tasks.where('type').equals(DISCIPLINE_ITEM_TYPE.HABIT).toArray();
+    const tasks = await this.db.tasks.where('type').equals(DisciplineItemType.HABIT).toArray();
     const toReset = tasks.filter(t => t.isCompleted && t.lastCompletedAt && t.lastCompletedAt < startOfDay);
     
     if (toReset.length > 0) {

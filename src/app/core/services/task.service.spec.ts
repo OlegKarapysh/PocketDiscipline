@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TaskService } from './task.service';
 import { DbService } from './db.service';
 import { UserService } from './user.service';
-import { DisciplineItem, DISCIPLINE_ITEM_TYPE } from '../models/data-models';
+import { DisciplineItem } from '../models/discipline-item.model';
+import { DisciplineItemType } from '../models/discipline-item-type.enum';
 
 const TEST_TASK_ID = 't-1';
 const TEST_TASK_TITLE = 'Drink Water';
@@ -68,12 +69,12 @@ describe('TaskService', () => {
   });
 
   it('should add a discipline task to the database', async () => {
-    await service.addTask(TEST_TASK_TITLE, DISCIPLINE_ITEM_TYPE.HABIT, TEST_REWARD);
+    await service.addTask(TEST_TASK_TITLE, DisciplineItemType.HABIT, TEST_REWARD);
 
     expect(dbMock.tasks.add).toHaveBeenCalledWith(
       expect.objectContaining({
         title: TEST_TASK_TITLE,
-        type: DISCIPLINE_ITEM_TYPE.HABIT,
+        type: DisciplineItemType.HABIT,
         rewardValue: TEST_REWARD,
         isCompleted: false,
         lastCompletedAt: null,
@@ -85,7 +86,7 @@ describe('TaskService', () => {
     const task: DisciplineItem = {
       id: TEST_TASK_ID,
       title: TEST_TASK_TITLE,
-      type: DISCIPLINE_ITEM_TYPE.HABIT,
+      type: DisciplineItemType.HABIT,
       rewardValue: TEST_REWARD,
       isCompleted: false,
       lastCompletedAt: null,
@@ -108,7 +109,7 @@ describe('TaskService', () => {
     const task: DisciplineItem = {
       id: TEST_TASK_ID,
       title: TEST_TASK_TITLE,
-      type: DISCIPLINE_ITEM_TYPE.HABIT,
+      type: DisciplineItemType.HABIT,
       rewardValue: TEST_REWARD,
       isCompleted: true,
       lastCompletedAt: Date.now(),
@@ -127,7 +128,7 @@ describe('TaskService', () => {
     const completedHabit: DisciplineItem = {
       id: TEST_TASK_ID,
       title: TEST_TASK_TITLE,
-      type: DISCIPLINE_ITEM_TYPE.HABIT,
+      type: DisciplineItemType.HABIT,
       rewardValue: TEST_REWARD,
       isCompleted: true,
       lastCompletedAt: yesterday,

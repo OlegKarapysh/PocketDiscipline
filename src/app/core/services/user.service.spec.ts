@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { UserService, CURRENT_USER_ID, DEFAULT_INITIAL_BALANCE } from './user.service';
 import { DbService } from './db.service';
 import { EventBusService, EVENT_TYPE } from './event-bus.service';
-import { User } from '../models/data-models';
+import { User } from '../models/user.model';
 
 const TEST_INITIAL_BALANCE = 500;
 const TEST_ADD_REWARD = 200;

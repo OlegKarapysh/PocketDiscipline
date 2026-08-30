@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { PomodoroSession } from '../models/pomodoro-session.model';
-import { PomodoroDatabase } from './pomodoro-database';
+import { DbService } from '../../../core/services/db.service';
 
 const ORDER_BY_FIELD = 'startTime';
 
@@ -8,29 +8,26 @@ const ORDER_BY_FIELD = 'startTime';
   providedIn: 'root'
 })
 export class PomodoroStorageService {
-  private db: PomodoroDatabase;
-
-  constructor() {
-    this.db = new PomodoroDatabase();
-  }
+  private db = inject(DbService);
 
   async saveSession(session: PomodoroSession): Promise<void> {
-    await this.db.sessions.put(session);
+    await this.db.pomodoroSessions.put(session);
   }
 
   async getSession(id: string): Promise<PomodoroSession | undefined> {
-    return this.db.sessions.get(id);
+    return this.db.pomodoroSessions.get(id);
   }
 
   async getAllSessions(): Promise<PomodoroSession[]> {
-    return this.db.sessions.orderBy(ORDER_BY_FIELD).reverse().toArray();
+    return this.db.pomodoroSessions.orderBy(ORDER_BY_FIELD).reverse().toArray();
   }
 
   async updateSession(id: string, changes: Partial<PomodoroSession>): Promise<void> {
-    await this.db.sessions.update(id, changes);
+    await this.db.pomodoroSessions.update(id, changes);
   }
 
   async deleteSession(id: string): Promise<void> {
-    await this.db.sessions.delete(id);
+    await this.db.pomodoroSessions.delete(id);
   }
 }
+

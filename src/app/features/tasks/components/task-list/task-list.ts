@@ -7,22 +7,23 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { TaskService } from '../../../../core/services/task.service';
-import { DisciplineItem, DISCIPLINE_ITEM_TYPE } from '../../../../core/models/data-models';
+import { DisciplineItem } from '../../../../core/models/discipline-item.model';
+import { DisciplineItemType } from '../../../../core/models/discipline-item-type.enum';
 import { Observable, from } from 'rxjs';
 
 const DUMMY_TASK_WATER = {
   title: 'Drink 2L Water',
-  type: DISCIPLINE_ITEM_TYPE.HABIT,
+  type: DisciplineItemType.HABIT,
   reward: 10,
 };
 const DUMMY_TASK_READ = {
   title: 'Read 10 pages',
-  type: DISCIPLINE_ITEM_TYPE.HABIT,
+  type: DisciplineItemType.HABIT,
   reward: 20,
 };
 const DUMMY_TASK_BILL = {
   title: 'Pay internet bill',
-  type: DISCIPLINE_ITEM_TYPE.ONEOFF,
+  type: DisciplineItemType.ONEOFF,
   reward: 5,
 };
 
