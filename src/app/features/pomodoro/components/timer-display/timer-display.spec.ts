@@ -4,7 +4,7 @@ import { By } from '@angular/platform-browser';
 import { signal } from '@angular/core';
 import { TimerDisplay } from './timer-display';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
-import { ENGAGEMENT_TYPE } from '../../models/pomodoro-session.model';
+import { EngagementType } from '../../models/engagement-type.enum';
 
 const SECONDS_25_MIN = 1500;
 const SECONDS_1_MIN_5_SEC = 65;
@@ -22,7 +22,7 @@ describe('TimerDisplay', () => {
   beforeEach(async () => {
     timerServiceMock = {
       isActive: signal(false),
-      engagementType: signal(ENGAGEMENT_TYPE.WORK),
+      engagementType: signal(EngagementType.WORK),
       timeRemaining: signal(SECONDS_25_MIN),
     };
 
@@ -49,7 +49,7 @@ describe('TimerDisplay', () => {
 
   it('should format 65 seconds as "01:05" and show "Focusing on study" when active', async () => {
     timerServiceMock.isActive.set(true);
-    timerServiceMock.engagementType.set(ENGAGEMENT_TYPE.STUDY);
+    timerServiceMock.engagementType.set(EngagementType.STUDY);
     timerServiceMock.timeRemaining.set(SECONDS_1_MIN_5_SEC);
 
     fixture.detectChanges();

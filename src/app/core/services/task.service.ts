@@ -10,6 +10,7 @@ const MIDNIGHT_MINUTE = 0;
 const MIDNIGHT_SECOND = 0;
 const MIDNIGHT_MILLISECOND = 0;
 const TRANSACTION_READ_WRITE = 'rw';
+const FIELD_TYPE = 'type';
 
 @Injectable({
   providedIn: 'root'
@@ -24,7 +25,7 @@ export class TaskService {
   });
 
   async addTask(title: string, type: DisciplineItemType, rewardValue: number) {
-    const task: DisciplineItem = {
+    const item: DisciplineItem = {
       id: crypto.randomUUID(),
       title,
       type,
@@ -33,7 +34,7 @@ export class TaskService {
       lastCompletedAt: null,
       createdAt: Date.now()
     };
-    await this.db.tasks.add(task);
+    await this.db.tasks.add(item);
   }
 
   async completeTask(id: string) {
@@ -54,7 +55,7 @@ export class TaskService {
     now.setHours(MIDNIGHT_HOUR, MIDNIGHT_MINUTE, MIDNIGHT_SECOND, MIDNIGHT_MILLISECOND);
     const startOfDay = now.getTime();
 
-    const tasks = await this.db.tasks.where('type').equals(DisciplineItemType.HABIT).toArray();
+    const tasks = await this.db.tasks.where(FIELD_TYPE).equals(DisciplineItemType.HABIT).toArray();
     const toReset = tasks.filter(t => t.isCompleted && t.lastCompletedAt && t.lastCompletedAt < startOfDay);
     
     if (toReset.length > 0) {

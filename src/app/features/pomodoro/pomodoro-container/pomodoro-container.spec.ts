@@ -7,7 +7,7 @@ import { TimerDisplay } from '../components/timer-display/timer-display';
 import { TimerControls } from '../components/timer-controls/timer-controls';
 import { SessionConfig } from '../components/session-config/session-config';
 import { PomodoroTimerService } from '../services/pomodoro-timer.service';
-import { ENGAGEMENT_TYPE } from '../models/pomodoro-session.model';
+import { EngagementType } from '../models/engagement-type.enum';
 
 describe('PomodoroContainer', () => {
   let fixture: ComponentFixture<PomodoroContainer>;
@@ -25,7 +25,7 @@ describe('PomodoroContainer', () => {
     timerServiceMock = {
       isActive: signal(false),
       durationMinutes: signal(25),
-      engagementType: signal(ENGAGEMENT_TYPE.WORK),
+      engagementType: signal(EngagementType.WORK),
       timeRemaining: signal(1500),
       startTimer: vi.fn(),
       stopTimer: vi.fn(),

@@ -4,10 +4,7 @@ import { concatMap, filter } from 'rxjs/operators';
 import { DbService } from './db.service';
 import { liveQuery } from 'dexie';
 import { EventBusService, EVENT_TYPE, RewardEarnedEvent } from './event-bus.service';
-
-export const CURRENT_USER_ID = 1;
-export const CURRENT_USER_NAME = 'Current';
-export const DEFAULT_INITIAL_BALANCE = 0;
+import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'

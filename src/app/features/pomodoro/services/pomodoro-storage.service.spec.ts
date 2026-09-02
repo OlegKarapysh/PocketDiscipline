@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PomodoroStorageService } from './pomodoro-storage.service';
 import { DbService } from '../../../core/services/db.service';
-import { PomodoroSession, POMODORO_SESSION_STATUS, ENGAGEMENT_TYPE } from '../models/pomodoro-session.model';
+import { PomodoroSession } from '../models/pomodoro-session.model';
+import { EngagementType } from '../models/engagement-type.enum';
+import { PomodoroSessionStatus } from '../models/pomodoro-session-status.enum';
 
 const TEST_SESSION_ID = 'session-123';
 const TEST_DURATION = 25;
@@ -51,9 +53,9 @@ describe('PomodoroStorageService', () => {
     const session: PomodoroSession = {
       id: TEST_SESSION_ID,
       durationMinutes: TEST_DURATION,
-      engagementType: ENGAGEMENT_TYPE.WORK,
+      engagementType: EngagementType.WORK,
       startTime: TEST_START_TIME,
-      status: POMODORO_SESSION_STATUS.ACTIVE,
+      status: PomodoroSessionStatus.ACTIVE,
     };
 
     dbMock.pomodoroSessions.put.mockResolvedValue(TEST_SESSION_ID);
@@ -69,7 +71,7 @@ describe('PomodoroStorageService', () => {
 
   it('should update a session with completion data', async () => {
     const changes: Partial<PomodoroSession> = {
-      status: POMODORO_SESSION_STATUS.COMPLETED,
+      status: PomodoroSessionStatus.COMPLETED,
       endTime: TEST_END_TIME,
       rewardEarned: TEST_REWARD,
     };
@@ -88,9 +90,9 @@ describe('PomodoroStorageService', () => {
       {
         id: TEST_SESSION_ID,
         durationMinutes: TEST_DURATION,
-        engagementType: ENGAGEMENT_TYPE.WORK,
+        engagementType: EngagementType.WORK,
         startTime: TEST_START_TIME,
-        status: POMODORO_SESSION_STATUS.COMPLETED,
+        status: PomodoroSessionStatus.COMPLETED,
       },
     ];
 

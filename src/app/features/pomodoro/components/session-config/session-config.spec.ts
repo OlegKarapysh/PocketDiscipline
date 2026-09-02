@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { SessionConfig } from './session-config';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
-import { ENGAGEMENT_TYPE } from '../../models/pomodoro-session.model';
+import { EngagementType } from '../../models/engagement-type.enum';
 
 const VALID_DURATION = 45;
 const INVALID_LOW_DURATION = 10;
@@ -16,7 +16,7 @@ describe('SessionConfig', () => {
   let timerServiceMock: {
     isActive: ReturnType<typeof signal<boolean>>;
     durationMinutes: ReturnType<typeof signal<number>>;
-    engagementType: ReturnType<typeof signal<string>>;
+    engagementType: ReturnType<typeof signal<EngagementType>>;
     setConfig: ReturnType<typeof vi.fn>;
   };
 
@@ -24,7 +24,7 @@ describe('SessionConfig', () => {
     timerServiceMock = {
       isActive: signal(false),
       durationMinutes: signal(DEFAULT_DURATION),
-      engagementType: signal(ENGAGEMENT_TYPE.WORK),
+      engagementType: signal(EngagementType.WORK),
       setConfig: vi.fn(),
     };
 
@@ -44,7 +44,7 @@ describe('SessionConfig', () => {
 
     expect(timerServiceMock.setConfig).toHaveBeenCalledWith({
       durationMinutes: VALID_DURATION,
-      engagementType: ENGAGEMENT_TYPE.WORK,
+      engagementType: EngagementType.WORK,
     });
   });
 
@@ -61,11 +61,11 @@ describe('SessionConfig', () => {
   });
 
   it('should update engagement type', () => {
-    component.updateEngagement(ENGAGEMENT_TYPE.STUDY);
+    component.updateEngagement(EngagementType.STUDY);
 
     expect(timerServiceMock.setConfig).toHaveBeenCalledWith({
       durationMinutes: DEFAULT_DURATION,
-      engagementType: ENGAGEMENT_TYPE.STUDY,
+      engagementType: EngagementType.STUDY,
     });
   });
 });

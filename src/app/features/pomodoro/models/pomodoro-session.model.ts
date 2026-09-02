@@ -1,17 +1,5 @@
-export type PomodoroSessionStatus = 'active' | 'completed' | 'cancelled';
-
-export const POMODORO_SESSION_STATUS = {
-  ACTIVE: 'active',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled',
-} as const;
-
-export type EngagementType = 'work' | 'study';
-
-export const ENGAGEMENT_TYPE = {
-  WORK: 'work',
-  STUDY: 'study',
-} as const;
+import { EngagementType } from './engagement-type.enum';
+import { PomodoroSessionStatus } from './pomodoro-session-status.enum';
 
 export interface PomodoroSession {
   id: string;

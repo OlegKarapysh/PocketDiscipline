@@ -4,7 +4,7 @@ import { DailyScoresService } from './daily-scores.service';
 import { DbService } from '../../../core/services/db.service';
 import { DailyScore } from '../models/daily-score.model';
 import { firstValueFrom } from 'rxjs';
-import { CURRENT_USER_ID } from '../../../core/services/user.service';
+import { CURRENT_USER_ID } from '../../../core/models/user.model';
 
 const TEST_DATE_TODAY = '2026-08-28';
 const TEST_DATE_YESTERDAY = '2026-08-27';

@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
+import { MatSidenav } from '@angular/material/sidenav';
 import { BehaviorSubject } from 'rxjs';
+import { vi } from 'vitest';
 import { LayoutComponent } from './layout';
 
 describe('Layout', () => {
@@ -46,7 +48,9 @@ describe('Layout', () => {
 
   it('should contain navigation links for all features', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    const links = Array.from(compiled.querySelectorAll('a[mat-list-item]')).map(a => a.getAttribute('routerLink'));
+    const links = Array.from(compiled.querySelectorAll('a[mat-list-item]')).map(
+      a => a.getAttribute('href') || a.getAttribute('ng-reflect-router-link') || a.getAttribute('routerLink')
+    );
     expect(links).toContain('/dashboard');
     expect(links).toContain('/tasks');
     expect(links).toContain('/goals');
@@ -105,5 +109,31 @@ describe('Layout', () => {
     titleEl = fixture.nativeElement.querySelector('mat-sidenav-content mat-toolbar .tab-title');
     expect(titleEl?.textContent?.trim()).toBe('Settings');
   });
-});
 
+  it('should strip query parameters and hash fragments when determining active tab title', async () => {
+    breakpointSubject.next({ matches: true, breakpoints: {} });
+
+    await router.navigateByUrl('/tasks?filter=active#section');
+    fixture.detectChanges();
+    const titleEl = fixture.nativeElement.querySelector('mat-sidenav-content mat-toolbar .tab-title');
+    expect(titleEl?.textContent?.trim()).toBe('Tasks');
+  });
+
+  it('should close drawer on mobile when onNavClick is called', () => {
+    breakpointSubject.next({ matches: true, breakpoints: {} });
+    fixture.detectChanges();
+
+    const mockDrawer = { close: vi.fn() } as unknown as MatSidenav;
+    component.onNavClick(mockDrawer);
+    expect(mockDrawer.close).toHaveBeenCalled();
+  });
+
+  it('should not close drawer on desktop when onNavClick is called', () => {
+    breakpointSubject.next({ matches: false, breakpoints: {} });
+    fixture.detectChanges();
+
+    const mockDrawer = { close: vi.fn() } as unknown as MatSidenav;
+    component.onNavClick(mockDrawer);
+    expect(mockDrawer.close).not.toHaveBeenCalled();
+  });
+});

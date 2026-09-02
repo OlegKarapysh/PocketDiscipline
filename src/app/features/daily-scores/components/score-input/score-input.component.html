@@ -1,28 +1,82 @@
-<div class="score-input-container">
-  <h2>How was your discipline today?</h2>
-  
-  @if (!readonly) {
-    <div class="score-buttons">
-      @for (score of availableScores; track score) {
-        <button mat-fab 
-                (click)="selectScore(score)"
-                [color]="internalSelectedScore === score ? 'accent' : 'primary'">
-          {{ score }}
-        </button>
-      }
-    </div>
-  } @else {
-    <div class="readonly-score">
-      <div class="score-circle">
-        {{ internalSelectedScore }}
+<mat-card class="score-card">
+  <mat-card-header class="score-card-header">
+    <mat-card-title>Today's score</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content class="score-card-content">
+    @if (!readonly) {
+      <div class="scale-section">
+        <div class="scale-buttons" role="radiogroup" aria-label="Discipline score from 1 to 10">
+          @for (score of availableScores; track score) {
+            <button
+              type="button"
+              class="score-btn"
+              [class.selected]="internalSelectedScore === score"
+              [attr.aria-pressed]="internalSelectedScore === score"
+              [attr.aria-label]="'Score ' + score"
+              (click)="selectScore(score)">
+              <span class="score-number">{{ score }}</span>
+            </button>
+          }
+        </div>
+
+        <div class="scale-legend">
+          <span class="legend-label legend-low">
+            <mat-icon class="legend-icon">arrow_back</mat-icon>
+            1 - Struggled
+          </span>
+          <span class="legend-label legend-high">
+            10 - Exceptional
+            <mat-icon class="legend-icon">arrow_forward</mat-icon>
+          </span>
+        </div>
       </div>
-      <p>Score set for today!</p>
-    </div>
-  }
+
+      @if (activeTier; as tier) {
+        <div class="feedback-banner" [ngClass]="tier.badgeClass">
+          <div class="feedback-badge">
+            <mat-icon class="tier-icon">{{ tier.icon }}</mat-icon>
+            <span class="feedback-score">{{ internalSelectedScore }} / 10</span>
+          </div>
+          <div class="feedback-text">
+            <div class="feedback-title">{{ tier.label }}</div>
+            <div class="feedback-desc">{{ tier.description }}</div>
+          </div>
+        </div>
+      }
+    } @else {
+      <div class="readonly-container">
+        <div class="readonly-badge-wrapper">
+          <div class="readonly-score-display" [ngClass]="activeTier?.badgeClass">
+            <span class="readonly-score-num">{{ internalSelectedScore }}</span>
+            <span class="readonly-score-max">/ 10</span>
+          </div>
+        </div>
+
+        <div class="readonly-details">
+          <div class="status-pill">
+            <mat-icon class="status-icon">check_circle</mat-icon>
+            <span>Score Set for Today</span>
+          </div>
+          @if (activeTier; as tier) {
+            <div class="readonly-tier-label">{{ tier.label }}</div>
+            <div class="readonly-tier-desc">{{ tier.description }}</div>
+          }
+        </div>
+      </div>
+    }
+  </mat-card-content>
 
   @if (!readonly && internalSelectedScore !== null) {
-    <div class="actions">
-      <button mat-flat-button color="accent" (click)="submit()">Submit Score</button>
-    </div>
+    <mat-card-actions class="score-card-actions" align="end">
+      <button
+        mat-flat-button
+        color="primary"
+        class="submit-button"
+        (click)="submit()">
+        <mat-icon>save</mat-icon>
+        Save Score
+      </button>
+    </mat-card-actions>
   }
-</div>
+</mat-card>
