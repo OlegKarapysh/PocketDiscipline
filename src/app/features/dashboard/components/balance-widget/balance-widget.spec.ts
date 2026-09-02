@@ -4,7 +4,7 @@ import { By } from '@angular/platform-browser';
 import { Observable, of } from 'rxjs';
 import { BalanceWidgetComponent } from './balance-widget';
 import { UserService } from '../../../../core/services/user.service';
-import { User } from '../../../../core/models/data-models';
+import { User } from '../../../../core/models/user.model';
 
 const TEST_BALANCE = 2500;
 

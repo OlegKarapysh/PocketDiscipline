@@ -4,7 +4,8 @@ import { By } from '@angular/platform-browser';
 import { Observable, of } from 'rxjs';
 import { TaskListComponent } from './task-list';
 import { TaskService } from '../../../../core/services/task.service';
-import { DisciplineItem, DISCIPLINE_ITEM_TYPE } from '../../../../core/models/data-models';
+import { DisciplineItem } from '../../../../core/models/discipline-item.model';
+import { DisciplineItemType } from '../../../../core/models/discipline-item-type.enum';
 
 const TEST_TASK_ID = 't-1';
 const TEST_TASK_TITLE = 'Drink 2L Water';
@@ -23,7 +24,7 @@ describe('TaskListComponent', () => {
     {
       id: TEST_TASK_ID,
       title: TEST_TASK_TITLE,
-      type: DISCIPLINE_ITEM_TYPE.HABIT,
+      type: DisciplineItemType.HABIT,
       rewardValue: TEST_REWARD,
       isCompleted: false,
       lastCompletedAt: null,

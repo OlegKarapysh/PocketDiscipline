@@ -4,7 +4,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { PomodoroTimerService, TimerConfig } from './pomodoro-timer.service';
 import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
-import { ENGAGEMENT_TYPE, POMODORO_SESSION_STATUS } from '../models/pomodoro-session.model';
+import { EngagementType } from '../models/engagement-type.enum';
+import { PomodoroSessionStatus } from '../models/pomodoro-session-status.enum';
 
 const DEFAULT_DURATION = 25;
 const CUSTOM_DURATION = 50;
@@ -63,7 +64,7 @@ describe('PomodoroTimerService', () => {
   describe('Initial State and Configuration', () => {
     it('should initialize with default 25 minutes and WORK engagement type', () => {
       expect(service.durationMinutes()).toBe(DEFAULT_DURATION);
-      expect(service.engagementType()).toBe(ENGAGEMENT_TYPE.WORK);
+      expect(service.engagementType()).toBe(EngagementType.WORK);
       expect(service.isActive()).toBe(false);
       expect(service.timeRemaining()).toBe(EXPECTED_INITIAL_SECONDS);
       expect(service.currentSessionId()).toBeNull();
@@ -72,13 +73,13 @@ describe('PomodoroTimerService', () => {
     it('should update config when timer is not active', () => {
       const config: TimerConfig = {
         durationMinutes: CUSTOM_DURATION,
-        engagementType: ENGAGEMENT_TYPE.STUDY,
+        engagementType: EngagementType.STUDY,
       };
 
       service.setConfig(config);
 
       expect(service.durationMinutes()).toBe(CUSTOM_DURATION);
-      expect(service.engagementType()).toBe(ENGAGEMENT_TYPE.STUDY);
+      expect(service.engagementType()).toBe(EngagementType.STUDY);
       expect(service.timeRemaining()).toBe(CUSTOM_DURATION * 60);
     });
 
@@ -87,13 +88,13 @@ describe('PomodoroTimerService', () => {
 
       const newConfig: TimerConfig = {
         durationMinutes: CUSTOM_DURATION,
-        engagementType: ENGAGEMENT_TYPE.STUDY,
+        engagementType: EngagementType.STUDY,
       };
 
       service.setConfig(newConfig);
 
       expect(service.durationMinutes()).toBe(DEFAULT_DURATION);
-      expect(service.engagementType()).toBe(ENGAGEMENT_TYPE.WORK);
+      expect(service.engagementType()).toBe(EngagementType.WORK);
     });
   });
 
@@ -107,8 +108,8 @@ describe('PomodoroTimerService', () => {
         expect.objectContaining({
           id: TEST_SESSION_UUID,
           durationMinutes: DEFAULT_DURATION,
-          engagementType: ENGAGEMENT_TYPE.WORK,
-          status: POMODORO_SESSION_STATUS.ACTIVE,
+          engagementType: EngagementType.WORK,
+          status: PomodoroSessionStatus.ACTIVE,
         })
       );
     });
@@ -133,7 +134,7 @@ describe('PomodoroTimerService', () => {
       expect(storageMock.updateSession).toHaveBeenCalledWith(
         TEST_SESSION_UUID,
         expect.objectContaining({
-          status: POMODORO_SESSION_STATUS.CANCELLED,
+          status: PomodoroSessionStatus.CANCELLED,
         })
       );
       expect(eventBusMock.emit).not.toHaveBeenCalled();
@@ -150,7 +151,7 @@ describe('PomodoroTimerService', () => {
       expect(storageMock.updateSession).toHaveBeenCalledWith(
         TEST_SESSION_UUID,
         expect.objectContaining({
-          status: POMODORO_SESSION_STATUS.COMPLETED,
+          status: PomodoroSessionStatus.COMPLETED,
           rewardEarned: 25, // 25 min work session = 25 points (1.0x base)
         })
       );
@@ -167,7 +168,7 @@ describe('PomodoroTimerService', () => {
     it('should calculate Tier 1 (15-24 min) reward: 0.5x base', async () => {
       service.setConfig({
         durationMinutes: TIER1_DURATION,
-        engagementType: ENGAGEMENT_TYPE.WORK,
+        engagementType: EngagementType.WORK,
       });
       await service.startTimer();
       await vi.advanceTimersByTimeAsync(TIER1_DURATION * 60 * 1000);
@@ -183,7 +184,7 @@ describe('PomodoroTimerService', () => {
     it('should calculate Tier 1 (15-24 min) study reward: 0.5x base', async () => {
       service.setConfig({
         durationMinutes: TIER1_DURATION,
-        engagementType: ENGAGEMENT_TYPE.STUDY,
+        engagementType: EngagementType.STUDY,
       });
       await service.startTimer();
       await vi.advanceTimersByTimeAsync(TIER1_DURATION * 60 * 1000);
@@ -199,7 +200,7 @@ describe('PomodoroTimerService', () => {
     it('should calculate Tier 3 (50-75 min) reward: 2.0x base', async () => {
       service.setConfig({
         durationMinutes: TIER3_DURATION,
-        engagementType: ENGAGEMENT_TYPE.WORK,
+        engagementType: EngagementType.WORK,
       });
       await service.startTimer();
       await vi.advanceTimersByTimeAsync(TIER3_DURATION * 60 * 1000);
@@ -215,7 +216,7 @@ describe('PomodoroTimerService', () => {
     it('should calculate Tier 4 (80-120 min) reward: 3.0x base', async () => {
       service.setConfig({
         durationMinutes: TIER4_DURATION,
-        engagementType: ENGAGEMENT_TYPE.STUDY,
+        engagementType: EngagementType.STUDY,
       });
       await service.startTimer();
       await vi.advanceTimersByTimeAsync(TIER4_DURATION * 60 * 1000);

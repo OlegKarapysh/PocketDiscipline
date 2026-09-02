@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { DbService } from '../../../core/services/db.service';
 import { DailyScore } from '../models/daily-score.model';
 import { Observable, from } from 'rxjs';
-import { CURRENT_USER_ID } from '../../../core/services/user.service';
+import { CURRENT_USER_ID } from '../../../core/models/user.model';
 
 const REWARD_PERFECT = 500;
 const REWARD_GOOD = 100;

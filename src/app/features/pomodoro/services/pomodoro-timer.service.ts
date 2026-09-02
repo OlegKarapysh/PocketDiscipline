@@ -1,7 +1,9 @@
 import { Injectable, signal, OnDestroy, inject } from '@angular/core';
 import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
-import { EngagementType, PomodoroSession, POMODORO_SESSION_STATUS, ENGAGEMENT_TYPE } from '../models/pomodoro-session.model';
+import { PomodoroSession } from '../models/pomodoro-session.model';
+import { EngagementType } from '../models/engagement-type.enum';
+import { PomodoroSessionStatus } from '../models/pomodoro-session-status.enum';
 import { MatDialog } from '@angular/material/dialog';
 import { CompletionDialog } from '../components/completion-dialog/completion-dialog';
 
@@ -41,7 +43,7 @@ export interface TimerConfig {
 })
 export class PomodoroTimerService implements OnDestroy {
   durationMinutes = signal<number>(DEFAULT_DURATION_MINUTES);
-  engagementType = signal<EngagementType>(ENGAGEMENT_TYPE.WORK);
+  engagementType = signal<EngagementType>(EngagementType.WORK);
 
   isActive = signal<boolean>(false);
   timeRemaining = signal<number>(DEFAULT_DURATION_MINUTES * SECONDS_IN_MINUTE);
@@ -109,7 +111,7 @@ export class PomodoroTimerService implements OnDestroy {
       durationMinutes: this.durationMinutes(),
       engagementType: this.engagementType(),
       startTime: Date.now(),
-      status: POMODORO_SESSION_STATUS.ACTIVE
+      status: PomodoroSessionStatus.ACTIVE
     };
     
     await this.storage.saveSession(session);
@@ -124,7 +126,7 @@ export class PomodoroTimerService implements OnDestroy {
     const id = this.currentSessionId();
     if (id) {
       await this.storage.updateSession(id, {
-        status: POMODORO_SESSION_STATUS.CANCELLED,
+        status: PomodoroSessionStatus.CANCELLED,
         endTime: Date.now()
       });
     }
@@ -161,7 +163,7 @@ export class PomodoroTimerService implements OnDestroy {
     const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
     
     await this.storage.updateSession(id, {
-      status: POMODORO_SESSION_STATUS.COMPLETED,
+      status: PomodoroSessionStatus.COMPLETED,
       endTime: Date.now(),
       rewardEarned: reward
     });
@@ -195,7 +197,7 @@ export class PomodoroTimerService implements OnDestroy {
   }
 
   private calculateReward(duration: number, type: EngagementType): number {
-    const base = type === ENGAGEMENT_TYPE.WORK ? BASE_REWARD_WORK : BASE_REWARD_STUDY;
+    const base = type === EngagementType.WORK ? BASE_REWARD_WORK : BASE_REWARD_STUDY;
     let multiplier = 0;
     
     if (duration >= DURATION_TIER_1_MIN && duration < DURATION_TIER_2_MIN) {
@@ -213,7 +215,7 @@ export class PomodoroTimerService implements OnDestroy {
 
   private async restoreActiveSession() {
     const sessions = await this.storage.getAllSessions();
-    const active = sessions.find(s => s.status === POMODORO_SESSION_STATUS.ACTIVE);
+    const active = sessions.find(s => s.status === PomodoroSessionStatus.ACTIVE);
     
     if (active) {
       const expectedEnd = active.startTime + (active.durationMinutes * SECONDS_IN_MINUTE * MILLISECONDS_IN_SECOND);

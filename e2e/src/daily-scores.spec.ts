@@ -21,8 +21,8 @@ test.describe('Daily Scores Flow', () => {
     await expect(page.locator('.bars .bar-wrapper')).toHaveCount(7);
 
     // Verify score input prompt and 10 score buttons
-    await expect(page.getByRole('heading', { name: 'How was your discipline today?' })).toBeVisible();
-    const scoreButtons = page.locator('.score-buttons button');
+    await expect(page.getByText("Today's score")).toBeVisible();
+    const scoreButtons = page.locator('.scale-buttons .score-btn');
     await expect(scoreButtons).toHaveCount(10);
   });
 
@@ -30,17 +30,17 @@ test.describe('Daily Scores Flow', () => {
     await page.goto('/dashboard');
 
     // Navigate to Daily Scores via Sidenav
-    await page.locator('mat-nav-list a[routerLink="/daily-scores"]').click();
+    await page.getByRole('link', { name: 'Daily Scores' }).click();
     await expect(page).toHaveURL(/.*daily-scores/);
 
     // Verify loading state finishes
     await expect(page.locator('.loading-state')).not.toBeVisible();
 
     // Select score 10
-    await page.locator('.score-buttons button', { hasText: '10' }).click();
+    await page.getByRole('button', { name: 'Score 10' }).click();
 
     // Submit button should appear
-    const submitButton = page.getByRole('button', { name: 'Submit Score' });
+    const submitButton = page.getByRole('button', { name: 'Save Score' });
     await expect(submitButton).toBeVisible();
     await submitButton.click();
 
@@ -49,9 +49,9 @@ test.describe('Daily Scores Flow', () => {
     await expect(page.locator('.success-message')).toContainText('Awesome! You earned 500₴. Current high score streak: 1');
 
     // Verify readonly state is displayed for today's score
-    await expect(page.locator('.readonly-score')).toBeVisible();
-    await expect(page.locator('.readonly-score .score-circle')).toHaveText('10');
-    await expect(page.getByText('Score set for today!')).toBeVisible();
+    await expect(page.locator('.readonly-container')).toBeVisible();
+    await expect(page.locator('.readonly-score-num')).toHaveText('10');
+    await expect(page.getByText('Score Set for Today')).toBeVisible();
 
     // Verify streak is updated in the stats card
     await expect(page.locator('.stat-value.streak')).toHaveText('1');

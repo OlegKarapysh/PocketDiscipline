@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { UserService } from '../../../../core/services/user.service';
-import { User } from '../../../../core/models/data-models';
+import { User } from '../../../../core/models/user.model';
 import { Observable, from } from 'rxjs';
 
 @Component({

@@ -4,7 +4,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
-import { EngagementType, ENGAGEMENT_TYPE } from '../../models/pomodoro-session.model';
+import { EngagementType } from '../../models/engagement-type.enum';
 
 const MIN_DURATION_MINUTES = 15;
 const MAX_DURATION_MINUTES = 120;
@@ -23,8 +23,8 @@ export class SessionConfig {
   readonly minDuration = MIN_DURATION_MINUTES;
   readonly maxDuration = MAX_DURATION_MINUTES;
   readonly stepDuration = DURATION_STEP_MINUTES;
-  readonly engagementTypeWork = ENGAGEMENT_TYPE.WORK;
-  readonly engagementTypeStudy = ENGAGEMENT_TYPE.STUDY;
+  readonly engagementTypeWork = EngagementType.WORK;
+  readonly engagementTypeStudy = EngagementType.STUDY;
 
   isActive = this.timerService.isActive;
   duration = this.timerService.durationMinutes;

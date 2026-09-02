@@ -1,19 +1,23 @@
 import { Injectable } from '@angular/core';
 import Dexie, { Table } from 'dexie';
-import { User, DisciplineItem } from '../models/data-models';
+import { User, CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
+import { DisciplineItem } from '../models/discipline-item.model';
 import { Goal, GOAL_STATUS } from '../../features/goals/models/goal.model';
 import { DailyTask } from '../../features/daily-tasks/models/daily-task.model';
 import { DailyScore } from '../../features/daily-scores/models/daily-score.model';
-import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from './user.service';
+import { PomodoroSession } from '../../features/pomodoro/models/pomodoro-session.model';
 
 const DATABASE_NAME = 'pocket-discipline-db';
 const GOALS_TABLE_NAME = 'goals';
+const LEGACY_POMODORO_DB_NAME = 'PomodoroDatabase';
+const LEGACY_POMODORO_TABLE_NAME = 'sessions';
 
 const SCHEMA_USERS = 'id';
 const SCHEMA_TASKS = 'id, type, isCompleted';
 const SCHEMA_GOALS = 'id, status';
 const SCHEMA_DAILY_TASKS = 'id';
 const SCHEMA_DAILY_SCORES = 'date';
+const SCHEMA_POMODORO_SESSIONS = 'id, startTime, status';
 
 const INITIAL_GOAL_PUSHUPS = {
   title: 'do 50 push-ups on fists',
@@ -24,7 +28,7 @@ const INITIAL_GOAL_SQUATS = {
   rewardValue: 1500,
 };
 const INITIAL_GOAL_POMODORO = {
-  title: 'do 12 pomodorro a day',
+  title: 'do 12 pomodoro a day',
   rewardValue: 1500,
 };
 
@@ -37,6 +41,7 @@ export class DbService extends Dexie {
   goals!: Table<Goal, string>;
   dailyTasks!: Table<DailyTask, string>;
   dailyScores!: Table<DailyScore, string>;
+  pomodoroSessions!: Table<PomodoroSession, string>;
 
   constructor() {
     super(DATABASE_NAME);
@@ -63,6 +68,10 @@ export class DbService extends Dexie {
       dailyScores: SCHEMA_DAILY_SCORES
     });
 
+    this.version(5).stores({
+      pomodoroSessions: SCHEMA_POMODORO_SESSIONS
+    });
+
     this.on('populate', () => {
       this.users.add({
         id: CURRENT_USER_ID,
@@ -85,7 +94,56 @@ export class DbService extends Dexie {
           updatedAt: Date.now()
         });
       }
+
+      await this.migrateLegacyPomodoroDatabase();
     });
+  }
+
+  private isValidPomodoroSession(item: unknown): item is PomodoroSession {
+    if (!item || typeof item !== 'object') {
+      return false;
+    }
+    const s = item as Partial<PomodoroSession>;
+    return (
+      typeof s.id === 'string' &&
+      s.id.trim().length > 0 &&
+      typeof s.durationMinutes === 'number' &&
+      Number.isFinite(s.durationMinutes) &&
+      typeof s.startTime === 'number' &&
+      Number.isFinite(s.startTime) &&
+      typeof s.status === 'string'
+    );
+  }
+
+  private async migrateLegacyPomodoroDatabase(): Promise<void> {
+    try {
+      const exists = await Dexie.exists(LEGACY_POMODORO_DB_NAME);
+      if (!exists) {
+        return;
+      }
+
+      const oldDb = new Dexie(LEGACY_POMODORO_DB_NAME);
+      oldDb.on('versionchange', () => {
+        oldDb.close();
+      });
+
+      try {
+        await oldDb.open();
+        if (oldDb.tables.some(t => t.name === LEGACY_POMODORO_TABLE_NAME)) {
+          const rawSessions = await oldDb.table(LEGACY_POMODORO_TABLE_NAME).toArray();
+          const validSessions = rawSessions.filter((s): s is PomodoroSession => this.isValidPomodoroSession(s));
+          if (validSessions.length > 0) {
+            await this.pomodoroSessions.bulkPut(validSessions);
+          }
+        }
+      } finally {
+        oldDb.close();
+      }
+
+      await Dexie.delete(LEGACY_POMODORO_DB_NAME);
+    } catch (error) {
+      console.error('Failed to migrate legacy Pomodoro database:', error);
+    }
   }
 
   private getInitialGoals(): Goal[] {
