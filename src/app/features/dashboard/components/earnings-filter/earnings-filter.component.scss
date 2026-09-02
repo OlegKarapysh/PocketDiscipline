@@ -1,0 +1,25 @@
+.earnings-filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+.presets-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+
+  mat-button-toggle-group {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+}
+
+.custom-range-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 320px;
+}

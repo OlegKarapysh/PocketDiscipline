@@ -40,4 +40,13 @@ describe('CompletionDialog', () => {
     const rewardEl = fixture.debugElement.query(By.css('.reward strong'));
     expect(rewardEl.nativeElement.textContent.trim()).toBe('50');
   });
+
+  it('should render an action button to dismiss the dialog', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const button = fixture.debugElement.query(By.css('button[mat-dialog-close]'));
+    expect(button).toBeTruthy();
+    expect(button.nativeElement.textContent.trim()).toBe('Awesome');
+  });
 });

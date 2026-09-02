@@ -1,0 +1,145 @@
+<mat-card class="earnings-chart-card">
+  <mat-card-header>
+    <mat-card-title>Daily Earnings</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content class="chart-content">
+    <div class="legend-container">
+      @for (item of legendItems; track item.label) {
+        <div class="legend-item">
+          <span class="legend-swatch" [style.background-color]="item.color"></span>
+          <span class="legend-label">{{ item.label }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="svg-container">
+      <svg
+        [attr.viewBox]="viewBox"
+        class="earnings-svg"
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label="Daily earnings chart"
+      >
+        <!-- Horizontal Grid Lines and Labels -->
+        @for (line of gridLines(); track line.y) {
+          <line
+            x1="45"
+            [attr.y1]="line.y"
+            x2="585"
+            [attr.y2]="line.y"
+            class="grid-line"
+          />
+          <text
+            x="40"
+            [attr.y]="line.y + 4"
+            class="axis-label-y"
+            text-anchor="end"
+          >
+            {{ line.label }}
+          </text>
+        }
+
+        <!-- Baseline -->
+        <line x1="45" y1="225" x2="585" y2="225" class="baseline" />
+
+        <!-- Bars -->
+        @for (bar of bars(); track bar.date) {
+          <g
+            class="chart-bar-group"
+            (mouseenter)="onBarMouseEnter(bar.record, $event)"
+            (mousemove)="onBarMouseMove($event)"
+            (mouseleave)="onBarMouseLeave()"
+            tabindex="0"
+            [attr.aria-label]="bar.date + ': ' + bar.total + ' points'"
+          >
+            <!-- Invisible hit target for smooth hover -->
+            <rect
+              [attr.x]="bar.x"
+              y="20"
+              [attr.width]="bar.width"
+              height="205"
+              class="bar-hitbox"
+            />
+
+            <!-- Zero earnings indicator line on baseline -->
+            @if (bar.total === 0) {
+              <rect
+                [attr.x]="bar.x"
+                y="223"
+                [attr.width]="bar.width"
+                height="2"
+                class="zero-bar"
+              />
+            }
+
+            <!-- Stacked Segments -->
+            @for (seg of bar.segments; track seg.source) {
+              <rect
+                [attr.x]="bar.x"
+                [attr.y]="seg.y"
+                [attr.width]="bar.width"
+                [attr.height]="seg.height"
+                [attr.fill]="seg.color"
+                class="bar-segment"
+              />
+            }
+
+            <!-- X-Axis Label -->
+            <text
+              [attr.x]="bar.x + bar.width / 2"
+              y="245"
+              class="axis-label-x"
+              text-anchor="middle"
+            >
+              {{ bar.formattedDate }}
+            </text>
+          </g>
+        }
+      </svg>
+    </div>
+
+    <!-- Floating Tooltip -->
+    @if (hoveredRecord(); as record) {
+      <div
+        class="chart-tooltip"
+        [style.left.px]="tooltipPosition()?.x"
+        [style.top.px]="tooltipPosition()?.y"
+      >
+        <div class="tooltip-date">{{ record.date }}</div>
+        <div class="tooltip-total">
+          Total: <strong>{{ record.totalEarned }} pts</strong>
+        </div>
+        <div class="tooltip-breakdown">
+          @if (record.goalsEarned > 0) {
+            <div class="breakdown-row">
+              <span class="breakdown-swatch goals"></span>
+              <span>Goals: {{ record.goalsEarned }} pts</span>
+            </div>
+          }
+          @if (record.dailyTasksEarned > 0) {
+            <div class="breakdown-row">
+              <span class="breakdown-swatch daily-tasks"></span>
+              <span>Daily Tasks: {{ record.dailyTasksEarned }} pts</span>
+            </div>
+          }
+          @if (record.pomodoroEarned > 0) {
+            <div class="breakdown-row">
+              <span class="breakdown-swatch pomodoro"></span>
+              <span>Pomodoro: {{ record.pomodoroEarned }} pts</span>
+            </div>
+          }
+          @if (record.dailyScoresEarned > 0) {
+            <div class="breakdown-row">
+              <span class="breakdown-swatch daily-scores"></span>
+              <span>Daily Score: {{ record.dailyScoresEarned }} pts</span>
+            </div>
+          }
+          @if (record.totalEarned === 0) {
+            <div class="no-earnings-text">No earnings recorded</div>
+          }
+        </div>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>

@@ -6,6 +6,7 @@ import { Goal, GOAL_STATUS } from '../../features/goals/models/goal.model';
 import { DailyTask } from '../../features/daily-tasks/models/daily-task.model';
 import { DailyScore } from '../../features/daily-scores/models/daily-score.model';
 import { PomodoroSession } from '../../features/pomodoro/models/pomodoro-session.model';
+import { DailyTaskCompletion } from '../../features/daily-tasks/models/daily-task-completion.model';
 
 const DATABASE_NAME = 'pocket-discipline-db';
 const GOALS_TABLE_NAME = 'goals';
@@ -18,6 +19,7 @@ const SCHEMA_GOALS = 'id, status';
 const SCHEMA_DAILY_TASKS = 'id';
 const SCHEMA_DAILY_SCORES = 'date';
 const SCHEMA_POMODORO_SESSIONS = 'id, startTime, status';
+const SCHEMA_DAILY_TASK_COMPLETIONS = 'id, date, taskId';
 
 const INITIAL_GOAL_PUSHUPS = {
   title: 'do 50 push-ups on fists',
@@ -42,6 +44,7 @@ export class DbService extends Dexie {
   dailyTasks!: Table<DailyTask, string>;
   dailyScores!: Table<DailyScore, string>;
   pomodoroSessions!: Table<PomodoroSession, string>;
+  dailyTaskCompletions!: Table<DailyTaskCompletion, string>;
 
   constructor() {
     super(DATABASE_NAME);
@@ -70,6 +73,10 @@ export class DbService extends Dexie {
 
     this.version(5).stores({
       pomodoroSessions: SCHEMA_POMODORO_SESSIONS
+    });
+
+    this.version(6).stores({
+      dailyTaskCompletions: SCHEMA_DAILY_TASK_COMPLETIONS
     });
 
     this.on('populate', () => {

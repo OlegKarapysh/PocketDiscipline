@@ -18,6 +18,7 @@ const MIDNIGHT_HOUR = 0;
 const MIDNIGHT_MINUTE = 0;
 const MIDNIGHT_SECOND = 0;
 const MIDNIGHT_MILLISECOND = 0;
+const DATE_LOCALE_CA = 'en-CA';
 
 @Injectable({
   providedIn: 'root'
@@ -95,13 +96,30 @@ export class DailyTasksService {
     const bonusMultiplier = BASE_BONUS_MULTIPLIER + cappedStreakBonus * STREAK_BONUS_RATE;
     const finalReward = Math.round(difficulty.baseReward * bonusMultiplier);
 
-    await this.db.transaction(TRANSACTION_READ_WRITE, this.db.dailyTasks, this.db.users, async () => {
-      await this.db.dailyTasks.update(task.id, {
-        lastCompletedAt: now,
-        streak: newStreak
-      });
+    const todayStr = new Date(now).toLocaleDateString(DATE_LOCALE_CA);
 
-      await this.userService.addBalance(finalReward);
-    });
+    await this.db.transaction(
+      TRANSACTION_READ_WRITE,
+      this.db.dailyTasks,
+      this.db.users,
+      this.db.dailyTaskCompletions,
+      async () => {
+        await this.db.dailyTasks.update(task.id, {
+          lastCompletedAt: now,
+          streak: newStreak
+        });
+
+        await this.db.dailyTaskCompletions.add({
+          id: crypto.randomUUID(),
+          taskId: task.id,
+          date: todayStr,
+          difficultyId: difficulty.id,
+          rewardEarned: finalReward,
+          completedAt: now
+        });
+
+        await this.userService.addBalance(finalReward);
+      }
+    );
   }
 }

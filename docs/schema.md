@@ -63,6 +63,22 @@ export interface DailyTask {
 }
 ```
 
+#### `dailyTaskCompletions`
+**Primary Key**: `id`  
+**Indexed Properties**: `id`, `date`, `taskId`  
+**Description**: Historical log of completed daily tasks across calendar dates, recording difficulty level and reward earned.
+
+```typescript
+export interface DailyTaskCompletion {
+  id: string;           // UUID
+  taskId: string;       // Reference to DailyTask id
+  date: string;         // Format: YYYY-MM-DD
+  difficultyId: string; // Reference to DailyTaskDifficulty id
+  rewardEarned: number; // Reward earned for this completion
+  completedAt: number;  // Timestamp of completion
+}
+```
+
 #### `dailyScores`
 **Primary Key**: `date`  
 **Description**: Daily self-assessment score tracking and streak bonuses.

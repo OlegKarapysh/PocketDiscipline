@@ -25,6 +25,9 @@ describe('DailyTasksService', () => {
       add: ReturnType<typeof vi.fn>;
       update: ReturnType<typeof vi.fn>;
     };
+    dailyTaskCompletions: {
+      add: ReturnType<typeof vi.fn>;
+    };
     users: unknown;
     transaction: ReturnType<typeof vi.fn>;
   };
@@ -39,8 +42,12 @@ describe('DailyTasksService', () => {
         add: vi.fn().mockResolvedValue(undefined),
         update: vi.fn().mockResolvedValue(1),
       },
+      dailyTaskCompletions: {
+        add: vi.fn().mockResolvedValue(undefined),
+      },
       users: {},
-      transaction: vi.fn().mockImplementation(async (_mode, _t1, _t2, callback) => {
+      transaction: vi.fn().mockImplementation(async (...args: unknown[]) => {
+        const callback = args[args.length - 1] as () => Promise<void>;
         await callback();
       }),
     };
@@ -175,6 +182,49 @@ describe('DailyTasksService', () => {
         })
       );
       expect(userMock.addBalance).toHaveBeenCalledWith(EASY_DIFFICULTY.baseReward);
+    });
+
+    it('should record a completion in dailyTaskCompletions table with correct reward and date', async () => {
+      const task: DailyTask = {
+        id: TEST_TASK_ID,
+        title: TEST_TASK_TITLE,
+        difficulties: [EASY_DIFFICULTY],
+        createdAt: Date.now() - ONE_DAY_MS,
+        streak: ZERO_VALUE,
+        lastCompletedAt: null,
+      };
+
+      await service.completeTask(task, EASY_DIFFICULTY);
+
+      expect(dbMock.dailyTaskCompletions.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          taskId: TEST_TASK_ID,
+          difficultyId: EASY_DIFFICULTY.id,
+          rewardEarned: EASY_DIFFICULTY.baseReward,
+          date: expect.any(String),
+        })
+      );
+    });
+
+    it('should keep current streak if completed on the same day', async () => {
+      const now = Date.now();
+      const task: DailyTask = {
+        id: TEST_TASK_ID,
+        title: TEST_TASK_TITLE,
+        difficulties: [EASY_DIFFICULTY],
+        createdAt: now - ONE_DAY_MS,
+        streak: STREAK_FIVE,
+        lastCompletedAt: now - 1000, // completed earlier today
+      };
+
+      await service.completeTask(task, EASY_DIFFICULTY);
+
+      expect(dbMock.dailyTasks.update).toHaveBeenCalledWith(
+        TEST_TASK_ID,
+        expect.objectContaining({
+          streak: STREAK_FIVE,
+        })
+      );
     });
   });
 });

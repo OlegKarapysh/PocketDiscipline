@@ -1,0 +1,110 @@
+.earnings-stats-card {
+  margin-top: 16px;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 8px;
+}
+
+.month-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 280px;
+}
+
+.month-label {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.stats-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.empty-earnings-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f5f5f5;
+  color: #616161;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  .empty-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.stat-highlight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.value-number {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.value-unit {
+  font-size: 0.95rem;
+  color: #757575;
+}
+
+.stat-context {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+.stat-secondary {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 12px;
+}
+
+.secondary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.secondary-label {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.secondary-value {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
