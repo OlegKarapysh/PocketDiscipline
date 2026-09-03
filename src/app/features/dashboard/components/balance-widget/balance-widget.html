@@ -1,15 +1,15 @@
 <mat-card class="balance-card">
   <mat-card-content class="content">
-    <div class="icon-container">
-      <mat-icon color="primary" class="coin-icon">account_balance_wallet</mat-icon>
-    </div>
+    <mat-icon color="primary" class="coin-icon">account_balance_wallet</mat-icon>
     <div class="balance-info">
       <span class="label">Current Balance</span>
-      @if (user$ | async; as user) {
-        <h2 class="amount">{{ user.balance | number: '1.0-0' }} ₴</h2>
-      } @else {
-        <h2 class="amount">-- ₴</h2>
-      }
+      <h2 class="amount">
+        @if (user$ | async; as user) {
+          {{ user.balance | number: '1.0-0' }} ₴
+        } @else {
+          -- ₴
+        }
+      </h2>
     </div>
   </mat-card-content>
 </mat-card>

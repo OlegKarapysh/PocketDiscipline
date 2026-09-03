@@ -1,21 +1,26 @@
-<div class="chart-container">
-  <h3>Last 7 Days</h3>
-  
-  @if (chartData().length > 0) {
-    <div class="bars">
-      @for (item of chartData(); track item.date) {
-        <div class="bar-wrapper">
-          <div class="score-label">{{ item.score !== null ? item.score : '-' }}</div>
-          <div class="bar" 
-               [style.height.%]="item.score ? item.score * 10 : 0"
-               [class.empty]="!item.score"
-               [class.high-score]="item.score && item.score >= 9">
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-card-title>Last 7 Days</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    @if (chartData().length > 0) {
+      <div class="bars">
+        @for (item of chartData(); track item.date) {
+          <div class="bar-wrapper">
+            <div class="score-label">{{ item.score !== null ? item.score : '-' }}</div>
+            <div
+              class="bar"
+              [style.height.%]="item.score ? item.score * 10 : 0"
+              [class.empty]="!item.score"
+              [class.high-score]="item.score && item.score >= 9"
+            ></div>
+            <div class="day-label">{{ item.dayOfWeek }}</div>
           </div>
-          <div class="day-label">{{ item.dayOfWeek }}</div>
-        </div>
-      }
-    </div>
-  } @else {
-    <p class="no-data">No scores yet for the last 7 days.</p>
-  }
-</div>
+        }
+      </div>
+    } @else {
+      <p class="no-data">No scores yet for the last 7 days.</p>
+    }
+  </mat-card-content>
+</mat-card>

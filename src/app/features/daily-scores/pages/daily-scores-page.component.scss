@@ -1,21 +1,29 @@
 .page-container {
+  max-width: 800px;
+  margin: 0 auto;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.loading-state {
-  padding: 24px;
-  text-align: center;
+.page-title {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 48px 16px;
 }
 
 .success-message {
-  margin-top: 24px;
   padding: 16px;
-  background-color: #4caf50;
-  color: white;
-  border-radius: 8px;
+  background-color: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+  border-radius: 12px;
   text-align: center;
+  font: var(--mat-sys-body-medium);
   font-weight: 500;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
 }

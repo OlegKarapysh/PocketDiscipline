@@ -1,9 +1,9 @@
 import { Component, output } from '@angular/core';
-
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 
@@ -17,7 +17,7 @@ const DEFAULT_NEW_DIFFICULTY_REWARD = 100;
 const MIN_DIFFICULTIES_COUNT = 1;
 
 @Component({
-  imports: [FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
+  imports: [FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCardModule, MatIconModule],
   selector: 'app-daily-task-form',
   templateUrl: './daily-task-form.component.html',
   styleUrl: './daily-task-form.component.scss',

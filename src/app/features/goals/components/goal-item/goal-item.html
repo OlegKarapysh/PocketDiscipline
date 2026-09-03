@@ -1,4 +1,4 @@
-<mat-card class="goal-card" [class.completed]="goal().status === 'COMPLETED'">
+<mat-card appearance="outlined" class="goal-card" [class.completed]="goal().status === 'COMPLETED'">
   <mat-card-header>
     <mat-card-title>{{ goal().title }}</mat-card-title>
     <mat-card-subtitle>Reward: {{ goal().rewardValue }} ₴</mat-card-subtitle>

@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { MatCardModule } from '@angular/material/card';
 import { DailyScore } from '../../models/daily-score.model';
 import { ChartDayData } from '../../models/chart-day-data.model';
 
@@ -9,7 +10,7 @@ const WEEKDAY_FORMAT = 'short';
 
 @Component({
   selector: 'app-scores-chart',
-  imports: [],
+  imports: [MatCardModule],
   templateUrl: './scores-chart.component.html',
   styleUrl: './scores-chart.component.scss',
 })

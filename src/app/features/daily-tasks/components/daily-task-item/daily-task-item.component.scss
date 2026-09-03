@@ -1,29 +1,29 @@
 .task-card {
-  margin-bottom: 1rem;
   transition: opacity 0.3s ease;
 
   &.completed {
-    opacity: 0.6;
+    opacity: 0.65;
   }
 }
 
 .streak-badge {
   font-weight: bold;
-  color: #ff9800;
+  color: var(--mat-sys-tertiary);
 }
 
 .completed-msg {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: var(--mat-sys-primary, #4caf50);
+  gap: 8px;
+  color: var(--mat-sys-primary);
+  font: var(--mat-sys-body-medium);
   font-weight: 500;
-  margin-top: 1rem;
+  margin-top: 8px;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0 8px; /* match mat-card-actions padding */
+  gap: 8px;
+  padding: 0 8px;
 }

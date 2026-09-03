@@ -1,37 +1,50 @@
-<div class="form-container mat-elevation-z2">
-  <h3 class="mat-h3 form-title">Add New Daily Task</h3>
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-card-title>Add New Daily Task</mat-card-title>
+  </mat-card-header>
 
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Title</mat-label>
-    <input matInput type="text" [(ngModel)]="title" placeholder="e.g. Morning Workout" />
-  </mat-form-field>
+  <mat-card-content class="form-content">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Title</mat-label>
+      <input matInput type="text" [(ngModel)]="title" placeholder="e.g. Morning Workout" />
+    </mat-form-field>
 
-  <div class="difficulties-section">
-    <h4 class="mat-h4">Difficulties</h4>
-    @for (diff of difficulties; track diff; let i = $index) {
-      <div class="difficulty-row">
-        <mat-form-field appearance="outline" class="diff-name">
-          <mat-label>Name</mat-label>
-          <input matInput type="text" [(ngModel)]="diff.name" placeholder="e.g. Easy" />
-        </mat-form-field>
-        
-        <mat-form-field appearance="outline" class="diff-reward">
-          <mat-label>Reward</mat-label>
-          <input matInput type="number" [(ngModel)]="diff.baseReward" placeholder="Reward" />
-        </mat-form-field>
+    <div class="difficulties-section">
+      <h4 class="section-title">Difficulties</h4>
+      @for (diff of difficulties; track diff; let i = $index) {
+        <div class="difficulty-row">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="diff-name">
+            <mat-label>Name</mat-label>
+            <input matInput type="text" [(ngModel)]="diff.name" placeholder="e.g. Easy" />
+          </mat-form-field>
 
-        <button mat-icon-button color="warn" (click)="removeDifficulty(i)" [disabled]="difficulties.length === 1" aria-label="Remove difficulty">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </div>
-    }
-    <button mat-stroked-button color="primary" type="button" (click)="addDifficulty()">
-      <mat-icon>add</mat-icon> Add Difficulty
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="diff-reward">
+            <mat-label>Reward</mat-label>
+            <input matInput type="number" [(ngModel)]="diff.baseReward" placeholder="Reward" />
+          </mat-form-field>
+
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="removeDifficulty(i)"
+            [disabled]="difficulties.length === 1"
+            aria-label="Remove difficulty"
+            type="button"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      }
+      <button mat-stroked-button color="primary" type="button" (click)="addDifficulty()">
+        <mat-icon>add</mat-icon> Add Difficulty
+      </button>
+    </div>
+  </mat-card-content>
+
+  <mat-card-actions align="end" class="actions">
+    <button mat-button type="button" (click)="cancelForm.emit()">Cancel</button>
+    <button mat-flat-button color="primary" type="button" [disabled]="!title" (click)="submit()">
+      Save Task
     </button>
-  </div>
-
-  <div class="actions">
-    <button mat-button (click)="cancelForm.emit()">Cancel</button>
-    <button mat-flat-button color="primary" [disabled]="!title" (click)="submit()">Save Task</button>
-  </div>
-</div>
+  </mat-card-actions>
+</mat-card>

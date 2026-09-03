@@ -1,6 +1,6 @@
 .timer-display {
   text-align: center;
-  padding: 2rem;
+  padding: 32px 16px;
 }
 
 .time {
@@ -11,12 +11,12 @@
 }
 
 .status {
-  margin-top: 1rem;
-  font-size: 1.2rem;
-  color: #666;
-}
+  margin-top: 16px;
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface-variant);
 
-.status.active {
-  color: #e91e63;
-  font-weight: bold;
+  &.active {
+    color: var(--mat-sys-primary);
+    font-weight: bold;
+  }
 }

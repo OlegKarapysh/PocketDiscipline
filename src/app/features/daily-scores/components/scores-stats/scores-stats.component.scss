@@ -1,25 +1,24 @@
 .stats-container {
   display: flex;
   gap: 16px;
-  margin-top: 16px;
   justify-content: center;
 }
 
 .stat-card {
-  background: white;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   flex: 1;
   max-width: 200px;
+}
+
+.stat-card-content {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 16px;
 }
 
 .stat-title {
-  font-size: 14px;
-  color: #666;
+  font: var(--mat-sys-label-medium);
+  color: var(--mat-sys-on-surface-variant);
   text-transform: uppercase;
   font-weight: 500;
 }
@@ -27,19 +26,20 @@
 .stat-value {
   font-size: 36px;
   font-weight: bold;
-  color: #3f51b5;
+  color: var(--mat-sys-primary);
   margin: 8px 0;
-}
+  line-height: 1.1;
 
-.stat-value.no-data {
-  color: #ccc;
-}
+  &.no-data {
+    color: var(--mat-sys-outline);
+  }
 
-.stat-value.streak.active {
-  color: #ff9800;
+  &.streak.active {
+    color: var(--mat-sys-tertiary);
+  }
 }
 
 .stat-subtitle {
-  font-size: 12px;
-  color: #888;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
 }

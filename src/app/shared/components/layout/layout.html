@@ -11,7 +11,7 @@
       @for (item of navItems; track item.path) {
         <a mat-list-item [routerLink]="item.path" (click)="onNavClick(drawer)">
           <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-          <span matListItemTitle class="nav-label">{{ item.label }}</span>
+          <span matListItemTitle>{{ item.label }}</span>
         </a>
       }
     </mat-nav-list>

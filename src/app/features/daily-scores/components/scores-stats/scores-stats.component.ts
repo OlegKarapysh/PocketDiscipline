@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { MatCardModule } from '@angular/material/card';
 import { DailyScore } from '../../models/daily-score.model';
 
 const DEFAULT_AVERAGE = 0;
@@ -9,7 +10,7 @@ const YESTERDAY_OFFSET = 1;
 
 @Component({
   selector: 'app-scores-stats',
-  imports: [],
+  imports: [MatCardModule],
   templateUrl: './scores-stats.component.html',
   styleUrl: './scores-stats.component.scss',
 })

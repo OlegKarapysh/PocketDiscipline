@@ -1,16 +1,20 @@
 <div class="stats-container">
-  <div class="stat-card">
-    <div class="stat-title">Month Avg</div>
-    <div class="stat-value" [class.no-data]="monthlyAverage() === 0">
-      {{ monthlyAverage() > 0 ? monthlyAverage() : '-' }}
-    </div>
-  </div>
-  
-  <div class="stat-card">
-    <div class="stat-title">Current Streak</div>
-    <div class="stat-value streak" [class.active]="currentStreak() > 0">
-      {{ currentStreak() }}
-    </div>
-    <div class="stat-subtitle">High Scores</div>
-  </div>
+  <mat-card appearance="outlined" class="stat-card">
+    <mat-card-content class="stat-card-content">
+      <div class="stat-title">Month Avg</div>
+      <div class="stat-value" [class.no-data]="monthlyAverage() === 0">
+        {{ monthlyAverage() > 0 ? monthlyAverage() : '-' }}
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined" class="stat-card">
+    <mat-card-content class="stat-card-content">
+      <div class="stat-title">Current Streak</div>
+      <div class="stat-value streak" [class.active]="currentStreak() > 0">
+        {{ currentStreak() }}
+      </div>
+      <div class="stat-subtitle">High Scores</div>
+    </mat-card-content>
+  </mat-card>
 </div>
