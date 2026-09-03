@@ -126,5 +126,14 @@ describe('EarningsStatsComponent', () => {
     const emptyIndicator = compiled.querySelector('.empty-earnings-indicator');
     expect(emptyIndicator).toBeFalsy();
   });
+
+  it('should not render stat content when summary is null', () => {
+    fixture.componentRef.setInput('summary', null);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.stat-highlight')).toBeNull();
+    expect(compiled.querySelector('.empty-earnings-indicator')).toBeNull();
+  });
 });
 

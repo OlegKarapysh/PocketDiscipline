@@ -9,4 +9,5 @@ export interface ChartBar {
   width: number;
   segments: ChartBarSegment[];
   record: DailyEarningsRecord;
+  shouldShowLabel: boolean;
 }

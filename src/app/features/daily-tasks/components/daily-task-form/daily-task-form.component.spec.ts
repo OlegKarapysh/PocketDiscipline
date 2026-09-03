@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DailyTaskFormComponent } from './daily-task-form.component';
-import { DailyTaskDifficulty } from '../../models/daily-task.model';
+import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 
 const TEST_TASK_TITLE = 'Read 30 mins';
 const INITIAL_DIFFICULTIES_COUNT = 3;

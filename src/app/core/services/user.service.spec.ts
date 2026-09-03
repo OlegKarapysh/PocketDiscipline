@@ -5,9 +5,7 @@ import { DbService } from './db.service';
 import { EventBusService, EVENT_TYPE } from './event-bus.service';
 import { User, CURRENT_USER_ID, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
 
-const TEST_INITIAL_BALANCE = 500;
-const TEST_ADD_REWARD = 200;
-const TEST_DEDUCT_REWARD = -200;
+
 
 describe('UserService', () => {
   let service: UserService;
@@ -47,18 +45,18 @@ describe('UserService', () => {
       const existingUser: User = {
         id: CURRENT_USER_ID,
         name: 'Current',
-        balance: TEST_INITIAL_BALANCE,
+        balance: 500,
         createdAt: 1000,
         updatedAt: 1000,
       };
       dbMock.users.get.mockResolvedValue(existingUser);
 
-      await service.addBalance(TEST_ADD_REWARD);
+      await service.addBalance(200);
 
       expect(dbMock.users.update).toHaveBeenCalledWith(
         CURRENT_USER_ID,
         expect.objectContaining({
-          balance: TEST_INITIAL_BALANCE + TEST_ADD_REWARD,
+          balance: 500 + 200,
         })
       );
     });
@@ -67,18 +65,18 @@ describe('UserService', () => {
       const existingUser: User = {
         id: CURRENT_USER_ID,
         name: 'Current',
-        balance: TEST_INITIAL_BALANCE,
+        balance: 500,
         createdAt: 1000,
         updatedAt: 1000,
       };
       dbMock.users.get.mockResolvedValue(existingUser);
 
-      await service.addBalance(TEST_DEDUCT_REWARD);
+      await service.addBalance(-200);
 
       expect(dbMock.users.update).toHaveBeenCalledWith(
         CURRENT_USER_ID,
         expect.objectContaining({
-          balance: TEST_INITIAL_BALANCE + TEST_DEDUCT_REWARD,
+          balance: 500 + -200,
         })
       );
     });
@@ -86,12 +84,12 @@ describe('UserService', () => {
     it('should create new user record if user not found in database', async () => {
       dbMock.users.get.mockResolvedValue(undefined);
 
-      await service.addBalance(TEST_ADD_REWARD);
+      await service.addBalance(200);
 
       expect(dbMock.users.add).toHaveBeenCalledWith(
         expect.objectContaining({
           id: CURRENT_USER_ID,
-          balance: TEST_ADD_REWARD,
+          balance: 200,
         })
       );
     });
@@ -110,7 +108,7 @@ describe('UserService', () => {
 
       eventBus.emit({
         type: EVENT_TYPE.REWARD_EARNED,
-        payload: { points: TEST_ADD_REWARD },
+        payload: { points: 200 },
         source: 'test',
       });
 
@@ -120,7 +118,7 @@ describe('UserService', () => {
       expect(dbMock.users.update).toHaveBeenCalledWith(
         CURRENT_USER_ID,
         expect.objectContaining({
-          balance: DEFAULT_INITIAL_BALANCE + TEST_ADD_REWARD,
+          balance: DEFAULT_INITIAL_BALANCE + 200,
         })
       );
     });

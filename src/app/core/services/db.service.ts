@@ -8,31 +8,6 @@ import { DailyScore } from '../../features/daily-scores/models/daily-score.model
 import { PomodoroSession } from '../../features/pomodoro/models/pomodoro-session.model';
 import { DailyTaskCompletion } from '../../features/daily-tasks/models/daily-task-completion.model';
 
-const DATABASE_NAME = 'pocket-discipline-db';
-const GOALS_TABLE_NAME = 'goals';
-const LEGACY_POMODORO_DB_NAME = 'PomodoroDatabase';
-const LEGACY_POMODORO_TABLE_NAME = 'sessions';
-
-const SCHEMA_USERS = 'id';
-const SCHEMA_TASKS = 'id, type, isCompleted';
-const SCHEMA_GOALS = 'id, status';
-const SCHEMA_DAILY_TASKS = 'id';
-const SCHEMA_DAILY_SCORES = 'date';
-const SCHEMA_POMODORO_SESSIONS = 'id, startTime, status';
-const SCHEMA_DAILY_TASK_COMPLETIONS = 'id, date, taskId';
-
-const INITIAL_GOAL_PUSHUPS = {
-  title: 'do 50 push-ups on fists',
-  rewardValue: 2000,
-};
-const INITIAL_GOAL_SQUATS = {
-  title: 'do 100 squats',
-  rewardValue: 1500,
-};
-const INITIAL_GOAL_POMODORO = {
-  title: 'do 12 pomodoro a day',
-  rewardValue: 1500,
-};
 
 @Injectable({
   providedIn: 'root'
@@ -47,36 +22,40 @@ export class DbService extends Dexie {
   dailyTaskCompletions!: Table<DailyTaskCompletion, string>;
 
   constructor() {
-    super(DATABASE_NAME);
+    super('pocket-discipline-db');
 
     this.version(1).stores({
-      users: SCHEMA_USERS,
-      tasks: SCHEMA_TASKS
+      users: 'id',
+      tasks: 'id, type, isCompleted'
     });
 
     this.version(2).stores({
-      goals: SCHEMA_GOALS
+      goals: 'id, status'
     }).upgrade(async (tx) => {
-      const goalsCount = await tx.table(GOALS_TABLE_NAME).count();
+      const goalsCount = await tx.table('goals').count();
       if (goalsCount === 0) {
-        await tx.table(GOALS_TABLE_NAME).bulkAdd(this.getInitialGoals());
+        await tx.table('goals').bulkAdd(this.getInitialGoals());
       }
     });
 
     this.version(3).stores({
-      dailyTasks: SCHEMA_DAILY_TASKS
+      dailyTasks: 'id'
     });
 
     this.version(4).stores({
-      dailyScores: SCHEMA_DAILY_SCORES
+      dailyScores: 'date'
     });
 
     this.version(5).stores({
-      pomodoroSessions: SCHEMA_POMODORO_SESSIONS
+      pomodoroSessions: 'id, startTime, status'
     });
 
     this.version(6).stores({
-      dailyTaskCompletions: SCHEMA_DAILY_TASK_COMPLETIONS
+      dailyTaskCompletions: 'id, date, taskId'
+    });
+
+    this.version(7).stores({
+      goals: 'id, status, completedAt'
     });
 
     this.on('populate', () => {
@@ -124,20 +103,20 @@ export class DbService extends Dexie {
 
   private async migrateLegacyPomodoroDatabase(): Promise<void> {
     try {
-      const exists = await Dexie.exists(LEGACY_POMODORO_DB_NAME);
+      const exists = await Dexie.exists('PomodoroDatabase');
       if (!exists) {
         return;
       }
 
-      const oldDb = new Dexie(LEGACY_POMODORO_DB_NAME);
+      const oldDb = new Dexie('PomodoroDatabase');
       oldDb.on('versionchange', () => {
         oldDb.close();
       });
 
       try {
         await oldDb.open();
-        if (oldDb.tables.some(t => t.name === LEGACY_POMODORO_TABLE_NAME)) {
-          const rawSessions = await oldDb.table(LEGACY_POMODORO_TABLE_NAME).toArray();
+        if (oldDb.tables.some(t => t.name === 'sessions')) {
+          const rawSessions = await oldDb.table('sessions').toArray();
           const validSessions = rawSessions.filter((s): s is PomodoroSession => this.isValidPomodoroSession(s));
           if (validSessions.length > 0) {
             await this.pomodoroSessions.bulkPut(validSessions);
@@ -147,7 +126,7 @@ export class DbService extends Dexie {
         oldDb.close();
       }
 
-      await Dexie.delete(LEGACY_POMODORO_DB_NAME);
+      await Dexie.delete('PomodoroDatabase');
     } catch (error) {
       console.error('Failed to migrate legacy Pomodoro database:', error);
     }
@@ -157,24 +136,24 @@ export class DbService extends Dexie {
     return [
       {
         id: crypto.randomUUID(),
-        title: INITIAL_GOAL_PUSHUPS.title,
-        rewardValue: INITIAL_GOAL_PUSHUPS.rewardValue,
+        title: 'do 50 push-ups on fists',
+        rewardValue: 2000,
         status: GOAL_STATUS.ACTIVE,
         completedAt: null,
         createdAt: Date.now()
       },
       {
         id: crypto.randomUUID(),
-        title: INITIAL_GOAL_SQUATS.title,
-        rewardValue: INITIAL_GOAL_SQUATS.rewardValue,
+        title: 'do 100 squats',
+        rewardValue: 1500,
         status: GOAL_STATUS.ACTIVE,
         completedAt: null,
         createdAt: Date.now()
       },
       {
         id: crypto.randomUUID(),
-        title: INITIAL_GOAL_POMODORO.title,
-        rewardValue: INITIAL_GOAL_POMODORO.rewardValue,
+        title: 'do 12 pomodoro a day',
+        rewardValue: 1500,
         status: GOAL_STATUS.ACTIVE,
         completedAt: null,
         createdAt: Date.now()

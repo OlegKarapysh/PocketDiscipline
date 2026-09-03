@@ -19,8 +19,20 @@ const GRID_STEP_ROUNDING = 500;
 const GRID_DIVISION_COUNT = 4;
 const ZERO_VALUE = 0;
 const BAR_INNER_GAP_FRACTION = 0.35;
+const MIN_BAR_WIDTH = 4;
 const TOOLTIP_OFFSET_X = 10;
 const TOOLTIP_OFFSET_Y = 15;
+const DIVISOR_TWO = 2;
+const DATE_PARTS_LENGTH = 3;
+const DATE_PART_MONTH_INDEX = 1;
+const DATE_PART_DAY_INDEX = 2;
+const MAX_BARS_FOR_ALL_LABELS = 10;
+const MAX_BARS_FOR_HALF_LABELS = 16;
+const MAX_BARS_FOR_MONTH_LABELS = 31;
+const LABEL_STEP_HALF = 2;
+const LABEL_STEP_MONTH = 5;
+const LABEL_STEP_DIVISOR = 7;
+const AXIS_LABEL_X_OFFSET = 5;
 
 const SOURCE_COLORS: Record<EarningsSource, string> = {
   [EarningsSource.GOALS]: '#3f51b5',
@@ -51,6 +63,17 @@ export class EarningsChartComponent {
 
   readonly viewBox = `${ZERO_VALUE} ${ZERO_VALUE} ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`;
 
+  readonly chartBaselineY = VIEWBOX_HEIGHT - PADDING_BOTTOM;
+  readonly chartTopY = PADDING_TOP;
+  readonly chartHeight = VIEWBOX_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+  readonly chartLeftX = PADDING_LEFT;
+  readonly chartRightX = VIEWBOX_WIDTH - PADDING_RIGHT;
+  readonly yAxisTextX = PADDING_LEFT - AXIS_LABEL_X_OFFSET;
+  readonly axisLabelYOffset = 4;
+  readonly axisLabelYPos = 245;
+  readonly zeroBarY = 223;
+  readonly zeroBarHeight = 2;
+
   readonly legendItems = [
     { label: SOURCE_LABELS[EarningsSource.GOALS], color: SOURCE_COLORS[EarningsSource.GOALS] },
     { label: SOURCE_LABELS[EarningsSource.DAILY_TASKS], color: SOURCE_COLORS[EarningsSource.DAILY_TASKS] },
@@ -63,7 +86,7 @@ export class EarningsChartComponent {
     if (recs.length === ZERO_VALUE) {
       return MIN_MAX_EARNINGS;
     }
-    const maxVal = Math.max(...recs.map(r => r.totalEarned), ZERO_VALUE);
+    const maxVal = recs.reduce((max, r) => Math.max(max, r.totalEarned), ZERO_VALUE);
     if (maxVal <= MIN_MAX_EARNINGS) {
       return MIN_MAX_EARNINGS;
     }
@@ -72,7 +95,7 @@ export class EarningsChartComponent {
 
   readonly gridLines = computed<ChartGridLine[]>(() => {
     const max = this.maxDailyEarned();
-    const chartHeight = VIEWBOX_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
+    const chartHeight = this.chartHeight;
     const lines: ChartGridLine[] = [];
 
     for (let i = 0; i <= GRID_DIVISION_COUNT; i++) {
@@ -85,22 +108,33 @@ export class EarningsChartComponent {
 
   readonly bars = computed<ChartBar[]>(() => {
     const recs = this.records();
-    if (recs.length === ZERO_VALUE) {
+    const totalBars = recs.length;
+    if (totalBars === ZERO_VALUE) {
       return [];
     }
 
     const max = this.maxDailyEarned();
-    const chartWidth = VIEWBOX_WIDTH - PADDING_LEFT - PADDING_RIGHT;
-    const chartHeight = VIEWBOX_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
-    const baselineY = VIEWBOX_HEIGHT - PADDING_BOTTOM;
+    const chartWidth = this.chartRightX - this.chartLeftX;
+    const chartHeight = this.chartHeight;
+    const baselineY = this.chartBaselineY;
 
-    const slotWidth = chartWidth / recs.length;
-    const barWidth = Math.max(slotWidth * (1 - BAR_INNER_GAP_FRACTION), 4);
-    const gap = (slotWidth - barWidth) / 2;
+    const slotWidth = chartWidth / totalBars;
+    const barWidth = Math.max(slotWidth * (1 - BAR_INNER_GAP_FRACTION), MIN_BAR_WIDTH);
+    const gap = (slotWidth - barWidth) / DIVISOR_TWO;
+
+    let labelInterval = 1;
+    if (totalBars > MAX_BARS_FOR_MONTH_LABELS) {
+      labelInterval = Math.ceil(totalBars / LABEL_STEP_DIVISOR);
+    } else if (totalBars > MAX_BARS_FOR_HALF_LABELS) {
+      labelInterval = LABEL_STEP_MONTH;
+    } else if (totalBars > MAX_BARS_FOR_ALL_LABELS) {
+      labelInterval = LABEL_STEP_HALF;
+    }
 
     return recs.map((record, index) => {
       const x = PADDING_LEFT + index * slotWidth + gap;
       const formattedDate = this.formatDateLabel(record.date);
+      const shouldShowLabel = index === ZERO_VALUE || index === totalBars - 1 || index % labelInterval === ZERO_VALUE;
       const segments: ChartBarSegment[] = [];
 
       let currentY = baselineY;
@@ -133,6 +167,7 @@ export class EarningsChartComponent {
         width: barWidth,
         segments,
         record,
+        shouldShowLabel,
       };
     });
   });
@@ -159,10 +194,32 @@ export class EarningsChartComponent {
     this.tooltipPosition.set(null);
   }
 
+  onBarClick(record: DailyEarningsRecord, event: MouseEvent): void {
+    if (this.hoveredRecord()?.date === record.date) {
+      this.onBarMouseLeave();
+    } else {
+      this.onBarMouseEnter(record, event);
+    }
+  }
+
+  onBarFocus(record: DailyEarningsRecord, event: FocusEvent): void {
+    const target = event.currentTarget as HTMLElement | null;
+    const rect = target?.getBoundingClientRect();
+    this.hoveredRecord.set(record);
+    this.tooltipPosition.set({
+      x: (rect?.left ?? ZERO_VALUE) + (rect?.width ?? ZERO_VALUE) / DIVISOR_TWO,
+      y: (rect?.top ?? ZERO_VALUE) - TOOLTIP_OFFSET_Y,
+    });
+  }
+
+  onBarBlur(): void {
+    this.onBarMouseLeave();
+  }
+
   private formatDateLabel(dateStr: string): string {
     const parts = dateStr.split('-');
-    if (parts.length === 3) {
-      return `${parts[1]}/${parts[2]}`;
+    if (parts.length === DATE_PARTS_LENGTH) {
+      return `${parts[DATE_PART_MONTH_INDEX]}/${parts[DATE_PART_DAY_INDEX]}`;
     }
     return dateStr;
   }

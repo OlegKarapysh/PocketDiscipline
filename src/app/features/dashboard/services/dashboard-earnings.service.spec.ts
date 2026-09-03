@@ -4,6 +4,16 @@ import { firstValueFrom } from 'rxjs';
 import { DashboardEarningsService } from './dashboard-earnings.service';
 import { DbService } from '../../../core/services/db.service';
 import { GOAL_STATUS } from '../../goals/models/goal.model';
+import { PomodoroSessionStatus } from '../../pomodoro/models/pomodoro-session-status.enum';
+
+vi.mock('dexie', () => {
+  class MockDexie {}
+  return {
+    default: MockDexie,
+    Dexie: MockDexie,
+    liveQuery: (fn: () => unknown) => fn(),
+  };
+});
 
 describe('DashboardEarningsService', () => {
   let service: DashboardEarningsService;
@@ -49,7 +59,7 @@ describe('DashboardEarningsService', () => {
       durationMinutes: 25,
       engagementType: 'work',
       startTime: new Date('2026-09-01T15:00:00').getTime(),
-      status: 'completed',
+      status: PomodoroSessionStatus.COMPLETED,
       rewardEarned: 250,
     },
   ];
@@ -69,7 +79,13 @@ describe('DashboardEarningsService', () => {
     dbMock = {
       goals: {
         where: vi.fn().mockReturnValue({
+          between: vi.fn().mockReturnValue({
+            toArray: vi.fn().mockResolvedValue(sampleGoals),
+          }),
           equals: vi.fn().mockReturnValue({
+            filter: vi.fn().mockImplementation((predicate: (goal: (typeof sampleGoals)[number]) => boolean) => ({
+              toArray: vi.fn().mockResolvedValue(sampleGoals.filter(predicate)),
+            })),
             toArray: vi.fn().mockResolvedValue(sampleGoals),
           }),
         }),
@@ -83,7 +99,7 @@ describe('DashboardEarningsService', () => {
       },
       pomodoroSessions: {
         where: vi.fn().mockReturnValue({
-          equals: vi.fn().mockReturnValue({
+          between: vi.fn().mockReturnValue({
             toArray: vi.fn().mockResolvedValue(sampleSessions),
           }),
         }),
@@ -113,32 +129,40 @@ describe('DashboardEarningsService', () => {
       expect(range.startDate).toBeDefined();
       expect(range.endDate).toBeDefined();
 
-      const start = new Date(range.startDate);
-      const end = new Date(range.endDate);
+      const [sY, sM, sD] = range.startDate.split('-').map(Number);
+      const [eY, eM, eD] = range.endDate.split('-').map(Number);
+      const start = new Date(sY, sM - 1, sD);
+      const end = new Date(eY, eM - 1, eD);
       const diffDays = Math.round((end.getTime() - start.getTime()) / 86_400_000);
       expect(diffDays).toBe(6);
     });
 
     it('should return 14 days range for last14 preset', () => {
       const range = service.getPresetDateRange('last14');
-      const start = new Date(range.startDate);
-      const end = new Date(range.endDate);
+      const [sY, sM, sD] = range.startDate.split('-').map(Number);
+      const [eY, eM, eD] = range.endDate.split('-').map(Number);
+      const start = new Date(sY, sM - 1, sD);
+      const end = new Date(eY, eM - 1, eD);
       const diffDays = Math.round((end.getTime() - start.getTime()) / 86_400_000);
       expect(diffDays).toBe(13);
     });
 
     it('should return 30 days range for last30 preset', () => {
       const range = service.getPresetDateRange('last30');
-      const start = new Date(range.startDate);
-      const end = new Date(range.endDate);
+      const [sY, sM, sD] = range.startDate.split('-').map(Number);
+      const [eY, eM, eD] = range.endDate.split('-').map(Number);
+      const start = new Date(sY, sM - 1, sD);
+      const end = new Date(eY, eM - 1, eD);
       const diffDays = Math.round((end.getTime() - start.getTime()) / 86_400_000);
       expect(diffDays).toBe(29);
     });
 
     it('should fallback to 7 days offset when custom preset is passed', () => {
       const range = service.getPresetDateRange('custom');
-      const start = new Date(range.startDate);
-      const end = new Date(range.endDate);
+      const [sY, sM, sD] = range.startDate.split('-').map(Number);
+      const [eY, eM, eD] = range.endDate.split('-').map(Number);
+      const start = new Date(sY, sM - 1, sD);
+      const end = new Date(eY, eM - 1, eD);
       const diffDays = Math.round((end.getTime() - start.getTime()) / 86_400_000);
       expect(diffDays).toBe(6);
     });
@@ -177,23 +201,40 @@ describe('DashboardEarningsService', () => {
       }
     });
 
+    it('should return empty array when startDate > endDate', async () => {
+      const records = await firstValueFrom(service.getDailyEarnings('2026-09-10', '2026-09-01'));
+      expect(records).toEqual([]);
+    });
+
+    it('should cap days at 90 days maximum for wide ranges', async () => {
+      const records = await firstValueFrom(service.getDailyEarnings('2026-01-01', '2026-12-31'));
+      expect(records.length).toBe(90);
+    });
+
     it('should ignore goals without completedAt and pomodoro sessions without rewardEarned', async () => {
+      const incompleteGoals = [
+        {
+          id: 'g2',
+          title: 'Incomplete Goal',
+          rewardValue: 1000,
+          status: GOAL_STATUS.COMPLETED,
+          completedAt: null,
+        },
+      ];
       dbMock.goals.where = vi.fn().mockReturnValue({
+        between: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockResolvedValue(incompleteGoals),
+        }),
         equals: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockResolvedValue([
-            {
-              id: 'g2',
-              title: 'Incomplete Goal',
-              rewardValue: 1000,
-              status: GOAL_STATUS.COMPLETED,
-              completedAt: null,
-            },
-          ]),
+          filter: vi.fn().mockImplementation((predicate: (goal: (typeof incompleteGoals)[number]) => boolean) => ({
+            toArray: vi.fn().mockResolvedValue(incompleteGoals.filter(predicate)),
+          })),
+          toArray: vi.fn().mockResolvedValue(incompleteGoals),
         }),
       });
 
       dbMock.pomodoroSessions.where = vi.fn().mockReturnValue({
-        equals: vi.fn().mockReturnValue({
+        between: vi.fn().mockReturnValue({
           toArray: vi.fn().mockResolvedValue([
             {
               id: 'p2',
@@ -201,7 +242,7 @@ describe('DashboardEarningsService', () => {
               engagementType: 'work',
               startTime: new Date('2026-09-01T15:00:00').getTime(),
               endTime: new Date('2026-09-01T15:25:00').getTime(),
-              status: 'completed',
+              status: PomodoroSessionStatus.COMPLETED,
               rewardEarned: undefined,
             },
           ]),

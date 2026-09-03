@@ -100,4 +100,29 @@ describe('EarningsFilterComponent', () => {
       endDate: '2026-08-15',
     });
   });
+
+  it('should not emit if start date is after end date', () => {
+    const spy = vi.fn();
+    component.filterChange.subscribe(spy);
+
+    const start = new Date(2026, 7, 20);
+    const end = new Date(2026, 7, 10);
+    component.rangeForm.controls.start.setValue(start);
+    component.rangeForm.controls.end.setValue(end);
+    component.onCustomDateChange();
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('should synchronize activePreset when filter input changes', () => {
+    fixture.componentRef.setInput('filter', {
+      preset: 'last30',
+      startDate: '2026-08-04',
+      endDate: '2026-09-02',
+    });
+    fixture.detectChanges();
+
+    expect(component.activePreset()).toBe('last30');
+    expect(component.showCustomPicker()).toBe(false);
+  });
 });

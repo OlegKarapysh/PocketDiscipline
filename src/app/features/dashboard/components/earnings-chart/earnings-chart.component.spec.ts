@@ -118,9 +118,43 @@ describe('EarningsChartComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const tooltip = compiled.querySelector('.chart-tooltip');
     expect(tooltip).toBeTruthy();
-    expect(tooltip?.textContent).toContain('Goals: 500 pts');
-    expect(tooltip?.textContent).toContain('Daily Tasks: 200 pts');
-    expect(tooltip?.textContent).toContain('Pomodoro: 300 pts');
+    expect(tooltip?.textContent).toContain('Goals: 500 ₴');
+    expect(tooltip?.textContent).toContain('Daily Tasks: 200 ₴');
+    expect(tooltip?.textContent).toContain('Pomodoro: 300 ₴');
+  });
+
+  it('should toggle tooltip on bar click', () => {
+    fixture.componentRef.setInput('records', mockRecords);
+    fixture.detectChanges();
+
+    component.onBarClick(mockRecords[0], { clientX: 100, clientY: 200 } as MouseEvent);
+    expect(component.hoveredRecord()).toEqual(mockRecords[0]);
+
+    // Second click on same bar dismisses it
+    component.onBarClick(mockRecords[0], { clientX: 100, clientY: 200 } as MouseEvent);
+    expect(component.hoveredRecord()).toBeNull();
+  });
+
+  it('should thin labels when record count exceeds 16', () => {
+    const manyRecords: DailyEarningsRecord[] = Array.from({ length: 30 }, (_, i) => ({
+      date: `2026-09-${String(i + 1).padStart(2, '0')}`,
+      totalEarned: 100,
+      goalsEarned: 100,
+      dailyTasksEarned: 0,
+      pomodoroEarned: 0,
+      dailyScoresEarned: 0,
+    }));
+
+    fixture.componentRef.setInput('records', manyRecords);
+    fixture.detectChanges();
+
+    const bars = component.bars();
+    expect(bars.length).toBe(30);
+    const visibleLabels = bars.filter(b => b.shouldShowLabel);
+    expect(visibleLabels.length).toBeLessThan(30);
+    expect(visibleLabels.length).toBeGreaterThan(0);
+    expect(bars[0].shouldShowLabel).toBe(true);
+    expect(bars[29].shouldShowLabel).toBe(true);
   });
 
   it('should handle empty records gracefully', () => {

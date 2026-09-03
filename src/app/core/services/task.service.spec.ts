@@ -6,10 +6,6 @@ import { UserService } from './user.service';
 import { DisciplineItem } from '../models/discipline-item.model';
 import { DisciplineItemType } from '../models/discipline-item-type.enum';
 
-const TEST_TASK_ID = 't-1';
-const TEST_TASK_TITLE = 'Drink Water';
-const TEST_REWARD = 20;
-const ONE_DAY_MS = 86_400_000;
 
 describe('TaskService', () => {
   let service: TaskService;
@@ -69,13 +65,13 @@ describe('TaskService', () => {
   });
 
   it('should add a discipline task to the database', async () => {
-    await service.addTask(TEST_TASK_TITLE, DisciplineItemType.HABIT, TEST_REWARD);
+    await service.addTask('Drink Water', DisciplineItemType.HABIT, 20);
 
     expect(dbMock.tasks.add).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: TEST_TASK_TITLE,
+        title: 'Drink Water',
         type: DisciplineItemType.HABIT,
-        rewardValue: TEST_REWARD,
+        rewardValue: 20,
         isCompleted: false,
         lastCompletedAt: null,
       })
@@ -84,40 +80,40 @@ describe('TaskService', () => {
 
   it('should complete an uncompleted task, update timestamp, and add balance', async () => {
     const task: DisciplineItem = {
-      id: TEST_TASK_ID,
-      title: TEST_TASK_TITLE,
+      id: 't-1',
+      title: 'Drink Water',
       type: DisciplineItemType.HABIT,
-      rewardValue: TEST_REWARD,
+      rewardValue: 20,
       isCompleted: false,
       lastCompletedAt: null,
       createdAt: Date.now(),
     };
     dbMock.tasks.get.mockResolvedValue(task);
 
-    await service.completeTask(TEST_TASK_ID);
+    await service.completeTask('t-1');
 
     expect(dbMock.tasks.update).toHaveBeenCalledWith(
-      TEST_TASK_ID,
+      't-1',
       expect.objectContaining({
         isCompleted: true,
       })
     );
-    expect(userMock.addBalance).toHaveBeenCalledWith(TEST_REWARD);
+    expect(userMock.addBalance).toHaveBeenCalledWith(20);
   });
 
   it('should not complete a task if already completed', async () => {
     const task: DisciplineItem = {
-      id: TEST_TASK_ID,
-      title: TEST_TASK_TITLE,
+      id: 't-1',
+      title: 'Drink Water',
       type: DisciplineItemType.HABIT,
-      rewardValue: TEST_REWARD,
+      rewardValue: 20,
       isCompleted: true,
       lastCompletedAt: Date.now(),
       createdAt: Date.now(),
     };
     dbMock.tasks.get.mockResolvedValue(task);
 
-    await service.completeTask(TEST_TASK_ID);
+    await service.completeTask('t-1');
 
     expect(dbMock.tasks.update).not.toHaveBeenCalled();
     expect(userMock.addBalance).not.toHaveBeenCalled();
@@ -126,10 +122,10 @@ describe('TaskService', () => {
   it('should perform daily reset on habits completed on a previous day', async () => {
     const yesterday = Date.now() - ONE_DAY_MS;
     const completedHabit: DisciplineItem = {
-      id: TEST_TASK_ID,
-      title: TEST_TASK_TITLE,
+      id: 't-1',
+      title: 'Drink Water',
       type: DisciplineItemType.HABIT,
-      rewardValue: TEST_REWARD,
+      rewardValue: 20,
       isCompleted: true,
       lastCompletedAt: yesterday,
       createdAt: Date.now() - (5 * ONE_DAY_MS),
@@ -139,7 +135,7 @@ describe('TaskService', () => {
 
     await service.performDailyReset();
 
-    expect(dbMock.tasks.update).toHaveBeenCalledWith(TEST_TASK_ID, {
+    expect(dbMock.tasks.update).toHaveBeenCalledWith('t-1', {
       isCompleted: false,
     });
   });

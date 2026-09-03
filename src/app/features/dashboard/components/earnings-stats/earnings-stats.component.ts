@@ -43,7 +43,7 @@ export class EarningsStatsComponent {
 
   readonly hasNoEarnings = computed(() => {
     const currentSummary = this.summary();
-    return !currentSummary || currentSummary.totalEarned === ZERO_EARNINGS;
+    return currentSummary !== null && currentSummary.totalEarned === ZERO_EARNINGS;
   });
 
   goToPreviousMonth(): void {

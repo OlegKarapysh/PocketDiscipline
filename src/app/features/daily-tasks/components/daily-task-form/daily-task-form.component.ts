@@ -5,7 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { DailyTaskDifficulty } from '../../models/daily-task.model';
+import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 
 const DEFAULT_DIFFICULTIES: DailyTaskDifficulty[] = [
   { id: 'easy', name: 'Easy', baseReward: 100 },

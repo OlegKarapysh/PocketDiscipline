@@ -1,0 +1,16 @@
+{
+  "git-auto-stage": {
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"try{require('./scripts/auto-stage.js')}catch{require('./.agents/scripts/auto-stage.js')}\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

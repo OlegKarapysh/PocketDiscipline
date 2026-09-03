@@ -4,7 +4,8 @@ import { By } from '@angular/platform-browser';
 import { Observable, of } from 'rxjs';
 import { DailyTaskListComponent } from './daily-task-list.component';
 import { DailyTasksService } from '../../services/daily-tasks.service';
-import { DailyTask, DailyTaskDifficulty } from '../../models/daily-task.model';
+import { DailyTask } from '../../models/daily-task.model';
+import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 import { DailyTaskItemComponent } from '../daily-task-item/daily-task-item.component';
 import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.component';
 

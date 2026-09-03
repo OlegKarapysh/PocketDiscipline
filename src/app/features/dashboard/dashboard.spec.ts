@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Dashboard } from './dashboard';
 import { DashboardEarningsService } from './services/dashboard-earnings.service';
 import { UserService } from '../../core/services/user.service';
@@ -84,5 +84,21 @@ describe('Dashboard', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('app-task-list')).toBeFalsy();
     expect(compiled.querySelector('app-daily-task-list')).toBeFalsy();
+  });
+
+  it('should handle service error gracefully in dailyEarnings stream', async () => {
+    earningsServiceMock.getDailyEarnings.mockReturnValue(
+      new Observable(subscriber => subscriber.error(new Error('IndexedDB error')))
+    );
+
+    component.onFilterChange({
+      preset: 'last14',
+      startDate: '2026-08-20',
+      endDate: '2026-09-02',
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.dailyEarnings()).toEqual([]);
   });
 });

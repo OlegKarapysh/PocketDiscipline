@@ -1,4 +1,4 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -12,7 +12,9 @@ import { PeriodPreset } from '../../models/period-preset.type';
 
 const DEFAULT_PRESET: PeriodPreset = 'last7';
 const PRESET_CUSTOM: PeriodPreset = 'custom';
-const DATE_LOCALE_CA = 'en-CA';
+const PAD_LENGTH_TWO = 2;
+const PAD_CHAR_ZERO = '0';
+const MONTH_OFFSET_ONE = 1;
 
 @Component({
   selector: 'app-earnings-filter',
@@ -40,8 +42,10 @@ export class EarningsFilterComponent {
 
   readonly filterChange = output<EarningsPeriodFilter>();
 
-  readonly activePreset = signal<PeriodPreset>(DEFAULT_PRESET);
-  readonly showCustomPicker = signal<boolean>(false);
+  readonly activePreset = linkedSignal<PeriodPreset>(() => this.filter().preset);
+  readonly showCustomPicker = computed<boolean>(() => this.activePreset() === PRESET_CUSTOM);
+
+  readonly maxDate = new Date();
 
   readonly rangeForm = new FormGroup({
     start: new FormControl<Date | null>(null),
@@ -52,11 +56,9 @@ export class EarningsFilterComponent {
     this.activePreset.set(preset);
 
     if (preset === PRESET_CUSTOM) {
-      this.showCustomPicker.set(true);
       return;
     }
 
-    this.showCustomPicker.set(false);
     const range = this.earningsService.getPresetDateRange(preset);
     this.filterChange.emit({
       preset,
@@ -69,14 +71,18 @@ export class EarningsFilterComponent {
     const start = this.rangeForm.controls.start.value;
     const end = this.rangeForm.controls.end.value;
 
-    if (start && end) {
+    if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime()) && start.getTime() <= end.getTime()) {
       this.applyCustomRange(start, end);
     }
   }
 
   applyCustomRange(start: Date, end: Date): void {
-    const startDate = start.toLocaleDateString(DATE_LOCALE_CA);
-    const endDate = end.toLocaleDateString(DATE_LOCALE_CA);
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start.getTime() > end.getTime()) {
+      return;
+    }
+
+    const startDate = this.formatLocalDate(start);
+    const endDate = this.formatLocalDate(end);
 
     this.activePreset.set(PRESET_CUSTOM);
     this.filterChange.emit({
@@ -84,5 +90,12 @@ export class EarningsFilterComponent {
       startDate,
       endDate,
     });
+  }
+
+  private formatLocalDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + MONTH_OFFSET_ONE).padStart(PAD_LENGTH_TWO, PAD_CHAR_ZERO);
+    const day = String(date.getDate()).padStart(PAD_LENGTH_TWO, PAD_CHAR_ZERO);
+    return `${year}-${month}-${day}`;
   }
 }

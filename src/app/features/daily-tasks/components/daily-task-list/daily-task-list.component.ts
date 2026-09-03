@@ -4,7 +4,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
 import { DailyTaskItemComponent } from '../daily-task-item/daily-task-item.component';
-import { DailyTask, DailyTaskDifficulty } from '../../models/daily-task.model';
+import { DailyTask } from '../../models/daily-task.model';
+import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 
 import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.component';
 

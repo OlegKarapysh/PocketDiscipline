@@ -1,7 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 import { BalanceWidgetComponent } from './components/balance-widget/balance-widget';
 import { EarningsChartComponent } from './components/earnings-chart/earnings-chart.component';
 import { EarningsFilterComponent } from './components/earnings-filter/earnings-filter.component';
@@ -44,14 +45,28 @@ export class Dashboard {
 
   readonly dailyEarnings = toSignal(
     toObservable(this.currentFilter).pipe(
-      switchMap(filter => this.earningsService.getDailyEarnings(filter.startDate, filter.endDate))
+      switchMap(filter =>
+        this.earningsService.getDailyEarnings(filter.startDate, filter.endDate).pipe(
+          catchError(error => {
+            console.error('Failed to load daily earnings:', error);
+            return of([]);
+          })
+        )
+      )
     ),
     { initialValue: [] }
   );
 
   readonly monthlySummary = toSignal(
     toObservable(this.selectedMonth).pipe(
-      switchMap(({ year, month }) => this.earningsService.getMonthlyEarningsSummary(year, month))
+      switchMap(({ year, month }) =>
+        this.earningsService.getMonthlyEarningsSummary(year, month).pipe(
+          catchError(error => {
+            console.error('Failed to load monthly summary:', error);
+            return of(null);
+          })
+        )
+      )
     ),
     { initialValue: null }
   );

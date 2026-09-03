@@ -27,33 +27,35 @@
   </mat-card-header>
 
   <mat-card-content class="stats-content">
-    @if (hasNoEarnings()) {
-      <div class="empty-earnings-indicator">
-        <mat-icon class="empty-icon">info_outline</mat-icon>
-        <span>No earnings recorded for this month</span>
+    @if (summary(); as s) {
+      @if (hasNoEarnings()) {
+        <div class="empty-earnings-indicator">
+          <mat-icon class="empty-icon">info_outline</mat-icon>
+          <span>No earnings recorded for this month</span>
+        </div>
+      }
+
+      <div class="stat-highlight">
+        <span class="stat-label">Daily Average</span>
+        <div class="stat-value">
+          <span class="value-number">{{ s.averageEarnedPerDay }}</span>
+          <span class="value-unit">₴/day</span>
+        </div>
+        <div class="stat-context">
+          @if (s.isCurrentMonth) {
+            <span>Based on {{ s.daysCount }} elapsed days</span>
+          } @else {
+            <span>Based on {{ s.daysCount }} calendar days</span>
+          }
+        </div>
+      </div>
+
+      <div class="stat-secondary">
+        <div class="secondary-item">
+          <span class="secondary-label">Total Earned</span>
+          <span class="secondary-value">{{ s.totalEarned }} ₴</span>
+        </div>
       </div>
     }
-
-    <div class="stat-highlight">
-      <span class="stat-label">Daily Average</span>
-      <div class="stat-value">
-        <span class="value-number">{{ summary()?.averageEarnedPerDay ?? 0 }}</span>
-        <span class="value-unit">pts/day</span>
-      </div>
-      <div class="stat-context">
-        @if (summary()?.isCurrentMonth) {
-          <span>Based on {{ summary()?.daysCount }} elapsed days</span>
-        } @else {
-          <span>Based on {{ summary()?.daysCount }} calendar days</span>
-        }
-      </div>
-    </div>
-
-    <div class="stat-secondary">
-      <div class="secondary-item">
-        <span class="secondary-label">Total Earned</span>
-        <span class="secondary-value">{{ summary()?.totalEarned ?? 0 }} pts</span>
-      </div>
-    </div>
   </mat-card-content>
 </mat-card>

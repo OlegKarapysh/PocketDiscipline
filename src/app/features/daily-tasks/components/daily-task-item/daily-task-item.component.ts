@@ -4,7 +4,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 
-import { DailyTask, DailyTaskDifficulty } from '../../models/daily-task.model';
+import { DailyTask } from '../../models/daily-task.model';
+import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 
 const MIDNIGHT_HOUR = 0;
 const MIDNIGHT_MINUTE = 0;

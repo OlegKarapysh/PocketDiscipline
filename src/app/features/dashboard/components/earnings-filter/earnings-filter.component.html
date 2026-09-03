@@ -17,7 +17,7 @@
     <div class="custom-range-row">
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>Select Date Range</mat-label>
-        <mat-date-range-input [formGroup]="rangeForm" [rangePicker]="picker">
+        <mat-date-range-input [formGroup]="rangeForm" [rangePicker]="picker" [max]="maxDate">
           <input
             matStartDate
             formControlName="start"

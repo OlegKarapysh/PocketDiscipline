@@ -18,21 +18,21 @@
         [attr.viewBox]="viewBox"
         class="earnings-svg"
         preserveAspectRatio="xMidYMid meet"
-        role="img"
+        role="region"
         aria-label="Daily earnings chart"
       >
         <!-- Horizontal Grid Lines and Labels -->
         @for (line of gridLines(); track line.y) {
           <line
-            x1="45"
+            [attr.x1]="chartLeftX"
             [attr.y1]="line.y"
-            x2="585"
+            [attr.x2]="chartRightX"
             [attr.y2]="line.y"
             class="grid-line"
           />
           <text
-            x="40"
-            [attr.y]="line.y + 4"
+            [attr.x]="yAxisTextX"
+            [attr.y]="line.y + axisLabelYOffset"
             class="axis-label-y"
             text-anchor="end"
           >
@@ -41,7 +41,13 @@
         }
 
         <!-- Baseline -->
-        <line x1="45" y1="225" x2="585" y2="225" class="baseline" />
+        <line
+          [attr.x1]="chartLeftX"
+          [attr.y1]="chartBaselineY"
+          [attr.x2]="chartRightX"
+          [attr.y2]="chartBaselineY"
+          class="baseline"
+        />
 
         <!-- Bars -->
         @for (bar of bars(); track bar.date) {
@@ -50,15 +56,18 @@
             (mouseenter)="onBarMouseEnter(bar.record, $event)"
             (mousemove)="onBarMouseMove($event)"
             (mouseleave)="onBarMouseLeave()"
+            (click)="onBarClick(bar.record, $event)"
+            (focus)="onBarFocus(bar.record, $event)"
+            (blur)="onBarBlur()"
             tabindex="0"
-            [attr.aria-label]="bar.date + ': ' + bar.total + ' points'"
+            [attr.aria-label]="bar.date + ': ' + bar.total + ' ₴'"
           >
-            <!-- Invisible hit target for smooth hover -->
+            <!-- Invisible hit target for smooth hover/touch -->
             <rect
               [attr.x]="bar.x"
-              y="20"
+              [attr.y]="chartTopY"
               [attr.width]="bar.width"
-              height="205"
+              [attr.height]="chartHeight"
               class="bar-hitbox"
             />
 
@@ -66,9 +75,9 @@
             @if (bar.total === 0) {
               <rect
                 [attr.x]="bar.x"
-                y="223"
+                [attr.y]="zeroBarY"
                 [attr.width]="bar.width"
-                height="2"
+                [attr.height]="zeroBarHeight"
                 class="zero-bar"
               />
             }
@@ -86,14 +95,16 @@
             }
 
             <!-- X-Axis Label -->
-            <text
-              [attr.x]="bar.x + bar.width / 2"
-              y="245"
-              class="axis-label-x"
-              text-anchor="middle"
-            >
-              {{ bar.formattedDate }}
-            </text>
+            @if (bar.shouldShowLabel) {
+              <text
+                [attr.x]="bar.x + bar.width / 2"
+                [attr.y]="axisLabelYPos"
+                class="axis-label-x"
+                text-anchor="middle"
+              >
+                {{ bar.formattedDate }}
+              </text>
+            }
           </g>
         }
       </svg>
@@ -108,31 +119,31 @@
       >
         <div class="tooltip-date">{{ record.date }}</div>
         <div class="tooltip-total">
-          Total: <strong>{{ record.totalEarned }} pts</strong>
+          Total: <strong>{{ record.totalEarned }} ₴</strong>
         </div>
         <div class="tooltip-breakdown">
           @if (record.goalsEarned > 0) {
             <div class="breakdown-row">
               <span class="breakdown-swatch goals"></span>
-              <span>Goals: {{ record.goalsEarned }} pts</span>
+              <span>Goals: {{ record.goalsEarned }} ₴</span>
             </div>
           }
           @if (record.dailyTasksEarned > 0) {
             <div class="breakdown-row">
               <span class="breakdown-swatch daily-tasks"></span>
-              <span>Daily Tasks: {{ record.dailyTasksEarned }} pts</span>
+              <span>Daily Tasks: {{ record.dailyTasksEarned }} ₴</span>
             </div>
           }
           @if (record.pomodoroEarned > 0) {
             <div class="breakdown-row">
               <span class="breakdown-swatch pomodoro"></span>
-              <span>Pomodoro: {{ record.pomodoroEarned }} pts</span>
+              <span>Pomodoro: {{ record.pomodoroEarned }} ₴</span>
             </div>
           }
           @if (record.dailyScoresEarned > 0) {
             <div class="breakdown-row">
               <span class="breakdown-swatch daily-scores"></span>
-              <span>Daily Score: {{ record.dailyScoresEarned }} pts</span>
+              <span>Daily Score: {{ record.dailyScoresEarned }} ₴</span>
             </div>
           }
           @if (record.totalEarned === 0) {
