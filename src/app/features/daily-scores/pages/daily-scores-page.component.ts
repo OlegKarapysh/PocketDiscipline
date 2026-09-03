@@ -1,5 +1,4 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ScoreInputComponent } from '../components/score-input/score-input.component';
 import { ScoresChartComponent } from '../components/scores-chart/scores-chart.component';
 import { ScoresStatsComponent } from '../components/scores-stats/scores-stats.component';
@@ -14,8 +13,7 @@ const EMPTY_LENGTH = 0;
 
 @Component({
   selector: 'app-daily-scores-page',
-  standalone: true,
-  imports: [CommonModule, ScoreInputComponent, ScoresChartComponent, ScoresStatsComponent],
+  imports: [ScoreInputComponent, ScoresChartComponent, ScoresStatsComponent],
   templateUrl: './daily-scores-page.component.html',
   styleUrl: './daily-scores-page.component.scss',
 })

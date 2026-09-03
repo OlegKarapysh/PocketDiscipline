@@ -1,15 +1,15 @@
 <div class="stats-container">
   <div class="stat-card">
     <div class="stat-title">Month Avg</div>
-    <div class="stat-value" [class.no-data]="monthlyAverage === 0">
-      {{ monthlyAverage > 0 ? monthlyAverage : '-' }}
+    <div class="stat-value" [class.no-data]="monthlyAverage() === 0">
+      {{ monthlyAverage() > 0 ? monthlyAverage() : '-' }}
     </div>
   </div>
   
   <div class="stat-card">
     <div class="stat-title">Current Streak</div>
-    <div class="stat-value streak" [class.active]="currentStreak > 0">
-      {{ currentStreak }}
+    <div class="stat-value streak" [class.active]="currentStreak() > 0">
+      {{ currentStreak() }}
     </div>
     <div class="stat-subtitle">High Scores</div>
   </div>

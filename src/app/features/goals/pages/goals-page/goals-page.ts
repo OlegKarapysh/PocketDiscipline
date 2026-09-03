@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -21,7 +21,7 @@ const MSG_GOAL_UPDATED = 'Goal updated';
 const MSG_UNKNOWN_ERROR = 'Unknown error occurred';
 
 @Component({
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatDialogModule, MatSnackBarModule, GoalList],
+  imports: [MatButtonModule, MatIconModule, MatDialogModule, MatSnackBarModule, GoalList],
   selector: 'app-goals-page',
   styleUrl: './goals-page.scss',
   templateUrl: './goals-page.html',
@@ -31,8 +31,8 @@ export class GoalsPage {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
-  activeGoals$ = from(this.goalService.getActiveGoals());
-  completedGoals$ = from(this.goalService.getCompletedGoals());
+  readonly activeGoals = toSignal(from(this.goalService.getActiveGoals()), { initialValue: [] });
+  readonly completedGoals = toSignal(from(this.goalService.getCompletedGoals()), { initialValue: [] });
 
   async completeGoal(id: string) {
     await this.goalService.completeGoal(id);

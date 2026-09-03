@@ -5,7 +5,6 @@ import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
 
 @Component({
   selector: 'app-timer-controls',
-  standalone: true,
   imports: [MatButtonModule, MatIconModule],
   templateUrl: './timer-controls.html',
   styleUrl: './timer-controls.scss',

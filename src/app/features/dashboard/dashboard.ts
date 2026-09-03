@@ -1,5 +1,4 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
@@ -16,9 +15,7 @@ const MONTH_STEP = 1;
 
 @Component({
   selector: 'app-dashboard',
-  standalone: true,
   imports: [
-    CommonModule,
     BalanceWidgetComponent,
     EarningsChartComponent,
     EarningsFilterComponent,

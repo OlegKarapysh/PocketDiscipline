@@ -29,8 +29,8 @@ describe('ScoresStatsComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.monthlyAverage).toBe(ZERO_VALUE);
-    expect(component.currentStreak).toBe(ZERO_VALUE);
+    expect(component.monthlyAverage()).toBe(ZERO_VALUE);
+    expect(component.currentStreak()).toBe(ZERO_VALUE);
     const noDataEl = fixture.debugElement.query(By.css('.stat-value.no-data'));
     expect(noDataEl.nativeElement.textContent.trim()).toBe('-');
   });
@@ -42,12 +42,11 @@ describe('ScoresStatsComponent', () => {
       { date: '2026-08-03', score: TEST_SCORE_EIGHT, rewardEarned: 0, streakAtThisDay: 0, createdAt: 3 },
     ];
 
-    component.monthlyScores = mockMonthlyScores;
-    component.ngOnChanges();
+    fixture.componentRef.setInput('monthlyScores', mockMonthlyScores);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.monthlyAverage).toBe(EXPECTED_AVERAGE_ROUNDED);
+    expect(component.monthlyAverage()).toBe(EXPECTED_AVERAGE_ROUNDED);
     const statValues = fixture.debugElement.queryAll(By.css('.stat-value'));
     expect(statValues[0].nativeElement.textContent.trim()).toBe('8.7');
   });
@@ -62,12 +61,11 @@ describe('ScoresStatsComponent', () => {
       createdAt: Date.now(),
     };
 
-    component.latestScore = mockLatestScore;
-    component.ngOnChanges();
+    fixture.componentRef.setInput('latestScore', mockLatestScore);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.currentStreak).toBe(STREAK_FIVE);
+    expect(component.currentStreak()).toBe(STREAK_FIVE);
     const streakEl = fixture.debugElement.query(By.css('.stat-value.streak'));
     expect(streakEl.nativeElement.textContent.trim()).toBe('5');
   });
@@ -85,12 +83,11 @@ describe('ScoresStatsComponent', () => {
       createdAt: Date.now(),
     };
 
-    component.latestScore = mockLatestScore;
-    component.ngOnChanges();
+    fixture.componentRef.setInput('latestScore', mockLatestScore);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.currentStreak).toBe(STREAK_FIVE);
+    expect(component.currentStreak()).toBe(STREAK_FIVE);
   });
 
   it('should reset streak to 0 if latest score is older than yesterday', async () => {
@@ -103,11 +100,10 @@ describe('ScoresStatsComponent', () => {
       createdAt: Date.now(),
     };
 
-    component.latestScore = mockLatestScore;
-    component.ngOnChanges();
+    fixture.componentRef.setInput('latestScore', mockLatestScore);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.currentStreak).toBe(ZERO_VALUE);
+    expect(component.currentStreak()).toBe(ZERO_VALUE);
   });
 });

@@ -4,8 +4,8 @@
   </div>
 
   <app-goal-list
-    [activeGoals]="(activeGoals$ | async) || []"
-    [completedGoals]="(completedGoals$ | async) || []"
+    [activeGoals]="activeGoals()"
+    [completedGoals]="completedGoals()"
     (complete)="completeGoal($event)"
     (undo)="undoCompleteGoal($event)"
     (edit)="openEditDialog($event)"

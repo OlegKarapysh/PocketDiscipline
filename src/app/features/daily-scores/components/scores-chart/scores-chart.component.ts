@@ -1,5 +1,4 @@
-import { Component, Input, OnChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, input } from '@angular/core';
 import { DailyScore } from '../../models/daily-score.model';
 import { ChartDayData } from '../../models/chart-day-data.model';
 
@@ -10,26 +9,20 @@ const WEEKDAY_FORMAT = 'short';
 
 @Component({
   selector: 'app-scores-chart',
-  standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './scores-chart.component.html',
   styleUrl: './scores-chart.component.scss',
 })
-export class ScoresChartComponent implements OnChanges {
-  @Input() scores: DailyScore[] = [];
+export class ScoresChartComponent {
+  readonly scores = input<DailyScore[]>([]);
   
-  chartData: ChartDayData[] = [];
-
-  ngOnChanges() {
-    this.generateChartData();
-  }
-
-  private generateChartData() {
-    this.chartData = [];
+  readonly chartData = computed<ChartDayData[]>(() => {
+    const data: ChartDayData[] = [];
     const today = new Date();
+    const currentScores = this.scores();
     
     const scoreMap = new Map<string, number>();
-    for (const score of this.scores) {
+    for (const score of currentScores) {
       scoreMap.set(score.date, score.score);
     }
     
@@ -41,11 +34,13 @@ export class ScoresChartComponent implements OnChanges {
       
       const scoreValue = scoreMap.get(dateStr);
       
-      this.chartData.push({
+      data.push({
         date: dateStr,
         dayOfWeek: dayName,
         score: scoreValue !== undefined ? scoreValue : null
       });
     }
-  }
+
+    return data;
+  });
 }

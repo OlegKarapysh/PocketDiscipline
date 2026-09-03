@@ -1,15 +1,15 @@
 <div class="daily-tasks-container">
   <div class="header">
     <h2 class="mat-h2 title">Daily Tasks</h2>
-    @if (!showForm) {
-      <button mat-flat-button color="primary" (click)="showForm = true">
+    @if (!showForm()) {
+      <button mat-flat-button color="primary" (click)="openForm()">
         <mat-icon>add</mat-icon> Add Daily Task
       </button>
     }
   </div>
 
-  @if (showForm) {
-    <app-daily-task-form (taskCreated)="onTaskCreated($event)" (cancelForm)="showForm = false"> </app-daily-task-form>
+  @if (showForm()) {
+    <app-daily-task-form (taskCreated)="onTaskCreated($event)" (cancelForm)="closeForm()"> </app-daily-task-form>
   }
 
   @if (tasks$ | async; as tasks) {

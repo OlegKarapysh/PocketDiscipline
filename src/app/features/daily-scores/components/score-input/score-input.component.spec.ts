@@ -42,8 +42,8 @@ describe('ScoreInputComponent', () => {
     buttons[SCORE_BTN_INDEX_FOUR].nativeElement.click();
     fixture.detectChanges();
 
-    expect(component.internalSelectedScore).toBe(TEST_SCORE_FIVE);
-    expect(component.activeTier?.label).toBe('Moderate Discipline');
+    expect(component.internalSelectedScore()).toBe(TEST_SCORE_FIVE);
+    expect(component.activeTier()?.label).toBe('Moderate Discipline');
   });
 
   it('should not update internalSelectedScore when readonly is true', async () => {
@@ -52,7 +52,7 @@ describe('ScoreInputComponent', () => {
     await fixture.whenStable();
 
     component.selectScore(TEST_SCORE_TEN);
-    expect(component.internalSelectedScore).toBeNull();
+    expect(component.internalSelectedScore()).toBeNull();
   });
 
   it('should emit scoreSubmitted when submit is clicked with selected score', async () => {
@@ -77,17 +77,10 @@ describe('ScoreInputComponent', () => {
   });
 
   it('should sync internalSelectedScore when selectedScore input changes', () => {
-    component.selectedScore = TEST_SCORE_FIVE;
-    component.ngOnChanges({
-      selectedScore: {
-        currentValue: TEST_SCORE_FIVE,
-        previousValue: null,
-        firstChange: true,
-        isFirstChange: () => true,
-      },
-    });
+    fixture.componentRef.setInput('selectedScore', TEST_SCORE_FIVE);
+    fixture.detectChanges();
 
-    expect(component.internalSelectedScore).toBe(TEST_SCORE_FIVE);
+    expect(component.internalSelectedScore()).toBe(TEST_SCORE_FIVE);
   });
 
   it('should render feedback banner when a score is selected', async () => {
@@ -101,8 +94,8 @@ describe('ScoreInputComponent', () => {
 
     const feedbackBanner = fixture.debugElement.query(By.css('.feedback-banner'));
     expect(feedbackBanner).toBeTruthy();
-    expect(component.internalSelectedScore).toBe(TEST_SCORE_ONE);
-    expect(component.activeTier?.label).toBe('Low Discipline');
+    expect(component.internalSelectedScore()).toBe(TEST_SCORE_ONE);
+    expect(component.activeTier()?.label).toBe('Low Discipline');
   });
 
   it('should render readonly score display when readonly is true', async () => {

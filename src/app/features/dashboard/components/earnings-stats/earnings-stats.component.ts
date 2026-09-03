@@ -1,5 +1,4 @@
 import { Component, computed, input, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,8 +13,7 @@ const ZERO_EARNINGS = 0;
 
 @Component({
   selector: 'app-earnings-stats',
-  standalone: true,
-  imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule],
+  imports: [MatCardModule, MatButtonModule, MatIconModule],
   templateUrl: './earnings-stats.component.html',
   styleUrl: './earnings-stats.component.scss'
 })

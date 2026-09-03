@@ -12,7 +12,6 @@ const DURATION_STEP_MINUTES = 5;
 
 @Component({
   selector: 'app-session-config',
-  standalone: true,
   imports: [FormsModule, MatFormFieldModule, MatInputModule, MatSelectModule],
   templateUrl: './session-config.html',
   styleUrl: './session-config.scss',

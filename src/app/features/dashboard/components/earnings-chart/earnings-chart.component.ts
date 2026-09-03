@@ -1,5 +1,4 @@
 import { Component, computed, input, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
 import { ChartBar } from '../../models/chart-bar.model';
@@ -50,8 +49,7 @@ const SOURCE_LABELS: Record<EarningsSource, string> = {
 
 @Component({
   selector: 'app-earnings-chart',
-  standalone: true,
-  imports: [CommonModule, MatCardModule],
+  imports: [MatCardModule],
   templateUrl: './earnings-chart.component.html',
   styleUrl: './earnings-chart.component.scss'
 })

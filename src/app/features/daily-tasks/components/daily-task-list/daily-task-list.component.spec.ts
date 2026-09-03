@@ -69,11 +69,11 @@ describe('DailyTaskListComponent', () => {
   });
 
   it('should toggle form visibility and create task upon onTaskCreated', () => {
-    component.showForm = true;
+    component.showForm.set(true);
     component.onTaskCreated({ title: TEST_TASK_TITLE, difficulties: [EASY_DIFFICULTY] });
 
     expect(dailyTasksServiceMock.createTask).toHaveBeenCalledWith(TEST_TASK_TITLE, [EASY_DIFFICULTY]);
-    expect(component.showForm).toBe(false);
+    expect(component.showForm()).toBe(false);
   });
 
   it('should call service completeTask when onCompleteTask is invoked', async () => {
@@ -83,7 +83,7 @@ describe('DailyTaskListComponent', () => {
   });
 
   it('should show DailyTaskFormComponent when showForm is true', async () => {
-    component.showForm = true;
+    component.showForm.set(true);
     fixture.detectChanges();
     await fixture.whenStable();
 

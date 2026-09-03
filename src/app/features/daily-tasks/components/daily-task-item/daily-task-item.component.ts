@@ -13,7 +13,6 @@ const MIDNIGHT_SECOND = 0;
 const MIDNIGHT_MILLISECOND = 0;
 
 @Component({
-  standalone: true,
   imports: [MatCardModule, MatButtonModule, MatIconModule, MatChipsModule],
   selector: 'app-daily-task-item',
   styleUrl: './daily-task-item.component.scss',

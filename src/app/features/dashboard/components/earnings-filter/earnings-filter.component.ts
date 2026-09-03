@@ -1,5 +1,4 @@
 import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -18,9 +17,7 @@ const MONTH_OFFSET_ONE = 1;
 
 @Component({
   selector: 'app-earnings-filter',
-  standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonToggleModule,
     MatDatepickerModule,

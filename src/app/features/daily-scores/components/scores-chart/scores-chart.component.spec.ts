@@ -23,12 +23,11 @@ describe('ScoresChartComponent', () => {
   });
 
   it('should generate 7 day data entries when initialized or changed', async () => {
-    component.scores = [];
-    component.ngOnChanges();
+    fixture.componentRef.setInput('scores', []);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.chartData.length).toBe(SEVEN_DAYS_COUNT);
+    expect(component.chartData().length).toBe(SEVEN_DAYS_COUNT);
     const barWrappers = fixture.debugElement.queryAll(By.css('.bar-wrapper'));
     expect(barWrappers.length).toBe(SEVEN_DAYS_COUNT);
   });
@@ -47,23 +46,21 @@ describe('ScoresChartComponent', () => {
       },
     ];
 
-    component.scores = mockScores;
-    component.ngOnChanges();
+    fixture.componentRef.setInput('scores', mockScores);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const todayEntry = component.chartData.find((d) => d.date === todayStr);
+    const todayEntry = component.chartData().find((d) => d.date === todayStr);
     expect(todayEntry).toBeDefined();
     expect(todayEntry?.score).toBe(TEST_SCORE_TEN);
   });
 
   it('should assign null score for days without a recorded score', async () => {
-    component.scores = [];
-    component.ngOnChanges();
+    fixture.componentRef.setInput('scores', []);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.chartData.every((d) => d.score === null)).toBe(true);
+    expect(component.chartData().every((d) => d.score === null)).toBe(true);
   });
 
   it('should apply high-score CSS class to bars with scores >= 9', async () => {
@@ -80,8 +77,7 @@ describe('ScoresChartComponent', () => {
       },
     ];
 
-    component.scores = mockScores;
-    component.ngOnChanges();
+    fixture.componentRef.setInput('scores', mockScores);
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -103,8 +99,7 @@ describe('ScoresChartComponent', () => {
       },
     ];
 
-    component.scores = mockScores;
-    component.ngOnChanges();
+    fixture.componentRef.setInput('scores', mockScores);
     fixture.detectChanges();
     await fixture.whenStable();
 

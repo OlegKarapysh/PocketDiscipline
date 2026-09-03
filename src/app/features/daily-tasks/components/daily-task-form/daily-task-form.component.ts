@@ -17,7 +17,6 @@ const DEFAULT_NEW_DIFFICULTY_REWARD = 100;
 const MIN_DIFFICULTIES_COUNT = 1;
 
 @Component({
-  standalone: true,
   imports: [FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
   selector: 'app-daily-task-form',
   templateUrl: './daily-task-form.component.html',

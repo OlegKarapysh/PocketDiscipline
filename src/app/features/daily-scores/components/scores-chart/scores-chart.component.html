@@ -1,9 +1,9 @@
 <div class="chart-container">
   <h3>Last 7 Days</h3>
   
-  @if (chartData.length > 0) {
+  @if (chartData().length > 0) {
     <div class="bars">
-      @for (item of chartData; track item.date) {
+      @for (item of chartData(); track item.date) {
         <div class="bar-wrapper">
           <div class="score-label">{{ item.score !== null ? item.score : '-' }}</div>
           <div class="bar" 

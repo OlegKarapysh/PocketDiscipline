@@ -6,6 +6,7 @@ import { UserService } from './user.service';
 import { DisciplineItem } from '../models/discipline-item.model';
 import { DisciplineItemType } from '../models/discipline-item-type.enum';
 
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 describe('TaskService', () => {
   let service: TaskService;

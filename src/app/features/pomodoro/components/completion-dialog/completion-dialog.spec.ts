@@ -2,7 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { CompletionDialog, CompletionDialogData } from './completion-dialog';
+import { CompletionDialog } from './completion-dialog';
+import { CompletionDialogData } from '../../models/completion-dialog-data.model';
 
 const TEST_REWARD_POINTS = 50;
 const TEST_ENGAGEMENT_TYPE = 'study';

@@ -5,16 +5,12 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { Goal } from '../../models/goal.model';
+import { GoalFormDialogData } from '../../models/goal-form-dialog-data.model';
 
 const MIN_TITLE_LENGTH = 3;
 const MAX_TITLE_LENGTH = 100;
 const MIN_REWARD_VALUE = 1;
 const MAX_REWARD_VALUE = 10_000_000;
-
-export interface GoalFormDialogData {
-  goal?: Goal;
-}
 
 @Component({
   imports: [ReactiveFormsModule, MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule],
@@ -24,7 +20,7 @@ export interface GoalFormDialogData {
 })
 export class GoalFormDialog {
   private fb = inject(FormBuilder);
-  public data: GoalFormDialogData = inject(MAT_DIALOG_DATA);
+  readonly data: GoalFormDialogData = inject(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<GoalFormDialog>);
 
   form: FormGroup = this.fb.group({

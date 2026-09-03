@@ -2,14 +2,10 @@ import { Component, computed, input, output } from '@angular/core';
 
 import { GoalItem } from '../goal-item/goal-item';
 import { Goal } from '../../models/goal.model';
+import { MonthGoalGroup } from '../../models/month-goal-group.model';
 
 const LOCALE_DEFAULT = 'default';
 const DATE_FORMAT_MONTH_YEAR: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' };
-
-export interface MonthGoalGroup {
-  month: string;
-  goals: Goal[];
-}
 
 @Component({
   imports: [GoalItem],
