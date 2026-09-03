@@ -1,5 +1,5 @@
 .completed {
-  opacity: 0.6;
+  opacity: 0.65;
 }
 
 .task-title.strike {
@@ -10,21 +10,22 @@
   margin-top: 4px;
 }
 
-.reward-chip, .type-chip {
+.reward-chip,
+.type-chip {
   min-height: 24px;
-  font-size: 12px;
+  font: var(--mat-sys-label-small);
 }
 
 .empty-state {
   text-align: center;
   padding: 32px 16px;
-  color: #666;
-  
+  color: var(--mat-sys-on-surface-variant);
+
   .empty-icon {
     font-size: 48px;
     width: 48px;
     height: 48px;
     margin-bottom: 16px;
-    color: #ccc;
+    color: var(--mat-sys-outline-variant);
   }
 }

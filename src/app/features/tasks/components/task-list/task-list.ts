@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -29,9 +29,8 @@ const DUMMY_TASK_BILL = {
 
 @Component({
   selector: 'app-task-list',
-  standalone: true,
   imports: [
-    CommonModule, 
+    AsyncPipe, 
     MatCardModule, 
     MatListModule, 
     MatCheckboxModule, 

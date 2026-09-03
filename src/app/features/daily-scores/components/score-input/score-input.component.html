@@ -1,18 +1,18 @@
-<mat-card class="score-card">
+<mat-card appearance="outlined" class="score-card">
   <mat-card-header class="score-card-header">
     <mat-card-title>Today's score</mat-card-title>
   </mat-card-header>
 
   <mat-card-content class="score-card-content">
-    @if (!readonly) {
+    @if (!readonly()) {
       <div class="scale-section">
         <div class="scale-buttons" role="radiogroup" aria-label="Discipline score from 1 to 10">
           @for (score of availableScores; track score) {
             <button
               type="button"
               class="score-btn"
-              [class.selected]="internalSelectedScore === score"
-              [attr.aria-pressed]="internalSelectedScore === score"
+              [class.selected]="internalSelectedScore() === score"
+              [attr.aria-pressed]="internalSelectedScore() === score"
               [attr.aria-label]="'Score ' + score"
               (click)="selectScore(score)">
               <span class="score-number">{{ score }}</span>
@@ -32,11 +32,11 @@
         </div>
       </div>
 
-      @if (activeTier; as tier) {
-        <div class="feedback-banner" [ngClass]="tier.badgeClass">
+      @if (activeTier(); as tier) {
+        <div class="feedback-banner" [class]="tier.badgeClass">
           <div class="feedback-badge">
             <mat-icon class="tier-icon">{{ tier.icon }}</mat-icon>
-            <span class="feedback-score">{{ internalSelectedScore }} / 10</span>
+            <span class="feedback-score">{{ internalSelectedScore() }} / 10</span>
           </div>
           <div class="feedback-text">
             <div class="feedback-title">{{ tier.label }}</div>
@@ -47,8 +47,8 @@
     } @else {
       <div class="readonly-container">
         <div class="readonly-badge-wrapper">
-          <div class="readonly-score-display" [ngClass]="activeTier?.badgeClass">
-            <span class="readonly-score-num">{{ internalSelectedScore }}</span>
+          <div class="readonly-score-display" [class]="activeTier()?.badgeClass">
+            <span class="readonly-score-num">{{ internalSelectedScore() }}</span>
             <span class="readonly-score-max">/ 10</span>
           </div>
         </div>
@@ -58,7 +58,7 @@
             <mat-icon class="status-icon">check_circle</mat-icon>
             <span>Score Set for Today</span>
           </div>
-          @if (activeTier; as tier) {
+          @if (activeTier(); as tier) {
             <div class="readonly-tier-label">{{ tier.label }}</div>
             <div class="readonly-tier-desc">{{ tier.description }}</div>
           }
@@ -67,7 +67,7 @@
     }
   </mat-card-content>
 
-  @if (!readonly && internalSelectedScore !== null) {
+  @if (!readonly() && internalSelectedScore() !== null) {
     <mat-card-actions class="score-card-actions" align="end">
       <button
         mat-flat-button

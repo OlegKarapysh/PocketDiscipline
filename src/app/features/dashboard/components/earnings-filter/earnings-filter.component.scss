@@ -1,0 +1,19 @@
+.earnings-filter-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.presets-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.custom-range-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 320px;
+}

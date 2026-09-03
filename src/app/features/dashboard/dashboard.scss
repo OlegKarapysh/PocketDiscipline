@@ -1,4 +1,13 @@
 .dashboard-container {
   max-width: 800px;
   margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    padding: 12px;
+    gap: 12px;
+  }
 }

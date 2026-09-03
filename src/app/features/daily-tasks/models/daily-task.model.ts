@@ -1,8 +1,4 @@
-export interface DailyTaskDifficulty {
-  id: string;
-  name: string;
-  baseReward: number;
-}
+import { DailyTaskDifficulty } from './daily-task-difficulty.model';
 
 export interface DailyTask {
   id: string;

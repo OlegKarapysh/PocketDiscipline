@@ -1,8 +1,7 @@
 .goal-card {
-  margin-bottom: 16px;
+  transition: opacity 0.3s ease;
 
   &.completed {
-    opacity: 0.7;
-    background-color: #fafafa;
+    opacity: 0.65;
   }
 }

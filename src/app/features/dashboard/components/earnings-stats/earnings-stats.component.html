@@ -1,0 +1,61 @@
+<mat-card class="earnings-stats-card">
+  <mat-card-header class="stats-header">
+    <div class="month-navigation">
+      <button
+        mat-icon-button
+        (click)="goToPreviousMonth()"
+        aria-label="Previous Month"
+        type="button"
+      >
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+
+      <span class="month-label">
+        {{ summary()?.monthLabel ?? 'Monthly Statistics' }}
+      </span>
+
+      <button
+        mat-icon-button
+        (click)="goToNextMonth()"
+        [disabled]="isNextDisabled()"
+        aria-label="Next Month"
+        type="button"
+      >
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content class="stats-content">
+    @if (summary(); as s) {
+      @if (hasNoEarnings()) {
+        <div class="empty-earnings-indicator">
+          <mat-icon class="empty-icon">info_outline</mat-icon>
+          <span>No earnings recorded for this month</span>
+        </div>
+      }
+
+      <div class="stat-highlight">
+        <span class="stat-label">Daily Average</span>
+        <div class="stat-value">
+          <span class="value-number">{{ s.averageEarnedPerDay }}</span>
+          <span class="value-unit">₴/day</span>
+        </div>
+        <div class="stat-context">
+          @if (s.isCurrentMonth) {
+            <span>Based on {{ s.daysCount }} elapsed days</span>
+          } @else {
+            <span>Based on {{ s.daysCount }} calendar days</span>
+          }
+        </div>
+      </div>
+
+      <div class="stat-secondary">
+        <div class="secondary-item">
+          <span class="secondary-label">Total Earned</span>
+          <span class="secondary-value">{{ s.totalEarned }} ₴</span>
+        </div>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>

@@ -1,11 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ScoreInputComponent } from '../components/score-input/score-input.component';
 import { ScoresChartComponent } from '../components/scores-chart/scores-chart.component';
 import { ScoresStatsComponent } from '../components/scores-stats/scores-stats.component';
 import { DailyScoresService } from '../services/daily-scores.service';
 import { DailyScore } from '../models/daily-score.model';
 import { forkJoin } from 'rxjs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 const CURRENCY_SYMBOL = '₴';
 const MSG_SCORE_SAVED_NO_REWARD = 'Score saved! Aim for a 9 or 10 tomorrow to earn rewards!';
@@ -14,19 +14,18 @@ const EMPTY_LENGTH = 0;
 
 @Component({
   selector: 'app-daily-scores-page',
-  standalone: true,
-  imports: [CommonModule, ScoreInputComponent, ScoresChartComponent, ScoresStatsComponent],
+  imports: [ScoreInputComponent, ScoresChartComponent, ScoresStatsComponent, MatProgressSpinnerModule],
   templateUrl: './daily-scores-page.component.html',
   styleUrl: './daily-scores-page.component.scss',
 })
 export class DailyScoresPageComponent implements OnInit {
   private dailyScoresService = inject(DailyScoresService);
-  
+
   loading = signal<boolean>(true);
   hasScoreToday = signal<boolean>(false);
   currentScore = signal<number | null>(null);
   successMessage = signal<string | null>(null);
-  
+
   monthlyScores = signal<DailyScore[]>([]);
   weeklyScores = signal<DailyScore[]>([]);
   latestScore = signal<DailyScore | null>(null);
@@ -37,7 +36,7 @@ export class DailyScoresPageComponent implements OnInit {
 
   loadData() {
     this.loading.set(true);
-    
+
     forkJoin({
       todayScore: this.dailyScoresService.getTodayScore(),
       monthlyScores: this.dailyScoresService.getCurrentMonthScores(),
@@ -51,17 +50,17 @@ export class DailyScoresPageComponent implements OnInit {
           this.hasScoreToday.set(false);
           this.currentScore.set(null);
         }
-        
+
         this.monthlyScores.set(results.monthlyScores);
         this.weeklyScores.set(results.weeklyScores);
-        
+
         if (results.weeklyScores.length > EMPTY_LENGTH) {
           const latest = results.weeklyScores.reduce((prev, curr) => (prev.date > curr.date) ? prev : curr);
           this.latestScore.set(latest);
         } else {
           this.latestScore.set(null);
         }
-        
+
         this.loading.set(false);
       },
       error: (e) => {
@@ -74,7 +73,7 @@ export class DailyScoresPageComponent implements OnInit {
   async onScoreSubmit(score: number) {
     this.loading.set(true);
     this.successMessage.set(null);
-    
+
     try {
       const result = await this.dailyScoresService.saveTodayScore(score);
       if (result.reward > EMPTY_LENGTH) {

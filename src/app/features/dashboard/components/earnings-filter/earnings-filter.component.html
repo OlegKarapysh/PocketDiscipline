@@ -1,0 +1,39 @@
+<div class="earnings-filter-container">
+  <div class="presets-row">
+    <mat-button-toggle-group
+      [value]="activePreset()"
+      (change)="selectPreset($event.value)"
+      aria-label="Select earnings time period"
+      name="earningsPeriod"
+    >
+      <mat-button-toggle value="last7">7 Days</mat-button-toggle>
+      <mat-button-toggle value="last14">14 Days</mat-button-toggle>
+      <mat-button-toggle value="last30">30 Days</mat-button-toggle>
+      <mat-button-toggle value="custom">Custom</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+
+  @if (showCustomPicker()) {
+    <div class="custom-range-row">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Select Date Range</mat-label>
+        <mat-date-range-input [formGroup]="rangeForm" [rangePicker]="picker" [max]="maxDate">
+          <input
+            matStartDate
+            formControlName="start"
+            placeholder="Start date"
+            (dateChange)="onCustomDateChange()"
+          />
+          <input
+            matEndDate
+            formControlName="end"
+            placeholder="End date"
+            (dateChange)="onCustomDateChange()"
+          />
+        </mat-date-range-input>
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker></mat-date-range-picker>
+      </mat-form-field>
+    </div>
+  }
+</div>

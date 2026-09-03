@@ -56,8 +56,6 @@ describe('GoalList', () => {
   });
 
   it('should group completed goals by month and year', async () => {
-    // August 2026: 1787702400000 (2026-08-25)
-    // July 2026: 1784937600000 (2026-07-25)
     const completedGoals: Goal[] = [
       {
         id: 'g-1',
@@ -89,5 +87,68 @@ describe('GoalList', () => {
 
     const monthHeaders = fixture.debugElement.queryAll(By.css('.month-group h3'));
     expect(monthHeaders.length).toBe(2);
+  });
+
+  it('should forward complete, edit, and delete events when active goal item emits', async () => {
+    const activeGoals: Goal[] = [
+      {
+        id: 'g-1',
+        title: TEST_GOAL_TITLE_1,
+        rewardValue: 2000,
+        status: GOAL_STATUS.ACTIVE,
+        completedAt: null,
+        createdAt: Date.now(),
+      },
+    ];
+
+    fixture.componentRef.setInput('activeGoals', activeGoals);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    let completedId = '';
+    let editedGoal: Goal | null = null;
+    let deletedId = '';
+
+    component.complete.subscribe((id) => (completedId = id));
+    component.edit.subscribe((g) => (editedGoal = g));
+    component.delete.subscribe((id) => (deletedId = id));
+
+    const goalItemEl = fixture.debugElement.query(By.directive(GoalItem));
+    const goalItemComponent = goalItemEl.componentInstance as GoalItem;
+
+    goalItemComponent.complete.emit('g-1');
+    expect(completedId).toBe('g-1');
+
+    goalItemComponent.edit.emit(activeGoals[0]);
+    expect(editedGoal).toEqual(activeGoals[0]);
+
+    goalItemComponent.delete.emit('g-1');
+    expect(deletedId).toBe('g-1');
+  });
+
+  it('should forward undo event when completed goal item emits', async () => {
+    const completedGoals: Goal[] = [
+      {
+        id: 'g-1',
+        title: TEST_GOAL_TITLE_1,
+        rewardValue: 2000,
+        status: GOAL_STATUS.COMPLETED,
+        completedAt: new Date(2026, 7, 25).getTime(),
+        createdAt: 1000,
+      },
+    ];
+
+    fixture.componentRef.setInput('completedGoals', completedGoals);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    let undoneId = '';
+    component.undo.subscribe((id) => (undoneId = id));
+
+    const goalItemEl = fixture.debugElement.query(By.directive(GoalItem));
+    const goalItemComponent = goalItemEl.componentInstance as GoalItem;
+
+    goalItemComponent.undo.emit('g-1');
+    expect(undoneId).toBe('g-1');
   });
 });

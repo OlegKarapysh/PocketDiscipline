@@ -1,15 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
 import { DailyTaskItemComponent } from '../daily-task-item/daily-task-item.component';
-import { DailyTask, DailyTaskDifficulty } from '../../models/daily-task.model';
-
+import { DailyTask } from '../../models/daily-task.model';
+import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.component';
 
 @Component({
-  standalone: true,
   imports: [CommonModule, MatButtonModule, MatIconModule, DailyTaskItemComponent, DailyTaskFormComponent],
   selector: 'app-daily-task-list',
   styleUrl: './daily-task-list.component.scss',
@@ -19,7 +18,15 @@ export class DailyTaskListComponent {
   private dailyTasksService = inject(DailyTasksService);
   
   tasks$ = this.dailyTasksService.tasks$;
-  showForm = false;
+  readonly showForm = signal(false);
+
+  openForm() {
+    this.showForm.set(true);
+  }
+
+  closeForm() {
+    this.showForm.set(false);
+  }
 
   async onCompleteTask(task: DailyTask, difficulty: DailyTaskDifficulty) {
     await this.dailyTasksService.completeTask(task, difficulty);
@@ -27,6 +34,6 @@ export class DailyTaskListComponent {
 
   onTaskCreated(event: {title: string, difficulties: DailyTaskDifficulty[]}) {
     this.dailyTasksService.createTask(event.title, event.difficulties);
-    this.showForm = false;
+    this.showForm.set(false);
   }
 }

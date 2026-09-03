@@ -5,7 +5,6 @@ import { DailyTaskListComponent } from '../../../daily-tasks/components/daily-ta
 
 @Component({
   selector: 'app-tasks-page',
-  standalone: true,
   imports: [TaskListComponent, DailyTaskListComponent],
   templateUrl: './tasks-page.html',
   styleUrl: './tasks-page.scss',

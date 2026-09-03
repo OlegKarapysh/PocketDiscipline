@@ -9,7 +9,6 @@ const STATUS_FOCUSING_PREFIX = 'Focusing on ';
 
 @Component({
   selector: 'app-timer-display',
-  standalone: true,
   imports: [],
   templateUrl: './timer-display.html',
   styleUrl: './timer-display.scss',

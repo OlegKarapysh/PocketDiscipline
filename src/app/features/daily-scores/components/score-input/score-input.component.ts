@@ -1,5 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, input, linkedSignal, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,15 +27,15 @@ const TIER_MODERATE_CLASS = 'tier-moderate';
 
 const TIER_GOOD_LABEL = 'Good Discipline';
 const TIER_GOOD_DESC = 'Strong day! Maintained focus and completed key habits.';
-const TIER_GOOD_ICON = 'thumb_up';
+const TIER_GOOD_ICON = 'check_circle';
 const TIER_GOOD_CLASS = 'tier-good';
 
 const TIER_EXCEPTIONAL_LABEL = 'Exceptional Discipline';
-const TIER_EXCEPTIONAL_DESC = 'Outstanding performance! Crushed your goals.';
-const TIER_EXCEPTIONAL_ICON = 'military_tech';
+const TIER_EXCEPTIONAL_DESC = 'Flawless execution! You crushed every objective.';
+const TIER_EXCEPTIONAL_ICON = 'workspace_premium';
 const TIER_EXCEPTIONAL_CLASS = 'tier-exceptional';
 
-const SCORE_TIERS: readonly ScoreTier[] = [
+const SCORE_TIERS: ScoreTier[] = [
   {
     minScore: TIER_LOW_MIN,
     maxScore: TIER_LOW_MAX,
@@ -73,21 +72,20 @@ const SCORE_TIERS: readonly ScoreTier[] = [
 
 @Component({
   selector: 'app-score-input',
-  standalone: true,
-  imports: [CommonModule, MatButtonModule, MatCardModule, MatIconModule],
+  imports: [MatButtonModule, MatCardModule, MatIconModule],
   templateUrl: './score-input.component.html',
   styleUrl: './score-input.component.scss',
 })
-export class ScoreInputComponent implements OnChanges {
-  @Input() readonly = false;
-  @Input() selectedScore: number | null = null;
-  @Output() scoreSubmitted = new EventEmitter<number>();
+export class ScoreInputComponent {
+  readonly readonly = input<boolean>(false);
+  readonly selectedScore = input<number | null>(null);
+  readonly scoreSubmitted = output<number>();
 
   readonly availableScores = AVAILABLE_SCORES;
-  internalSelectedScore: number | null = null;
+  readonly internalSelectedScore = linkedSignal<number | null>(() => this.selectedScore());
 
-  get activeTier(): ScoreTier | null {
-    const score = this.internalSelectedScore;
+  readonly activeTier = computed<ScoreTier | null>(() => {
+    const score = this.internalSelectedScore();
     if (score === null) {
       return null;
     }
@@ -96,23 +94,18 @@ export class ScoreInputComponent implements OnChanges {
         (tier) => score >= tier.minScore && score <= tier.maxScore
       ) ?? null
     );
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['selectedScore']) {
-      this.internalSelectedScore = changes['selectedScore'].currentValue;
-    }
-  }
+  });
 
   selectScore(score: number): void {
-    if (!this.readonly) {
-      this.internalSelectedScore = score;
+    if (!this.readonly()) {
+      this.internalSelectedScore.set(score);
     }
   }
 
   submit(): void {
-    if (this.internalSelectedScore !== null) {
-      this.scoreSubmitted.emit(this.internalSelectedScore);
+    const score = this.internalSelectedScore();
+    if (score !== null) {
+      this.scoreSubmitted.emit(score);
     }
   }
 }

@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
-import { DailyTask, DailyTaskDifficulty } from '../models/daily-task.model';
+import { DailyTask } from '../models/daily-task.model';
+import { DailyTaskDifficulty } from '../models/daily-task-difficulty.model';
 import { liveQuery } from 'dexie';
 import { Observable, from } from 'rxjs';
 
@@ -18,6 +19,8 @@ const MIDNIGHT_HOUR = 0;
 const MIDNIGHT_MINUTE = 0;
 const MIDNIGHT_SECOND = 0;
 const MIDNIGHT_MILLISECOND = 0;
+const DATE_LOCALE_CA = 'en-CA';
+const MIN_BASE_REWARD = 0;
 
 @Injectable({
   providedIn: 'root'
@@ -76,32 +79,54 @@ export class DailyTasksService {
   }
 
   async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty) {
-    const now = Date.now();
-    let newStreak = task.streak;
-    
-    if (task.lastCompletedAt) {
-      const diffDays = this.getDiffDays(now, task.lastCompletedAt);
-      if (diffDays === DAYS_THRESHOLD_CONSECUTIVE) {
-        newStreak += STREAK_INCREMENT;
-      } else if (diffDays > DAYS_THRESHOLD_CONSECUTIVE) {
-        newStreak = FIRST_STREAK;
-      }
-    } else {
-      newStreak = FIRST_STREAK;
+    if (!difficulty || !Number.isFinite(difficulty.baseReward) || difficulty.baseReward <= MIN_BASE_REWARD) {
+      return;
     }
 
-    const streakCountForBonus = Math.max(newStreak - FIRST_STREAK, INITIAL_STREAK);
-    const cappedStreakBonus = Math.min(streakCountForBonus, MAX_STREAK_BONUS_DAYS);
-    const bonusMultiplier = BASE_BONUS_MULTIPLIER + cappedStreakBonus * STREAK_BONUS_RATE;
-    const finalReward = Math.round(difficulty.baseReward * bonusMultiplier);
+    const now = Date.now();
+    const todayStr = new Date(now).toLocaleDateString(DATE_LOCALE_CA);
 
-    await this.db.transaction(TRANSACTION_READ_WRITE, this.db.dailyTasks, this.db.users, async () => {
-      await this.db.dailyTasks.update(task.id, {
-        lastCompletedAt: now,
-        streak: newStreak
-      });
+    await this.db.transaction(
+      TRANSACTION_READ_WRITE,
+      this.db.dailyTasks,
+      this.db.users,
+      this.db.dailyTaskCompletions,
+      async () => {
+        const freshTask = (await this.db.dailyTasks?.get?.(task.id)) ?? task;
 
-      await this.userService.addBalance(finalReward);
-    });
+        let newStreak = freshTask.streak;
+        if (freshTask.lastCompletedAt) {
+          const diffDays = this.getDiffDays(now, freshTask.lastCompletedAt);
+          if (diffDays === DAYS_THRESHOLD_CONSECUTIVE) {
+            newStreak += STREAK_INCREMENT;
+          } else if (diffDays > DAYS_THRESHOLD_CONSECUTIVE) {
+            newStreak = FIRST_STREAK;
+          }
+        } else {
+          newStreak = FIRST_STREAK;
+        }
+
+        const streakCountForBonus = Math.max(newStreak - FIRST_STREAK, INITIAL_STREAK);
+        const cappedStreakBonus = Math.min(streakCountForBonus, MAX_STREAK_BONUS_DAYS);
+        const bonusMultiplier = BASE_BONUS_MULTIPLIER + cappedStreakBonus * STREAK_BONUS_RATE;
+        const finalReward = Math.round(difficulty.baseReward * bonusMultiplier);
+
+        await this.db.dailyTasks.update(freshTask.id, {
+          lastCompletedAt: now,
+          streak: newStreak
+        });
+
+        await this.db.dailyTaskCompletions.add({
+          id: crypto.randomUUID(),
+          taskId: freshTask.id,
+          date: todayStr,
+          difficultyId: difficulty.id,
+          rewardEarned: finalReward,
+          completedAt: now
+        });
+
+        await this.userService.addBalance(finalReward);
+      }
+    );
   }
 }

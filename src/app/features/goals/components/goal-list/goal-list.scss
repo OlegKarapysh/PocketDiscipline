@@ -4,24 +4,34 @@
   gap: 24px;
 }
 
+.active-section,
+.completed-section,
+.month-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 h2 {
-  margin-top: 0;
-  margin-bottom: 16px;
-  font-size: 1.5rem;
-  font-weight: 500;
+  margin: 0;
+  font: var(--mat-sys-title-large);
 }
 
 h3 {
-  margin-top: 16px;
-  margin-bottom: 12px;
-  font-size: 1.1rem;
-  color: #666;
+  margin: 8px 0 0;
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .empty-state {
   text-align: center;
-  padding: 32px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  color: #666;
+  padding: 32px 16px;
+  background-color: var(--mat-sys-surface-container-low);
+  border-radius: 12px;
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-medium);
+
+  p {
+    margin: 0;
+  }
 }

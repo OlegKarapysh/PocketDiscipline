@@ -6,7 +6,6 @@ import { SessionConfig } from '../components/session-config/session-config';
 
 @Component({
   selector: 'app-pomodoro-container',
-  standalone: true,
   imports: [TimerDisplay, TimerControls, SessionConfig],
   templateUrl: './pomodoro-container.html',
   styleUrl: './pomodoro-container.scss',

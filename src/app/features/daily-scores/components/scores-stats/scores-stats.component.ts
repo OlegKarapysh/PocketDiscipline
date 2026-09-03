@@ -1,5 +1,5 @@
-import { Component, Input, OnChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, input } from '@angular/core';
+import { MatCardModule } from '@angular/material/card';
 import { DailyScore } from '../../models/daily-score.model';
 
 const DEFAULT_AVERAGE = 0;
@@ -10,44 +10,36 @@ const YESTERDAY_OFFSET = 1;
 
 @Component({
   selector: 'app-scores-stats',
-  standalone: true,
-  imports: [CommonModule],
+  imports: [MatCardModule],
   templateUrl: './scores-stats.component.html',
   styleUrl: './scores-stats.component.scss',
 })
-export class ScoresStatsComponent implements OnChanges {
-  @Input() monthlyScores: DailyScore[] = [];
-  @Input() latestScore: DailyScore | null = null;
+export class ScoresStatsComponent {
+  readonly monthlyScores = input<DailyScore[]>([]);
+  readonly latestScore = input<DailyScore | null>(null);
   
-  monthlyAverage = DEFAULT_AVERAGE;
-  currentStreak = DEFAULT_STREAK;
-
-  ngOnChanges() {
-    this.calculateStats();
-  }
-
-  private calculateStats() {
-    if (this.monthlyScores.length > 0) {
-      const sum = this.monthlyScores.reduce((acc, curr) => acc + curr.score, 0);
-      this.monthlyAverage = Math.round((sum / this.monthlyScores.length) * DECIMAL_ROUNDING_FACTOR) / DECIMAL_ROUNDING_FACTOR;
-    } else {
-      this.monthlyAverage = DEFAULT_AVERAGE;
+  readonly monthlyAverage = computed<number>(() => {
+    const scores = this.monthlyScores();
+    if (scores.length > 0) {
+      const sum = scores.reduce((acc, curr) => acc + curr.score, 0);
+      return Math.round((sum / scores.length) * DECIMAL_ROUNDING_FACTOR) / DECIMAL_ROUNDING_FACTOR;
     }
+    return DEFAULT_AVERAGE;
+  });
 
-    if (this.latestScore) {
+  readonly currentStreak = computed<number>(() => {
+    const latest = this.latestScore();
+    if (latest) {
       const today = new Date();
       const todayStr = today.toLocaleDateString(DATE_LOCALE_CA);
       const yesterday = new Date();
       yesterday.setDate(today.getDate() - YESTERDAY_OFFSET);
       const yesterdayStr = yesterday.toLocaleDateString(DATE_LOCALE_CA);
 
-      if (this.latestScore.date === todayStr || this.latestScore.date === yesterdayStr) {
-        this.currentStreak = this.latestScore.streakAtThisDay;
-      } else {
-        this.currentStreak = DEFAULT_STREAK;
+      if (latest.date === todayStr || latest.date === yesterdayStr) {
+        return latest.streakAtThisDay;
       }
-    } else {
-      this.currentStreak = DEFAULT_STREAK;
     }
-  }
+    return DEFAULT_STREAK;
+  });
 }

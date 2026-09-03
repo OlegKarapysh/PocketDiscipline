@@ -2,7 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { EventBusService, EVENT_TYPE, RewardEarnedEvent } from './event-bus.service';
 
-const TEST_REWARD_POINTS = 50;
 
 describe('EventBusService', () => {
   let service: EventBusService;
@@ -23,7 +22,7 @@ describe('EventBusService', () => {
 
     const mockEvent: RewardEarnedEvent = {
       type: EVENT_TYPE.REWARD_EARNED,
-      payload: { points: TEST_REWARD_POINTS },
+      payload: { points: 50 },
       source: 'pomodoro',
     };
 

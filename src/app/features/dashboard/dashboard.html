@@ -1,3 +1,15 @@
 <div class="dashboard-container">
   <app-balance-widget></app-balance-widget>
+
+  <app-earnings-stats
+    [summary]="monthlySummary()"
+    (monthChange)="onMonthChange($event)"
+  ></app-earnings-stats>
+
+  <app-earnings-filter
+    [filter]="currentFilter()"
+    (filterChange)="onFilterChange($event)"
+  ></app-earnings-filter>
+
+  <app-earnings-chart [records]="dailyEarnings()"></app-earnings-chart>
 </div>

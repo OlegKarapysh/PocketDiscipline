@@ -4,7 +4,8 @@ import { By } from '@angular/platform-browser';
 import { Observable, of } from 'rxjs';
 import { DailyTaskListComponent } from './daily-task-list.component';
 import { DailyTasksService } from '../../services/daily-tasks.service';
-import { DailyTask, DailyTaskDifficulty } from '../../models/daily-task.model';
+import { DailyTask } from '../../models/daily-task.model';
+import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 import { DailyTaskItemComponent } from '../daily-task-item/daily-task-item.component';
 import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.component';
 
@@ -68,11 +69,11 @@ describe('DailyTaskListComponent', () => {
   });
 
   it('should toggle form visibility and create task upon onTaskCreated', () => {
-    component.showForm = true;
+    component.showForm.set(true);
     component.onTaskCreated({ title: TEST_TASK_TITLE, difficulties: [EASY_DIFFICULTY] });
 
     expect(dailyTasksServiceMock.createTask).toHaveBeenCalledWith(TEST_TASK_TITLE, [EASY_DIFFICULTY]);
-    expect(component.showForm).toBe(false);
+    expect(component.showForm()).toBe(false);
   });
 
   it('should call service completeTask when onCompleteTask is invoked', async () => {
@@ -82,7 +83,7 @@ describe('DailyTaskListComponent', () => {
   });
 
   it('should show DailyTaskFormComponent when showForm is true', async () => {
-    component.showForm = true;
+    component.showForm.set(true);
     fixture.detectChanges();
     await fixture.whenStable();
 
