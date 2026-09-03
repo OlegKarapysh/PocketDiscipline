@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { Observable, from } from 'rxjs';
 import { liveQuery } from 'dexie';
 import { DbService } from '../../../core/services/db.service';
@@ -30,9 +30,7 @@ const START_OF_DAY_MINUTES = 0;
 const START_OF_DAY_SECONDS = 0;
 const START_OF_DAY_MILLISECONDS = 0;
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DashboardEarningsService {
   private readonly db = inject(DbService);
 

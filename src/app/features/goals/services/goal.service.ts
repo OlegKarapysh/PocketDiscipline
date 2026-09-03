@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
 import { Goal, GOAL_STATUS } from '../models/goal.model';
@@ -9,9 +9,7 @@ const TRANSACTION_READ_WRITE = 'rw';
 const STATUS_FIELD = 'status';
 const COMPLETED_AT_FIELD = 'completedAt';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class GoalService {
   private db = inject(DbService);
   private userService = inject(UserService);

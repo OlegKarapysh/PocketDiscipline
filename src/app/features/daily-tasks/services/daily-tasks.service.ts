@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
 import { DailyTask } from '../models/daily-task.model';
@@ -22,9 +22,7 @@ const MIDNIGHT_MILLISECOND = 0;
 const DATE_LOCALE_CA = 'en-CA';
 const MIN_BASE_REWARD = 0;
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DailyTasksService {
   private db = inject(DbService);
   private userService = inject(UserService);
@@ -42,12 +40,12 @@ export class DailyTasksService {
     return from(liveQuery(async () => {
       const tasks = await this.db.dailyTasks.toArray();
       const now = Date.now();
-      
+
       const updatedTasks = [];
       for (const task of tasks) {
         let currentStreak = task.streak;
         let needsUpdate = false;
-        
+
         if (task.lastCompletedAt) {
           const diffDays = this.getDiffDays(now, task.lastCompletedAt);
           if (diffDays > DAYS_THRESHOLD_CONSECUTIVE && currentStreak > INITIAL_STREAK) {
@@ -55,7 +53,7 @@ export class DailyTasksService {
             needsUpdate = true;
           }
         }
-        
+
         if (needsUpdate) {
           await this.db.dailyTasks.update(task.id, { streak: currentStreak });
           task.streak = currentStreak;

@@ -6,6 +6,7 @@ import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.se
 import { PomodoroStorageService } from './pomodoro-storage.service';
 import { EngagementType } from '../models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../models/pomodoro-session-status.enum';
+import { PomodoroSession } from '../models/pomodoro-session.model';
 
 const DEFAULT_DURATION = 25;
 const CUSTOM_DURATION = 50;
@@ -25,6 +26,21 @@ describe('PomodoroTimerService', () => {
   };
   let dialogMock: { open: ReturnType<typeof vi.fn> };
 
+  const createService = (sessions: PomodoroSession[] = []) => {
+    TestBed.resetTestingModule();
+    storageMock.getAllSessions.mockResolvedValue(sessions);
+    TestBed.configureTestingModule({
+      providers: [
+        PomodoroTimerService,
+        { provide: EventBusService, useValue: eventBusMock },
+        { provide: PomodoroStorageService, useValue: storageMock },
+        { provide: MatDialog, useValue: dialogMock },
+      ],
+    });
+    service = TestBed.inject(PomodoroTimerService);
+    return service;
+  };
+
   beforeEach(() => {
     vi.useFakeTimers();
     vi.spyOn(crypto, 'randomUUID').mockReturnValue(TEST_SESSION_UUID);
@@ -43,20 +59,12 @@ describe('PomodoroTimerService', () => {
       open: vi.fn(),
     };
 
-    TestBed.configureTestingModule({
-      providers: [
-        PomodoroTimerService,
-        { provide: EventBusService, useValue: eventBusMock },
-        { provide: PomodoroStorageService, useValue: storageMock },
-        { provide: MatDialog, useValue: dialogMock },
-      ],
-    });
-
-    service = TestBed.inject(PomodoroTimerService);
+    service = createService([]);
   });
 
   afterEach(() => {
     service.ngOnDestroy();
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
@@ -160,6 +168,104 @@ describe('PomodoroTimerService', () => {
         payload: { points: 25 },
         source: 'pomodoro',
       });
+      expect(dialogMock.open).toHaveBeenCalled();
+    });
+  });
+
+  describe('Session Restoration on Startup', () => {
+    it('should restore active session and resume countdown when remaining time is positive', async () => {
+      const now = Date.now();
+      const activeSession: PomodoroSession = {
+        id: 'restored-session-1',
+        durationMinutes: 25,
+        engagementType: EngagementType.WORK,
+        startTime: now - (5 * 60 * 1000), // started 5 mins ago
+        status: PomodoroSessionStatus.ACTIVE,
+      };
+
+      service = createService([activeSession]);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(service.isActive()).toBe(true);
+      expect(service.currentSessionId()).toBe('restored-session-1');
+      expect(service.timeRemaining()).toBe(20 * 60);
+
+      // Verify timer continues to tick
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(service.timeRemaining()).toBe((20 * 60) - 2);
+    });
+
+    it('should auto-complete session when restored active session has already expired', async () => {
+      const now = Date.now();
+      const expiredSession: PomodoroSession = {
+        id: 'expired-session-1',
+        durationMinutes: 25,
+        engagementType: EngagementType.WORK,
+        startTime: now - (30 * 60 * 1000), // started 30 mins ago for 25 min duration
+        status: PomodoroSessionStatus.ACTIVE,
+      };
+
+      service = createService([expiredSession]);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(service.isActive()).toBe(false);
+      expect(storageMock.updateSession).toHaveBeenCalledWith(
+        'expired-session-1',
+        expect.objectContaining({
+          status: PomodoroSessionStatus.COMPLETED,
+          rewardEarned: 25,
+        })
+      );
+      expect(eventBusMock.emit).toHaveBeenCalledWith({
+        type: EVENT_TYPE.REWARD_EARNED,
+        payload: { points: 25 },
+        source: 'pomodoro',
+      });
+      expect(dialogMock.open).toHaveBeenCalled();
+    });
+  });
+
+  describe('Visibility Change (Background Sync)', () => {
+    it('should synchronize elapsed time when tab returns from background to visible', async () => {
+      await service.startTimer();
+
+      // Tab goes to background
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+
+      // 10 minutes pass while tab is in background
+      await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+
+      // Tab returns to foreground
+      Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+
+      expect(service.isActive()).toBe(true);
+      expect(service.timeRemaining()).toBe(15 * 60);
+    });
+
+    it('should complete session if timer expired while tab was in background', async () => {
+      await service.startTimer();
+
+      // Tab goes to background
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+
+      // 26 minutes pass (timer duration is 25 minutes)
+      await vi.advanceTimersByTimeAsync(26 * 60 * 1000);
+
+      // Tab returns to foreground
+      Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+
+      expect(service.isActive()).toBe(false);
+      expect(storageMock.updateSession).toHaveBeenCalledWith(
+        TEST_SESSION_UUID,
+        expect.objectContaining({
+          status: PomodoroSessionStatus.COMPLETED,
+        })
+      );
+      expect(eventBusMock.emit).toHaveBeenCalled();
       expect(dialogMock.open).toHaveBeenCalled();
     });
   });

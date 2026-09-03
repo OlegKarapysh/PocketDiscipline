@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { DailyScoresService } from '../../features/daily-scores/services/daily-scores.service';
 import { firstValueFrom } from 'rxjs';
 
@@ -13,9 +13,7 @@ const APP_TITLE = 'Pocket Discipline';
 const NOTIFICATION_REMINDER_BODY = 'Time to set your daily score!';
 const NOTIFICATION_ICON_PATH = '/assets/icons/icon-192x192.png';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class NotificationService {
   private dailyScoresService = inject(DailyScoresService);
   private timerId: ReturnType<typeof setTimeout> | null = null;
@@ -24,11 +22,11 @@ export class NotificationService {
     if (!('Notification' in window)) {
       return false;
     }
-    
+
     if (Notification.permission === PERMISSION_GRANTED) {
       return true;
     }
-    
+
     if (Notification.permission !== PERMISSION_DENIED) {
       try {
         const permission = await Notification.requestPermission();
@@ -38,7 +36,7 @@ export class NotificationService {
         return false;
       }
     }
-    
+
     return false;
   }
 
@@ -63,7 +61,7 @@ export class NotificationService {
     }
 
     const timeUntilReminder = reminderTime.getTime() - now.getTime();
-    
+
     this.timerId = setTimeout(async () => {
       await this.checkAndNotify();
       this.scheduleNextCheck();

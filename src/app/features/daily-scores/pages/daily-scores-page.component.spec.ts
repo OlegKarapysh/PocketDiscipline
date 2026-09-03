@@ -1,16 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { of } from 'rxjs';
+import { By } from '@angular/platform-browser';
+import { Subject, of, throwError } from 'rxjs';
 import { DailyScoresPageComponent } from './daily-scores-page.component';
 import { DailyScoresService } from '../services/daily-scores.service';
 import { DailyScore } from '../models/daily-score.model';
-
-const TEST_SCORE_TEN = 10;
-const TEST_SCORE_SEVEN = 7;
-const TEST_REWARD_500 = 500;
-const TEST_STREAK_ONE = 1;
-const TEST_NO_REWARD = 0;
-const TEST_NO_STREAK = 0;
 
 describe('DailyScoresPageComponent', () => {
   let component: DailyScoresPageComponent;
@@ -27,7 +21,7 @@ describe('DailyScoresPageComponent', () => {
       getTodayScore: vi.fn().mockReturnValue(of(undefined)),
       getCurrentMonthScores: vi.fn().mockReturnValue(of([])),
       getLast7DaysScores: vi.fn().mockReturnValue(of([])),
-      saveTodayScore: vi.fn().mockResolvedValue({ reward: TEST_REWARD_500, newStreak: TEST_STREAK_ONE }),
+      saveTodayScore: vi.fn().mockResolvedValue({ reward: 500, newStreak: 1 }),
     };
 
     await TestBed.configureTestingModule({
@@ -44,9 +38,9 @@ describe('DailyScoresPageComponent', () => {
   it('should load today score, monthly scores, and weekly scores on init', async () => {
     const mockTodayScore: DailyScore = {
       date: '2026-08-28',
-      score: TEST_SCORE_TEN,
-      rewardEarned: TEST_REWARD_500,
-      streakAtThisDay: TEST_STREAK_ONE,
+      score: 10,
+      rewardEarned: 500,
+      streakAtThisDay: 1,
       createdAt: Date.now(),
     };
 
@@ -59,7 +53,7 @@ describe('DailyScoresPageComponent', () => {
 
     expect(component.loading()).toBe(false);
     expect(component.hasScoreToday()).toBe(true);
-    expect(component.currentScore()).toBe(TEST_SCORE_TEN);
+    expect(component.currentScore()).toBe(10);
     expect(component.monthlyScores().length).toBe(1);
     expect(component.weeklyScores().length).toBe(1);
     expect(component.latestScore()).toEqual(mockTodayScore);
@@ -74,43 +68,87 @@ describe('DailyScoresPageComponent', () => {
     expect(component.currentScore()).toBeNull();
   });
 
+  it('should render loading container when loading is true and replace with score components when false', async () => {
+    const pendingSubject = new Subject<DailyScore | undefined>();
+    dailyScoresServiceMock.getTodayScore.mockReturnValue(pendingSubject);
+    dailyScoresServiceMock.getCurrentMonthScores.mockReturnValue(of([]));
+    dailyScoresServiceMock.getLast7DaysScores.mockReturnValue(of([]));
+
+    component.loadData();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.loading()).toBe(true);
+    expect(fixture.debugElement.query(By.css('.loading-container'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('app-scores-stats'))).toBeNull();
+
+    pendingSubject.next(undefined);
+    pendingSubject.complete();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.loading()).toBe(false);
+    expect(fixture.debugElement.query(By.css('.loading-container'))).toBeNull();
+    expect(fixture.debugElement.query(By.css('app-scores-stats'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('app-scores-chart'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('app-score-input'))).toBeTruthy();
+  });
+
   it('should submit today score and show reward success message when reward > 0', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    await component.onScoreSubmit(TEST_SCORE_TEN);
+    await component.onScoreSubmit(10);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(dailyScoresServiceMock.saveTodayScore).toHaveBeenCalledWith(TEST_SCORE_TEN);
+    expect(dailyScoresServiceMock.saveTodayScore).toHaveBeenCalledWith(10);
     expect(component.successMessage()).toContain('Awesome! You earned 500₴. Current high score streak: 1');
   });
 
   it('should show encouragement message when score submitted earns no reward', async () => {
     dailyScoresServiceMock.saveTodayScore.mockResolvedValue({
-      reward: TEST_NO_REWARD,
-      newStreak: TEST_NO_STREAK,
+      reward: 0,
+      newStreak: 0,
     });
 
     fixture.detectChanges();
     await fixture.whenStable();
 
-    await component.onScoreSubmit(TEST_SCORE_SEVEN);
+    await component.onScoreSubmit(7);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(dailyScoresServiceMock.saveTodayScore).toHaveBeenCalledWith(TEST_SCORE_SEVEN);
+    expect(dailyScoresServiceMock.saveTodayScore).toHaveBeenCalledWith(7);
     expect(component.successMessage()).toBe('Score saved! Aim for a 9 or 10 tomorrow to earn rewards!');
   });
 
   it('should handle submission failure gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      // suppress expected error output
+    });
     dailyScoresServiceMock.saveTodayScore.mockRejectedValue(new Error('Database error'));
 
     fixture.detectChanges();
     await fixture.whenStable();
 
-    await component.onScoreSubmit(TEST_SCORE_TEN);
+    await component.onScoreSubmit(10);
 
     expect(component.loading()).toBe(false);
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to save score', expect.any(Error));
+  });
+
+  it('should handle data loading failure gracefully', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      // suppress expected error output
+    });
+    dailyScoresServiceMock.getTodayScore.mockReturnValue(throwError(() => new Error('Network error')));
+
+    component.loadData();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.loading()).toBe(false);
+    expect(consoleSpy).toHaveBeenCalled();
   });
 });

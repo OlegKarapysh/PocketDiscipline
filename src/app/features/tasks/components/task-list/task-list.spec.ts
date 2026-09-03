@@ -66,6 +66,20 @@ describe('TaskListComponent', () => {
     expect(taskServiceMock.completeTask).toHaveBeenCalledWith(TEST_TASK_ID);
   });
 
+  it('should complete task when checkbox is clicked in template', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const checkboxEl = fixture.debugElement.query(By.css('mat-checkbox'));
+    expect(checkboxEl).toBeTruthy();
+
+    const input = checkboxEl.nativeElement.querySelector('input');
+    input.click();
+    fixture.detectChanges();
+
+    expect(taskServiceMock.completeTask).toHaveBeenCalledWith(TEST_TASK_ID);
+  });
+
   it('should not call completeTask if task is already completed', () => {
     const completedTask: DisciplineItem = {
       ...mockTasks[0],
@@ -75,7 +89,7 @@ describe('TaskListComponent', () => {
     expect(taskServiceMock.completeTask).not.toHaveBeenCalled();
   });
 
-  it('should render empty state when task stream is empty and allow adding dummy tasks', async () => {
+  it('should render empty state when task stream is empty and trigger addDummyTask on button click', async () => {
     component.tasks$ = of([]);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -83,7 +97,10 @@ describe('TaskListComponent', () => {
     const emptyState = fixture.debugElement.query(By.css('.empty-state'));
     expect(emptyState).toBeTruthy();
 
-    component.addDummyTask();
+    const addBtn = fixture.debugElement.query(By.css('.empty-state button'));
+    expect(addBtn).toBeTruthy();
+
+    addBtn.nativeElement.click();
     expect(taskServiceMock.addTask).toHaveBeenCalledTimes(3);
   });
 });

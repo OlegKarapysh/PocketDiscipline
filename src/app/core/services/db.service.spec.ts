@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it, beforeEach } from 'vitest';
+import { afterEach, describe, expect, it, beforeEach, vi } from 'vitest';
+import Dexie from 'dexie';
 import { DbService } from './db.service';
 import { EngagementType } from '../../features/pomodoro/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../features/pomodoro/models/pomodoro-session-status.enum';
@@ -12,6 +13,10 @@ describe('DbService', () => {
       providers: [DbService],
     });
     service = TestBed.inject(DbService);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('should instantiate DbService with all required tables', () => {
@@ -54,5 +59,30 @@ describe('DbService', () => {
     expect(initialGoals[0].title).toBe('do 50 push-ups on fists');
     expect(initialGoals[1].title).toBe('do 100 squats');
     expect(initialGoals[2].title).toBe('do 12 pomodoro a day');
+  });
+
+  describe('migrateLegacyPomodoroDatabase', () => {
+    it('should skip migration when legacy database does not exist', async () => {
+      vi.spyOn(Dexie, 'exists').mockResolvedValue(false);
+      const deleteSpy = vi.spyOn(Dexie, 'delete');
+
+      await service.migrateLegacyPomodoroDatabase();
+
+      expect(deleteSpy).not.toHaveBeenCalled();
+    });
+
+    it('should catch error and log error when migration fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // suppress expected console error in test
+      });
+      vi.spyOn(Dexie, 'exists').mockRejectedValue(new Error('IndexedDB failure'));
+
+      await service.migrateLegacyPomodoroDatabase();
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to migrate legacy Pomodoro database:',
+        expect.any(Error)
+      );
+    });
   });
 });

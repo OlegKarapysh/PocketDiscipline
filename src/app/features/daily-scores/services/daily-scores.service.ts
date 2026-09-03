@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { DbService } from '../../../core/services/db.service';
 import { DailyScore } from '../models/daily-score.model';
 import { Observable, from } from 'rxjs';
@@ -21,9 +21,7 @@ const MONTH_START_DAY = '01';
 const MONTH_END_DAY = '31';
 const ERROR_USER_NOT_FOUND = 'User not found when attempting to add reward.';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DailyScoresService {
   private db = inject(DbService);
 

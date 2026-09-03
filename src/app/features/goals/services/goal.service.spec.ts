@@ -1,9 +1,38 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { firstValueFrom, from } from 'rxjs';
 import { GoalService } from './goal.service';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
 import { Goal, GOAL_STATUS } from '../models/goal.model';
+
+vi.mock('dexie', () => {
+  class MockDexie {}
+  return {
+    default: MockDexie,
+    Dexie: MockDexie,
+    liveQuery: (fn: () => unknown) => ({
+      '@@observable'() {
+        return {
+          subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
+            Promise.resolve().then(fn).then(
+              (val) => {
+                subscriber.next(val);
+                subscriber.complete();
+              },
+              (err) => subscriber.error(err)
+            );
+            return {
+              unsubscribe() {
+                // no-op for test mock
+              },
+            };
+          },
+        };
+      },
+    }),
+  };
+});
 
 const TEST_GOAL_ID = 'goal-123';
 const TEST_GOAL_TITLE = 'do 50 push-ups on fists';
@@ -68,14 +97,46 @@ describe('GoalService', () => {
   });
 
   describe('Live Queries', () => {
-    it('should return live query for active goals', () => {
-      const result = service.getActiveGoals();
-      expect(result).toBeTruthy();
+    it('should return live query and emit active goals filtered by status', async () => {
+      const mockActiveGoals: Goal[] = [
+        {
+          id: TEST_GOAL_ID,
+          title: TEST_GOAL_TITLE,
+          rewardValue: TEST_REWARD_VALUE,
+          status: GOAL_STATUS.ACTIVE,
+          completedAt: null,
+          createdAt: Date.now(),
+        },
+      ];
+      dbMock.goals.toArray.mockResolvedValue(mockActiveGoals);
+
+      const result = await firstValueFrom(from(service.getActiveGoals()));
+
+      expect(dbMock.goals.where).toHaveBeenCalledWith('status');
+      expect(dbMock.goals.equals).toHaveBeenCalledWith(GOAL_STATUS.ACTIVE);
+      expect(result).toEqual(mockActiveGoals);
     });
 
-    it('should return live query for completed goals', () => {
-      const result = service.getCompletedGoals();
-      expect(result).toBeTruthy();
+    it('should return live query and emit completed goals sorted by completedAt', async () => {
+      const mockCompletedGoals: Goal[] = [
+        {
+          id: TEST_GOAL_ID,
+          title: TEST_GOAL_TITLE,
+          rewardValue: TEST_REWARD_VALUE,
+          status: GOAL_STATUS.COMPLETED,
+          completedAt: Date.now(),
+          createdAt: Date.now() - 1000,
+        },
+      ];
+      dbMock.goals.sortBy.mockResolvedValue(mockCompletedGoals);
+
+      const result = await firstValueFrom(from(service.getCompletedGoals()));
+
+      expect(dbMock.goals.where).toHaveBeenCalledWith('status');
+      expect(dbMock.goals.equals).toHaveBeenCalledWith(GOAL_STATUS.COMPLETED);
+      expect(dbMock.goals.reverse).toHaveBeenCalled();
+      expect(dbMock.goals.sortBy).toHaveBeenCalledWith('completedAt');
+      expect(result).toEqual(mockCompletedGoals);
     });
   });
 

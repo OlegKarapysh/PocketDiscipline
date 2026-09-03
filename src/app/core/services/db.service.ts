@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import Dexie, { Table } from 'dexie';
 import { User, CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
 import { DisciplineItem } from '../models/discipline-item.model';
@@ -9,9 +9,7 @@ import { PomodoroSession } from '../../features/pomodoro/models/pomodoro-session
 import { DailyTaskCompletion } from '../../features/daily-tasks/models/daily-task-completion.model';
 
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class DbService extends Dexie {
   users!: Table<User, number>;
   tasks!: Table<DisciplineItem, string>;
@@ -101,7 +99,7 @@ export class DbService extends Dexie {
     );
   }
 
-  private async migrateLegacyPomodoroDatabase(): Promise<void> {
+  async migrateLegacyPomodoroDatabase(): Promise<void> {
     try {
       const exists = await Dexie.exists('PomodoroDatabase');
       if (!exists) {

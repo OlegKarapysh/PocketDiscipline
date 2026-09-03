@@ -68,6 +68,36 @@ describe('DailyTaskListComponent', () => {
     expect(emptyState.nativeElement.textContent).toContain('No daily tasks configured yet.');
   });
 
+  it('should open form when Add Daily Task button is clicked in header', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const addBtn = fixture.debugElement.query(By.css('.header button[mat-fab]'));
+    expect(addBtn).toBeTruthy();
+
+    addBtn.nativeElement.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.showForm()).toBe(true);
+    const formEl = fixture.debugElement.query(By.directive(DailyTaskFormComponent));
+    expect(formEl).toBeTruthy();
+  });
+
+  it('should close form when cancelForm event is emitted by DailyTaskFormComponent', async () => {
+    component.showForm.set(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const formEl = fixture.debugElement.query(By.directive(DailyTaskFormComponent));
+    const formComp = formEl.componentInstance as DailyTaskFormComponent;
+
+    formComp.cancelForm.emit();
+    fixture.detectChanges();
+
+    expect(component.showForm()).toBe(false);
+  });
+
   it('should toggle form visibility and create task upon onTaskCreated', () => {
     component.showForm.set(true);
     component.onTaskCreated({ title: TEST_TASK_TITLE, difficulties: [EASY_DIFFICULTY] });
@@ -76,18 +106,15 @@ describe('DailyTaskListComponent', () => {
     expect(component.showForm()).toBe(false);
   });
 
-  it('should call service completeTask when onCompleteTask is invoked', async () => {
-    await component.onCompleteTask(mockTasks[0], EASY_DIFFICULTY);
-
-    expect(dailyTasksServiceMock.completeTask).toHaveBeenCalledWith(mockTasks[0], EASY_DIFFICULTY);
-  });
-
-  it('should show DailyTaskFormComponent when showForm is true', async () => {
-    component.showForm.set(true);
+  it('should forward completion to service when child item emits complete event', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const formEl = fixture.debugElement.query(By.directive(DailyTaskFormComponent));
-    expect(formEl).toBeTruthy();
+    const itemEl = fixture.debugElement.query(By.directive(DailyTaskItemComponent));
+    const itemComp = itemEl.componentInstance as DailyTaskItemComponent;
+
+    itemComp.complete.emit(EASY_DIFFICULTY);
+
+    expect(dailyTasksServiceMock.completeTask).toHaveBeenCalledWith(mockTasks[0], EASY_DIFFICULTY);
   });
 });

@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { concatMap, filter } from 'rxjs/operators';
 import { DbService } from './db.service';
@@ -6,9 +6,7 @@ import { liveQuery } from 'dexie';
 import { EventBusService, EVENT_TYPE, RewardEarnedEvent } from './event-bus.service';
 import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class UserService {
   private db = inject(DbService);
   private eventBus = inject(EventBusService);

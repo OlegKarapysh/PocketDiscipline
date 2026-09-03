@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
@@ -19,9 +19,7 @@ export interface RewardEarnedEvent extends AppEvent {
   };
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class EventBusService {
   private eventSubject = new Subject<AppEvent>();
 

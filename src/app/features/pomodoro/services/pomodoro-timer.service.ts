@@ -1,4 +1,4 @@
-import { Injectable, signal, OnDestroy, inject } from '@angular/core';
+import { Service, signal, OnDestroy, inject } from '@angular/core';
 import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
 import { PomodoroSession } from '../models/pomodoro-session.model';
@@ -38,9 +38,7 @@ export interface TimerConfig {
   engagementType: EngagementType;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class PomodoroTimerService implements OnDestroy {
   durationMinutes = signal<number>(DEFAULT_DURATION_MINUTES);
   engagementType = signal<EngagementType>(EngagementType.WORK);
@@ -48,11 +46,11 @@ export class PomodoroTimerService implements OnDestroy {
   isActive = signal<boolean>(false);
   timeRemaining = signal<number>(DEFAULT_DURATION_MINUTES * SECONDS_IN_MINUTE);
   currentSessionId = signal<string | null>(null);
-  
+
   private timerInterval: ReturnType<typeof setInterval> | null = null;
   private expectedEndTime = 0;
   private backgroundTimeStart: number | null = null;
-  
+
   private eventBus = inject(EventBusService);
   private storage = inject(PomodoroStorageService);
   private dialog = inject(MatDialog);
@@ -99,13 +97,13 @@ export class PomodoroTimerService implements OnDestroy {
 
   async startTimer() {
     if (this.isActive()) return;
-    
+
     const id = crypto.randomUUID();
     this.currentSessionId.set(id);
     this.isActive.set(true);
-    
+
     this.expectedEndTime = Date.now() + this.timeRemaining() * MILLISECONDS_IN_SECOND;
-    
+
     const session: PomodoroSession = {
       id,
       durationMinutes: this.durationMinutes(),
@@ -113,16 +111,16 @@ export class PomodoroTimerService implements OnDestroy {
       startTime: Date.now(),
       status: PomodoroSessionStatus.ACTIVE
     };
-    
+
     await this.storage.saveSession(session);
-    
+
     this.startInterval();
   }
 
   async stopTimer() {
     if (!this.isActive()) return;
     this.clearInterval();
-    
+
     const id = this.currentSessionId();
     if (id) {
       await this.storage.updateSession(id, {
@@ -130,7 +128,7 @@ export class PomodoroTimerService implements OnDestroy {
         endTime: Date.now()
       });
     }
-    
+
     this.resetTimer();
   }
 
@@ -138,7 +136,7 @@ export class PomodoroTimerService implements OnDestroy {
     this.clearInterval();
     this.timerInterval = setInterval(() => {
       const remaining = Math.round((this.expectedEndTime - Date.now()) / MILLISECONDS_IN_SECOND);
-      
+
       if (remaining <= 0) {
         this.timeRemaining.set(0);
         this.completeSession();
@@ -161,7 +159,7 @@ export class PomodoroTimerService implements OnDestroy {
     if (!id) return;
 
     const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
-    
+
     await this.storage.updateSession(id, {
       status: PomodoroSessionStatus.COMPLETED,
       endTime: Date.now(),
@@ -171,7 +169,7 @@ export class PomodoroTimerService implements OnDestroy {
     this.completeTimer(reward);
 
     this.showNotification(NOTIFICATION_TITLE, `You earned ${reward} points for your ${this.engagementType()} session.`);
-    
+
     this.dialog.open(CompletionDialog, {
       data: {
         reward,
@@ -181,7 +179,7 @@ export class PomodoroTimerService implements OnDestroy {
 
     this.resetTimer();
   }
-  
+
   completeTimer(rewardPoints: number) {
     this.eventBus.emit({
       type: EVENT_TYPE.REWARD_EARNED,
@@ -199,7 +197,7 @@ export class PomodoroTimerService implements OnDestroy {
   private calculateReward(duration: number, type: EngagementType): number {
     const base = type === EngagementType.WORK ? BASE_REWARD_WORK : BASE_REWARD_STUDY;
     let multiplier = 0;
-    
+
     if (duration >= DURATION_TIER_1_MIN && duration < DURATION_TIER_2_MIN) {
       multiplier = MULTIPLIER_TIER_1;
     } else if (duration >= DURATION_TIER_2_MIN && duration < DURATION_TIER_3_MIN) {
@@ -209,22 +207,22 @@ export class PomodoroTimerService implements OnDestroy {
     } else if (duration >= DURATION_TIER_4_MIN) {
       multiplier = MULTIPLIER_TIER_4;
     }
-    
+
     return Math.trunc(base * multiplier);
   }
 
   private async restoreActiveSession() {
     const sessions = await this.storage.getAllSessions();
     const active = sessions.find(s => s.status === PomodoroSessionStatus.ACTIVE);
-    
+
     if (active) {
       const expectedEnd = active.startTime + (active.durationMinutes * SECONDS_IN_MINUTE * MILLISECONDS_IN_SECOND);
       const remaining = Math.round((expectedEnd - Date.now()) / MILLISECONDS_IN_SECOND);
-      
+
       this.durationMinutes.set(active.durationMinutes);
       this.engagementType.set(active.engagementType);
       this.currentSessionId.set(active.id);
-      
+
       if (remaining <= 0) {
         this.expectedEndTime = expectedEnd;
         await this.completeSession();

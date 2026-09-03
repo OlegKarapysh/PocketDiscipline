@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { DbService } from './db.service';
 import { DisciplineItem } from '../models/discipline-item.model';
 import { DisciplineItemType } from '../models/discipline-item-type.enum';
@@ -12,9 +12,7 @@ const MIDNIGHT_MILLISECOND = 0;
 const TRANSACTION_READ_WRITE = 'rw';
 const FIELD_TYPE = 'type';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Service()
 export class TaskService {
   private db = inject(DbService);
   private userService = inject(UserService);
@@ -57,7 +55,7 @@ export class TaskService {
 
     const tasks = await this.db.tasks.where(FIELD_TYPE).equals(DisciplineItemType.HABIT).toArray();
     const toReset = tasks.filter(t => t.isCompleted && t.lastCompletedAt && t.lastCompletedAt < startOfDay);
-    
+
     if (toReset.length > 0) {
       await this.db.transaction(TRANSACTION_READ_WRITE, this.db.tasks, async () => {
         for (const t of toReset) {
