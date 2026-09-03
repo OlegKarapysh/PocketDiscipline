@@ -5,7 +5,7 @@ test.describe('Daily Scores Flow', () => {
     await page.goto('/daily-scores');
 
     // Verify loading indicator is not visible
-    await expect(page.locator('.loading-state')).not.toBeVisible();
+    await expect(page.locator('mat-spinner')).not.toBeVisible();
 
     // Verify page header
     await expect(page.locator('h1')).toHaveText('Daily Scores');
@@ -16,8 +16,8 @@ test.describe('Daily Scores Flow', () => {
     await expect(page.getByText('Current Streak')).toBeVisible();
 
     // Verify 7-day chart is rendered
-    await expect(page.locator('.chart-container')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Last 7 Days' })).toBeVisible();
+    await expect(page.locator('app-scores-chart')).toBeVisible();
+    await expect(page.getByText('Last 7 Days')).toBeVisible();
     await expect(page.locator('.bars .bar-wrapper')).toHaveCount(7);
 
     // Verify score input prompt and 10 score buttons
@@ -34,7 +34,7 @@ test.describe('Daily Scores Flow', () => {
     await expect(page).toHaveURL(/.*daily-scores/);
 
     // Verify loading state finishes
-    await expect(page.locator('.loading-state')).not.toBeVisible();
+    await expect(page.locator('mat-spinner')).not.toBeVisible();
 
     // Select score 10
     await page.getByRole('button', { name: 'Score 10' }).click();

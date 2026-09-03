@@ -27,10 +27,6 @@ describe('DbService', () => {
   });
 
   it('should validate valid PomodoroSession objects in isValidPomodoroSession', () => {
-    // Access private validator via any for unit testing validation logic
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const validator = (service as any).isValidPomodoroSession.bind(service);
-
     const validSession = {
       id: 'session-123',
       durationMinutes: 25,
@@ -39,24 +35,20 @@ describe('DbService', () => {
       status: PomodoroSessionStatus.COMPLETED,
     };
 
-    expect(validator(validSession)).toBe(true);
+    expect(service.isValidPomodoroSession(validSession)).toBe(true);
   });
 
   it('should reject invalid PomodoroSession objects in isValidPomodoroSession', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const validator = (service as any).isValidPomodoroSession.bind(service);
-
-    expect(validator(null)).toBe(false);
-    expect(validator(undefined)).toBe(false);
-    expect(validator({})).toBe(false);
-    expect(validator({ id: '', durationMinutes: 25, startTime: 1000, status: 'active' })).toBe(false);
-    expect(validator({ id: 's-1', durationMinutes: '25', startTime: 1000, status: 'active' })).toBe(false);
-    expect(validator({ id: 's-1', durationMinutes: 25, startTime: '1000', status: 'active' })).toBe(false);
+    expect(service.isValidPomodoroSession(null)).toBe(false);
+    expect(service.isValidPomodoroSession(undefined)).toBe(false);
+    expect(service.isValidPomodoroSession({})).toBe(false);
+    expect(service.isValidPomodoroSession({ id: '', durationMinutes: 25, startTime: 1000, status: 'active' })).toBe(false);
+    expect(service.isValidPomodoroSession({ id: 's-1', durationMinutes: '25', startTime: 1000, status: 'active' })).toBe(false);
+    expect(service.isValidPomodoroSession({ id: 's-1', durationMinutes: 25, startTime: '1000', status: 'active' })).toBe(false);
   });
 
   it('should return predefined initial goals with valid structures', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const initialGoals = (service as any).getInitialGoals();
+    const initialGoals = service.getInitialGoals();
 
     expect(initialGoals).toHaveLength(3);
     expect(initialGoals[0].title).toBe('do 50 push-ups on fists');

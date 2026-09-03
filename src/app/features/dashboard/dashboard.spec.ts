@@ -10,18 +10,26 @@ import { MonthChangeEvent } from './models/month-change-event.model';
 describe('Dashboard', () => {
   let component: Dashboard;
   let fixture: ComponentFixture<Dashboard>;
-
-  const earningsServiceMock = {
-    getPresetDateRange: vi.fn().mockReturnValue({ startDate: '2026-08-27', endDate: '2026-09-02' }),
-    getDailyEarnings: vi.fn().mockReturnValue(of([])),
-    getMonthlyEarningsSummary: vi.fn().mockReturnValue(of(null)),
+  let earningsServiceMock: {
+    getPresetDateRange: ReturnType<typeof vi.fn>;
+    getDailyEarnings: ReturnType<typeof vi.fn>;
+    getMonthlyEarningsSummary: ReturnType<typeof vi.fn>;
   };
-
-  const userServiceMock = {
-    user$: of({ id: 1, name: 'User', balance: 1000 }),
+  let userServiceMock: {
+    user$: Observable<{ id: number; name: string; balance: number }>;
   };
 
   beforeEach(async () => {
+    earningsServiceMock = {
+      getPresetDateRange: vi.fn().mockReturnValue({ startDate: '2026-08-27', endDate: '2026-09-02' }),
+      getDailyEarnings: vi.fn().mockReturnValue(of([])),
+      getMonthlyEarningsSummary: vi.fn().mockReturnValue(of(null)),
+    };
+
+    userServiceMock = {
+      user$: of({ id: 1, name: 'User', balance: 1000 }),
+    };
+
     await TestBed.configureTestingModule({
       imports: [Dashboard],
       providers: [
@@ -87,6 +95,10 @@ describe('Dashboard', () => {
   });
 
   it('should handle service error gracefully in dailyEarnings stream', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      // suppress expected console error output
+    });
+
     earningsServiceMock.getDailyEarnings.mockReturnValue(
       new Observable(subscriber => subscriber.error(new Error('IndexedDB error')))
     );
@@ -100,5 +112,7 @@ describe('Dashboard', () => {
     await fixture.whenStable();
 
     expect(component.dailyEarnings()).toEqual([]);
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });

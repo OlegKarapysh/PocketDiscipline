@@ -85,7 +85,7 @@ export class DbService extends Dexie {
     });
   }
 
-  private isValidPomodoroSession(item: unknown): item is PomodoroSession {
+  isValidPomodoroSession(item: unknown): item is PomodoroSession {
     if (!item || typeof item !== 'object') {
       return false;
     }
@@ -132,7 +132,7 @@ export class DbService extends Dexie {
     }
   }
 
-  private getInitialGoals(): Goal[] {
+  getInitialGoals(): Goal[] {
     return [
       {
         id: crypto.randomUUID(),

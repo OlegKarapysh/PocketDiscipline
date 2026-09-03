@@ -6,11 +6,6 @@ import { TimerDisplay } from './timer-display';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
 import { EngagementType } from '../../models/engagement-type.enum';
 
-const SECONDS_25_MIN = 1500;
-const SECONDS_1_MIN_5_SEC = 65;
-const SECONDS_5_SEC = 5;
-const SECONDS_ZERO = 0;
-
 describe('TimerDisplay', () => {
   let fixture: ComponentFixture<TimerDisplay>;
   let timerServiceMock: {
@@ -23,7 +18,7 @@ describe('TimerDisplay', () => {
     timerServiceMock = {
       isActive: signal(false),
       engagementType: signal(EngagementType.WORK),
-      timeRemaining: signal(SECONDS_25_MIN),
+      timeRemaining: signal(1500),
     };
 
     await TestBed.configureTestingModule({
@@ -50,7 +45,7 @@ describe('TimerDisplay', () => {
   it('should format 65 seconds as "01:05" and show "Focusing on study" when active', async () => {
     timerServiceMock.isActive.set(true);
     timerServiceMock.engagementType.set(EngagementType.STUDY);
-    timerServiceMock.timeRemaining.set(SECONDS_1_MIN_5_SEC);
+    timerServiceMock.timeRemaining.set(65);
 
     fixture.detectChanges();
     await fixture.whenStable();
@@ -63,7 +58,7 @@ describe('TimerDisplay', () => {
   });
 
   it('should format 5 seconds as "00:05" with leading zero padding', async () => {
-    timerServiceMock.timeRemaining.set(SECONDS_5_SEC);
+    timerServiceMock.timeRemaining.set(5);
 
     fixture.detectChanges();
     await fixture.whenStable();
@@ -73,7 +68,7 @@ describe('TimerDisplay', () => {
   });
 
   it('should format 0 seconds as "00:00"', async () => {
-    timerServiceMock.timeRemaining.set(SECONDS_ZERO);
+    timerServiceMock.timeRemaining.set(0);
 
     fixture.detectChanges();
     await fixture.whenStable();

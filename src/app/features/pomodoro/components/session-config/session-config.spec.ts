@@ -1,14 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { By } from '@angular/platform-browser';
 import { signal } from '@angular/core';
 import { SessionConfig } from './session-config';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
 import { EngagementType } from '../../models/engagement-type.enum';
-
-const VALID_DURATION = 45;
-const INVALID_LOW_DURATION = 10;
-const INVALID_HIGH_DURATION = 130;
-const DEFAULT_DURATION = 25;
 
 describe('SessionConfig', () => {
   let component: SessionConfig;
@@ -23,7 +19,7 @@ describe('SessionConfig', () => {
   beforeEach(async () => {
     timerServiceMock = {
       isActive: signal(false),
-      durationMinutes: signal(DEFAULT_DURATION),
+      durationMinutes: signal(25),
       engagementType: signal(EngagementType.WORK),
       setConfig: vi.fn(),
     };
@@ -39,23 +35,41 @@ describe('SessionConfig', () => {
     component = fixture.componentInstance;
   });
 
+  it('should render config container when timer is inactive', async () => {
+    timerServiceMock.isActive.set(false);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const container = fixture.debugElement.query(By.css('.config-container'));
+    expect(container).toBeTruthy();
+  });
+
+  it('should hide config container when timer is active', async () => {
+    timerServiceMock.isActive.set(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const container = fixture.debugElement.query(By.css('.config-container'));
+    expect(container).toBeNull();
+  });
+
   it('should update duration when value is within valid range [15, 120]', () => {
-    component.updateDuration(VALID_DURATION);
+    component.updateDuration(45);
 
     expect(timerServiceMock.setConfig).toHaveBeenCalledWith({
-      durationMinutes: VALID_DURATION,
+      durationMinutes: 45,
       engagementType: EngagementType.WORK,
     });
   });
 
   it('should ignore duration update when value is below minimum (< 15)', () => {
-    component.updateDuration(INVALID_LOW_DURATION);
+    component.updateDuration(10);
 
     expect(timerServiceMock.setConfig).not.toHaveBeenCalled();
   });
 
   it('should ignore duration update when value is above maximum (> 120)', () => {
-    component.updateDuration(INVALID_HIGH_DURATION);
+    component.updateDuration(130);
 
     expect(timerServiceMock.setConfig).not.toHaveBeenCalled();
   });
@@ -64,7 +78,7 @@ describe('SessionConfig', () => {
     component.updateEngagement(EngagementType.STUDY);
 
     expect(timerServiceMock.setConfig).toHaveBeenCalledWith({
-      durationMinutes: DEFAULT_DURATION,
+      durationMinutes: 25,
       engagementType: EngagementType.STUDY,
     });
   });

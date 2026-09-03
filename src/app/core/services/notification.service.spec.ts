@@ -10,8 +10,11 @@ describe('NotificationService', () => {
   let dailyScoresServiceMock: {
     getTodayScore: ReturnType<typeof vi.fn>;
   };
+  const originalNotification = window.Notification;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+
     dailyScoresServiceMock = {
       getTodayScore: vi.fn().mockReturnValue(of(undefined)),
     };
@@ -27,95 +30,119 @@ describe('NotificationService', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    window.Notification = originalNotification;
   });
 
-  it('should return false if Notification API is not supported in window', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const originalNotification = (window as any).Notification;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (window as any).Notification;
+  describe('requestPermission', () => {
+    it('should return false if Notification API is not supported in window', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (window as any).Notification;
 
-    const result = await service.requestPermission();
-    expect(result).toBe(false);
+      const result = await service.requestPermission();
+      expect(result).toBe(false);
+    });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).Notification = originalNotification;
+    it('should return true if Notification.permission is already granted', async () => {
+      vi.stubGlobal('Notification', {
+        permission: 'granted',
+        requestPermission: vi.fn().mockResolvedValue('granted'),
+      });
+
+      const result = await service.requestPermission();
+      expect(result).toBe(true);
+    });
+
+    it('should request permission if not already denied', async () => {
+      const requestPermissionMock = vi.fn().mockResolvedValue('granted');
+      vi.stubGlobal('Notification', {
+        permission: 'default',
+        requestPermission: requestPermissionMock,
+      });
+
+      const result = await service.requestPermission();
+      expect(requestPermissionMock).toHaveBeenCalled();
+      expect(result).toBe(true);
+    });
+
+    it('should return false if requestPermission is denied', async () => {
+      const requestPermissionMock = vi.fn().mockResolvedValue('denied');
+      vi.stubGlobal('Notification', {
+        permission: 'default',
+        requestPermission: requestPermissionMock,
+      });
+
+      const result = await service.requestPermission();
+      expect(result).toBe(false);
+    });
   });
 
-  it('should return true if Notification.permission is already granted', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).Notification = {
-      permission: 'granted',
-      requestPermission: vi.fn().mockResolvedValue('granted'),
-    };
+  describe('scheduleDailyReminder', () => {
+    it('should not schedule any reminder if permission is denied', async () => {
+      vi.stubGlobal('Notification', {
+        permission: 'denied',
+        requestPermission: vi.fn().mockResolvedValue('denied'),
+      });
 
-    const result = await service.requestPermission();
-    expect(result).toBe(true);
-  });
+      await service.scheduleDailyReminder();
 
-  it('should request permission if not already denied', async () => {
-    const requestPermissionMock = vi.fn().mockResolvedValue('granted');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).Notification = {
-      permission: 'default',
-      requestPermission: requestPermissionMock,
-    };
+      expect(vi.getTimerCount()).toBe(0);
+    });
 
-    const result = await service.requestPermission();
-    expect(requestPermissionMock).toHaveBeenCalled();
-    expect(result).toBe(true);
-  });
+    it('should schedule reminder and trigger notification at 21:30 when score is not set', async () => {
+      const notificationSpy = vi.fn();
+      Object.assign(notificationSpy, {
+        permission: 'granted',
+        requestPermission: vi.fn().mockResolvedValue('granted'),
+      });
+      vi.stubGlobal('Notification', notificationSpy);
 
-  it('should return false if requestPermission is denied', async () => {
-    const requestPermissionMock = vi.fn().mockResolvedValue('denied');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).Notification = {
-      permission: 'default',
-      requestPermission: requestPermissionMock,
-    };
+      // Set time to 10:00:00 on test day
+      vi.setSystemTime(new Date(2026, 7, 28, 10, 0, 0));
+      dailyScoresServiceMock.getTodayScore.mockReturnValue(of(undefined));
 
-    const result = await service.requestPermission();
-    expect(result).toBe(false);
-  });
+      await service.scheduleDailyReminder();
 
-  it('should create notification if today score is not set', async () => {
-    const notificationConstructor = vi.fn();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).Notification = notificationConstructor;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).Notification.permission = 'granted';
+      // Ensure timer was scheduled
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
 
-    dailyScoresServiceMock.getTodayScore.mockReturnValue(of(undefined));
+      // Advance time to 21:30:00 (11 hours and 30 minutes later)
+      await vi.advanceTimersByTimeAsync(11.5 * 60 * 60 * 1000);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (service as any).checkAndNotify();
+      expect(notificationSpy).toHaveBeenCalledWith(
+        'Pocket Discipline',
+        expect.objectContaining({
+          body: 'Time to set your daily score!',
+        })
+      );
+    });
 
-    expect(notificationConstructor).toHaveBeenCalledWith(
-      'Pocket Discipline',
-      expect.objectContaining({
-        body: 'Time to set your daily score!',
-      })
-    );
-  });
+    it('should schedule reminder but not trigger notification when score is already recorded', async () => {
+      const notificationSpy = vi.fn();
+      Object.assign(notificationSpy, {
+        permission: 'granted',
+        requestPermission: vi.fn().mockResolvedValue('granted'),
+      });
+      vi.stubGlobal('Notification', notificationSpy);
 
-  it('should not create notification if today score is already recorded', async () => {
-    const notificationConstructor = vi.fn();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).Notification = notificationConstructor;
+      vi.setSystemTime(new Date(2026, 7, 28, 10, 0, 0));
 
-    const mockScore: DailyScore = {
-      date: '2026-08-28',
-      score: 10,
-      rewardEarned: 500,
-      streakAtThisDay: 1,
-      createdAt: Date.now(),
-    };
-    dailyScoresServiceMock.getTodayScore.mockReturnValue(of(mockScore));
+      const mockScore: DailyScore = {
+        date: '2026-08-28',
+        score: 10,
+        rewardEarned: 500,
+        streakAtThisDay: 1,
+        createdAt: Date.now(),
+      };
+      dailyScoresServiceMock.getTodayScore.mockReturnValue(of(mockScore));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (service as any).checkAndNotify();
+      await service.scheduleDailyReminder();
 
-    expect(notificationConstructor).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(11.5 * 60 * 60 * 1000);
+
+      expect(notificationSpy).not.toHaveBeenCalled();
+    });
   });
 });

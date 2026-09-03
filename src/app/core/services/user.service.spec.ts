@@ -1,11 +1,38 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { firstValueFrom, from } from 'rxjs';
 import { UserService } from './user.service';
 import { DbService } from './db.service';
 import { EventBusService, EVENT_TYPE } from './event-bus.service';
-import { User, CURRENT_USER_ID, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
+import { User, CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
 
-
+vi.mock('dexie', () => {
+  class MockDexie {}
+  return {
+    default: MockDexie,
+    Dexie: MockDexie,
+    liveQuery: (fn: () => unknown) => ({
+      '@@observable'() {
+        return {
+          subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
+            Promise.resolve().then(fn).then(
+              (val) => {
+                subscriber.next(val);
+                subscriber.complete();
+              },
+              (err) => subscriber.error(err)
+            );
+            return {
+              unsubscribe() {
+                // no-op for test mock
+              },
+            };
+          },
+        };
+      },
+    }),
+  };
+});
 
 describe('UserService', () => {
   let service: UserService;
@@ -40,6 +67,39 @@ describe('UserService', () => {
     service = TestBed.inject(UserService);
   });
 
+  describe('user$ live query', () => {
+    it('should emit existing user from database', async () => {
+      const existingUser: User = {
+        id: CURRENT_USER_ID,
+        name: 'Existing',
+        balance: 1500,
+        createdAt: 1000,
+        updatedAt: 2000,
+      };
+      dbMock.users.get.mockResolvedValue(existingUser);
+
+      const user = await firstValueFrom(from(service.user$));
+
+      expect(dbMock.users.get).toHaveBeenCalledWith(CURRENT_USER_ID);
+      expect(user).toEqual(existingUser);
+    });
+
+    it('should return default initial user when user is not found in database', async () => {
+      dbMock.users.get.mockResolvedValue(undefined);
+
+      const user = await firstValueFrom(from(service.user$));
+
+      expect(dbMock.users.get).toHaveBeenCalledWith(CURRENT_USER_ID);
+      expect(user).toEqual(
+        expect.objectContaining({
+          id: CURRENT_USER_ID,
+          name: CURRENT_USER_NAME,
+          balance: DEFAULT_INITIAL_BALANCE,
+        })
+      );
+    });
+  });
+
   describe('addBalance', () => {
     it('should increment existing user balance and update timestamp', async () => {
       const existingUser: User = {
@@ -56,7 +116,7 @@ describe('UserService', () => {
       expect(dbMock.users.update).toHaveBeenCalledWith(
         CURRENT_USER_ID,
         expect.objectContaining({
-          balance: 500 + 200,
+          balance: 700,
         })
       );
     });
@@ -76,7 +136,7 @@ describe('UserService', () => {
       expect(dbMock.users.update).toHaveBeenCalledWith(
         CURRENT_USER_ID,
         expect.objectContaining({
-          balance: 500 + -200,
+          balance: 300,
         })
       );
     });
@@ -121,6 +181,19 @@ describe('UserService', () => {
           balance: DEFAULT_INITIAL_BALANCE + 200,
         })
       );
+    });
+
+    it('should ignore EVENT_TYPE.REWARD_EARNED when points are zero or missing', async () => {
+      eventBus.emit({
+        type: EVENT_TYPE.REWARD_EARNED,
+        payload: { points: 0 },
+        source: 'test',
+      });
+
+      await Promise.resolve();
+
+      expect(dbMock.users.update).not.toHaveBeenCalled();
+      expect(dbMock.users.add).not.toHaveBeenCalled();
     });
   });
 });

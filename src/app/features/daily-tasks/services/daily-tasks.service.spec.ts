@@ -1,10 +1,39 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { firstValueFrom } from 'rxjs';
 import { DailyTasksService } from './daily-tasks.service';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
 import { DailyTask } from '../models/daily-task.model';
 import { DailyTaskDifficulty } from '../models/daily-task-difficulty.model';
+
+vi.mock('dexie', () => {
+  class MockDexie {}
+  return {
+    default: MockDexie,
+    Dexie: MockDexie,
+    liveQuery: (fn: () => unknown) => ({
+      '@@observable'() {
+        return {
+          subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
+            Promise.resolve().then(fn).then(
+              (val) => {
+                subscriber.next(val);
+                subscriber.complete();
+              },
+              (err) => subscriber.error(err)
+            );
+            return {
+              unsubscribe() {
+                // no-op for test mock
+              },
+            };
+          },
+        };
+      },
+    }),
+  };
+});
 
 const EASY_DIFFICULTY: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
 const HARD_DIFFICULTY: DailyTaskDifficulty = { id: 'hard', name: 'Hard', baseReward: 300 };
@@ -78,6 +107,60 @@ describe('DailyTasksService', () => {
         lastCompletedAt: null,
       })
     );
+  });
+
+  describe('tasks$ stream', () => {
+    it('should emit tasks from database', async () => {
+      const mockTask: DailyTask = {
+        id: 'test-daily-task-1',
+        title: 'Morning Workout',
+        difficulties: [EASY_DIFFICULTY],
+        createdAt: Date.now(),
+        streak: 0,
+        lastCompletedAt: null,
+      };
+      dbMock.dailyTasks.toArray.mockResolvedValue([mockTask]);
+
+      const tasks = await firstValueFrom(service.tasks$);
+
+      expect(tasks).toHaveLength(1);
+      expect(tasks[0].id).toBe('test-daily-task-1');
+      expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
+    });
+
+    it('should reset broken streak to 0 and persist to DB when task was missed for more than 1 day', async () => {
+      const staleTask: DailyTask = {
+        id: 'test-daily-task-1',
+        title: 'Morning Workout',
+        difficulties: [EASY_DIFFICULTY],
+        createdAt: Date.now() - (10 * ONE_DAY_MS),
+        streak: 5,
+        lastCompletedAt: Date.now() - TWO_DAYS_MS,
+      };
+      dbMock.dailyTasks.toArray.mockResolvedValue([staleTask]);
+
+      const tasks = await firstValueFrom(service.tasks$);
+
+      expect(tasks[0].streak).toBe(0);
+      expect(dbMock.dailyTasks.update).toHaveBeenCalledWith('test-daily-task-1', { streak: 0 });
+    });
+
+    it('should maintain streak when task was completed yesterday', async () => {
+      const yesterdayTask: DailyTask = {
+        id: 'test-daily-task-1',
+        title: 'Morning Workout',
+        difficulties: [EASY_DIFFICULTY],
+        createdAt: Date.now() - (5 * ONE_DAY_MS),
+        streak: 5,
+        lastCompletedAt: Date.now() - ONE_DAY_MS,
+      };
+      dbMock.dailyTasks.toArray.mockResolvedValue([yesterdayTask]);
+
+      const tasks = await firstValueFrom(service.tasks$);
+
+      expect(tasks[0].streak).toBe(5);
+      expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
+    });
   });
 
   describe('completeTask and Reward Scaling', () => {
