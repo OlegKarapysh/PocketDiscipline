@@ -1,0 +1,50 @@
+.rewards-hub {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hub-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  .header-titles {
+    h1 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--mat-sys-on-surface, #212121);
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.9375rem;
+      color: var(--mat-sys-on-surface-variant, #616161);
+    }
+  }
+
+  .quick-spend-action-button {
+    height: 44px;
+    border-radius: 22px;
+    padding: 0 1.25rem;
+  }
+}
+
+.hub-tabs {
+  .tab-icon {
+    margin-right: 8px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .tab-content {
+    padding-top: 1rem;
+  }
+}

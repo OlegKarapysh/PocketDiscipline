@@ -3,7 +3,7 @@ import { Router, provideRouter } from '@angular/router';
 import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
 import { MatSidenav } from '@angular/material/sidenav';
 import { BehaviorSubject } from 'rxjs';
-import { vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LayoutComponent } from './layout';
 
 describe('Layout', () => {
@@ -25,6 +25,7 @@ describe('Layout', () => {
           { path: 'goals', children: [] },
           { path: 'pomodoro', children: [] },
           { path: 'daily-scores', children: [] },
+          { path: 'rewards', children: [] },
           { path: 'settings', children: [] },
         ]),
         {
@@ -56,6 +57,7 @@ describe('Layout', () => {
     expect(links).toContain('/goals');
     expect(links).toContain('/pomodoro');
     expect(links).toContain('/daily-scores');
+    expect(links).toContain('/rewards');
     expect(links).toContain('/settings');
   });
 
@@ -103,6 +105,11 @@ describe('Layout', () => {
     fixture.detectChanges();
     titleEl = fixture.nativeElement.querySelector('mat-sidenav-content mat-toolbar .tab-title');
     expect(titleEl?.textContent?.trim()).toBe('Daily Scores');
+
+    await router.navigateByUrl('/rewards');
+    fixture.detectChanges();
+    titleEl = fixture.nativeElement.querySelector('mat-sidenav-content mat-toolbar .tab-title');
+    expect(titleEl?.textContent?.trim()).toBe('Rewards');
 
     await router.navigateByUrl('/settings');
     fixture.detectChanges();

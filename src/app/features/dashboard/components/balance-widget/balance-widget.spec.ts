@@ -1,42 +1,39 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { BalanceWidgetComponent } from './balance-widget';
 import { UserService } from '../../../../core/services/user.service';
 import { User } from '../../../../core/models/user.model';
-
-const TEST_BALANCE = 2500;
+import { EventBusService } from '../../../../core/services/event-bus.service';
 
 describe('BalanceWidgetComponent', () => {
-  let component: BalanceWidgetComponent;
   let fixture: ComponentFixture<BalanceWidgetComponent>;
-  let userServiceMock: {
-    user$: Observable<User | undefined>;
-  };
-
-  const mockUser: User = {
-    id: 1,
-    name: 'Current',
-    balance: TEST_BALANCE,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
+  let userSubject: BehaviorSubject<User | undefined>;
+  let eventBusMock: { emit: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    userServiceMock = {
-      user$: of(mockUser),
+    userSubject = new BehaviorSubject<User | undefined>({
+      id: 1,
+      name: 'Current',
+      balance: 2500,
+      createdAt: 1000,
+      updatedAt: 1000,
+    });
+
+    eventBusMock = {
+      emit: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
       imports: [BalanceWidgetComponent],
       providers: [
-        { provide: UserService, useValue: userServiceMock },
+        { provide: UserService, useValue: { user$: userSubject.asObservable() } },
+        { provide: EventBusService, useValue: eventBusMock },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BalanceWidgetComponent);
-    component = fixture.componentInstance;
   });
 
   it('should render user balance with currency symbol ₴', async () => {
@@ -48,11 +45,22 @@ describe('BalanceWidgetComponent', () => {
   });
 
   it('should render placeholder "-- ₴" when user is undefined', async () => {
-    component.user$ = of(undefined);
+    userSubject.next(undefined);
     fixture.detectChanges();
     await fixture.whenStable();
 
     const amountEl = fixture.debugElement.query(By.css('.amount'));
     expect(amountEl.nativeElement.textContent.trim()).toBe('-- ₴');
+  });
+
+  it('should emit REQUEST_QUICK_SPEND event when clicking the Quick Spend button in the DOM', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const button = fixture.debugElement.query(By.css('.quick-spend-btn'));
+    expect(button).toBeTruthy();
+    button.nativeElement.click();
+
+    expect(eventBusMock.emit).toHaveBeenCalledWith({ type: 'REQUEST_QUICK_SPEND' });
   });
 });

@@ -15,6 +15,7 @@ const ROUTE_TASKS = 'tasks';
 const ROUTE_GOALS = 'goals';
 const ROUTE_POMODORO = 'pomodoro';
 const ROUTE_DAILY_SCORES = 'daily-scores';
+const ROUTE_REWARDS = 'rewards';
 const ROUTE_SETTINGS = 'settings';
 
 const TITLE_DASHBOARD = 'Dashboard';
@@ -22,6 +23,7 @@ const TITLE_TASKS = 'Tasks';
 const TITLE_GOALS = 'Goals';
 const TITLE_POMODORO = 'Pomodoro';
 const TITLE_DAILY_SCORES = 'Daily Scores';
+const TITLE_REWARDS = 'Rewards';
 const TITLE_SETTINGS = 'Settings';
 
 const ROUTE_TITLE_MAP: Record<string, string> = {
@@ -30,6 +32,7 @@ const ROUTE_TITLE_MAP: Record<string, string> = {
   [ROUTE_GOALS]: TITLE_GOALS,
   [ROUTE_POMODORO]: TITLE_POMODORO,
   [ROUTE_DAILY_SCORES]: TITLE_DAILY_SCORES,
+  [ROUTE_REWARDS]: TITLE_REWARDS,
   [ROUTE_SETTINGS]: TITLE_SETTINGS,
 };
 
@@ -39,6 +42,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { path: '/goals', label: TITLE_GOALS, icon: 'star' },
   { path: '/pomodoro', label: TITLE_POMODORO, icon: 'timer' },
   { path: '/daily-scores', label: TITLE_DAILY_SCORES, icon: 'score' },
+  { path: '/rewards', label: TITLE_REWARDS, icon: 'card_giftcard' },
   { path: '/settings', label: TITLE_SETTINGS, icon: 'settings' },
 ];
 
