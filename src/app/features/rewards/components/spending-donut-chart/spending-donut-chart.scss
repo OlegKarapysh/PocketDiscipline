@@ -1,0 +1,116 @@
+.donut-chart-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.chart-visual {
+  width: 220px;
+  height: 220px;
+  position: relative;
+  flex-shrink: 0;
+
+  .donut-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .donut-segment {
+    transition: stroke-width 0.2s ease, opacity 0.2s ease;
+    cursor: pointer;
+
+    &:hover,
+    &.hovered {
+      stroke-width: 26;
+      opacity: 0.9;
+    }
+  }
+
+  .center-text {
+    pointer-events: none;
+
+    .center-label {
+      font-size: 13px;
+      font-weight: 500;
+      fill: var(--mat-sys-on-surface-variant, #616161);
+    }
+
+    .center-value {
+      font-size: 20px;
+      font-weight: 700;
+      fill: var(--mat-sys-on-surface, #212121);
+    }
+
+    .center-sub {
+      font-size: 12px;
+      font-weight: 600;
+      fill: var(--mat-sys-primary, #673ab7);
+    }
+  }
+}
+
+.chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  flex: 1;
+  min-width: 220px;
+  max-width: 380px;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover,
+    &.highlighted {
+      background-color: var(--mat-sys-surface-container-high, rgba(0, 0, 0, 0.04));
+    }
+
+    .legend-swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      flex-shrink: 0;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .legend-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+
+      .legend-name {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--mat-sys-on-surface, #212121);
+      }
+
+      .legend-percent {
+        font-size: 0.75rem;
+        color: var(--mat-sys-on-surface-variant, #757575);
+      }
+    }
+
+    .legend-amount {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--mat-sys-on-surface, #212121);
+    }
+  }
+}

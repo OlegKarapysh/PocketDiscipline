@@ -1,0 +1,88 @@
+<mat-card class="reward-card" [class.is-claimed]="reward().status === 'claimed'">
+  <mat-card-header class="card-header">
+    <div mat-card-avatar class="category-avatar" [style.backgroundColor]="category()?.color || '#6b7280'">
+      <mat-icon>{{ category()?.icon || 'card_giftcard' }}</mat-icon>
+    </div>
+
+    <mat-card-title class="card-title">{{ reward().title }}</mat-card-title>
+    <mat-card-subtitle class="card-subtitle">
+      {{ category()?.name || 'General' }}
+    </mat-card-subtitle>
+
+    <div class="header-actions">
+      <button mat-icon-button [matMenuTriggerFor]="cardMenu" aria-label="Reward options">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #cardMenu="matMenu">
+        <button mat-menu-item (click)="onEdit()">
+          <mat-icon>edit</mat-icon>
+          <span>Edit</span>
+        </button>
+        <button mat-menu-item (click)="onDelete()" class="delete-item">
+          <mat-icon color="warn">delete</mat-icon>
+          <span>Delete</span>
+        </button>
+      </mat-menu>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content class="card-content">
+    <div class="tags-row">
+      <span class="type-tag" [class.is-milestone]="reward().type === 'one-time'">
+        {{ reward().type === 'one-time' ? 'Milestone' : 'Repeatable Treat' }}
+      </span>
+
+      @if (reward().status === 'claimed') {
+        <span class="claimed-tag"> <mat-icon>check_circle</mat-icon> Claimed </span>
+      }
+
+      @if (reward().type === 'repeatable' && reward().claimCount > 0) {
+        <span class="count-tag"> Claimed {{ reward().claimCount }}x </span>
+      }
+    </div>
+
+    <div class="cost-section">
+      <span class="cost-label">Cost</span>
+      <span class="cost-value">{{ reward().cost | number: '1.0-2' }} ₴</span>
+    </div>
+
+    @if (reward().status === 'active') {
+      <div class="progress-section">
+        <mat-progress-bar
+          mode="determinate"
+          [value]="progressPercentage()"
+          [color]="isAffordable() ? 'accent' : 'primary'"
+        />
+        <div class="progress-text">
+          <span>{{ currentBalance() | number: '1.0-2' }} / {{ reward().cost | number: '1.0-2' }} ₴</span>
+          <span class="percentage">{{ progressPercentage() }}%</span>
+        </div>
+      </div>
+    } @else {
+      <div class="claimed-info">
+        <mat-icon color="primary">event_available</mat-icon>
+        <span>Claimed on {{ reward().claimedAt | date: 'mediumDate' }}</span>
+      </div>
+    }
+  </mat-card-content>
+
+  <mat-card-actions class="card-actions" align="end">
+    @if (reward().status === 'active') {
+      @if (isAffordable()) {
+        <button mat-flat-button color="primary" class="claim-btn" type="button" (click)="onClaim()">
+          <mat-icon>redeem</mat-icon>
+          Claim Reward
+        </button>
+      } @else {
+        <button mat-stroked-button disabled class="need-more-btn" type="button">
+          Need {{ remainingNeeded() | number: '1.0-2' }} ₴ more
+        </button>
+      }
+    } @else {
+      <button mat-button disabled class="claimed-btn" type="button">
+        <mat-icon>done_all</mat-icon>
+        Completed
+      </button>
+    }
+  </mat-card-actions>
+</mat-card>

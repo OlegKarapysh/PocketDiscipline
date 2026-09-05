@@ -1,0 +1,122 @@
+.category-management {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  .header-text {
+    h2 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--mat-sys-on-surface, #212121);
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--mat-sys-on-surface-variant, #616161);
+    }
+  }
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.category-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1.25rem;
+  background: var(--mat-sys-surface, #ffffff);
+  border-radius: 12px;
+  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  transition: box-shadow 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .category-main {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+
+    .category-icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      flex-shrink: 0;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .category-name {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--mat-sys-on-surface, #212121);
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+
+      &.protected-badge {
+        background: rgba(103, 58, 183, 0.12);
+        color: #673ab7;
+
+        .badge-icon {
+          font-size: 12px;
+          width: 12px;
+          height: 12px;
+        }
+      }
+
+      &.default-badge {
+        background: rgba(0, 0, 0, 0.06);
+        color: var(--mat-sys-on-surface-variant, #616161);
+      }
+    }
+  }
+
+  .category-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    .edit-button {
+      color: var(--mat-sys-on-surface-variant, #616161);
+    }
+
+    .delete-button {
+      color: var(--mat-sys-error, #d32f2f);
+
+      &:disabled {
+        color: var(--mat-sys-outline, #bdbdbd);
+      }
+    }
+  }
+}

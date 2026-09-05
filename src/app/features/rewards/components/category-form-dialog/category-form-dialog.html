@@ -1,0 +1,68 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit Category' : 'Add New Category' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="category-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Category Name</mat-label>
+      <input
+        matInput
+        formControlName="name"
+        placeholder="e.g. Fitness, Hobbies, Gaming"
+        required
+      />
+      @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+        <mat-error>Category name is required</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="selection-section">
+      <span class="section-label">Select Color</span>
+      <div class="color-picker-row">
+        @for (color of presetColors; track color) {
+          <button
+            type="button"
+            class="color-chip"
+            [style.backgroundColor]="color"
+            [class.selected]="form.value.color === color"
+            (click)="selectColor(color)"
+            [attr.aria-label]="'Select color ' + color"
+          >
+            @if (form.value.color === color) {
+              <mat-icon class="check-icon">check</mat-icon>
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="selection-section">
+      <span class="section-label">Select Icon</span>
+      <div class="icon-picker-row">
+        @for (icon of presetIcons; track icon) {
+          <button
+            type="button"
+            class="icon-chip"
+            [class.selected]="form.value.icon === icon"
+            [style.backgroundColor]="form.value.icon === icon ? form.value.color : 'transparent'"
+            (click)="selectIcon(icon)"
+            [attr.aria-label]="'Select icon ' + icon"
+          >
+            <mat-icon>{{ icon }}</mat-icon>
+          </button>
+        }
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button
+    mat-flat-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="form.invalid"
+  >
+    {{ isEdit ? 'Save Changes' : 'Create Category' }}
+  </button>
+</mat-dialog-actions>

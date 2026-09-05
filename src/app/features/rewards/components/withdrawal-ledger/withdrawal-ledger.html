@@ -1,0 +1,109 @@
+<div class="withdrawal-ledger">
+  <div class="filters-card">
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search withdrawals</mat-label>
+        <input
+          matInput
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onFilterChange()"
+          placeholder="Search by title or notes..."
+        />
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="category-field">
+        <mat-label>Category</mat-label>
+        <mat-select
+          [(ngModel)]="selectedCategoryId"
+          (ngModelChange)="onFilterChange()"
+        >
+          <mat-option value="">All Categories</mat-option>
+          @for (category of categories(); track category.id) {
+            <mat-option [value]="category.id">
+              {{ category.name }}
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="date-field">
+        <mat-label>From Date</mat-label>
+        <input
+          matInput
+          type="date"
+          [(ngModel)]="startDate"
+          (ngModelChange)="onFilterChange()"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="date-field">
+        <mat-label>To Date</mat-label>
+        <input
+          matInput
+          type="date"
+          [(ngModel)]="endDate"
+          (ngModelChange)="onFilterChange()"
+        />
+      </mat-form-field>
+
+      <button
+        mat-button
+        class="clear-button"
+        (click)="clearFilters()"
+        [disabled]="!searchQuery && !selectedCategoryId && !startDate && !endDate"
+      >
+        <mat-icon>filter_alt_off</mat-icon>
+        Clear
+      </button>
+    </div>
+  </div>
+
+  @if (withdrawals().length === 0) {
+    <div class="empty-state">
+      <mat-icon class="empty-icon">receipt_long</mat-icon>
+      <h3>No withdrawals found</h3>
+      <p>No transactions match your current filter criteria.</p>
+    </div>
+  } @else {
+    <div class="ledger-list">
+      @for (withdrawal of withdrawals(); track withdrawal.id) {
+        <div class="ledger-item">
+          <div class="item-left">
+            <div class="category-indicator" [style.backgroundColor]="getCategory(withdrawal.categoryId)?.color || '#9e9e9e'">
+              <mat-icon>{{ getCategory(withdrawal.categoryId)?.icon || 'category' }}</mat-icon>
+            </div>
+            <div class="item-details">
+              <span class="item-title">{{ withdrawal.title }}</span>
+              <div class="item-meta">
+                <span class="item-category">{{ getCategory(withdrawal.categoryId)?.name || 'Uncategorized' }}</span>
+                <span class="meta-dot">&bull;</span>
+                <span class="item-date">{{ withdrawal.date }}</span>
+                @if (withdrawal.rewardId) {
+                  <span class="meta-dot">&bull;</span>
+                  <span class="reward-tag">Store Reward</span>
+                }
+              </div>
+              @if (withdrawal.notes) {
+                <span class="item-notes">{{ withdrawal.notes }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="item-right">
+            <span class="item-amount">-{{ withdrawal.amount }} ₴</span>
+            <button
+              mat-icon-button
+              color="warn"
+              matTooltip="Revert withdrawal and refund balance"
+              (click)="confirmRevert(withdrawal)"
+              class="revert-button"
+            >
+              <mat-icon>undo</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

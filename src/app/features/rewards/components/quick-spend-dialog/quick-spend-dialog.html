@@ -1,0 +1,88 @@
+<h2 mat-dialog-title class="dialog-header">
+  <mat-icon color="primary">account_balance_wallet</mat-icon>
+  <span>Quick Spend</span>
+  @if (user(); as u) {
+    <span class="balance-badge">
+      Balance: {{ u.balance | number: '1.0-2' }} ₴
+    </span>
+  }
+</h2>
+
+<mat-dialog-content [formGroup]="form" class="dialog-content">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Amount (₴)</mat-label>
+    <input
+      matInput
+      type="number"
+      formControlName="amount"
+      placeholder="0.00"
+      step="any"
+      min="0.01"
+      cdkFocusInitial
+    />
+    <span matTextSuffix>₴</span>
+    @if (form.controls.amount.hasError('required')) {
+      <mat-error>Amount is required</mat-error>
+    }
+    @if (form.controls.amount.hasError('min')) {
+      <mat-error>Amount must be greater than zero</mat-error>
+    }
+    @if (form.controls.amount.hasError('max')) {
+      <mat-error>Amount exceeds your available balance</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Title</mat-label>
+    <input
+      matInput
+      type="text"
+      formControlName="title"
+      placeholder="e.g. Protein Bar, Coffee, Lunch"
+      maxlength="100"
+    />
+    @if (form.controls.title.hasError('required')) {
+      <mat-error>Title is required</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Category</mat-label>
+    <mat-select formControlName="categoryId">
+      @for (category of categories(); track category.id) {
+        <mat-option [value]="category.id">
+          <mat-icon [style.color]="category.color">{{ category.icon }}</mat-icon>
+          <span>{{ category.name }}</span>
+        </mat-option>
+      }
+    </mat-select>
+    @if (form.controls.categoryId.hasError('required')) {
+      <mat-error>Category is required</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Notes (Optional)</mat-label>
+    <textarea
+      matInput
+      rows="2"
+      formControlName="notes"
+      placeholder="Additional details..."
+    ></textarea>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()" [disabled]="isSubmitting()">
+    Cancel
+  </button>
+  <button
+    mat-flat-button
+    color="primary"
+    type="button"
+    (click)="submit()"
+    [disabled]="form.invalid || isSubmitting()"
+  >
+    Withdraw
+  </button>
+</mat-dialog-actions>
