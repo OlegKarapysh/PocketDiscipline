@@ -128,3 +128,64 @@ export interface DisciplineItem {
   createdAt: number;
 }
 ```
+
+#### `withdrawals` *(Version 8)*
+**Primary Key**: `id`  
+**Indexed Properties**: `id`, `date`, `categoryId`, `rewardId`, `timestamp`  
+**Description**: Financial ledger records tracking money withdrawals/deductions (Quick Spends and claimed rewards).
+
+```typescript
+export interface WithdrawalRecord {
+  id: string;               // UUID
+  amount: number;           // Amount deducted in ₴ (greater than 0)
+  title: string;            // Name/title of withdrawal or snapshot of reward title
+  categoryId: string;       // Foreign key to RewardCategory id
+  notes?: string;           // Optional user notes/description
+  date: string;             // Format: YYYY-MM-DD
+  timestamp: number;        // Epoch timestamp (ms)
+  rewardId?: string | null; // Optional foreign key to RewardItem id if claimed from store
+}
+```
+
+#### `rewards` *(Version 8)*
+**Primary Key**: `id`  
+**Indexed Properties**: `id`, `categoryId`, `status`, `type`, `createdAt`  
+**Description**: Reward store catalog items defining repeatable or one-time milestone rewards and their costs.
+
+```typescript
+export type RewardType = 'repeatable' | 'one-time';
+export type RewardStatus = 'active' | 'claimed' | 'archived';
+
+export interface RewardItem {
+  id: string;               // UUID
+  title: string;            // Reward title/name
+  cost: number;             // Cost in ₴ (greater than 0)
+  categoryId: string;       // Foreign key to RewardCategory id
+  type: RewardType;         // 'repeatable' or 'one-time'
+  status: RewardStatus;     // 'active' | 'claimed' | 'archived'
+  description?: string;     // Optional details
+  icon?: string;            // Material icon name
+  claimCount: number;       // Number of times claimed (for repeatable)
+  claimedAt?: number | null;// Timestamp of first/milestone claim
+  createdAt: number;        // Creation timestamp
+  updatedAt: number;        // Last updated timestamp
+}
+```
+
+#### `rewardCategories` *(Version 8)*
+**Primary Key**: `id`  
+**Indexed Properties**: `id`, `name`, `isProtected`  
+**Description**: Categories for organizing rewards and withdrawals. Includes the protected default fallback category `general` (`General`).
+
+```typescript
+export interface RewardCategory {
+  id: string;               // UUID or fixed ID ('general')
+  name: string;             // Category display name
+  color: string;            // Hex color code (e.g. #6b7280)
+  icon: string;             // Material icon name
+  isDefault: boolean;       // Built-in seed category flag
+  isProtected: boolean;     // Protected from deletion flag (true for 'general')
+  createdAt: number;        // Creation timestamp
+}
+```
+
