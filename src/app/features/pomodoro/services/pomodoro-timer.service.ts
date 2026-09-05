@@ -32,11 +32,9 @@ const EVENT_VISIBILITY_CHANGE = 'visibilitychange';
 const VISIBILITY_STATE_VISIBLE = 'visible';
 const PERMISSION_DEFAULT = 'default';
 const PERMISSION_GRANTED = 'granted';
+import { TimerConfig } from '../models/timer-config.model';
 
-export interface TimerConfig {
-  durationMinutes: number;
-  engagementType: EngagementType;
-}
+export type { TimerConfig };
 
 @Service()
 export class PomodoroTimerService implements OnDestroy {
@@ -168,7 +166,7 @@ export class PomodoroTimerService implements OnDestroy {
 
     this.completeTimer(reward);
 
-    this.showNotification(NOTIFICATION_TITLE, `You earned ${reward} points for your ${this.engagementType()} session.`);
+    this.showNotification(NOTIFICATION_TITLE, `You earned ${reward}₴ for your ${this.engagementType()} session.`);
 
     this.dialog.open(CompletionDialog, {
       data: {
