@@ -7,6 +7,10 @@ import { DailyTask } from '../../features/daily-tasks/models/daily-task.model';
 import { DailyScore } from '../../features/daily-scores/models/daily-score.model';
 import { PomodoroSession } from '../../features/pomodoro/models/pomodoro-session.model';
 import { DailyTaskCompletion } from '../../features/daily-tasks/models/daily-task-completion.model';
+import { WithdrawalRecord } from '../../features/rewards/models/withdrawal.model';
+import { RewardItem } from '../../features/rewards/models/reward.model';
+import { RewardCategory } from '../../features/rewards/models/reward-category.model';
+import { INITIAL_REWARD_CATEGORIES } from '../constants/initial-reward-categories.const';
 
 
 @Service()
@@ -18,6 +22,9 @@ export class DbService extends Dexie {
   dailyScores!: Table<DailyScore, string>;
   pomodoroSessions!: Table<PomodoroSession, string>;
   dailyTaskCompletions!: Table<DailyTaskCompletion, string>;
+  withdrawals!: Table<WithdrawalRecord, string>;
+  rewards!: Table<RewardItem, string>;
+  rewardCategories!: Table<RewardCategory, string>;
 
   constructor() {
     super('pocket-discipline-db');
@@ -56,6 +63,17 @@ export class DbService extends Dexie {
       goals: 'id, status, completedAt'
     });
 
+    this.version(8).stores({
+      withdrawals: 'id, date, categoryId, timestamp, rewardId',
+      rewards: 'id, categoryId, type, status, createdAt',
+      rewardCategories: 'id, name, isProtected'
+    }).upgrade(async (tx) => {
+      const categoriesCount = await tx.table('rewardCategories').count();
+      if (categoriesCount === 0) {
+        await tx.table('rewardCategories').bulkAdd(INITIAL_REWARD_CATEGORIES as RewardCategory[]);
+      }
+    });
+
     this.on('populate', () => {
       this.users.add({
         id: CURRENT_USER_ID,
@@ -65,6 +83,7 @@ export class DbService extends Dexie {
         updatedAt: Date.now()
       });
       this.goals.bulkAdd(this.getInitialGoals());
+      this.rewardCategories.bulkAdd(INITIAL_REWARD_CATEGORIES as RewardCategory[]);
     });
 
     this.on('ready', async () => {

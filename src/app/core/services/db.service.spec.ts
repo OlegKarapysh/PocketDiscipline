@@ -29,6 +29,9 @@ describe('DbService', () => {
     expect(service.dailyScores).toBeDefined();
     expect(service.pomodoroSessions).toBeDefined();
     expect(service.dailyTaskCompletions).toBeDefined();
+    expect(service.withdrawals).toBeDefined();
+    expect(service.rewards).toBeDefined();
+    expect(service.rewardCategories).toBeDefined();
   });
 
   it('should validate valid PomodoroSession objects in isValidPomodoroSession', () => {

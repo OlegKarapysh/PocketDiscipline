@@ -2,22 +2,11 @@ import { Service } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
-export const EVENT_TYPE = {
-  REWARD_EARNED: 'RewardEarned',
-} as const;
+import { AppEvent } from '../models/app-event.model';
+import { EVENT_TYPE, RewardEarnedEvent } from '../models/reward-earned-event.model';
 
-export interface AppEvent {
-  type: string;
-  payload?: unknown;
-  source?: string;
-}
-
-export interface RewardEarnedEvent extends AppEvent {
-  type: typeof EVENT_TYPE.REWARD_EARNED;
-  payload: {
-    points: number;
-  };
-}
+export { EVENT_TYPE };
+export type { AppEvent, RewardEarnedEvent };
 
 @Service()
 export class EventBusService {
