@@ -1,6 +1,6 @@
 import { Service, inject } from '@angular/core';
 import { DailyScoresService } from '../../features/daily-scores/services/daily-scores.service';
-import { firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom, from, Observable, of, tap } from 'rxjs';
 
 const REMINDER_HOUR = 21;
 const REMINDER_MINUTE = 30;
@@ -40,11 +40,16 @@ export class NotificationService {
     return false;
   }
 
-  async scheduleDailyReminder() {
-    const granted = await this.requestPermission();
-    if (!granted) return;
-
-    this.scheduleNextCheck();
+  scheduleDailyReminder(): Observable<boolean> {
+    return from(this.requestPermission()).pipe(
+      tap((granted) => {
+        if (granted) this.scheduleNextCheck();
+      }),
+      catchError((err) => {
+        console.error('Failed to schedule daily reminder:', err);
+        return of(false);
+      })
+    );
   }
 
   private scheduleNextCheck() {

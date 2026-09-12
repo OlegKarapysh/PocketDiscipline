@@ -36,12 +36,12 @@ export class DailyTasksService {
     return Math.round(diffTime / MILLISECONDS_IN_DAY);
   }
 
-  get tasks$(): Observable<DailyTask[]> {
-    return from(liveQuery(async () => {
+  private readonly _tasks$: Observable<DailyTask[]> = from(
+    liveQuery(async () => {
       const tasks = await this.db.dailyTasks.toArray();
       const now = Date.now();
 
-      const updatedTasks = [];
+      const updatedTasks: DailyTask[] = [];
       for (const task of tasks) {
         let currentStreak = task.streak;
         let needsUpdate = false;
@@ -61,10 +61,14 @@ export class DailyTasksService {
         updatedTasks.push(task);
       }
       return updatedTasks;
-    })) as Observable<DailyTask[]>;
+    })
+  );
+
+  get tasks$(): Observable<DailyTask[]> {
+    return this._tasks$;
   }
 
-  async createTask(title: string, difficulties: DailyTaskDifficulty[]) {
+  async createTask(title: string, difficulties: DailyTaskDifficulty[]): Promise<void> {
     const newTask: DailyTask = {
       id: crypto.randomUUID(),
       title,
@@ -76,7 +80,7 @@ export class DailyTasksService {
     await this.db.dailyTasks.add(newTask);
   }
 
-  async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty) {
+  async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
     if (!difficulty || !Number.isFinite(difficulty.baseReward) || difficulty.baseReward <= MIN_BASE_REWARD) {
       return;
     }

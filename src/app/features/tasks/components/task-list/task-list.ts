@@ -9,7 +9,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { TaskService } from '../../../../core/services/task.service';
 import { DisciplineItem } from '../../../../core/models/discipline-item.model';
 import { DisciplineItemType } from '../../../../core/models/discipline-item-type.enum';
-import { Observable, from } from 'rxjs';
+import { from } from 'rxjs';
 
 const DUMMY_TASK_WATER = {
   title: 'Drink 2L Water',
@@ -43,17 +43,37 @@ const DUMMY_TASK_BILL = {
 })
 export class TaskListComponent {
   taskService = inject(TaskService);
-  tasks$ = from(this.taskService.tasks$) as Observable<DisciplineItem[]>;
+  tasks$ = from(this.taskService.tasks$);
 
-  completeTask(task: DisciplineItem) {
+  async completeTask(task: DisciplineItem): Promise<void> {
     if (!task.isCompleted) {
-      this.taskService.completeTask(task.id);
+      try {
+        await this.taskService.completeTask(task.id);
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 
-  addDummyTask() {
-    this.taskService.addTask(DUMMY_TASK_WATER.title, DUMMY_TASK_WATER.type, DUMMY_TASK_WATER.reward);
-    this.taskService.addTask(DUMMY_TASK_READ.title, DUMMY_TASK_READ.type, DUMMY_TASK_READ.reward);
-    this.taskService.addTask(DUMMY_TASK_BILL.title, DUMMY_TASK_BILL.type, DUMMY_TASK_BILL.reward);
+  async addDummyTask(): Promise<void> {
+    try {
+      await this.taskService.addTask(
+        DUMMY_TASK_WATER.title,
+        DUMMY_TASK_WATER.type,
+        DUMMY_TASK_WATER.reward
+      );
+      await this.taskService.addTask(
+        DUMMY_TASK_READ.title,
+        DUMMY_TASK_READ.type,
+        DUMMY_TASK_READ.reward
+      );
+      await this.taskService.addTask(
+        DUMMY_TASK_BILL.title,
+        DUMMY_TASK_BILL.type,
+        DUMMY_TASK_BILL.reward
+      );
+    } catch (error) {
+      console.error(error);
+    }
   }
 }

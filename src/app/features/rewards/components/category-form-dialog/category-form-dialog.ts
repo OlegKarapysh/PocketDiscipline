@@ -1,12 +1,18 @@
 import { Component, OnInit, inject } from '@angular/core';
 
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CategoryFormDialogData } from './category-form-dialog-data.model';
+
+interface CategoryFormGroup {
+  name: FormControl<string>;
+  color: FormControl<string>;
+  icon: FormControl<string>;
+}
 
 const PRESET_COLORS = [
   '#e91e63',
@@ -50,16 +56,25 @@ export class CategoryFormDialogComponent implements OnInit {
   readonly presetColors = PRESET_COLORS;
   readonly presetIcons = PRESET_ICONS;
 
-  form!: FormGroup;
+  form!: FormGroup<CategoryFormGroup>;
   isEdit = false;
 
   ngOnInit(): void {
     this.isEdit = !!this.data?.category;
 
-    this.form = this.fb.group({
-      name: [this.data?.category?.name || '', [Validators.required, Validators.maxLength(50)]],
-      color: [this.data?.category?.color || PRESET_COLORS[0], [Validators.required]],
-      icon: [this.data?.category?.icon || PRESET_ICONS[0], [Validators.required]],
+    this.form = this.fb.group<CategoryFormGroup>({
+      name: this.fb.control(this.data?.category?.name ?? '', {
+        validators: [(control) => Validators.required(control), (control) => Validators.maxLength(50)(control)],
+        nonNullable: true,
+      }),
+      color: this.fb.control(this.data?.category?.color ?? PRESET_COLORS[0], {
+        validators: [(control) => Validators.required(control)],
+        nonNullable: true,
+      }),
+      icon: this.fb.control(this.data?.category?.icon ?? PRESET_ICONS[0], {
+        validators: [(control) => Validators.required(control)],
+        nonNullable: true,
+      }),
     });
   }
 
@@ -78,10 +93,11 @@ export class CategoryFormDialogComponent implements OnInit {
   onSubmit(): void {
     if (this.form.invalid) return;
 
+    const values = this.form.getRawValue();
     this.dialogRef.close({
-      name: this.form.value.name.trim(),
-      color: this.form.value.color,
-      icon: this.form.value.icon,
+      name: values.name.trim(),
+      color: values.color,
+      icon: values.icon,
     });
   }
 }

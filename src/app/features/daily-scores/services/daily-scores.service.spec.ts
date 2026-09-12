@@ -61,7 +61,7 @@ describe('DailyScoresService', () => {
         }),
         update: vi.fn().mockResolvedValue(1),
       },
-      transaction: vi.fn().mockImplementation(async (_mode, _t1, _t2, callback) => {
+      transaction: vi.fn().mockImplementation(async (_mode: string, _t1: unknown, _t2: unknown, callback: () => Promise<void>) => {
         await callback();
       }),
     };
@@ -243,11 +243,21 @@ describe('DailyScoresService', () => {
     });
 
     it('should throw error when user is not found during reward transaction', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
       dbMock.users.get.mockResolvedValue(undefined);
 
       await expect(service.saveTodayScore(TEST_SCORE_PERFECT)).rejects.toThrow(
         'User not found when attempting to add reward.'
       );
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to save daily score:', expect.any(Error));
+    });
+
+    it('should catch and rethrow database transaction errors', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
+      dbMock.transaction.mockRejectedValue(new Error('Transaction failed'));
+
+      await expect(service.saveTodayScore(TEST_SCORE_PERFECT)).rejects.toThrow('Transaction failed');
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to save daily score:', expect.any(Error));
     });
   });
 });

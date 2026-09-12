@@ -202,6 +202,6 @@ describe('RewardStoreComponent', () => {
 
     const emptyEl = fixture.debugElement.query(By.css('.empty-state'));
     expect(emptyEl).toBeTruthy();
-    expect(emptyEl.nativeElement.textContent).toContain('No rewards found');
+    expect((emptyEl.nativeElement as HTMLElement).textContent).toContain('No rewards found');
   });
 });

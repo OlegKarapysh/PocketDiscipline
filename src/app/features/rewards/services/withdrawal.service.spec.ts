@@ -97,8 +97,8 @@ describe('WithdrawalService', () => {
         get: vi.fn().mockResolvedValue(undefined),
         update: vi.fn().mockResolvedValue(1),
       },
-      transaction: vi.fn().mockImplementation(async (_mode, _t1, _t2, _t3, callback?: () => Promise<void>) => {
-        const fn = typeof _t3 === 'function' ? _t3 : callback;
+      transaction: vi.fn().mockImplementation(async (...args: unknown[]) => {
+        const fn = args.find((arg): arg is () => Promise<unknown> => typeof arg === 'function');
         if (fn) await fn();
       }),
     };
@@ -131,7 +131,7 @@ describe('WithdrawalService', () => {
     expect(dbMock.transaction).toHaveBeenCalled();
     expect(dbMock.users.update).toHaveBeenCalledWith(CURRENT_USER_ID, {
       balance: 380,
-      updatedAt: expect.any(Number),
+      updatedAt: expect.any(Number) as number,
     });
     expect(dbMock.withdrawals.add).toHaveBeenCalledWith(record);
   });
@@ -210,7 +210,7 @@ describe('WithdrawalService', () => {
     expect(dbMock.transaction).toHaveBeenCalled();
     expect(dbMock.users.update).toHaveBeenCalledWith(CURRENT_USER_ID, {
       balance: 600,
-      updatedAt: expect.any(Number),
+      updatedAt: expect.any(Number) as number,
     });
     expect(dbMock.withdrawals.delete).toHaveBeenCalledWith('w-1');
   });
@@ -245,7 +245,7 @@ describe('WithdrawalService', () => {
     expect(dbMock.rewards.update).toHaveBeenCalledWith('rew-1', {
       status: 'active',
       claimedAt: null,
-      updatedAt: expect.any(Number),
+      updatedAt: expect.any(Number) as number,
     });
   });
 
@@ -272,7 +272,7 @@ describe('WithdrawalService', () => {
 
     expect(dbMock.rewards.update).toHaveBeenCalledWith('rew-2', {
       claimCount: 2,
-      updatedAt: expect.any(Number),
+      updatedAt: expect.any(Number) as number,
     });
   });
 
@@ -299,7 +299,7 @@ describe('WithdrawalService', () => {
 
     expect(dbMock.rewards.update).toHaveBeenCalledWith('rew-zero', {
       claimCount: 0,
-      updatedAt: expect.any(Number),
+      updatedAt: expect.any(Number) as number,
     });
   });
 

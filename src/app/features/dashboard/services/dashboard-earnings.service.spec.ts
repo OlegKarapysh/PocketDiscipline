@@ -254,6 +254,26 @@ describe('DashboardEarningsService', () => {
       expect(day1?.pomodoroEarned).toBe(0);
       expect(day1?.goalsEarned).toBe(0);
     });
+
+    it('should handle database errors gracefully and return fallback records', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
+      dbMock.goals.where = vi.fn().mockReturnValue({
+        between: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockRejectedValue(new Error('IndexedDB error')),
+        }),
+      });
+
+      const records = await firstValueFrom(service.getDailyEarnings('2026-09-01', '2026-09-02'));
+      expect(records).toBeDefined();
+      expect(Array.isArray(records)).toBe(true);
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should return empty array for invalid date strings', async () => {
+      const records = await firstValueFrom(service.getDailyEarnings('invalid-date', '2026-09-02'));
+      expect(records).toEqual([]);
+    });
   });
 
   describe('getMonthlyEarningsSummary', () => {
@@ -278,6 +298,25 @@ describe('DashboardEarningsService', () => {
       expect(summary.daysCount).toBe(31);
       expect(summary.monthLabel).toContain('August');
       expect(summary.averageEarnedPerDay).toBe(Math.round(summary.totalEarned / 31));
+    });
+
+    it('should handle error gracefully and return fallback summary when calculation fails', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
+      vi.spyOn(service, 'calculateDailyEarnings').mockRejectedValue(new Error('DB failure'));
+
+      const summary = await firstValueFrom(service.getMonthlyEarningsSummary(2026, 8));
+      expect(summary).toBeDefined();
+      expect(summary.totalEarned).toBe(0);
+      expect(summary.averageEarnedPerDay).toBe(0);
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('should return fallback summary for invalid year or month', async () => {
+      const summary = await firstValueFrom(service.getMonthlyEarningsSummary(0, 13));
+      expect(summary).toBeDefined();
+      expect(summary.totalEarned).toBe(0);
+      expect(summary.averageEarnedPerDay).toBe(0);
     });
   });
 });

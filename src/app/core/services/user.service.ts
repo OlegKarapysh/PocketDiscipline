@@ -25,15 +25,13 @@ export class UserService {
 
   readonly user$ = liveQuery(async () => {
     let user = await this.db.users.get(CURRENT_USER_ID);
-    if (!user) {
-      user = {
-        id: CURRENT_USER_ID,
-        name: CURRENT_USER_NAME,
-        balance: DEFAULT_INITIAL_BALANCE,
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      };
-    }
+    user ??= {
+      id: CURRENT_USER_ID,
+      name: CURRENT_USER_NAME,
+      balance: DEFAULT_INITIAL_BALANCE,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
     return user;
   });
 

@@ -61,10 +61,10 @@ export class WithdrawalService {
           amount: dto.amount,
           title: trimmedTitle,
           categoryId: dto.categoryId,
-          notes: dto.notes?.trim() || undefined,
+          notes: dto.notes?.trim() ? dto.notes.trim() : undefined,
           date: getTodayDateString(),
           timestamp: Date.now(),
-          rewardId: dto.rewardId || null,
+          rewardId: dto.rewardId ?? null,
         };
 
         await this.db.withdrawals.add(createdRecord);
@@ -136,7 +136,7 @@ export class WithdrawalService {
           records = records.filter(
             r =>
               r.title.toLowerCase().includes(query) ||
-              (r.notes && r.notes.toLowerCase().includes(query))
+              (r.notes?.toLowerCase().includes(query))
           );
         }
 

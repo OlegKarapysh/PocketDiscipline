@@ -16,8 +16,8 @@ describe('TimerControls', () => {
   beforeEach(async () => {
     timerServiceMock = {
       isActive: signal(false),
-      startTimer: vi.fn(),
-      stopTimer: vi.fn(),
+      startTimer: vi.fn().mockResolvedValue(undefined),
+      stopTimer: vi.fn().mockResolvedValue(undefined),
     };
 
     await TestBed.configureTestingModule({
@@ -38,8 +38,26 @@ describe('TimerControls', () => {
     const startBtn = fixture.debugElement.query(By.css('button[aria-label="Start Timer"]'));
     expect(startBtn).toBeTruthy();
 
-    startBtn.nativeElement.click();
+    (startBtn.nativeElement as HTMLButtonElement).click();
     expect(timerServiceMock.startTimer).toHaveBeenCalled();
+  });
+
+  it('should handle error gracefully when startTimer rejects', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const testError = new Error('Failed to start');
+    timerServiceMock.startTimer.mockRejectedValue(testError);
+
+    timerServiceMock.isActive.set(false);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const startBtn = fixture.debugElement.query(By.css('button[aria-label="Start Timer"]'));
+    (startBtn.nativeElement as HTMLButtonElement).click();
+    await fixture.whenStable();
+
+    expect(timerServiceMock.startTimer).toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(testError);
+    consoleSpy.mockRestore();
   });
 
   it('should render stop button when timer is active and trigger stopTimer on click', async () => {
@@ -50,7 +68,26 @@ describe('TimerControls', () => {
     const stopBtn = fixture.debugElement.query(By.css('button[aria-label="Stop Timer"]'));
     expect(stopBtn).toBeTruthy();
 
-    stopBtn.nativeElement.click();
+    (stopBtn.nativeElement as HTMLButtonElement).click();
     expect(timerServiceMock.stopTimer).toHaveBeenCalled();
   });
+
+  it('should handle error gracefully when stopTimer rejects', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const testError = new Error('Failed to stop');
+    timerServiceMock.stopTimer.mockRejectedValue(testError);
+
+    timerServiceMock.isActive.set(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const stopBtn = fixture.debugElement.query(By.css('button[aria-label="Stop Timer"]'));
+    (stopBtn.nativeElement as HTMLButtonElement).click();
+    await fixture.whenStable();
+
+    expect(timerServiceMock.stopTimer).toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(testError);
+    consoleSpy.mockRestore();
+  });
 });
+

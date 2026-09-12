@@ -1,4 +1,4 @@
-import { Service, signal, OnDestroy, inject } from '@angular/core';
+import { Service, signal, OnDestroy, inject, DestroyRef } from '@angular/core';
 import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
 import { PomodoroSession } from '../models/pomodoro-session.model';
@@ -6,6 +6,13 @@ import { EngagementType } from '../models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../models/pomodoro-session-status.enum';
 import { MatDialog } from '@angular/material/dialog';
 import { CompletionDialog } from '../components/completion-dialog/completion-dialog';
+import { TimerConfig } from '../models/timer-config.model';
+
+export type { TimerConfig };
+
+declare class TimestampTrigger {
+  constructor(timestamp: number);
+}
 
 const DEFAULT_DURATION_MINUTES = 25;
 const SECONDS_IN_MINUTE = 60;
@@ -32,9 +39,6 @@ const EVENT_VISIBILITY_CHANGE = 'visibilitychange';
 const VISIBILITY_STATE_VISIBLE = 'visible';
 const PERMISSION_DEFAULT = 'default';
 const PERMISSION_GRANTED = 'granted';
-import { TimerConfig } from '../models/timer-config.model';
-
-export type { TimerConfig };
 
 @Service()
 export class PomodoroTimerService implements OnDestroy {
@@ -48,30 +52,50 @@ export class PomodoroTimerService implements OnDestroy {
   private timerInterval: ReturnType<typeof setInterval> | null = null;
   private expectedEndTime = 0;
   private backgroundTimeStart: number | null = null;
+  private isDestroyed = false;
 
   private eventBus = inject(EventBusService);
   private storage = inject(PomodoroStorageService);
   private dialog = inject(MatDialog);
+  private destroyRef = inject(DestroyRef);
 
   constructor() {
-    this.restoreActiveSession();
-    this.requestNotificationPermission();
-    document.addEventListener(EVENT_VISIBILITY_CHANGE, this.handleVisibilityChange);
+    void this.restoreActiveSession();
+    void this.requestNotificationPermission();
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener(EVENT_VISIBILITY_CHANGE, this.handleVisibilityChange);
+    }
+
+    this.destroyRef.onDestroy(() => {
+      this.cleanup();
+    });
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
+    this.cleanup();
+  }
+
+  private cleanup(): void {
+    this.isDestroyed = true;
     this.clearInterval();
-    document.removeEventListener(EVENT_VISIBILITY_CHANGE, this.handleVisibilityChange);
+    if (typeof document !== 'undefined') {
+      document.removeEventListener(EVENT_VISIBILITY_CHANGE, this.handleVisibilityChange);
+    }
   }
 
-  private handleVisibilityChange = () => {
+  private handleVisibilityChange = (): void => {
+    if (this.isDestroyed) {
+      return;
+    }
+
     if (document.visibilityState === VISIBILITY_STATE_VISIBLE) {
-      this.cancelScheduledNotifications();
+      void this.cancelScheduledNotifications();
       if (this.backgroundTimeStart && this.isActive()) {
         const remaining = Math.round((this.expectedEndTime - Date.now()) / MILLISECONDS_IN_SECOND);
         if (remaining <= 0) {
           this.timeRemaining.set(0);
-          this.completeSession();
+          this.triggerCompleteSession();
         } else {
           this.timeRemaining.set(remaining);
         }
@@ -81,19 +105,19 @@ export class PomodoroTimerService implements OnDestroy {
       if (this.isActive()) {
         this.backgroundTimeStart = Date.now();
         const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
-        this.scheduleNotification(NOTIFICATION_TITLE, `You earned ${reward} points for your ${this.engagementType()} session.`, this.expectedEndTime);
+        void this.scheduleNotification(NOTIFICATION_TITLE, `You earned ${reward} points for your ${this.engagementType()} session.`, this.expectedEndTime);
       }
     }
   };
 
-  setConfig(config: TimerConfig) {
+  setConfig(config: TimerConfig): void {
     if (this.isActive()) return;
     this.durationMinutes.set(config.durationMinutes);
     this.engagementType.set(config.engagementType);
     this.timeRemaining.set(config.durationMinutes * SECONDS_IN_MINUTE);
   }
 
-  async startTimer() {
+  async startTimer(): Promise<void> {
     if (this.isActive()) return;
 
     const id = crypto.randomUUID();
@@ -107,86 +131,108 @@ export class PomodoroTimerService implements OnDestroy {
       durationMinutes: this.durationMinutes(),
       engagementType: this.engagementType(),
       startTime: Date.now(),
-      status: PomodoroSessionStatus.ACTIVE
+      status: PomodoroSessionStatus.ACTIVE,
     };
 
-    await this.storage.saveSession(session);
-
-    this.startInterval();
+    try {
+      await this.storage.saveSession(session);
+      this.startInterval();
+    } catch (error) {
+      console.error('Failed to start pomodoro timer session:', error);
+      this.resetTimer();
+      throw error;
+    }
   }
 
-  async stopTimer() {
+  async stopTimer(): Promise<void> {
     if (!this.isActive()) return;
     this.clearInterval();
 
     const id = this.currentSessionId();
-    if (id) {
-      await this.storage.updateSession(id, {
-        status: PomodoroSessionStatus.CANCELLED,
-        endTime: Date.now()
-      });
+    try {
+      if (id) {
+        await this.storage.updateSession(id, {
+          status: PomodoroSessionStatus.CANCELLED,
+          endTime: Date.now(),
+        });
+      }
+    } catch (error) {
+      console.error('Failed to stop pomodoro timer session:', error);
+      throw error;
+    } finally {
+      this.resetTimer();
     }
-
-    this.resetTimer();
   }
 
-  private startInterval() {
+  private startInterval(): void {
     this.clearInterval();
+    if (this.isDestroyed) {
+      return;
+    }
     this.timerInterval = setInterval(() => {
       const remaining = Math.round((this.expectedEndTime - Date.now()) / MILLISECONDS_IN_SECOND);
 
       if (remaining <= 0) {
         this.timeRemaining.set(0);
-        this.completeSession();
+        this.triggerCompleteSession();
       } else {
         this.timeRemaining.set(remaining);
       }
     }, TIMER_INTERVAL_MS);
   }
 
-  private clearInterval() {
-    if (this.timerInterval) {
+  private triggerCompleteSession(): void {
+    void this.completeSession();
+  }
+
+  private clearInterval(): void {
+    if (this.timerInterval !== null) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
   }
 
-  private async completeSession() {
+  private async completeSession(): Promise<void> {
     this.clearInterval();
     const id = this.currentSessionId();
     if (!id) return;
 
-    const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
+    try {
+      const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
 
-    await this.storage.updateSession(id, {
-      status: PomodoroSessionStatus.COMPLETED,
-      endTime: Date.now(),
-      rewardEarned: reward
-    });
+      await this.storage.updateSession(id, {
+        status: PomodoroSessionStatus.COMPLETED,
+        endTime: Date.now(),
+        rewardEarned: reward,
+      });
 
-    this.completeTimer(reward);
+      this.completeTimer(reward);
 
-    this.showNotification(NOTIFICATION_TITLE, `You earned ${reward}₴ for your ${this.engagementType()} session.`);
+      void this.showNotification(NOTIFICATION_TITLE, `You earned ${reward}₴ for your ${this.engagementType()} session.`);
 
-    this.dialog.open(CompletionDialog, {
-      data: {
-        reward,
-        engagementType: this.engagementType()
-      }
-    });
-
-    this.resetTimer();
+      this.dialog.open(CompletionDialog, {
+        data: {
+          reward,
+          engagementType: this.engagementType(),
+        },
+      });
+    } catch (err: unknown) {
+      console.error('Failed to complete pomodoro session:', err);
+    } finally {
+      this.resetTimer();
+    }
   }
 
-  completeTimer(rewardPoints: number) {
+  completeTimer(rewardPoints: number): void {
     this.eventBus.emit({
       type: EVENT_TYPE.REWARD_EARNED,
       payload: { points: rewardPoints },
-      source: EVENT_SOURCE_POMODORO
+      source: EVENT_SOURCE_POMODORO,
     });
   }
 
-  private resetTimer() {
+  private resetTimer(): void {
+    this.clearInterval();
     this.isActive.set(false);
     this.currentSessionId.set(null);
     this.timeRemaining.set(this.durationMinutes() * SECONDS_IN_MINUTE);
@@ -209,75 +255,117 @@ export class PomodoroTimerService implements OnDestroy {
     return Math.trunc(base * multiplier);
   }
 
-  private async restoreActiveSession() {
-    const sessions = await this.storage.getAllSessions();
-    const active = sessions.find(s => s.status === PomodoroSessionStatus.ACTIVE);
-
-    if (active) {
-      const expectedEnd = active.startTime + (active.durationMinutes * SECONDS_IN_MINUTE * MILLISECONDS_IN_SECOND);
-      const remaining = Math.round((expectedEnd - Date.now()) / MILLISECONDS_IN_SECOND);
-
-      this.durationMinutes.set(active.durationMinutes);
-      this.engagementType.set(active.engagementType);
-      this.currentSessionId.set(active.id);
-
-      if (remaining <= 0) {
-        this.expectedEndTime = expectedEnd;
-        await this.completeSession();
-      } else {
-        this.isActive.set(true);
-        this.expectedEndTime = expectedEnd;
-        this.timeRemaining.set(remaining);
-        this.startInterval();
+  private async restoreActiveSession(): Promise<void> {
+    try {
+      const sessions = await this.storage.getAllSessions();
+      if (this.isDestroyed) {
+        return;
       }
-    }
-  }
+      const active = sessions.find(s => s.status === PomodoroSessionStatus.ACTIVE);
 
-  private async requestNotificationPermission() {
-    if ('Notification' in window && Notification.permission === PERMISSION_DEFAULT) {
-      await Notification.requestPermission();
-    }
-  }
+      if (active) {
+        const expectedEnd = active.startTime + (active.durationMinutes * SECONDS_IN_MINUTE * MILLISECONDS_IN_SECOND);
+        const remaining = Math.round((expectedEnd - Date.now()) / MILLISECONDS_IN_SECOND);
 
-  private showNotification(title: string, body: string) {
-    if ('Notification' in window && Notification.permission === PERMISSION_GRANTED) {
-      navigator.serviceWorker.getRegistration().then(reg => {
-        if (reg) {
-          reg.showNotification(title, {
-            body,
-            icon: NOTIFICATION_ICON_PATH
-          });
+        this.durationMinutes.set(active.durationMinutes);
+        this.engagementType.set(active.engagementType);
+        this.currentSessionId.set(active.id);
+
+        if (remaining <= 0) {
+          this.expectedEndTime = expectedEnd;
+          await this.completeSession();
         } else {
-          new Notification(title, { body });
+          this.isActive.set(true);
+          this.expectedEndTime = expectedEnd;
+          this.timeRemaining.set(remaining);
+          this.startInterval();
         }
-      });
+      }
+    } catch (e) {
+      console.error('Failed to restore active session:', e);
     }
   }
 
-  private scheduleNotification(title: string, body: string, timestamp: number) {
-    if ('Notification' in window && Notification.permission === PERMISSION_GRANTED && 'showTrigger' in Notification.prototype) {
-      navigator.serviceWorker.getRegistration().then(reg => {
+  private async requestNotificationPermission(): Promise<void> {
+    try {
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === PERMISSION_DEFAULT) {
+        await Notification.requestPermission();
+      }
+    } catch (e) {
+      console.error('Failed to request notification permission:', e);
+    }
+  }
+
+  private async showNotification(title: string, body: string): Promise<void> {
+    if (
+      typeof window === 'undefined' ||
+      !('Notification' in window) ||
+      Notification.permission !== PERMISSION_GRANTED
+    ) {
+      return;
+    }
+
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration();
         if (reg) {
-          reg.showNotification(title, {
+          await reg.showNotification(title, {
             body,
             icon: NOTIFICATION_ICON_PATH,
-            // @ts-expect-error - TimestampTrigger is an experimental API
-            showTrigger: new TimestampTrigger(timestamp)
           });
+          return;
         }
-      });
+      }
+      new Notification(title, { body });
+    } catch (err: unknown) {
+      console.error('Failed to show notification:', err);
     }
   }
 
-  private cancelScheduledNotifications() {
-    if ('Notification' in window && navigator.serviceWorker) {
-      navigator.serviceWorker.getRegistration().then(reg => {
-        if (reg && reg.getNotifications) {
-          reg.getNotifications().then(notifications => {
-            notifications.forEach(n => n.close());
-          });
-        }
-      });
+  private async scheduleNotification(title: string, body: string, timestamp: number): Promise<void> {
+    if (
+      typeof window === 'undefined' ||
+      !('Notification' in window) ||
+      Notification.permission !== PERMISSION_GRANTED ||
+      !('showTrigger' in Notification.prototype) ||
+      !('serviceWorker' in navigator)
+    ) {
+      return;
+    }
+
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        await reg.showNotification(title, {
+          body,
+          icon: NOTIFICATION_ICON_PATH,
+          showTrigger: new TimestampTrigger(timestamp),
+        } as NotificationOptions);
+      }
+    } catch (err: unknown) {
+      console.error('Failed to schedule notification:', err);
+    }
+  }
+
+  private async cancelScheduledNotifications(): Promise<void> {
+    if (
+      typeof window === 'undefined' ||
+      !('Notification' in window) ||
+      !('serviceWorker' in navigator)
+    ) {
+      return;
+    }
+
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg?.getNotifications) {
+        const notifications = await reg.getNotifications();
+        notifications.forEach(n => {
+          n.close();
+        });
+      }
+    } catch (err: unknown) {
+      console.error('Failed to cancel scheduled notifications:', err);
     }
   }
 }

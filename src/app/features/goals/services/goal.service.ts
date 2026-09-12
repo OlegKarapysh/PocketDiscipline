@@ -3,6 +3,7 @@ import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
 import { Goal, GOAL_STATUS } from '../models/goal.model';
 import { liveQuery } from 'dexie';
+import { Observable, from } from 'rxjs';
 
 const ERROR_DUPLICATE_GOAL_TITLE = 'A goal with this title already exists.';
 const TRANSACTION_READ_WRITE = 'rw';
@@ -14,17 +15,19 @@ export class GoalService {
   private db = inject(DbService);
   private userService = inject(UserService);
 
-  getActiveGoals() {
-    return liveQuery(() => this.db.goals.where(STATUS_FIELD).equals(GOAL_STATUS.ACTIVE).toArray());
+  getActiveGoals(): Observable<Goal[]> {
+    return from(liveQuery(() => this.db.goals.where(STATUS_FIELD).equals(GOAL_STATUS.ACTIVE).toArray()));
   }
 
-  getCompletedGoals() {
-    return liveQuery(() => this.db.goals.where(STATUS_FIELD).equals(GOAL_STATUS.COMPLETED).reverse().sortBy(COMPLETED_AT_FIELD));
+  getCompletedGoals(): Observable<Goal[]> {
+    return from(
+      liveQuery(() => this.db.goals.where(STATUS_FIELD).equals(GOAL_STATUS.COMPLETED).reverse().sortBy(COMPLETED_AT_FIELD))
+    );
   }
 
-  async completeGoal(id: string) {
+  async completeGoal(id: string): Promise<void> {
     const goal = await this.db.goals.get(id);
-    if (goal && goal.status === GOAL_STATUS.ACTIVE) {
+    if (goal?.status === GOAL_STATUS.ACTIVE) {
       await this.db.transaction(TRANSACTION_READ_WRITE, this.db.goals, this.db.users, async () => {
         await this.db.goals.update(id, {
           status: GOAL_STATUS.COMPLETED,
@@ -35,9 +38,9 @@ export class GoalService {
     }
   }
 
-  async undoCompleteGoal(id: string) {
+  async undoCompleteGoal(id: string): Promise<void> {
     const goal = await this.db.goals.get(id);
-    if (goal && goal.status === GOAL_STATUS.COMPLETED) {
+    if (goal?.status === GOAL_STATUS.COMPLETED) {
       await this.db.transaction(TRANSACTION_READ_WRITE, this.db.goals, this.db.users, async () => {
         await this.db.goals.update(id, {
           status: GOAL_STATUS.ACTIVE,
@@ -48,7 +51,7 @@ export class GoalService {
     }
   }
 
-  async addGoal(title: string, rewardValue: number) {
+  async addGoal(title: string, rewardValue: number): Promise<void> {
     const existing = await this.db.goals.where(STATUS_FIELD).equals(GOAL_STATUS.ACTIVE).toArray();
     if (existing.some((g) => g.title.toLowerCase() === title.toLowerCase())) {
       throw new Error(ERROR_DUPLICATE_GOAL_TITLE);
@@ -65,9 +68,9 @@ export class GoalService {
     await this.db.goals.add(goal);
   }
 
-  async updateGoal(id: string, title: string, rewardValue: number) {
+  async updateGoal(id: string, title: string, rewardValue: number): Promise<void> {
     const goal = await this.db.goals.get(id);
-    if (!goal || goal.status !== GOAL_STATUS.ACTIVE) return;
+    if (goal?.status !== GOAL_STATUS.ACTIVE) return;
 
     const existing = await this.db.goals.where(STATUS_FIELD).equals(GOAL_STATUS.ACTIVE).toArray();
     if (existing.some((g) => g.id !== id && g.title.toLowerCase() === title.toLowerCase())) {
@@ -77,7 +80,7 @@ export class GoalService {
     await this.db.goals.update(id, { title, rewardValue });
   }
 
-  async deleteGoal(id: string) {
+  async deleteGoal(id: string): Promise<void> {
     await this.db.goals.delete(id);
   }
 }

@@ -48,16 +48,24 @@ export class QuickSpendDialogComponent {
 
   readonly form = new FormGroup({
     amount: new FormControl<number | null>(null, [
-      Validators.required, 
-      Validators.min(0.01),
+      (control) => Validators.required(control),
+      (control) => Validators.min(0.01)(control),
       (control) => {
+        const val = control.value as number | null;
         const max = this.user()?.balance ?? 0;
-        return (control.value || 0) > max ? { max: { max, actual: control.value } } : null;
-      }
+        return (val ?? 0) > max ? { max: { max, actual: val } } : null;
+      },
     ]),
-    title: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
-    categoryId: new FormControl<string>(FALLBACK_CATEGORY_ID, [Validators.required]),
-    notes: new FormControl<string>('', [Validators.maxLength(1000)]),
+    title: new FormControl<string>('', [
+      (control) => Validators.required(control),
+      (control) => Validators.maxLength(100)(control),
+    ]),
+    categoryId: new FormControl<string>(FALLBACK_CATEGORY_ID, [
+      (control) => Validators.required(control),
+    ]),
+    notes: new FormControl<string>('', [
+      (control) => Validators.maxLength(1000)(control),
+    ]),
   });
 
   async submit(): Promise<void> {
@@ -80,7 +88,7 @@ export class QuickSpendDialogComponent {
         amount,
         title: title!,
         categoryId: categoryId!,
-        notes: notes || undefined,
+        notes: notes?.trim() ? notes.trim() : undefined,
       });
 
       this.snackBar.open(`Withdrawn ${record.amount} ₴ for ${record.title}`, 'Close', { duration: 3000 });

@@ -105,8 +105,8 @@ describe('RewardsService', () => {
       withdrawals: {
         add: vi.fn().mockResolvedValue('w-new'),
       },
-      transaction: vi.fn().mockImplementation(async (_mode, _t1, _t2, _t3, callback?: () => Promise<void>) => {
-        const fn = typeof _t3 === 'function' ? _t3 : callback;
+      transaction: vi.fn().mockImplementation(async (...args: unknown[]) => {
+        const fn = args.find((arg): arg is () => Promise<unknown> => typeof arg === 'function');
         if (fn) await fn();
       }),
     };
@@ -243,11 +243,11 @@ describe('RewardsService', () => {
     expect(dbMock.transaction).toHaveBeenCalled();
     expect(dbMock.users.update).toHaveBeenCalledWith(CURRENT_USER_ID, {
       balance: 500,
-      updatedAt: expect.any(Number),
+      updatedAt: expect.any(Number) as number,
     });
     expect(dbMock.rewards.update).toHaveBeenCalledWith('rew-1', expect.objectContaining({
       status: 'claimed',
-      claimedAt: expect.any(Number),
+      claimedAt: expect.any(Number) as number,
     }));
     expect(dbMock.withdrawals.add).toHaveBeenCalled();
   });

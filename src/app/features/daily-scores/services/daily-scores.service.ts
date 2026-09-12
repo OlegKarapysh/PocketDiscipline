@@ -55,48 +55,53 @@ export class DailyScoresService {
   }
 
   async saveTodayScore(score: number): Promise<{ reward: number, newStreak: number }> {
-    const today = new Date();
-    const todayStr = today.toLocaleDateString(DATE_LOCALE_CA);
+    try {
+      const today = new Date();
+      const todayStr = today.toLocaleDateString(DATE_LOCALE_CA);
 
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - YESTERDAY_OFFSET);
-    const yesterdayStr = yesterday.toLocaleDateString(DATE_LOCALE_CA);
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - YESTERDAY_OFFSET);
+      const yesterdayStr = yesterday.toLocaleDateString(DATE_LOCALE_CA);
 
-    const yesterdayScore = await this.db.dailyScores.get(yesterdayStr);
-    const previousStreak = yesterdayScore ? yesterdayScore.streakAtThisDay : INITIAL_STREAK;
+      const yesterdayScore = await this.db.dailyScores.get(yesterdayStr);
+      const previousStreak = yesterdayScore ? yesterdayScore.streakAtThisDay : INITIAL_STREAK;
 
-    let baseReward = NO_REWARD;
-    let newStreak = INITIAL_STREAK;
+      let baseReward = NO_REWARD;
+      let newStreak = INITIAL_STREAK;
 
-    if (score >= SCORE_GOOD) {
-      baseReward = score === SCORE_PERFECT ? REWARD_PERFECT : REWARD_GOOD;
-      newStreak = previousStreak + STREAK_INCREMENT;
-    }
-
-    const bonusMultiplier = Math.min(previousStreak * STREAK_BONUS_STEP, MAX_STREAK_BONUS);
-    const rewardEarned = baseReward > NO_REWARD ? Math.round(baseReward * (1 + bonusMultiplier)) : NO_REWARD;
-
-    const newScore: DailyScore = {
-      date: todayStr,
-      score: score,
-      rewardEarned: rewardEarned,
-      streakAtThisDay: newStreak,
-      createdAt: Date.now()
-    };
-
-    await this.db.transaction(TRANSACTION_READ_WRITE, this.db.dailyScores, this.db.users, async () => {
-      await this.db.dailyScores.add(newScore);
-
-      if (rewardEarned > NO_REWARD) {
-        const user = await this.db.users.get(CURRENT_USER_ID);
-        if (user) {
-          await this.db.users.update(CURRENT_USER_ID, { balance: user.balance + rewardEarned });
-        } else {
-          throw new Error(ERROR_USER_NOT_FOUND);
-        }
+      if (score >= SCORE_GOOD) {
+        baseReward = score === SCORE_PERFECT ? REWARD_PERFECT : REWARD_GOOD;
+        newStreak = previousStreak + STREAK_INCREMENT;
       }
-    });
 
-    return { reward: rewardEarned, newStreak };
+      const bonusMultiplier = Math.min(previousStreak * STREAK_BONUS_STEP, MAX_STREAK_BONUS);
+      const rewardEarned = baseReward > NO_REWARD ? Math.round(baseReward * (1 + bonusMultiplier)) : NO_REWARD;
+
+      const newScore: DailyScore = {
+        date: todayStr,
+        score: score,
+        rewardEarned: rewardEarned,
+        streakAtThisDay: newStreak,
+        createdAt: Date.now()
+      };
+
+      await this.db.transaction(TRANSACTION_READ_WRITE, this.db.dailyScores, this.db.users, async () => {
+        await this.db.dailyScores.add(newScore);
+
+        if (rewardEarned > NO_REWARD) {
+          const user = await this.db.users.get(CURRENT_USER_ID);
+          if (user) {
+            await this.db.users.update(CURRENT_USER_ID, { balance: user.balance + rewardEarned });
+          } else {
+            throw new Error(ERROR_USER_NOT_FOUND);
+          }
+        }
+      });
+
+      return { reward: rewardEarned, newStreak };
+    } catch (error) {
+      console.error('Failed to save daily score:', error);
+      throw error;
+    }
   }
 }

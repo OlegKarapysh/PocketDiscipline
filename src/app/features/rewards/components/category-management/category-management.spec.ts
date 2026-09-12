@@ -94,11 +94,11 @@ describe('CategoryManagementComponent', () => {
 
     expect(rows[0].textContent).toContain('General');
     expect(rows[0].textContent).toContain('Protected');
-    const generalDeleteBtn = rows[0].querySelector('.delete-button') as HTMLButtonElement;
+    const generalDeleteBtn = rows[0].querySelector<HTMLButtonElement>('.delete-button')!;
     expect(generalDeleteBtn.disabled).toBe(true);
 
     expect(rows[1].textContent).toContain('Hobbies');
-    const customDeleteBtn = rows[1].querySelector('.delete-button') as HTMLButtonElement;
+    const customDeleteBtn = rows[1].querySelector<HTMLButtonElement>('.delete-button')!;
     expect(customDeleteBtn.disabled).toBe(false);
   });
 
@@ -166,6 +166,80 @@ describe('CategoryManagementComponent', () => {
 
     expect(mockDialog.open).toHaveBeenCalled();
     expect(mockCategoryService.deleteCategory).not.toHaveBeenCalled();
+  });
+
+  it('should not create category when add dialog is cancelled', async () => {
+    mockDialog.open.mockReturnValue({
+      afterClosed: () => of(undefined),
+    });
+
+    const addBtn = fixture.debugElement.query(By.css('.add-category-button')).nativeElement as HTMLButtonElement;
+    addBtn.click();
+    await fixture.whenStable();
+
+    expect(mockDialog.open).toHaveBeenCalled();
+    expect(mockCategoryService.createCategory).not.toHaveBeenCalled();
+  });
+
+  it('should show error snackbar when creating category fails', async () => {
+    mockCategoryService.createCategory.mockRejectedValue(new Error('Failed'));
+    mockDialog.open.mockReturnValue({
+      afterClosed: () => of({ name: 'Gaming', color: '#ff5722', icon: 'sports_esports' }),
+    });
+
+    const addBtn = fixture.debugElement.query(By.css('.add-category-button')).nativeElement as HTMLButtonElement;
+    addBtn.click();
+    await fixture.whenStable();
+
+    expect(mockDialog.open).toHaveBeenCalled();
+    expect(mockCategoryService.createCategory).toHaveBeenCalled();
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Failed to create category', 'Close', { duration: 3000 });
+  });
+
+  it('should not update category when edit dialog is cancelled', async () => {
+    mockDialog.open.mockReturnValue({
+      afterClosed: () => of(undefined),
+    });
+
+    const rows = fixture.debugElement.queryAll(By.css('.category-row'));
+    const editBtn = rows[1].query(By.css('.edit-button')).nativeElement as HTMLButtonElement;
+    editBtn.click();
+    await fixture.whenStable();
+
+    expect(mockDialog.open).toHaveBeenCalled();
+    expect(mockCategoryService.updateCategory).not.toHaveBeenCalled();
+  });
+
+  it('should show error snackbar when updating category fails', async () => {
+    mockCategoryService.updateCategory.mockRejectedValue(new Error('Failed'));
+    mockDialog.open.mockReturnValue({
+      afterClosed: () => of({ name: 'Fine Arts', color: '#ff5722', icon: 'palette' }),
+    });
+
+    const rows = fixture.debugElement.queryAll(By.css('.category-row'));
+    const editBtn = rows[1].query(By.css('.edit-button')).nativeElement as HTMLButtonElement;
+    editBtn.click();
+    await fixture.whenStable();
+
+    expect(mockDialog.open).toHaveBeenCalled();
+    expect(mockCategoryService.updateCategory).toHaveBeenCalled();
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Failed to update category', 'Close', { duration: 3000 });
+  });
+
+  it('should show error snackbar when deleting category fails', async () => {
+    mockCategoryService.deleteCategory.mockRejectedValue(new Error('Failed'));
+    mockDialog.open.mockReturnValue({
+      afterClosed: () => of(true),
+    });
+
+    const rows = fixture.debugElement.queryAll(By.css('.category-row'));
+    const deleteBtn = rows[1].query(By.css('.delete-button')).nativeElement as HTMLButtonElement;
+    deleteBtn.click();
+    await fixture.whenStable();
+
+    expect(mockDialog.open).toHaveBeenCalled();
+    expect(mockCategoryService.deleteCategory).toHaveBeenCalled();
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Failed to delete category', 'Close', { duration: 3000 });
   });
 
   it('should never trigger delete on protected category', () => {

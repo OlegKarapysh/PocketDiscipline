@@ -117,10 +117,15 @@ describe('SpendingAnalyticsComponent', () => {
     const toggleButtons = fixture.debugElement.queryAll(By.css('mat-button-toggle button'));
     expect(toggleButtons.length).toBe(4);
 
-    toggleButtons[1].nativeElement.click();
+    (toggleButtons[1].nativeElement as HTMLButtonElement).click();
     fixture.detectChanges();
 
     expect(component.selectedPeriod()).toBe('last30');
     expect(mockAnalyticsService.getAnalytics).toHaveBeenCalledWith('last30');
+  });
+
+  it('should cleanly unsubscribe on component destroy', () => {
+    fixture.detectChanges();
+    expect(() => component.ngOnDestroy()).not.toThrow();
   });
 });

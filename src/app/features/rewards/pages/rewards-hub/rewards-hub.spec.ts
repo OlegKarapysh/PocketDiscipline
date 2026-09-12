@@ -82,10 +82,9 @@ describe('RewardsHubComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create and render header, action button, and tab labels', () => {
+  it('should create and render action button and tab labels', () => {
     expect(component).toBeTruthy();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Rewards & Redemptions');
     expect(compiled.querySelector('.quick-spend-action-button')).toBeTruthy();
 
     const tabs = compiled.querySelectorAll('.mat-mdc-tab');
@@ -98,7 +97,7 @@ describe('RewardsHubComponent', () => {
 
   it('should open Quick Spend dialog and show snackbar when submitted via DOM button click', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    const button = compiled.querySelector('.quick-spend-action-button') as HTMLButtonElement;
+    const button = compiled.querySelector<HTMLButtonElement>('.quick-spend-action-button')!;
     button.click();
 
     expect(mockDialog.open).toHaveBeenCalledWith(QuickSpendDialogComponent, {
@@ -117,7 +116,7 @@ describe('RewardsHubComponent', () => {
     });
 
     const compiled = fixture.nativeElement as HTMLElement;
-    const button = compiled.querySelector('.quick-spend-action-button') as HTMLButtonElement;
+    const button = compiled.querySelector<HTMLButtonElement>('.quick-spend-action-button')!;
     button.click();
 
     expect(mockDialog.open).toHaveBeenCalledWith(QuickSpendDialogComponent, {

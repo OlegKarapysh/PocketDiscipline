@@ -39,7 +39,7 @@ export class DbService extends Dexie {
     }).upgrade(async (tx) => {
       const goalsCount = await tx.table('goals').count();
       if (goalsCount === 0) {
-        await tx.table('goals').bulkAdd(this.getInitialGoals());
+        await tx.table('goals').bulkAdd(DbService.getInitialGoals());
       }
     });
 
@@ -75,15 +75,17 @@ export class DbService extends Dexie {
     });
 
     this.on('populate', () => {
-      this.users.add({
-        id: CURRENT_USER_ID,
-        name: CURRENT_USER_NAME,
-        balance: DEFAULT_INITIAL_BALANCE,
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      });
-      this.goals.bulkAdd(this.getInitialGoals());
-      this.rewardCategories.bulkAdd(INITIAL_REWARD_CATEGORIES as RewardCategory[]);
+      return Promise.all([
+        this.users.add({
+          id: CURRENT_USER_ID,
+          name: CURRENT_USER_NAME,
+          balance: DEFAULT_INITIAL_BALANCE,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        }),
+        this.goals.bulkAdd(DbService.getInitialGoals()),
+        this.rewardCategories.bulkAdd(INITIAL_REWARD_CATEGORIES)
+      ]);
     });
 
     this.on('ready', async () => {
@@ -102,7 +104,7 @@ export class DbService extends Dexie {
     });
   }
 
-  isValidPomodoroSession(item: unknown): item is PomodoroSession {
+  static isValidPomodoroSession(item: unknown): item is PomodoroSession {
     if (!item || typeof item !== 'object') {
       return false;
     }
@@ -116,6 +118,10 @@ export class DbService extends Dexie {
       Number.isFinite(s.startTime) &&
       typeof s.status === 'string'
     );
+  }
+
+  isValidPomodoroSession(item: unknown): item is PomodoroSession {
+    return DbService.isValidPomodoroSession(item);
   }
 
   async migrateLegacyPomodoroDatabase(): Promise<void> {
@@ -134,7 +140,7 @@ export class DbService extends Dexie {
         await oldDb.open();
         if (oldDb.tables.some(t => t.name === 'sessions')) {
           const rawSessions = await oldDb.table('sessions').toArray();
-          const validSessions = rawSessions.filter((s): s is PomodoroSession => this.isValidPomodoroSession(s));
+          const validSessions = rawSessions.filter((s): s is PomodoroSession => DbService.isValidPomodoroSession(s));
           if (validSessions.length > 0) {
             await this.pomodoroSessions.bulkPut(validSessions);
           }
@@ -149,7 +155,7 @@ export class DbService extends Dexie {
     }
   }
 
-  getInitialGoals(): Goal[] {
+  static getInitialGoals(): Goal[] {
     return [
       {
         id: crypto.randomUUID(),
@@ -176,5 +182,9 @@ export class DbService extends Dexie {
         createdAt: Date.now()
       }
     ];
+  }
+
+  getInitialGoals(): Goal[] {
+    return DbService.getInitialGoals();
   }
 }

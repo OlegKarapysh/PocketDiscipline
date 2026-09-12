@@ -41,8 +41,8 @@ describe('DailyTaskItemComponent', () => {
     const titleEl = fixture.debugElement.query(By.css('mat-card-title'));
     const streakEl = fixture.debugElement.query(By.css('.streak-badge'));
 
-    expect(titleEl.nativeElement.textContent.trim()).toBe(TEST_TASK_TITLE);
-    expect(streakEl.nativeElement.textContent).toContain('4 Day Streak');
+    expect((titleEl.nativeElement as HTMLElement).textContent?.trim()).toBe(TEST_TASK_TITLE);
+    expect((streakEl.nativeElement as HTMLElement).textContent).toContain('4 Day Streak');
   });
 
   it('should compute isCompletedToday as false and render difficulty action buttons when uncompleted', async () => {
@@ -85,7 +85,7 @@ describe('DailyTaskItemComponent', () => {
     });
 
     const buttons = fixture.debugElement.queryAll(By.css('.actions button'));
-    buttons[1].nativeElement.click(); // Hard difficulty
+    (buttons[1].nativeElement as HTMLElement).click(); // Hard difficulty
 
     expect(emittedDifficulty).toEqual(HARD_DIFFICULTY);
   });
@@ -108,7 +108,7 @@ describe('DailyTaskItemComponent', () => {
 
     const completedMsg = fixture.debugElement.query(By.css('.completed-msg'));
     expect(completedMsg).toBeTruthy();
-    expect(completedMsg.nativeElement.textContent).toContain('Completed for today!');
+    expect((completedMsg.nativeElement as HTMLElement).textContent).toContain('Completed for today!');
 
     const actions = fixture.debugElement.query(By.css('.actions'));
     expect(actions).toBeNull();

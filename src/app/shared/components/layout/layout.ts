@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { RouterOutlet, RouterModule, Router, NavigationEnd } from '@angular/router';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map } from 'rxjs/operators';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, map, catchError } from 'rxjs/operators';
+import { from, EMPTY } from 'rxjs';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -63,6 +64,7 @@ const NAV_ITEMS: readonly NavItem[] = [
 export class LayoutComponent {
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly navItems = NAV_ITEMS;
 
@@ -81,7 +83,15 @@ export class LayoutComponent {
 
   onNavClick(drawer: MatSidenav): void {
     if (this.isHandset()) {
-      drawer.close();
+      from(Promise.resolve(drawer.close()))
+        .pipe(
+          takeUntilDestroyed(this.destroyRef),
+          catchError((err: unknown) => {
+            console.error('Failed to close navigation drawer:', err);
+            return EMPTY;
+          })
+        )
+        .subscribe();
     }
   }
 
@@ -90,7 +100,7 @@ export class LayoutComponent {
       return TITLE_DASHBOARD;
     }
     const cleanUrl = url.split('?')[0].split('#')[0];
-    const segment = cleanUrl.split('/').filter(Boolean)[0];
+    const segment = cleanUrl.split('/').find(Boolean);
     if (segment && Object.prototype.hasOwnProperty.call(ROUTE_TITLE_MAP, segment)) {
       return ROUTE_TITLE_MAP[segment];
     }

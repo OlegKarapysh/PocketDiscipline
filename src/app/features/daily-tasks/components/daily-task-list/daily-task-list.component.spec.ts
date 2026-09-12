@@ -35,8 +35,8 @@ describe('DailyTaskListComponent', () => {
   beforeEach(async () => {
     dailyTasksServiceMock = {
       tasks$: of(mockTasks),
-      createTask: vi.fn(),
-      completeTask: vi.fn(),
+      createTask: vi.fn().mockResolvedValue(undefined),
+      completeTask: vi.fn().mockResolvedValue(undefined),
     };
 
     await TestBed.configureTestingModule({
@@ -65,7 +65,7 @@ describe('DailyTaskListComponent', () => {
 
     const emptyState = fixture.debugElement.query(By.css('.empty-state'));
     expect(emptyState).toBeTruthy();
-    expect(emptyState.nativeElement.textContent).toContain('No daily tasks configured yet.');
+    expect((emptyState.nativeElement as HTMLElement).textContent).toContain('No daily tasks configured yet.');
   });
 
   it('should open form when Add Daily Task button is clicked in header', async () => {
@@ -75,7 +75,7 @@ describe('DailyTaskListComponent', () => {
     const addBtn = fixture.debugElement.query(By.css('.header button[mat-fab]'));
     expect(addBtn).toBeTruthy();
 
-    addBtn.nativeElement.click();
+    (addBtn.nativeElement as HTMLElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -98,12 +98,24 @@ describe('DailyTaskListComponent', () => {
     expect(component.showForm()).toBe(false);
   });
 
-  it('should toggle form visibility and create task upon onTaskCreated', () => {
+  it('should toggle form visibility and create task upon onTaskCreated', async () => {
     component.showForm.set(true);
-    component.onTaskCreated({ title: TEST_TASK_TITLE, difficulties: [EASY_DIFFICULTY] });
+    await component.onTaskCreated({ title: TEST_TASK_TITLE, difficulties: [EASY_DIFFICULTY] });
 
     expect(dailyTasksServiceMock.createTask).toHaveBeenCalledWith(TEST_TASK_TITLE, [EASY_DIFFICULTY]);
     expect(component.showForm()).toBe(false);
+  });
+
+  it('should handle error gracefully when createTask fails', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
+    dailyTasksServiceMock.createTask.mockRejectedValueOnce(new Error('Create error'));
+
+    component.showForm.set(true);
+    await component.onTaskCreated({ title: TEST_TASK_TITLE, difficulties: [EASY_DIFFICULTY] });
+
+    expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
+    expect(component.showForm()).toBe(false);
+    consoleSpy.mockRestore();
   });
 
   it('should forward completion to service when child item emits complete event', async () => {
@@ -114,7 +126,18 @@ describe('DailyTaskListComponent', () => {
     const itemComp = itemEl.componentInstance as DailyTaskItemComponent;
 
     itemComp.complete.emit(EASY_DIFFICULTY);
+    await fixture.whenStable();
 
     expect(dailyTasksServiceMock.completeTask).toHaveBeenCalledWith(mockTasks[0], EASY_DIFFICULTY);
+  });
+
+  it('should handle error gracefully when completeTask fails', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
+    dailyTasksServiceMock.completeTask.mockRejectedValueOnce(new Error('Complete error'));
+
+    await component.onCompleteTask(mockTasks[0], EASY_DIFFICULTY);
+
+    expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
+    consoleSpy.mockRestore();
   });
 });

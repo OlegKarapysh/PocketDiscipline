@@ -1,5 +1,6 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, OnInit, OnDestroy, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription, catchError, EMPTY, filter, from, switchMap, tap } from 'rxjs';
 
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -38,6 +39,7 @@ export class WithdrawalLedgerComponent implements OnInit, OnDestroy {
   private readonly categoryService = inject(CategoryService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly withdrawals = signal<WithdrawalRecord[]>([]);
   readonly categories = signal<RewardCategory[]>([]);
@@ -51,12 +53,21 @@ export class WithdrawalLedgerComponent implements OnInit, OnDestroy {
   private withdrawalsSub?: Subscription;
 
   ngOnInit(): void {
-    this.categoryService.getCategories().subscribe((cats) => {
-      this.categories.set(cats);
-      const map = new Map<string, RewardCategory>();
-      cats.forEach((c) => map.set(c.id, c));
-      this.categoryMap.set(map);
-    });
+    this.categoryService
+      .getCategories()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (cats) => {
+          this.categories.set(cats);
+          const map = new Map<string, RewardCategory>();
+          cats.forEach((c) => map.set(c.id, c));
+          this.categoryMap.set(map);
+        },
+        error: (err) => {
+          const message = err instanceof Error ? err.message : 'Failed to load categories';
+          this.snackBar.open(message, 'Close', { duration: SNACKBAR_DURATION_MS });
+        },
+      });
 
     this.loadWithdrawals();
   }
@@ -78,14 +89,24 @@ export class WithdrawalLedgerComponent implements OnInit, OnDestroy {
       this.withdrawalsSub.unsubscribe();
     }
 
-    this.withdrawalsSub = this.withdrawalService.getWithdrawals(filter).subscribe((records) => {
-      this.withdrawals.set(records);
-    });
+    this.withdrawalsSub = this.withdrawalService
+      .getWithdrawals(filter)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (records) => {
+          this.withdrawals.set(records);
+        },
+        error: (err) => {
+          const message = err instanceof Error ? err.message : 'Failed to load withdrawals';
+          this.snackBar.open(message, 'Close', { duration: SNACKBAR_DURATION_MS });
+        },
+      });
   }
 
   ngOnDestroy(): void {
     if (this.withdrawalsSub) {
       this.withdrawalsSub.unsubscribe();
+      this.withdrawalsSub = undefined;
     }
   }
 
@@ -110,30 +131,37 @@ export class WithdrawalLedgerComponent implements OnInit, OnDestroy {
       isDestructive: true,
     };
 
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: dialogData,
-      width: '400px',
-    });
-
-    dialogRef.afterClosed().subscribe((confirmed) => {
-      if (confirmed) {
-        this.executeRevert(withdrawal.id);
+    const dialogRef = this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
+      ConfirmDialogComponent,
+      {
+        data: dialogData,
+        width: '400px',
       }
-    });
-  }
+    );
 
-  private async executeRevert(id: string): Promise<void> {
-    try {
-      await this.withdrawalService.revertWithdrawal(id);
-      this.snackBar.open('Withdrawal reverted and balance refunded', 'Close', {
-        duration: SNACKBAR_DURATION_MS,
-      });
-      this.loadWithdrawals();
-    } catch {
-      this.snackBar.open('Failed to revert withdrawal', 'Close', {
-        duration: SNACKBAR_DURATION_MS,
-      });
-    }
+    dialogRef
+      .afterClosed()
+      .pipe(
+        filter(Boolean),
+        switchMap(() =>
+          from(this.withdrawalService.revertWithdrawal(withdrawal.id)).pipe(
+            tap(() => {
+              this.snackBar.open('Withdrawal reverted and balance refunded', 'Close', {
+                duration: SNACKBAR_DURATION_MS,
+              });
+              this.loadWithdrawals();
+            }),
+            catchError(() => {
+              this.snackBar.open('Failed to revert withdrawal', 'Close', {
+                duration: SNACKBAR_DURATION_MS,
+              });
+              return EMPTY;
+            })
+          )
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   getCategory(categoryId: string): RewardCategory | undefined {

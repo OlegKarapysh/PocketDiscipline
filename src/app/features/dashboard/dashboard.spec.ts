@@ -115,4 +115,62 @@ describe('Dashboard', () => {
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });
+
+  it('should handle service error gracefully in monthlySummary stream', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      // suppress expected console error output
+    });
+
+    earningsServiceMock.getMonthlyEarningsSummary.mockReturnValue(
+      new Observable(subscriber => subscriber.error(new Error('Monthly summary error')))
+    );
+
+    component.onMonthChange({
+      year: 2026,
+      month: 7,
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.monthlySummary()).toBeNull();
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+
+  it('should return empty dailyEarnings without calling service when filter dates are missing', async () => {
+    earningsServiceMock.getDailyEarnings.mockClear();
+
+    component.onFilterChange({
+      preset: 'custom',
+      startDate: '',
+      endDate: '',
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.dailyEarnings()).toEqual([]);
+    expect(earningsServiceMock.getDailyEarnings).not.toHaveBeenCalled();
+  });
+
+  it('should handle synchronous service errors gracefully in streams', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      // suppress expected console error output
+    });
+
+    earningsServiceMock.getDailyEarnings.mockImplementation(() => {
+      throw new Error('Synchronous service error');
+    });
+
+    component.onFilterChange({
+      preset: 'last30',
+      startDate: '2026-08-04',
+      endDate: '2026-09-02',
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.dailyEarnings()).toEqual([]);
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
 });

@@ -28,12 +28,20 @@ export class DailyTaskListComponent {
     this.showForm.set(false);
   }
 
-  async onCompleteTask(task: DailyTask, difficulty: DailyTaskDifficulty) {
-    await this.dailyTasksService.completeTask(task, difficulty);
+  async onCompleteTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
+    try {
+      await this.dailyTasksService.completeTask(task, difficulty);
+    } catch (e: unknown) {
+      console.error(e);
+    }
   }
 
-  onTaskCreated(event: { title: string; difficulties: DailyTaskDifficulty[] }) {
-    this.dailyTasksService.createTask(event.title, event.difficulties);
+  async onTaskCreated(event: { title: string; difficulties: DailyTaskDifficulty[] }): Promise<void> {
     this.showForm.set(false);
+    try {
+      await this.dailyTasksService.createTask(event.title, event.difficulties);
+    } catch (e: unknown) {
+      console.error(e);
+    }
   }
 }

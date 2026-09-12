@@ -45,7 +45,7 @@ export class SpendingDonutChartComponent {
   readonly activeCategory = computed<CategorySpendingBreakdown | null>(() => {
     const id = this.hoveredCategoryId();
     if (!id) return null;
-    return this.data().find((c) => c.categoryId === id) || null;
+    return this.data().find((c) => c.categoryId === id) ?? null;
   });
 
   setHovered(categoryId: string | null): void {

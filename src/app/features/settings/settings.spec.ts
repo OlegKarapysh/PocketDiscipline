@@ -11,9 +11,7 @@ describe('Settings', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Settings],
-      providers: [
-        provideRouter([]),
-      ],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Settings);
@@ -31,6 +29,7 @@ describe('Settings', () => {
   it('should render link to manage categories', () => {
     const link = fixture.debugElement.query(By.css('.settings-link'));
     expect(link).toBeTruthy();
-    expect(link.nativeElement.textContent).toContain('Manage Reward Categories');
+    const linkEl = link.nativeElement as HTMLElement;
+    expect(linkEl.textContent).toContain('Manage Reward Categories');
   });
 });

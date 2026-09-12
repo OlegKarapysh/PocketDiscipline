@@ -14,11 +14,20 @@ export class TimerControls {
 
   isActive = this.timerService.isActive;
 
-  start() {
-    this.timerService.startTimer();
+  async start(): Promise<void> {
+    try {
+      await this.timerService.startTimer();
+    } catch (e) {
+      console.error(e);
+    }
   }
 
-  stop() {
-    this.timerService.stopTimer();
+  async stop(): Promise<void> {
+    try {
+      await this.timerService.stopTimer();
+    } catch (e) {
+      console.error(e);
+    }
   }
 }
+

@@ -41,8 +41,8 @@ export class CategoryService {
     const newCategory: RewardCategory = {
       id: crypto.randomUUID(),
       name: trimmedName,
-      color: dto.color?.trim() || DEFAULT_CATEGORY_COLOR,
-      icon: dto.icon?.trim() || DEFAULT_CATEGORY_ICON,
+      color: dto.color?.trim() ?? DEFAULT_CATEGORY_COLOR,
+      icon: dto.icon?.trim() ?? DEFAULT_CATEGORY_ICON,
       isDefault: false,
       isProtected: false,
       createdAt: Date.now(),

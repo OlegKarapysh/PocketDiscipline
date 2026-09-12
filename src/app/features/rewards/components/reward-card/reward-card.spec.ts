@@ -48,11 +48,11 @@ describe('RewardCardComponent', () => {
 
   it('should create and render reward details and category info', () => {
     expect(component).toBeTruthy();
-    const titleEl = fixture.debugElement.query(By.css('.card-title'));
-    expect(titleEl.nativeElement.textContent.trim()).toBe('Noise-Cancelling Headphones');
+    const titleEl = fixture.debugElement.query(By.css('.card-title')).nativeElement as HTMLElement;
+    expect(titleEl.textContent?.trim()).toBe('Noise-Cancelling Headphones');
 
-    const subtitleEl = fixture.debugElement.query(By.css('.card-subtitle'));
-    expect(subtitleEl.nativeElement.textContent.trim()).toBe('Gear & Tech');
+    const subtitleEl = fixture.debugElement.query(By.css('.card-subtitle')).nativeElement as HTMLElement;
+    expect(subtitleEl.textContent?.trim()).toBe('Gear & Tech');
   });
 
   it('should calculate 50% progress and display disabled "Need X ₴ more" button when unaffordable', () => {
@@ -60,13 +60,13 @@ describe('RewardCardComponent', () => {
     expect(component.isAffordable()).toBe(false);
     expect(component.remainingNeeded()).toBe(600);
 
-    const progressEl = fixture.debugElement.query(By.css('.progress-text .percentage'));
-    expect(progressEl.nativeElement.textContent.trim()).toBe('50%');
+    const progressEl = fixture.debugElement.query(By.css('.progress-text .percentage')).nativeElement as HTMLElement;
+    expect(progressEl.textContent?.trim()).toBe('50%');
 
-    const needMoreBtn = fixture.debugElement.query(By.css('.need-more-btn'));
+    const needMoreBtn = fixture.debugElement.query(By.css('.need-more-btn')).nativeElement as HTMLButtonElement;
     expect(needMoreBtn).toBeTruthy();
-    expect(needMoreBtn.nativeElement.disabled).toBe(true);
-    expect(needMoreBtn.nativeElement.textContent).toContain('Need 600 ₴ more');
+    expect(needMoreBtn.disabled).toBe(true);
+    expect(needMoreBtn.textContent).toContain('Need 600 ₴ more');
   });
 
   it('should enable claim button and cap progress at 100% when affordable', () => {
@@ -77,9 +77,9 @@ describe('RewardCardComponent', () => {
     expect(component.isAffordable()).toBe(true);
     expect(component.remainingNeeded()).toBe(0);
 
-    const claimBtn = fixture.debugElement.query(By.css('.claim-btn'));
+    const claimBtn = fixture.debugElement.query(By.css('.claim-btn')).nativeElement as HTMLButtonElement;
     expect(claimBtn).toBeTruthy();
-    expect(claimBtn.nativeElement.disabled).toBe(false);
+    expect(claimBtn.disabled).toBe(false);
   });
 
   it('should emit claim event when clicking Claim Reward button in the DOM', () => {
@@ -89,8 +89,8 @@ describe('RewardCardComponent', () => {
     const claimSpy = vi.fn();
     component.claim.subscribe(claimSpy);
 
-    const claimBtn = fixture.debugElement.query(By.css('.claim-btn'));
-    claimBtn.nativeElement.click();
+    const claimBtn = fixture.debugElement.query(By.css('.claim-btn')).nativeElement as HTMLButtonElement;
+    claimBtn.click();
 
     expect(claimSpy).toHaveBeenCalledWith(mockReward);
   });
@@ -107,9 +107,9 @@ describe('RewardCardComponent', () => {
     const claimedTag = fixture.debugElement.query(By.css('.claimed-tag'));
     expect(claimedTag).toBeTruthy();
 
-    const claimedBtn = fixture.debugElement.query(By.css('.claimed-btn'));
+    const claimedBtn = fixture.debugElement.query(By.css('.claimed-btn')).nativeElement as HTMLButtonElement;
     expect(claimedBtn).toBeTruthy();
-    expect(claimedBtn.nativeElement.disabled).toBe(true);
+    expect(claimedBtn.disabled).toBe(true);
   });
 
   it('should render count tag for repeatable reward with claimCount > 0', () => {
@@ -124,17 +124,17 @@ describe('RewardCardComponent', () => {
     fixture.componentRef.setInput('reward', repeatableReward);
     fixture.detectChanges();
 
-    const countTag = fixture.debugElement.query(By.css('.count-tag'));
+    const countTag = fixture.debugElement.query(By.css('.count-tag')).nativeElement as HTMLElement;
     expect(countTag).toBeTruthy();
-    expect(countTag.nativeElement.textContent).toContain('Claimed 3x');
+    expect(countTag.textContent).toContain('Claimed 3x');
   });
 
   it('should fall back gracefully when category is undefined', () => {
     fixture.componentRef.setInput('category', undefined);
     fixture.detectChanges();
 
-    const subtitleEl = fixture.debugElement.query(By.css('.card-subtitle'));
-    expect(subtitleEl.nativeElement.textContent.trim()).toBe('General');
+    const subtitleEl = fixture.debugElement.query(By.css('.card-subtitle')).nativeElement as HTMLElement;
+    expect(subtitleEl.textContent?.trim()).toBe('General');
   });
 
   it('should emit edit and delete outputs when menu actions are clicked in the DOM', async () => {
@@ -143,8 +143,8 @@ describe('RewardCardComponent', () => {
     component.edit.subscribe(editSpy);
     component.delete.subscribe(deleteSpy);
 
-    const menuTriggerBtn = fixture.debugElement.query(By.css('button[aria-label="Reward options"]'));
-    menuTriggerBtn.nativeElement.click();
+    const menuTriggerBtn = fixture.debugElement.query(By.css('button[aria-label="Reward options"]')).nativeElement as HTMLButtonElement;
+    menuTriggerBtn.click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -154,7 +154,7 @@ describe('RewardCardComponent', () => {
     (menuItems[0] as HTMLElement).click();
     expect(editSpy).toHaveBeenCalledWith(mockReward);
 
-    menuTriggerBtn.nativeElement.click();
+    menuTriggerBtn.click();
     fixture.detectChanges();
     await fixture.whenStable();
 

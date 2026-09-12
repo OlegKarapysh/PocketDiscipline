@@ -50,7 +50,7 @@ describe('Layout', () => {
   it('should contain navigation links for all features', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const links = Array.from(compiled.querySelectorAll('a[mat-list-item]')).map(
-      a => a.getAttribute('href') || a.getAttribute('ng-reflect-router-link') || a.getAttribute('routerLink')
+      a => a.getAttribute('href') ?? a.getAttribute('ng-reflect-router-link') ?? a.getAttribute('routerLink')
     );
     expect(links).toContain('/dashboard');
     expect(links).toContain('/tasks');
@@ -85,35 +85,36 @@ describe('Layout', () => {
 
   it('should dynamically update the tab title on mobile when navigating across tabs', async () => {
     breakpointSubject.next({ matches: true, breakpoints: {} });
+    const compiled = fixture.nativeElement as HTMLElement;
 
     await router.navigateByUrl('/tasks');
     fixture.detectChanges();
-    let titleEl = fixture.nativeElement.querySelector('mat-sidenav-content mat-toolbar .tab-title');
+    let titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
     expect(titleEl?.textContent?.trim()).toBe('Tasks');
 
     await router.navigateByUrl('/goals');
     fixture.detectChanges();
-    titleEl = fixture.nativeElement.querySelector('mat-sidenav-content mat-toolbar .tab-title');
+    titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
     expect(titleEl?.textContent?.trim()).toBe('Goals');
 
     await router.navigateByUrl('/pomodoro');
     fixture.detectChanges();
-    titleEl = fixture.nativeElement.querySelector('mat-sidenav-content mat-toolbar .tab-title');
+    titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
     expect(titleEl?.textContent?.trim()).toBe('Pomodoro');
 
     await router.navigateByUrl('/daily-scores');
     fixture.detectChanges();
-    titleEl = fixture.nativeElement.querySelector('mat-sidenav-content mat-toolbar .tab-title');
+    titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
     expect(titleEl?.textContent?.trim()).toBe('Daily Scores');
 
     await router.navigateByUrl('/rewards');
     fixture.detectChanges();
-    titleEl = fixture.nativeElement.querySelector('mat-sidenav-content mat-toolbar .tab-title');
+    titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
     expect(titleEl?.textContent?.trim()).toBe('Rewards');
 
     await router.navigateByUrl('/settings');
     fixture.detectChanges();
-    titleEl = fixture.nativeElement.querySelector('mat-sidenav-content mat-toolbar .tab-title');
+    titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
     expect(titleEl?.textContent?.trim()).toBe('Settings');
   });
 
@@ -122,7 +123,8 @@ describe('Layout', () => {
 
     await router.navigateByUrl('/tasks?filter=active#section');
     fixture.detectChanges();
-    const titleEl = fixture.nativeElement.querySelector('mat-sidenav-content mat-toolbar .tab-title');
+    const compiled = fixture.nativeElement as HTMLElement;
+    const titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
     expect(titleEl?.textContent?.trim()).toBe('Tasks');
   });
 

@@ -37,8 +37,8 @@ describe('GoalItem', () => {
 
     const titleEl = fixture.debugElement.query(By.css('mat-card-title'));
     const subtitleEl = fixture.debugElement.query(By.css('mat-card-subtitle'));
-    expect(titleEl.nativeElement.textContent.trim()).toBe(TEST_GOAL_TITLE);
-    expect(subtitleEl.nativeElement.textContent).toContain('2000 ₴');
+    expect((titleEl.nativeElement as HTMLElement).textContent?.trim()).toBe(TEST_GOAL_TITLE);
+    expect((subtitleEl.nativeElement as HTMLElement).textContent).toContain('2000 ₴');
 
     const editBtn = fixture.debugElement.query(By.css('button[aria-label="Edit"]'));
     const deleteBtn = fixture.debugElement.query(By.css('button[aria-label="Delete"]'));
@@ -72,15 +72,15 @@ describe('GoalItem', () => {
     component.delete.subscribe((id) => (deletedId = id));
 
     const editBtn = fixture.debugElement.query(By.css('button[aria-label="Edit"]'));
-    editBtn.nativeElement.click();
+    (editBtn.nativeElement as HTMLButtonElement).click();
     expect(editedGoal).toEqual(activeGoal);
 
     const deleteBtn = fixture.debugElement.query(By.css('button[aria-label="Delete"]'));
-    deleteBtn.nativeElement.click();
+    (deleteBtn.nativeElement as HTMLButtonElement).click();
     expect(deletedId).toBe(TEST_GOAL_ID);
 
     const completeBtn = fixture.debugElement.query(By.css('button[color="primary"]:not([aria-label="Edit"])'));
-    completeBtn.nativeElement.click();
+    (completeBtn.nativeElement as HTMLButtonElement).click();
     expect(completedId).toBe(TEST_GOAL_ID);
   });
 
@@ -103,9 +103,9 @@ describe('GoalItem', () => {
 
     const undoBtn = fixture.debugElement.query(By.css('button[mat-stroked-button]'));
     expect(undoBtn).toBeTruthy();
-    expect(undoBtn.nativeElement.textContent).toContain('Undo');
+    expect((undoBtn.nativeElement as HTMLElement).textContent).toContain('Undo');
 
-    undoBtn.nativeElement.click();
+    (undoBtn.nativeElement as HTMLButtonElement).click();
     expect(undoneId).toBe(TEST_GOAL_ID);
   });
 });

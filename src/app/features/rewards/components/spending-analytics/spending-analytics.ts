@@ -1,4 +1,6 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, DestroyRef, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription } from 'rxjs';
 
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,8 +16,10 @@ import { SpendingTrendChartComponent } from '../spending-trend-chart/spending-tr
   styleUrl: './spending-analytics.scss',
   imports: [MatButtonToggleModule, MatIconModule, SpendingDonutChartComponent, SpendingTrendChartComponent],
 })
-export class SpendingAnalyticsComponent implements OnInit {
+export class SpendingAnalyticsComponent implements OnInit, OnDestroy {
   private readonly analyticsService = inject(SpendingAnalyticsService);
+  private readonly destroyRef = inject(DestroyRef);
+  private analyticsSub?: Subscription;
 
   readonly selectedPeriod = signal<AnalyticsPeriod>('thisMonth');
   readonly analytics = signal<SpendingAnalyticsSummary>({
@@ -48,8 +52,17 @@ export class SpendingAnalyticsComponent implements OnInit {
   }
 
   loadAnalytics(): void {
-    this.analyticsService.getAnalytics(this.selectedPeriod()).subscribe((summary) => {
-      this.analytics.set(summary);
-    });
+    this.analyticsSub?.unsubscribe();
+    this.analyticsSub = this.analyticsService
+      .getAnalytics(this.selectedPeriod())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((summary) => {
+        this.analytics.set(summary);
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.analyticsSub?.unsubscribe();
+    this.analyticsSub = undefined;
   }
 }

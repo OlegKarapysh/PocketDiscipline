@@ -48,7 +48,7 @@ describe('CategoryFormDialogComponent', () => {
 
   it('should initialize with empty form and disabled submit button when creating a new category', () => {
     expect(component.isEdit).toBe(false);
-    expect(component.form.value.name).toBe('');
+    expect(component.form.getRawValue().name).toBe('');
     expect(component.form.valid).toBe(false);
 
     const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
@@ -60,9 +60,10 @@ describe('CategoryFormDialogComponent', () => {
     await setupComponent(existingCategory);
 
     expect(component.isEdit).toBe(true);
-    expect(component.form.value.name).toBe('Hobbies');
-    expect(component.form.value.color).toBe('#3f51b5');
-    expect(component.form.value.icon).toBe('palette');
+    const formVal = component.form.getRawValue();
+    expect(formVal.name).toBe('Hobbies');
+    expect(formVal.color).toBe('#3f51b5');
+    expect(formVal.icon).toBe('palette');
     expect(component.form.valid).toBe(true);
 
     const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
@@ -77,11 +78,11 @@ describe('CategoryFormDialogComponent', () => {
     fixture.detectChanges();
 
     const colorChips = fixture.debugElement.queryAll(By.css('.color-chip'));
-    colorChips[1].nativeElement.click();
+    (colorChips[1].nativeElement as HTMLElement).click();
     fixture.detectChanges();
 
     const iconChips = fixture.debugElement.queryAll(By.css('.icon-chip'));
-    iconChips[2].nativeElement.click();
+    (iconChips[2].nativeElement as HTMLElement).click();
     fixture.detectChanges();
 
     expect(component.form.valid).toBe(true);
@@ -91,10 +92,11 @@ describe('CategoryFormDialogComponent', () => {
     submitBtn.click();
     await fixture.whenStable();
 
+    const submittedVal = component.form.getRawValue();
     expect(mockDialogRef.close).toHaveBeenCalledWith({
       name: 'Gaming',
-      color: component.form.value.color,
-      icon: component.form.value.icon,
+      color: submittedVal.color,
+      icon: submittedVal.icon,
     });
   });
 

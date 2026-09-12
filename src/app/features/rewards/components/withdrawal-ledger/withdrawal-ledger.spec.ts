@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
@@ -190,7 +190,7 @@ describe('WithdrawalLedgerComponent', () => {
     });
 
     const revertButtons = fixture.debugElement.queryAll(By.css('.revert-button'));
-    revertButtons[0].nativeElement.click();
+    (revertButtons[0].nativeElement as HTMLButtonElement).click();
     await fixture.whenStable();
 
     expect(mockDialog.open).toHaveBeenCalled();
@@ -202,6 +202,7 @@ describe('WithdrawalLedgerComponent', () => {
       'Close',
       { duration: 3000 }
     );
+    expect(mockWithdrawalService.getWithdrawals).toHaveBeenCalledTimes(2);
   });
 
   it('should not revert withdrawal when dialog is cancelled', async () => {
@@ -210,7 +211,7 @@ describe('WithdrawalLedgerComponent', () => {
     });
 
     const revertButtons = fixture.debugElement.queryAll(By.css('.revert-button'));
-    revertButtons[0].nativeElement.click();
+    (revertButtons[0].nativeElement as HTMLButtonElement).click();
     await fixture.whenStable();
 
     expect(mockDialog.open).toHaveBeenCalled();
@@ -224,7 +225,7 @@ describe('WithdrawalLedgerComponent', () => {
     });
 
     const revertButtons = fixture.debugElement.queryAll(By.css('.revert-button'));
-    revertButtons[0].nativeElement.click();
+    (revertButtons[0].nativeElement as HTMLButtonElement).click();
     await fixture.whenStable();
 
     await Promise.resolve();
@@ -235,5 +236,21 @@ describe('WithdrawalLedgerComponent', () => {
       'Close',
       { duration: 3000 }
     );
+  });
+
+  it('should cleanly unsubscribe on component destroy', () => {
+    expect(() => component.ngOnDestroy()).not.toThrow();
+  });
+
+  it('should show error snackbar when loading categories fails', () => {
+    mockCategoryService.getCategories.mockReturnValue(throwError(() => new Error('Categories DB failure')));
+    component.ngOnInit();
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Categories DB failure', 'Close', { duration: 3000 });
+  });
+
+  it('should show error snackbar when loading withdrawals fails', () => {
+    mockWithdrawalService.getWithdrawals.mockReturnValue(throwError(() => new Error('Withdrawals DB failure')));
+    component.loadWithdrawals();
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Withdrawals DB failure', 'Close', { duration: 3000 });
   });
 });

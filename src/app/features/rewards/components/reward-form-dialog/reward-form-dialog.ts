@@ -48,10 +48,20 @@ export class RewardFormDialogComponent implements OnInit {
   readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
 
   readonly form = new FormGroup({
-    title: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
-    cost: new FormControl<number | null>(null, [Validators.required, Validators.min(0.01)]),
-    categoryId: new FormControl<string>(FALLBACK_CATEGORY_ID, [Validators.required]),
-    type: new FormControl<RewardType>('repeatable', [Validators.required]),
+    title: new FormControl<string>('', [
+      (control) => Validators.required(control),
+      (control) => Validators.maxLength(100)(control),
+    ]),
+    cost: new FormControl<number | null>(null, [
+      (control) => Validators.required(control),
+      (control) => Validators.min(0.01)(control),
+    ]),
+    categoryId: new FormControl<string>(FALLBACK_CATEGORY_ID, [
+      (control) => Validators.required(control),
+    ]),
+    type: new FormControl<RewardType>('repeatable', [
+      (control) => Validators.required(control),
+    ]),
   });
 
   ngOnInit(): void {

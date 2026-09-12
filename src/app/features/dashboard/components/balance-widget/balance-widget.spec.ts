@@ -41,7 +41,7 @@ describe('BalanceWidgetComponent', () => {
     await fixture.whenStable();
 
     const amountEl = fixture.debugElement.query(By.css('.amount'));
-    expect(amountEl.nativeElement.textContent.trim()).toBe('2,500 ₴');
+    expect((amountEl.nativeElement as HTMLElement).textContent?.trim()).toBe('2,500 ₴');
   });
 
   it('should render placeholder "-- ₴" when user is undefined', async () => {
@@ -50,7 +50,7 @@ describe('BalanceWidgetComponent', () => {
     await fixture.whenStable();
 
     const amountEl = fixture.debugElement.query(By.css('.amount'));
-    expect(amountEl.nativeElement.textContent.trim()).toBe('-- ₴');
+    expect((amountEl.nativeElement as HTMLElement).textContent?.trim()).toBe('-- ₴');
   });
 
   it('should emit REQUEST_QUICK_SPEND event when clicking the Quick Spend button in the DOM', async () => {
@@ -59,8 +59,20 @@ describe('BalanceWidgetComponent', () => {
 
     const button = fixture.debugElement.query(By.css('.quick-spend-btn'));
     expect(button).toBeTruthy();
-    button.nativeElement.click();
+    (button.nativeElement as HTMLElement).click();
 
     expect(eventBusMock.emit).toHaveBeenCalledWith({ type: 'REQUEST_QUICK_SPEND' });
+  });
+
+  it('should handle error gracefully and render placeholder "-- ₴" when user$ errors', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
+    userSubject.error(new Error('User error'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const amountEl = fixture.debugElement.query(By.css('.amount'));
+    expect((amountEl.nativeElement as HTMLElement).textContent?.trim()).toBe('-- ₴');
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });

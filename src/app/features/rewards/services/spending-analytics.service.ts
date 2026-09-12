@@ -79,8 +79,8 @@ export class SpendingAnalyticsService {
     period: AnalyticsPeriod,
     withdrawals: WithdrawalRecord[],
     categoryMap: Map<string, RewardCategory>,
-    startDate?: string,
-    endDate?: string,
+    _startDate?: string,
+    _endDate?: string,
     now: Date = new Date()
   ): SpendingAnalyticsSummary {
     let granularity: TrendGranularity;
@@ -98,7 +98,7 @@ export class SpendingAnalyticsService {
 
     const categoryTotals = new Map<string, number>();
     filteredWithdrawals.forEach(w => {
-      const current = categoryTotals.get(w.categoryId) || 0;
+      const current = categoryTotals.get(w.categoryId) ?? 0;
       categoryTotals.set(w.categoryId, current + w.amount);
     });
 
@@ -108,9 +108,9 @@ export class SpendingAnalyticsService {
         const percentage = totalSpent > 0 ? Math.round((catSpent / totalSpent) * 1000) / 10 : 0;
         return {
           categoryId,
-          categoryName: category?.name || 'General',
-          color: category?.color || '#9e9e9e',
-          icon: category?.icon || 'category',
+          categoryName: category?.name ?? 'General',
+          color: category?.color ?? '#9e9e9e',
+          icon: category?.icon ?? 'category',
           totalSpent: catSpent,
           percentage,
         };
@@ -148,7 +148,7 @@ export class SpendingAnalyticsService {
   ): SpendingTrendPoint[] {
     const dailyMap = new Map<string, number>();
     withdrawals.forEach(w => {
-      dailyMap.set(w.date, (dailyMap.get(w.date) || 0) + w.amount);
+      dailyMap.set(w.date, (dailyMap.get(w.date) ?? 0) + w.amount);
     });
 
     const points: SpendingTrendPoint[] = [];
@@ -161,7 +161,7 @@ export class SpendingAnalyticsService {
         points.push({
           dateOrMonth: dateStr,
           label,
-          amount: dailyMap.get(dateStr) || 0,
+          amount: dailyMap.get(dateStr) ?? 0,
         });
       }
     } else {
@@ -174,7 +174,7 @@ export class SpendingAnalyticsService {
         points.push({
           dateOrMonth: dateStr,
           label,
-          amount: dailyMap.get(dateStr) || 0,
+          amount: dailyMap.get(dateStr) ?? 0,
         });
       }
     }
@@ -190,7 +190,7 @@ export class SpendingAnalyticsService {
     const monthlyMap = new Map<string, number>();
     withdrawals.forEach(w => {
       const monthKey = w.date.substring(0, 7);
-      monthlyMap.set(monthKey, (monthlyMap.get(monthKey) || 0) + w.amount);
+      monthlyMap.set(monthKey, (monthlyMap.get(monthKey) ?? 0) + w.amount);
     });
 
     const points: SpendingTrendPoint[] = [];
@@ -203,7 +203,7 @@ export class SpendingAnalyticsService {
         points.push({
           dateOrMonth: monthKey,
           label,
-          amount: monthlyMap.get(monthKey) || 0,
+          amount: monthlyMap.get(monthKey) ?? 0,
         });
       }
     } else {
@@ -226,7 +226,7 @@ export class SpendingAnalyticsService {
         points.push({
           dateOrMonth: monthKey,
           label: `${MONTH_NAMES[monthIdx]} '${shortYear}`,
-          amount: monthlyMap.get(monthKey) || 0,
+          amount: monthlyMap.get(monthKey) ?? 0,
         });
       }
     }
