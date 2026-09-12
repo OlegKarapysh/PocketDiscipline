@@ -1,9 +1,7 @@
-export type GoalStatus = 'ACTIVE' | 'COMPLETED';
+import { GoalStatus, GOAL_STATUS } from './goal-status.type';
 
-export const GOAL_STATUS = {
-  ACTIVE: 'ACTIVE',
-  COMPLETED: 'COMPLETED',
-} as const;
+export { GOAL_STATUS };
+export type { GoalStatus };
 
 export interface Goal {
   id: string;

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { GoalsPage } from './goals-page';
@@ -37,8 +37,8 @@ describe('GoalsPage', () => {
 
   beforeEach(async () => {
     goalServiceMock = {
-      getActiveGoals: vi.fn().mockReturnValue(Promise.resolve([mockGoal])),
-      getCompletedGoals: vi.fn().mockReturnValue(Promise.resolve([])),
+      getActiveGoals: vi.fn().mockReturnValue(of([mockGoal])),
+      getCompletedGoals: vi.fn().mockReturnValue(of([])),
       completeGoal: vi.fn().mockResolvedValue(undefined),
       undoCompleteGoal: vi.fn().mockResolvedValue(undefined),
       deleteGoal: vi.fn().mockResolvedValue(undefined),
@@ -134,5 +134,125 @@ describe('GoalsPage', () => {
 
     await Promise.resolve();
     expect(snackBarMock.open).toHaveBeenCalledWith('A goal with this title already exists.', 'Close', expect.any(Object));
+  });
+
+  it('should show unknown error snackbar when addGoal fails with non-Error', async () => {
+    dialogMock.open.mockReturnValue({
+      afterClosed: () => of({ title: TEST_GOAL_TITLE, rewardValue: TEST_REWARD_VALUE }),
+    });
+    goalServiceMock.addGoal.mockRejectedValue('something went wrong');
+
+    component.openAddDialog();
+
+    await Promise.resolve();
+    expect(snackBarMock.open).toHaveBeenCalledWith('Unknown error occurred', 'Close', expect.any(Object));
+  });
+
+  it('should not add goal when add dialog is cancelled', async () => {
+    dialogMock.open.mockReturnValue({
+      afterClosed: () => of(undefined),
+    });
+
+    component.openAddDialog();
+    await Promise.resolve();
+
+    expect(dialogMock.open).toHaveBeenCalled();
+    expect(goalServiceMock.addGoal).not.toHaveBeenCalled();
+    expect(snackBarMock.open).not.toHaveBeenCalled();
+  });
+
+  it('should show error snackbar when updateGoal fails', async () => {
+    dialogMock.open.mockReturnValue({
+      afterClosed: () => of({ title: 'New Title', rewardValue: 3000 }),
+    });
+    goalServiceMock.updateGoal.mockRejectedValue(new Error('Failed to update'));
+
+    component.openEditDialog(mockGoal);
+
+    await Promise.resolve();
+    expect(snackBarMock.open).toHaveBeenCalledWith('Failed to update', 'Close', expect.any(Object));
+  });
+
+  it('should not update goal when edit dialog is cancelled', async () => {
+    dialogMock.open.mockReturnValue({
+      afterClosed: () => of(undefined),
+    });
+
+    component.openEditDialog(mockGoal);
+    await Promise.resolve();
+
+    expect(dialogMock.open).toHaveBeenCalled();
+    expect(goalServiceMock.updateGoal).not.toHaveBeenCalled();
+    expect(snackBarMock.open).not.toHaveBeenCalled();
+  });
+
+  it('should show error snackbar when completeGoal fails with Error', async () => {
+    goalServiceMock.completeGoal.mockRejectedValue(new Error('Complete failed'));
+
+    await component.completeGoal(TEST_GOAL_ID);
+
+    expect(snackBarMock.open).toHaveBeenCalledWith('Complete failed', 'Close', expect.any(Object));
+  });
+
+  it('should show unknown error snackbar when completeGoal fails with non-Error', async () => {
+    goalServiceMock.completeGoal.mockRejectedValue('network error');
+
+    await component.completeGoal(TEST_GOAL_ID);
+
+    expect(snackBarMock.open).toHaveBeenCalledWith('Unknown error occurred', 'Close', expect.any(Object));
+  });
+
+  it('should show error snackbar when undoCompleteGoal fails with Error', async () => {
+    goalServiceMock.undoCompleteGoal.mockRejectedValue(new Error('Undo failed'));
+
+    await component.undoCompleteGoal(TEST_GOAL_ID);
+
+    expect(snackBarMock.open).toHaveBeenCalledWith('Undo failed', 'Close', expect.any(Object));
+  });
+
+  it('should show unknown error snackbar when undoCompleteGoal fails with non-Error', async () => {
+    goalServiceMock.undoCompleteGoal.mockRejectedValue('network error');
+
+    await component.undoCompleteGoal(TEST_GOAL_ID);
+
+    expect(snackBarMock.open).toHaveBeenCalledWith('Unknown error occurred', 'Close', expect.any(Object));
+  });
+
+  it('should show error snackbar when deleteGoal fails with Error', async () => {
+    goalServiceMock.deleteGoal.mockRejectedValue(new Error('Delete failed'));
+
+    await component.deleteGoal(TEST_GOAL_ID);
+
+    expect(snackBarMock.open).toHaveBeenCalledWith('Delete failed', 'Close', expect.any(Object));
+  });
+
+  it('should show unknown error snackbar when deleteGoal fails with non-Error', async () => {
+    goalServiceMock.deleteGoal.mockRejectedValue('network error');
+
+    await component.deleteGoal(TEST_GOAL_ID);
+
+    expect(snackBarMock.open).toHaveBeenCalledWith('Unknown error occurred', 'Close', expect.any(Object));
+  });
+
+  it('should show error snackbar when openAddDialog dialog stream throws error', async () => {
+    dialogMock.open.mockReturnValue({
+      afterClosed: () => throwError(() => new Error('Dialog crashed')),
+    });
+
+    component.openAddDialog();
+    await Promise.resolve();
+
+    expect(snackBarMock.open).toHaveBeenCalledWith('Dialog crashed', 'Close', expect.any(Object));
+  });
+
+  it('should show error snackbar when openEditDialog dialog stream throws error', async () => {
+    dialogMock.open.mockReturnValue({
+      afterClosed: () => throwError(() => new Error('Dialog crashed')),
+    });
+
+    component.openEditDialog(mockGoal);
+    await Promise.resolve();
+
+    expect(snackBarMock.open).toHaveBeenCalledWith('Dialog crashed', 'Close', expect.any(Object));
   });
 });

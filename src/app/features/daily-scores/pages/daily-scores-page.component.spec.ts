@@ -151,4 +151,34 @@ describe('DailyScoresPageComponent', () => {
     expect(component.loading()).toBe(false);
     expect(consoleSpy).toHaveBeenCalled();
   });
+
+  it('should unsubscribe from loadData when component is destroyed', () => {
+    const pendingSubject = new Subject<DailyScore | undefined>();
+    dailyScoresServiceMock.getTodayScore.mockReturnValue(pendingSubject);
+    dailyScoresServiceMock.getCurrentMonthScores.mockReturnValue(of([]));
+    dailyScoresServiceMock.getLast7DaysScores.mockReturnValue(of([]));
+
+    component.loadData();
+    expect(pendingSubject.observed).toBe(true);
+
+    fixture.destroy();
+    expect(pendingSubject.observed).toBe(false);
+  });
+
+  it('should unsubscribe from previous loadData when called again', () => {
+    const pendingSubject1 = new Subject<DailyScore | undefined>();
+    dailyScoresServiceMock.getTodayScore.mockReturnValue(pendingSubject1);
+    dailyScoresServiceMock.getCurrentMonthScores.mockReturnValue(of([]));
+    dailyScoresServiceMock.getLast7DaysScores.mockReturnValue(of([]));
+
+    component.loadData();
+    expect(pendingSubject1.observed).toBe(true);
+
+    const pendingSubject2 = new Subject<DailyScore | undefined>();
+    dailyScoresServiceMock.getTodayScore.mockReturnValue(pendingSubject2);
+
+    component.loadData();
+    expect(pendingSubject1.observed).toBe(false);
+    expect(pendingSubject2.observed).toBe(true);
+  });
 });

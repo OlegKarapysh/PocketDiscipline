@@ -1,0 +1,163 @@
+.reward-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
+
+  &.is-claimed {
+    opacity: 0.85;
+    background-color: var(--mat-sys-surface-container-low, #f7f7fa);
+  }
+}
+
+.card-header {
+  position: relative;
+  align-items: center;
+
+  .header-actions {
+    margin-left: auto;
+  }
+}
+
+.category-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  color: #fff;
+
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.card-subtitle {
+  font-size: 0.85rem;
+  color: var(--mat-sys-on-surface-variant, #6b7280);
+}
+
+.card-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.type-tag, .claimed-tag, .count-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background-color: var(--mat-sys-surface-variant, #e5e7eb);
+  color: var(--mat-sys-on-surface-variant, #374151);
+
+  &.is-milestone {
+    background-color: #e0e7ff;
+    color: #3730a3;
+  }
+
+  &.claimed-tag {
+    background-color: #d1fae5;
+    color: #065f46;
+
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  &.count-tag {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+}
+
+.cost-section {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+  .cost-label {
+    font-size: 0.85rem;
+    color: var(--mat-sys-on-surface-variant, #6b7280);
+  }
+
+  .cost-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--mat-sys-primary, #2563eb);
+  }
+}
+
+.progress-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  mat-progress-bar {
+    border-radius: 4px;
+    height: 8px;
+  }
+
+  .progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--mat-sys-on-surface-variant, #6b7280);
+
+    .percentage {
+      font-weight: 600;
+    }
+  }
+}
+
+.claimed-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--mat-sys-on-surface-variant, #6b7280);
+  padding: 6px 0;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.card-actions {
+  padding: 8px 16px 16px;
+
+  .claim-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}

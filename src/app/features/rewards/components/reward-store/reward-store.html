@@ -1,0 +1,77 @@
+<div class="store-container">
+  <div class="store-toolbar">
+    <mat-button-toggle-group
+      [value]="statusFilter()"
+      (change)="statusFilter.set($event.value)"
+      aria-label="Filter rewards by status"
+      class="status-toggle"
+    >
+      <mat-button-toggle value="active"> Active Wishlist ({{ activeRewardsCount() }}) </mat-button-toggle>
+      <mat-button-toggle value="claimed"> Claimed ({{ claimedRewardsCount() }}) </mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <div class="filter-controls">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search-field">
+        <mat-icon matPrefix>search</mat-icon>
+        <input
+          matInput
+          type="text"
+          placeholder="Search rewards..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="category-field">
+        <mat-label>Category</mat-label>
+        <mat-select [value]="selectedCategoryId()" (selectionChange)="selectedCategoryId.set($event.value)">
+          <mat-option value="all">All Categories</mat-option>
+          @for (cat of categories(); track cat.id) {
+            <mat-option [value]="cat.id">
+              <mat-icon [style.color]="cat.color">{{ cat.icon }}</mat-icon>
+              <span>{{ cat.name }}</span>
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" class="add-reward-btn" type="button" (click)="openAddReward()">
+        <mat-icon>add</mat-icon>
+        Add Reward
+      </button>
+    </div>
+  </div>
+
+  @if (filteredRewards().length > 0) {
+    <div class="rewards-grid">
+      @for (reward of filteredRewards(); track reward.id) {
+        <app-reward-card
+          [reward]="reward"
+          [category]="getCategory(reward.categoryId)"
+          [currentBalance]="user()?.balance ?? 0"
+          (claim)="onClaimReward($event)"
+          (edit)="onEditReward($event)"
+          (delete)="onDeleteReward($event)"
+        />
+      }
+    </div>
+  } @else {
+    <div class="empty-state">
+      <mat-icon class="empty-icon">card_giftcard</mat-icon>
+      <h3>No rewards found</h3>
+      <p>
+        @if (statusFilter() === 'active') {
+          Create a custom reward to start saving toward milestones and treats!
+        } @else {
+          You haven't claimed any milestone rewards yet. Keep building discipline!
+        }
+      </p>
+      @if (statusFilter() === 'active') {
+        <button mat-flat-button color="primary" type="button" (click)="openAddReward()">
+          <mat-icon>add</mat-icon>
+          Create First Reward
+        </button>
+      }
+    </div>
+  }
+</div>

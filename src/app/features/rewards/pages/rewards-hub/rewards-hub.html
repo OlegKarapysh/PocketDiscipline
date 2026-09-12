@@ -1,0 +1,45 @@
+<div class="rewards-hub">
+  <header class="hub-header">
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="openQuickSpend()"
+      class="quick-spend-action-button"
+    >
+      <mat-icon>payments</mat-icon>
+      Quick Spend
+    </button>
+  </header>
+
+  <mat-tab-group animationDuration="200ms" class="hub-tabs">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">storefront</mat-icon>
+        Reward Store
+      </ng-template>
+      <div class="tab-content">
+        <app-reward-store />
+      </div>
+    </mat-tab>
+
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">receipt_long</mat-icon>
+        History / Ledger
+      </ng-template>
+      <div class="tab-content">
+        <app-withdrawal-ledger />
+      </div>
+    </mat-tab>
+
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon class="tab-icon">insights</mat-icon>
+        Analytics
+      </ng-template>
+      <div class="tab-content">
+        <app-spending-analytics />
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

@@ -4,12 +4,22 @@
     <div class="balance-info">
       <span class="label">Current Balance</span>
       <h2 class="amount">
-        @if (user$ | async; as user) {
-          {{ user.balance | number: '1.0-0' }} ₴
+        @if (user()) {
+          {{ user()!.balance | number: '1.0-2' }} ₴
         } @else {
           -- ₴
         }
       </h2>
     </div>
+    <button
+      mat-flat-button
+      color="primary"
+      class="quick-spend-btn"
+      type="button"
+      (click)="openQuickSpend()"
+    >
+      <mat-icon>shopping_bag</mat-icon>
+      Quick Spend
+    </button>
   </mat-card-content>
 </mat-card>

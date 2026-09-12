@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { firstValueFrom, from } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { GoalService } from './goal.service';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
@@ -76,7 +76,7 @@ describe('GoalService', () => {
         delete: vi.fn().mockResolvedValue(undefined),
       },
       users: {},
-      transaction: vi.fn().mockImplementation(async (_mode, _t1, _t2, callback) => {
+      transaction: vi.fn().mockImplementation(async (_mode: unknown, _t1: unknown, _t2: unknown, callback: () => Promise<void>) => {
         await callback();
       }),
     };
@@ -110,7 +110,7 @@ describe('GoalService', () => {
       ];
       dbMock.goals.toArray.mockResolvedValue(mockActiveGoals);
 
-      const result = await firstValueFrom(from(service.getActiveGoals()));
+      const result = await firstValueFrom(service.getActiveGoals());
 
       expect(dbMock.goals.where).toHaveBeenCalledWith('status');
       expect(dbMock.goals.equals).toHaveBeenCalledWith(GOAL_STATUS.ACTIVE);
@@ -130,7 +130,7 @@ describe('GoalService', () => {
       ];
       dbMock.goals.sortBy.mockResolvedValue(mockCompletedGoals);
 
-      const result = await firstValueFrom(from(service.getCompletedGoals()));
+      const result = await firstValueFrom(service.getCompletedGoals());
 
       expect(dbMock.goals.where).toHaveBeenCalledWith('status');
       expect(dbMock.goals.equals).toHaveBeenCalledWith(GOAL_STATUS.COMPLETED);

@@ -1,0 +1,78 @@
+.trend-chart-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.chart-header {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  .hover-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--mat-sys-surface-container-high, #e8eaf6);
+    border-radius: 6px;
+
+    .hover-label {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--mat-sys-on-surface, #212121);
+    }
+
+    .hover-amount {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--mat-sys-primary, #673ab7);
+    }
+  }
+
+  .hover-placeholder {
+    font-size: 0.8125rem;
+    color: var(--mat-sys-on-surface-variant, #757575);
+    font-style: italic;
+  }
+}
+
+.svg-wrapper {
+  width: 100%;
+  overflow-x: auto;
+
+  .trend-svg {
+    width: 100%;
+    min-width: 400px;
+    height: auto;
+  }
+}
+
+.grid-line {
+  stroke: var(--mat-sys-outline-variant, #e0e0e0);
+  stroke-dasharray: 4 4;
+  stroke-width: 1;
+}
+
+.axis-label {
+  font-size: 11px;
+  fill: var(--mat-sys-on-surface-variant, #757575);
+}
+
+.trend-bar {
+  fill: var(--mat-sys-surface-variant, #e0e0e0);
+  transition: fill 0.15s ease, opacity 0.15s ease;
+  cursor: pointer;
+
+  &.has-amount {
+    fill: var(--mat-sys-primary, #673ab7);
+  }
+
+  &:hover,
+  &.hovered {
+    fill: #7e57c2;
+    opacity: 0.9;
+  }
+}

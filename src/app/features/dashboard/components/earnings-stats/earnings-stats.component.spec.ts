@@ -91,8 +91,8 @@ describe('EarningsStatsComponent', () => {
 
     expect(component.isNextDisabled()).toBe(true);
 
-    const nextBtn = fixture.nativeElement.querySelector('button[aria-label="Next Month"]');
-    expect(nextBtn.disabled).toBe(true);
+    const nextBtn = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button[aria-label="Next Month"]');
+    expect(nextBtn?.disabled).toBe(true);
 
     component.goToNextMonth();
     expect(spy).not.toHaveBeenCalled();

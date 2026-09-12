@@ -1,0 +1,41 @@
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .balance-badge {
+    margin-left: auto;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background-color: var(--mat-sys-surface-variant, #e0e2ec);
+    color: var(--mat-sys-on-surface-variant, #44474f);
+  }
+}
+
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 320px;
+  padding-top: 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+mat-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+}

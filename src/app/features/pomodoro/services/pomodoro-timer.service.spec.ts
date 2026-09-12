@@ -335,4 +335,90 @@ describe('PomodoroTimerService', () => {
       );
     });
   });
+
+  describe('Cleanup and Memory Management', () => {
+    it('should clear timer interval and stop countdown when destroyed', async () => {
+      await service.startTimer();
+      expect(service.isActive()).toBe(true);
+
+      service.ngOnDestroy();
+
+      const timeAtDestroy = service.timeRemaining();
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(service.timeRemaining()).toBe(timeAtDestroy);
+    });
+
+    it('should remove visibilitychange event listener on destroy', () => {
+      const removeEventListenerSpy = vi.spyOn(document, 'removeEventListener');
+      service.ngOnDestroy();
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('visibilitychange', expect.any(Function));
+      removeEventListenerSpy.mockRestore();
+    });
+  });
+
+  describe('Error Handling and Robustness', () => {
+    it('should reset timer and rethrow error if saving session fails during startTimer', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const testError = new Error('Database write error');
+      storageMock.saveSession.mockRejectedValue(testError);
+
+      await expect(service.startTimer()).rejects.toThrow(testError);
+      expect(service.isActive()).toBe(false);
+      expect(service.currentSessionId()).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to start pomodoro timer session:', testError);
+      consoleSpy.mockRestore();
+    });
+
+    it('should reset timer and rethrow error if updating session fails during stopTimer', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const testError = new Error('Database update error');
+      storageMock.updateSession.mockRejectedValue(testError);
+
+      await service.startTimer();
+      expect(service.isActive()).toBe(true);
+
+      await expect(service.stopTimer()).rejects.toThrow(testError);
+      expect(service.isActive()).toBe(false);
+      expect(service.currentSessionId()).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to stop pomodoro timer session:', testError);
+      consoleSpy.mockRestore();
+    });
+
+    it('should catch error gracefully if updating session fails during completeSession', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const testError = new Error('Database complete error');
+      storageMock.updateSession.mockRejectedValue(testError);
+
+      await service.startTimer();
+      await vi.advanceTimersByTimeAsync(1500 * 1000);
+
+      expect(service.isActive()).toBe(false);
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to complete pomodoro session:', testError);
+      consoleSpy.mockRestore();
+    });
+
+    it('should catch error gracefully if getAllSessions fails on startup', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const testError = new Error('Failed to load sessions');
+
+      TestBed.resetTestingModule();
+      storageMock.getAllSessions.mockRejectedValue(testError);
+      TestBed.configureTestingModule({
+        providers: [
+          PomodoroTimerService,
+          { provide: EventBusService, useValue: eventBusMock },
+          { provide: PomodoroStorageService, useValue: storageMock },
+          { provide: MatDialog, useValue: dialogMock },
+        ],
+      });
+      const failingService = TestBed.inject(PomodoroTimerService);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(failingService.isActive()).toBe(false);
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to restore active session:', testError);
+      failingService.ngOnDestroy();
+      consoleSpy.mockRestore();
+    });
+  });
 });

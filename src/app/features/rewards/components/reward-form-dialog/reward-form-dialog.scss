@@ -1,0 +1,66 @@
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 320px;
+  padding-top: 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.type-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 12px;
+
+  .section-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--mat-sys-on-surface-variant, #4b5563);
+  }
+
+  .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .radio-content {
+    display: flex;
+    flex-direction: column;
+    margin-left: 4px;
+
+    .radio-title {
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .radio-desc {
+      font-size: 0.8rem;
+      color: var(--mat-sys-on-surface-variant, #6b7280);
+    }
+  }
+}
+
+mat-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+}

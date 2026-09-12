@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
@@ -9,14 +9,14 @@ import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.component';
 
 @Component({
-  imports: [CommonModule, MatButtonModule, MatIconModule, DailyTaskItemComponent, DailyTaskFormComponent],
+  imports: [MatButtonModule, MatIconModule, DailyTaskItemComponent, DailyTaskFormComponent, AsyncPipe],
   selector: 'app-daily-task-list',
   styleUrl: './daily-task-list.component.scss',
   templateUrl: './daily-task-list.component.html',
 })
 export class DailyTaskListComponent {
   private dailyTasksService = inject(DailyTasksService);
-  
+
   tasks$ = this.dailyTasksService.tasks$;
   readonly showForm = signal(false);
 
@@ -28,12 +28,20 @@ export class DailyTaskListComponent {
     this.showForm.set(false);
   }
 
-  async onCompleteTask(task: DailyTask, difficulty: DailyTaskDifficulty) {
-    await this.dailyTasksService.completeTask(task, difficulty);
+  async onCompleteTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
+    try {
+      await this.dailyTasksService.completeTask(task, difficulty);
+    } catch (e: unknown) {
+      console.error(e);
+    }
   }
 
-  onTaskCreated(event: {title: string, difficulties: DailyTaskDifficulty[]}) {
-    this.dailyTasksService.createTask(event.title, event.difficulties);
+  async onTaskCreated(event: { title: string; difficulties: DailyTaskDifficulty[] }): Promise<void> {
     this.showForm.set(false);
+    try {
+      await this.dailyTasksService.createTask(event.title, event.difficulties);
+    } catch (e: unknown) {
+      console.error(e);
+    }
   }
 }

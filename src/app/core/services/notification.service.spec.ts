@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { of } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { NotificationService } from './notification.service';
 import { DailyScoresService } from '../../features/daily-scores/services/daily-scores.service';
 import { DailyScore } from '../../features/daily-scores/models/daily-score.model';
@@ -38,8 +38,7 @@ describe('NotificationService', () => {
 
   describe('requestPermission', () => {
     it('should return false if Notification API is not supported in window', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (window as any).Notification;
+      Reflect.deleteProperty(window, 'Notification');
 
       const result = await service.requestPermission();
       expect(result).toBe(false);
@@ -86,8 +85,9 @@ describe('NotificationService', () => {
         requestPermission: vi.fn().mockResolvedValue('denied'),
       });
 
-      await service.scheduleDailyReminder();
+      const granted = await firstValueFrom(service.scheduleDailyReminder());
 
+      expect(granted).toBe(false);
       expect(vi.getTimerCount()).toBe(0);
     });
 
@@ -103,7 +103,8 @@ describe('NotificationService', () => {
       vi.setSystemTime(new Date(2026, 7, 28, 10, 0, 0));
       dailyScoresServiceMock.getTodayScore.mockReturnValue(of(undefined));
 
-      await service.scheduleDailyReminder();
+      const granted = await firstValueFrom(service.scheduleDailyReminder());
+      expect(granted).toBe(true);
 
       // Ensure timer was scheduled
       expect(vi.getTimerCount()).toBeGreaterThan(0);
@@ -138,11 +139,26 @@ describe('NotificationService', () => {
       };
       dailyScoresServiceMock.getTodayScore.mockReturnValue(of(mockScore));
 
-      await service.scheduleDailyReminder();
+      const granted = await firstValueFrom(service.scheduleDailyReminder());
+      expect(granted).toBe(true);
 
       await vi.advanceTimersByTimeAsync(11.5 * 60 * 60 * 1000);
 
       expect(notificationSpy).not.toHaveBeenCalled();
+    });
+
+    it('should catch error and return false if requestPermission throws', async () => {
+      vi.spyOn(service, 'requestPermission').mockRejectedValue(new Error('Permission error'));
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+      const granted = await firstValueFrom(service.scheduleDailyReminder());
+
+      expect(granted).toBe(false);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to schedule daily reminder:',
+        expect.any(Error)
+      );
+      expect(vi.getTimerCount()).toBe(0);
     });
   });
 });

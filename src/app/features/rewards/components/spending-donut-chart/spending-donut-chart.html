@@ -1,0 +1,64 @@
+<div class="donut-chart-container">
+  <div class="chart-visual">
+    <svg viewBox="0 0 200 200" class="donut-svg">
+      <circle
+        cx="100"
+        cy="100"
+        r="70"
+        fill="transparent"
+        stroke="var(--mat-sys-outline-variant, #e0e0e0)"
+        stroke-width="20"
+      />
+
+      @for (slice of slices(); track slice.category.categoryId) {
+        <circle
+          cx="100"
+          cy="100"
+          r="70"
+          fill="transparent"
+          [attr.stroke]="slice.category.color"
+          stroke-width="20"
+          [attr.stroke-dasharray]="slice.dashArray"
+          [attr.stroke-dashoffset]="slice.dashOffset"
+          transform="rotate(-90 100 100)"
+          class="donut-segment"
+          [class.hovered]="hoveredCategoryId() === slice.category.categoryId"
+          (mouseenter)="setHovered(slice.category.categoryId)"
+          (mouseleave)="setHovered(null)"
+        />
+      }
+
+      <!-- Center text -->
+      <g class="center-text">
+        @if (activeCategory(); as active) {
+          <text x="100" y="93" text-anchor="middle" class="center-label">{{ active.categoryName }}</text>
+          <text x="100" y="115" text-anchor="middle" class="center-value">{{ active.totalSpent }} ₴</text>
+          <text x="100" y="130" text-anchor="middle" class="center-sub">{{ active.percentage }}%</text>
+        } @else {
+          <text x="100" y="95" text-anchor="middle" class="center-label">Total Spent</text>
+          <text x="100" y="120" text-anchor="middle" class="center-value">{{ totalSpent() }} ₴</text>
+        }
+      </g>
+    </svg>
+  </div>
+
+  <div class="chart-legend">
+    @for (item of data(); track item.categoryId) {
+      <div
+        class="legend-item"
+        [class.highlighted]="hoveredCategoryId() === item.categoryId"
+        (mouseenter)="setHovered(item.categoryId)"
+        (mouseleave)="setHovered(null)"
+      >
+        <div class="legend-swatch" [style.backgroundColor]="item.color">
+          <mat-icon>{{ item.icon }}</mat-icon>
+        </div>
+        <div class="legend-info">
+          <span class="legend-name">{{ item.categoryName }}</span>
+          <span class="legend-percent">{{ item.percentage }}%</span>
+        </div>
+        <span class="legend-amount">{{ item.totalSpent }} ₴</span>
+      </div>
+    }
+  </div>
+</div>

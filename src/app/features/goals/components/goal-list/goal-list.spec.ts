@@ -52,7 +52,7 @@ describe('GoalList', () => {
 
     const emptyState = fixture.debugElement.query(By.css('.empty-state'));
     expect(emptyState).toBeTruthy();
-    expect(emptyState.nativeElement.textContent).toContain('No active goals right now.');
+    expect((emptyState.nativeElement as HTMLElement).textContent).toContain('No active goals right now.');
   });
 
   it('should group completed goals by month and year', async () => {

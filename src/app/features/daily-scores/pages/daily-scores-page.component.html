@@ -1,21 +1,18 @@
 <div class="page-container">
   @if (loading()) {
     <div class="loading-container">
-      <mat-spinner diameter="40"></mat-spinner>
+      <mat-spinner diameter="40" />
     </div>
   } @else {
-    <app-scores-stats
-      [monthlyScores]="monthlyScores()"
-      [latestScore]="latestScore()"
-    ></app-scores-stats>
+    <app-scores-stats [monthlyScores]="monthlyScores()" [latestScore]="latestScore()" />
 
-    <app-scores-chart [scores]="weeklyScores()"></app-scores-chart>
+    <app-scores-chart [scores]="weeklyScores()" />
 
     <app-score-input
       [readonly]="hasScoreToday()"
       [selectedScore]="currentScore()"
       (scoreSubmitted)="onScoreSubmit($event)"
-    ></app-score-input>
+    />
 
     @if (successMessage()) {
       <div class="success-message">
@@ -24,4 +21,3 @@
     }
   }
 </div>
-

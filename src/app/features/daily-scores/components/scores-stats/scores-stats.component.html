@@ -1,7 +1,7 @@
 <div class="stats-container">
   <mat-card appearance="outlined" class="stat-card">
     <mat-card-content class="stat-card-content">
-      <div class="stat-title">Month Avg</div>
+      <div class="stat-title">Monthly Average</div>
       <div class="stat-value" [class.no-data]="monthlyAverage() === 0">
         {{ monthlyAverage() > 0 ? monthlyAverage() : '-' }}
       </div>

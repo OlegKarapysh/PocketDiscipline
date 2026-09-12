@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { RouterOutlet, RouterModule, Router, NavigationEnd } from '@angular/router';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map } from 'rxjs/operators';
+import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, map, catchError } from 'rxjs/operators';
+import { from, EMPTY } from 'rxjs';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,6 +16,7 @@ const ROUTE_TASKS = 'tasks';
 const ROUTE_GOALS = 'goals';
 const ROUTE_POMODORO = 'pomodoro';
 const ROUTE_DAILY_SCORES = 'daily-scores';
+const ROUTE_REWARDS = 'rewards';
 const ROUTE_SETTINGS = 'settings';
 
 const TITLE_DASHBOARD = 'Dashboard';
@@ -22,6 +24,7 @@ const TITLE_TASKS = 'Tasks';
 const TITLE_GOALS = 'Goals';
 const TITLE_POMODORO = 'Pomodoro';
 const TITLE_DAILY_SCORES = 'Daily Scores';
+const TITLE_REWARDS = 'Rewards';
 const TITLE_SETTINGS = 'Settings';
 
 const ROUTE_TITLE_MAP: Record<string, string> = {
@@ -30,6 +33,7 @@ const ROUTE_TITLE_MAP: Record<string, string> = {
   [ROUTE_GOALS]: TITLE_GOALS,
   [ROUTE_POMODORO]: TITLE_POMODORO,
   [ROUTE_DAILY_SCORES]: TITLE_DAILY_SCORES,
+  [ROUTE_REWARDS]: TITLE_REWARDS,
   [ROUTE_SETTINGS]: TITLE_SETTINGS,
 };
 
@@ -39,6 +43,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { path: '/goals', label: TITLE_GOALS, icon: 'star' },
   { path: '/pomodoro', label: TITLE_POMODORO, icon: 'timer' },
   { path: '/daily-scores', label: TITLE_DAILY_SCORES, icon: 'score' },
+  { path: '/rewards', label: TITLE_REWARDS, icon: 'card_giftcard' },
   { path: '/settings', label: TITLE_SETTINGS, icon: 'settings' },
 ];
 
@@ -59,6 +64,7 @@ const NAV_ITEMS: readonly NavItem[] = [
 export class LayoutComponent {
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly navItems = NAV_ITEMS;
 
@@ -77,7 +83,15 @@ export class LayoutComponent {
 
   onNavClick(drawer: MatSidenav): void {
     if (this.isHandset()) {
-      drawer.close();
+      from(Promise.resolve(drawer.close()))
+        .pipe(
+          takeUntilDestroyed(this.destroyRef),
+          catchError((err: unknown) => {
+            console.error('Failed to close navigation drawer:', err);
+            return EMPTY;
+          })
+        )
+        .subscribe();
     }
   }
 
@@ -86,7 +100,7 @@ export class LayoutComponent {
       return TITLE_DASHBOARD;
     }
     const cleanUrl = url.split('?')[0].split('#')[0];
-    const segment = cleanUrl.split('/').filter(Boolean)[0];
+    const segment = cleanUrl.split('/').find(Boolean);
     if (segment && Object.prototype.hasOwnProperty.call(ROUTE_TITLE_MAP, segment)) {
       return ROUTE_TITLE_MAP[segment];
     }

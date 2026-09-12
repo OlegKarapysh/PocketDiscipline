@@ -105,5 +105,65 @@ describe('PomodoroStorageService', () => {
     expect(reverseMock).toHaveBeenCalled();
     expect(result).toEqual(sessionList);
   });
+
+  it('should log error and rethrow when saveSession fails', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const testError = new Error('Database put failure');
+    dbMock.pomodoroSessions.put.mockRejectedValue(testError);
+
+    const session: PomodoroSession = {
+      id: TEST_SESSION_ID,
+      durationMinutes: TEST_DURATION,
+      engagementType: EngagementType.WORK,
+      startTime: TEST_START_TIME,
+      status: PomodoroSessionStatus.ACTIVE,
+    };
+
+    await expect(service.saveSession(session)).rejects.toThrow(testError);
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to save pomodoro session:', testError);
+    consoleSpy.mockRestore();
+  });
+
+  it('should log error and rethrow when getSession fails', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const testError = new Error('Database get failure');
+    dbMock.pomodoroSessions.get.mockRejectedValue(testError);
+
+    await expect(service.getSession(TEST_SESSION_ID)).rejects.toThrow(testError);
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to get pomodoro session:', testError);
+    consoleSpy.mockRestore();
+  });
+
+  it('should log error and rethrow when getAllSessions fails', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const testError = new Error('Database query failure');
+    const toArrayMock = vi.fn().mockRejectedValue(testError);
+    const reverseMock = vi.fn().mockReturnValue({ toArray: toArrayMock });
+    dbMock.pomodoroSessions.orderBy.mockReturnValue({ reverse: reverseMock });
+
+    await expect(service.getAllSessions()).rejects.toThrow(testError);
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to get all pomodoro sessions:', testError);
+    consoleSpy.mockRestore();
+  });
+
+  it('should log error and rethrow when updateSession fails', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const testError = new Error('Database update failure');
+    dbMock.pomodoroSessions.update.mockRejectedValue(testError);
+
+    await expect(service.updateSession(TEST_SESSION_ID, {})).rejects.toThrow(testError);
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to update pomodoro session:', testError);
+    consoleSpy.mockRestore();
+  });
+
+  it('should log error and rethrow when deleteSession fails', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const testError = new Error('Database delete failure');
+    dbMock.pomodoroSessions.delete.mockRejectedValue(testError);
+
+    await expect(service.deleteSession(TEST_SESSION_ID)).rejects.toThrow(testError);
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to delete pomodoro session:', testError);
+    consoleSpy.mockRestore();
+  });
 });
 

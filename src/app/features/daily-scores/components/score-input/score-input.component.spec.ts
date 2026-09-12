@@ -22,8 +22,8 @@ describe('ScoreInputComponent', () => {
 
     const buttons = fixture.debugElement.queryAll(By.css('button.score-btn'));
     expect(buttons.length).toBe(10);
-    expect(buttons[0].nativeElement.textContent.trim()).toBe('1');
-    expect(buttons[9].nativeElement.textContent.trim()).toBe('10');
+    expect((buttons[0].nativeElement as HTMLElement).textContent?.trim()).toBe('1');
+    expect((buttons[9].nativeElement as HTMLElement).textContent?.trim()).toBe('10');
   });
 
   it('should update internalSelectedScore when a score button is clicked', async () => {
@@ -31,7 +31,7 @@ describe('ScoreInputComponent', () => {
     await fixture.whenStable();
 
     const buttons = fixture.debugElement.queryAll(By.css('button.score-btn'));
-    buttons[4].nativeElement.click(); // score 5
+    (buttons[4].nativeElement as HTMLElement).click(); // score 5
     fixture.detectChanges();
 
     expect(component.internalSelectedScore()).toBe(5);
@@ -52,20 +52,21 @@ describe('ScoreInputComponent', () => {
     await fixture.whenStable();
 
     let emittedScore: number | null = null;
-    component.scoreSubmitted.subscribe((score) => {
+    const sub = component.scoreSubmitted.subscribe((score) => {
       emittedScore = score;
     });
 
     const buttons = fixture.debugElement.queryAll(By.css('button.score-btn'));
-    buttons[9].nativeElement.click(); // score 10
+    (buttons[9].nativeElement as HTMLElement).click(); // score 10
     fixture.detectChanges();
     await fixture.whenStable();
 
     const submitBtn = fixture.debugElement.query(By.css('button.submit-button'));
     expect(submitBtn).toBeTruthy();
-    submitBtn.nativeElement.click();
+    (submitBtn.nativeElement as HTMLElement).click();
 
     expect(emittedScore).toBe(10);
+    sub.unsubscribe();
   });
 
   it('should sync internalSelectedScore when selectedScore input changes', () => {
@@ -80,7 +81,7 @@ describe('ScoreInputComponent', () => {
     await fixture.whenStable();
 
     const buttons = fixture.debugElement.queryAll(By.css('button.score-btn'));
-    buttons[0].nativeElement.click(); // score 1
+    (buttons[0].nativeElement as HTMLElement).click(); // score 1
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -98,6 +99,6 @@ describe('ScoreInputComponent', () => {
 
     const readonlyDisplay = fixture.debugElement.query(By.css('.readonly-score-display'));
     expect(readonlyDisplay).toBeTruthy();
-    expect(readonlyDisplay.nativeElement.textContent).toContain('10');
+    expect((readonlyDisplay.nativeElement as HTMLElement).textContent).toContain('10');
   });
 });

@@ -33,13 +33,13 @@ describe('CompletionDialog', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const textContent = fixture.nativeElement.textContent;
+    const textContent = (fixture.nativeElement as HTMLElement).textContent;
     expect(textContent).toContain('Pomodoro Completed!');
     expect(textContent).toContain('study');
     expect(textContent).toContain('50');
 
     const rewardEl = fixture.debugElement.query(By.css('.reward strong'));
-    expect(rewardEl.nativeElement.textContent.trim()).toBe('50');
+    expect((rewardEl.nativeElement as HTMLElement).textContent?.trim()).toBe('50');
   });
 
   it('should render an action button to dismiss the dialog', async () => {
@@ -48,6 +48,6 @@ describe('CompletionDialog', () => {
 
     const button = fixture.debugElement.query(By.css('button[mat-dialog-close]'));
     expect(button).toBeTruthy();
-    expect(button.nativeElement.textContent.trim()).toBe('Awesome');
+    expect((button.nativeElement as HTMLElement).textContent?.trim()).toBe('Awesome');
   });
 });

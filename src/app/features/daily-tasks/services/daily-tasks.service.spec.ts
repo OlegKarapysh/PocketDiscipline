@@ -65,7 +65,7 @@ describe('DailyTasksService', () => {
     dbMock = {
       dailyTasks: {
         toArray: vi.fn().mockResolvedValue([]),
-        get: vi.fn().mockImplementation(async () => null),
+        get: vi.fn().mockResolvedValue(null),
         add: vi.fn().mockResolvedValue(undefined),
         update: vi.fn().mockResolvedValue(1),
       },
@@ -160,6 +160,12 @@ describe('DailyTasksService', () => {
 
       expect(tasks[0].streak).toBe(5);
       expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
+    });
+
+    it('should return the same observable instance without creating dangling queries', () => {
+      const stream1 = service.tasks$;
+      const stream2 = service.tasks$;
+      expect(stream1).toBe(stream2);
     });
   });
 
@@ -282,7 +288,7 @@ describe('DailyTasksService', () => {
           taskId: 'test-daily-task-1',
           difficultyId: EASY_DIFFICULTY.id,
           rewardEarned: EASY_DIFFICULTY.baseReward,
-          date: expect.any(String),
+          date: expect.any(String) as unknown as string,
         })
       );
     });

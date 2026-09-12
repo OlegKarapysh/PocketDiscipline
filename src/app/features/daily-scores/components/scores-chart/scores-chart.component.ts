@@ -38,7 +38,7 @@ export class ScoresChartComponent {
       data.push({
         date: dateStr,
         dayOfWeek: dayName,
-        score: scoreValue !== undefined ? scoreValue : null
+        score: scoreValue ?? null,
       });
     }
 

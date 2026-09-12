@@ -1,0 +1,96 @@
+<div class="spending-analytics">
+  <div class="analytics-header">
+    <mat-button-toggle-group
+      [value]="selectedPeriod()"
+      (change)="onPeriodChange($event.value)"
+      aria-label="Select analytics timeframe"
+      class="period-toggle"
+    >
+      <mat-button-toggle value="thisMonth">This Month</mat-button-toggle>
+      <mat-button-toggle value="last30">Last 30 Days</mat-button-toggle>
+      <mat-button-toggle value="thisYear">This Year</mat-button-toggle>
+      <mat-button-toggle value="allTime">All Time</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon total">
+        <mat-icon>payments</mat-icon>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Total Spent</span>
+        <span class="metric-value">{{ analytics().totalSpent }} ₴</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon count">
+        <mat-icon>receipt</mat-icon>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Withdrawals</span>
+        <span class="metric-value">{{ analytics().withdrawalCount }}</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon top">
+        <mat-icon>star</mat-icon>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Top Category</span>
+        <span class="metric-value">
+          {{ topCategory()?.categoryName || 'None' }}
+          @if (topCategory()) {
+            <span class="sub-percent">({{ topCategory()?.percentage }}%)</span>
+          }
+        </span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon avg">
+        <mat-icon>calculate</mat-icon>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Average / Spend</span>
+        <span class="metric-value">{{ averagePerWithdrawal() }} ₴</span>
+      </div>
+    </div>
+  </div>
+
+  @if (analytics().totalSpent === 0) {
+    <div class="empty-analytics">
+      <mat-icon class="empty-icon">insights</mat-icon>
+      <h3>No spending data in this period</h3>
+      <p>Log a Quick Spend from the Dashboard or claim a reward in the Store to view visual spending analytics.</p>
+    </div>
+  } @else {
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Category Breakdown</h3>
+          <span class="chart-subtitle">Distribution of withdrawals by category</span>
+        </div>
+        <app-spending-donut-chart
+          [data]="analytics().categoryBreakdown"
+          [totalSpent]="analytics().totalSpent"
+        />
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Spending Trend</h3>
+          <span class="chart-subtitle">
+            {{ analytics().granularity === 'daily' ? 'Daily spending distribution' : 'Monthly spending distribution' }}
+          </span>
+        </div>
+        <app-spending-trend-chart
+          [data]="analytics().spendingTrend"
+          [granularity]="analytics().granularity"
+        />
+      </div>
+    </div>
+  }
+</div>

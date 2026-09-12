@@ -7,12 +7,9 @@ test.describe('Daily Scores Flow', () => {
     // Verify loading indicator is not visible
     await expect(page.locator('mat-spinner')).not.toBeVisible();
 
-    // Verify page header
-    await expect(page.locator('h1')).toHaveText('Daily Scores');
-
     // Verify stats cards are rendered
     await expect(page.locator('.stats-container')).toBeVisible();
-    await expect(page.getByText('Month Avg')).toBeVisible();
+    await expect(page.getByText('Monthly Average')).toBeVisible();
     await expect(page.getByText('Current Streak')).toBeVisible();
 
     // Verify 7-day chart is rendered

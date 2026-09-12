@@ -18,21 +18,11 @@
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>Select Date Range</mat-label>
         <mat-date-range-input [formGroup]="rangeForm" [rangePicker]="picker" [max]="maxDate">
-          <input
-            matStartDate
-            formControlName="start"
-            placeholder="Start date"
-            (dateChange)="onCustomDateChange()"
-          />
-          <input
-            matEndDate
-            formControlName="end"
-            placeholder="End date"
-            (dateChange)="onCustomDateChange()"
-          />
+          <input matStartDate formControlName="start" placeholder="Start date" (dateChange)="onCustomDateChange()" />
+          <input matEndDate formControlName="end" placeholder="End date" (dateChange)="onCustomDateChange()" />
         </mat-date-range-input>
-        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-date-range-picker #picker></mat-date-range-picker>
+        <mat-datepicker-toggle matIconSuffix [for]="picker" />
+        <mat-date-range-picker #picker />
       </mat-form-field>
     </div>
   }

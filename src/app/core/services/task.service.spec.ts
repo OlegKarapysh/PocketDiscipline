@@ -73,9 +73,13 @@ describe('TaskService', () => {
         toArray: vi.fn().mockResolvedValue([]),
       },
       users: {},
-      transaction: vi.fn().mockImplementation(async (_mode, _t1, _t2OrCallback, maybeCb) => {
-        const callback = typeof _t2OrCallback === 'function' ? _t2OrCallback : maybeCb;
-        if (callback) await callback();
+      transaction: vi.fn().mockImplementation(async (_mode: unknown, _t1: unknown, _t2OrCallback: unknown, maybeCb?: unknown) => {
+        const callback = typeof _t2OrCallback === 'function'
+          ? (_t2OrCallback as () => Promise<void> | void)
+          : (maybeCb as (() => Promise<void> | void) | undefined);
+        if (callback) {
+          await callback();
+        }
       }),
     };
 

@@ -1,0 +1,65 @@
+<div class="trend-chart-container">
+  <div class="chart-header">
+    @if (hoveredPoint(); as hovered) {
+      <div class="hover-info">
+        <span class="hover-label">{{ hovered.label }}:</span>
+        <span class="hover-amount">{{ hovered.amount }} ₴</span>
+      </div>
+    } @else {
+      <div class="hover-placeholder">
+        Hover over a bar to view spending details
+      </div>
+    }
+  </div>
+
+  <div class="svg-wrapper">
+    <svg [attr.viewBox]="'0 0 ' + svgWidth + ' ' + svgHeight" preserveAspectRatio="xMidYMid meet" class="trend-svg">
+      <!-- Grid Lines & Y-Axis Labels -->
+      @for (line of gridLines(); track line.y) {
+        <line
+          [attr.x1]="marginLeft"
+          [attr.y1]="line.y"
+          [attr.x2]="marginLeft + plotWidth"
+          [attr.y2]="line.y"
+          class="grid-line"
+        />
+        <text
+          [attr.x]="marginLeft - 8"
+          [attr.y]="line.y + 4"
+          text-anchor="end"
+          class="axis-label"
+        >
+          {{ line.value }} ₴
+        </text>
+      }
+
+      <!-- Bars -->
+      @for (bar of bars(); track bar.point.dateOrMonth) {
+        <rect
+          [attr.x]="bar.x"
+          [attr.y]="bar.y"
+          [attr.width]="bar.width"
+          [attr.height]="bar.height"
+          rx="3"
+          ry="3"
+          class="trend-bar"
+          [class.has-amount]="bar.point.amount > 0"
+          [class.hovered]="hoveredPoint() === bar.point"
+          (mouseenter)="setHovered(bar.point)"
+          (mouseleave)="setHovered(null)"
+        />
+
+        @if (bar.showLabel) {
+          <text
+            [attr.x]="bar.x + bar.width / 2"
+            [attr.y]="marginTop + plotHeight + 18"
+            text-anchor="middle"
+            class="axis-label"
+          >
+            {{ bar.point.label }}
+          </text>
+        }
+      }
+    </svg>
+  </div>
+</div>

@@ -10,7 +10,21 @@ Create meaningful, maintainable, and behavior-driven unit tests for Angular comp
 
 ---
 
-## Core Principles
+## Foundation: The 5 Principles of Unit Testing (Vladimir Khorikov)
+
+When writing tests, always adhere to the foundational principles from *Unit Testing: Principles, Practices, and Patterns*:
+
+1. **Aim for Sustainable Project Growth**: The ultimate goal of unit testing is to enable the project to grow sustainably over time. Avoid writing tests just to hit coverage metrics; tests should act as a safety net, not a maintenance burden.
+2. **Maximize Protection Against Regressions**: Tests must effectively catch bugs when code breaks. Target complex business logic and domain code where regressions are most costly.
+3. **Ensure Resistance to Refactoring (Most Critical)**: A test should not fail when you refactor the underlying code as long as the observable behavior remains the same. Avoid "false positives" by testing *observable behavior* (the "what"), never *implementation details* (the "how").
+4. **Maintain Fast Feedback**: Tests must execute quickly so developers can run them frequently in a tight feedback loop.
+5. **Prioritize Maintainability**: Tests must be easy to read, understand, and modify. A test is a first-class citizen of the codebase and should concisely express business intent.
+
+> **The Trade-off Rule**: It is impossible to maximize Protection Against Regressions, Resistance to Refactoring, Fast Feedback, and Maintainability simultaneously. However, **Resistance to Refactoring is non-negotiable**.
+
+---
+
+## Angular Testing Practices
 
 ### 1. Test Intended Behavior via Public Contracts (Never Implementation Details)
 - **Public API Only**: Test public methods, observable streams, inputs, outputs, and DOM elements.

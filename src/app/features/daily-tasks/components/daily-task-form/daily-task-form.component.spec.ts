@@ -71,16 +71,16 @@ describe('DailyTaskFormComponent', () => {
     expect(emitted).toBe(false);
   });
 
-  it('should emit cancelForm when Cancel button is clicked in template', async () => {
+  it('should emit cancelForm when Cancel button is clicked in template', () => {
     let cancelled = false;
     component.cancelForm.subscribe(() => {
       cancelled = true;
     });
 
     const cancelBtn = fixture.debugElement.query(By.css('button[mat-button]'));
-    expect(cancelBtn.nativeElement.textContent.trim()).toBe('Cancel');
+    expect((cancelBtn.nativeElement as HTMLElement).textContent?.trim()).toBe('Cancel');
 
-    cancelBtn.nativeElement.click();
+    (cancelBtn.nativeElement as HTMLElement).click();
 
     expect(cancelled).toBe(true);
   });
@@ -96,14 +96,14 @@ describe('DailyTaskFormComponent', () => {
     await fixture.whenStable();
 
     const saveBtn = fixture.debugElement.query(By.css('.actions button[color="primary"]'));
-    expect(saveBtn.nativeElement.disabled).toBe(false);
+    expect((saveBtn.nativeElement as HTMLButtonElement).disabled).toBe(false);
 
-    saveBtn.nativeElement.click();
+    (saveBtn.nativeElement as HTMLButtonElement).click();
 
     expect(emittedData).toEqual(
       expect.objectContaining({
         title: 'Evening Reading',
-        difficulties: expect.any(Array),
+        difficulties: expect.any(Array) as unknown as DailyTaskDifficulty[],
       })
     );
   });

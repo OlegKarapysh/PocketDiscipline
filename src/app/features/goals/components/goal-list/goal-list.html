@@ -8,7 +8,7 @@
           (complete)="complete.emit($event)"
           (edit)="edit.emit($event)"
           (delete)="delete.emit($event)"
-        ></app-goal-item>
+        />
       }
     </div>
   } @else {
@@ -24,7 +24,7 @@
         <div class="month-group">
           <h3>{{ group.month }}</h3>
           @for (goal of group.goals; track goal.id) {
-            <app-goal-item [goal]="goal" (undo)="undo.emit($event)"></app-goal-item>
+            <app-goal-item [goal]="goal" (undo)="undo.emit($event)" />
           }
         </div>
       }
