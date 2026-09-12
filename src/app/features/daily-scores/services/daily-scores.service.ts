@@ -3,12 +3,8 @@ import { DbService } from '../../../core/services/db.service';
 import { DailyScore } from '../models/daily-score.model';
 import { Observable, from } from 'rxjs';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
+import { DailyScoreSystem } from '../models/daily-score-system.model';
 
-const REWARD_PERFECT = 500;
-const REWARD_GOOD = 100;
-const NO_REWARD = 0;
-const SCORE_PERFECT = 10;
-const SCORE_GOOD = 9;
 const MAX_STREAK_BONUS = 1.0;
 const STREAK_BONUS_STEP = 0.10;
 const DAYS_IN_WEEK_OFFSET = 6;
@@ -66,16 +62,19 @@ export class DailyScoresService {
       const yesterdayScore = await this.db.dailyScores.get(yesterdayStr);
       const previousStreak = yesterdayScore ? yesterdayScore.streakAtThisDay : INITIAL_STREAK;
 
-      let baseReward = NO_REWARD;
+      let baseReward = 0;
       let newStreak = INITIAL_STREAK;
 
-      if (score >= SCORE_GOOD) {
-        baseReward = score === SCORE_PERFECT ? REWARD_PERFECT : REWARD_GOOD;
-        newStreak = previousStreak + STREAK_INCREMENT;
+      const scoreOption = DailyScoreSystem.getOption(score);
+      if (scoreOption) {
+        baseReward = scoreOption.baseReward;
+        if (scoreOption.isStreakEligible) {
+          newStreak = previousStreak + STREAK_INCREMENT;
+        }
       }
 
       const bonusMultiplier = Math.min(previousStreak * STREAK_BONUS_STEP, MAX_STREAK_BONUS);
-      const rewardEarned = baseReward > NO_REWARD ? Math.round(baseReward * (1 + bonusMultiplier)) : NO_REWARD;
+      const rewardEarned = baseReward > 0 ? Math.round(baseReward * (1 + bonusMultiplier)) : 0;
 
       const newScore: DailyScore = {
         date: todayStr,
@@ -88,7 +87,7 @@ export class DailyScoresService {
       await this.db.transaction(TRANSACTION_READ_WRITE, this.db.dailyScores, this.db.users, async () => {
         await this.db.dailyScores.add(newScore);
 
-        if (rewardEarned > NO_REWARD) {
+        if (rewardEarned > 0) {
           const user = await this.db.users.get(CURRENT_USER_ID);
           if (user) {
             await this.db.users.update(CURRENT_USER_ID, { balance: user.balance + rewardEarned });
