@@ -1,12 +1,12 @@
 import type { ComponentFixture} from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EarningsStatsComponent } from './earnings-stats.component';
+import { EarningsStats } from './earnings-stats';
 import type { MonthlyEarningsSummary } from '../../models/monthly-earnings-summary.model';
 
-describe('EarningsStatsComponent', () => {
-  let component: EarningsStatsComponent;
-  let fixture: ComponentFixture<EarningsStatsComponent>;
+describe('EarningsStats', () => {
+  let component: EarningsStats;
+  let fixture: ComponentFixture<EarningsStats>;
 
   const mockSummary: MonthlyEarningsSummary = {
     year: 2026,
@@ -20,10 +20,10 @@ describe('EarningsStatsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [EarningsStatsComponent],
+      imports: [EarningsStats],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(EarningsStatsComponent);
+    fixture = TestBed.createComponent(EarningsStats);
     component = fixture.componentInstance;
   });
 

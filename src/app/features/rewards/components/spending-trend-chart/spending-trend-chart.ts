@@ -18,7 +18,7 @@ import type { RenderedBar } from './rendered-bar.model';
   styleUrl: './spending-trend-chart.scss',
   imports: [],
 })
-export class SpendingTrendChartComponent {
+export class SpendingTrendChart {
   readonly data = input<SpendingTrendPoint[]>([]);
   readonly granularity = input<TrendGranularity>('daily');
   readonly hoveredPoint = signal<SpendingTrendPoint | null>(null);

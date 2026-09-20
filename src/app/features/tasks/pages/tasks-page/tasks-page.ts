@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 
-import { TaskListComponent } from '../../components/task-list/task-list';
-import { DailyTaskListComponent } from '../../../daily-tasks/components/daily-task-list/daily-task-list.component';
+import { TaskList } from '../../components/task-list/task-list';
+import { DailyTaskList } from '../../../daily-tasks/components/daily-task-list/daily-task-list';
 
 @Component({
   selector: 'app-tasks-page',
-  imports: [TaskListComponent, DailyTaskListComponent],
+  imports: [TaskList, DailyTaskList],
   templateUrl: './tasks-page.html',
   styleUrl: './tasks-page.scss',
 })

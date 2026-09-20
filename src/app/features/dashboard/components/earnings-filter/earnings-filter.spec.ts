@@ -1,13 +1,13 @@
 import type { ComponentFixture} from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EarningsFilterComponent } from './earnings-filter.component';
+import { EarningsFilter } from './earnings-filter';
 import { DashboardEarningsService } from '../../services/dashboard-earnings.service';
 import type { PeriodPreset } from '../../models/period-preset.type';
 
-describe('EarningsFilterComponent', () => {
-  let component: EarningsFilterComponent;
-  let fixture: ComponentFixture<EarningsFilterComponent>;
+describe('EarningsFilter', () => {
+  let component: EarningsFilter;
+  let fixture: ComponentFixture<EarningsFilter>;
 
   const earningsServiceMock = {
     getPresetDateRange: vi.fn((preset: PeriodPreset) => {
@@ -23,13 +23,13 @@ describe('EarningsFilterComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [EarningsFilterComponent],
+      imports: [EarningsFilter],
       providers: [
         { provide: DashboardEarningsService, useValue: earningsServiceMock },
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(EarningsFilterComponent);
+    fixture = TestBed.createComponent(EarningsFilter);
     component = fixture.componentInstance;
   });
 

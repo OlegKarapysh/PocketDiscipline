@@ -19,10 +19,10 @@ const MIN_DIFFICULTIES_COUNT = 1;
 @Component({
   imports: [FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatCardModule, MatIconModule],
   selector: 'app-daily-task-form',
-  templateUrl: './daily-task-form.component.html',
-  styleUrl: './daily-task-form.component.scss',
+  templateUrl: './daily-task-form.html',
+  styleUrl: './daily-task-form.scss',
 })
-export class DailyTaskFormComponent {
+export class DailyTaskForm {
   taskCreated = output<{ title: string; difficulties: DailyTaskDifficulty[] }>();
   cancelForm = output();
 

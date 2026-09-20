@@ -6,19 +6,19 @@ import { of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { By } from '@angular/platform-browser';
-import { RewardStoreComponent } from './reward-store';
+import { RewardStore } from './reward-store';
 import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 import { UserService } from '../../../../core/services/user.service';
 import type { User } from '../../../../core/models/user.model';
 import type { RewardItem } from '../../../../core/models/reward.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
-import { RewardFormDialogComponent } from '../reward-form-dialog/reward-form-dialog';
-import { RewardCardComponent } from '../reward-card/reward-card';
+import { RewardFormDialog } from '../reward-form-dialog/reward-form-dialog';
+import { RewardCard } from '../reward-card/reward-card';
 
-describe('RewardStoreComponent', () => {
-  let component: RewardStoreComponent;
-  let fixture: ComponentFixture<RewardStoreComponent>;
+describe('RewardStore', () => {
+  let component: RewardStore;
+  let fixture: ComponentFixture<RewardStore>;
 
   let mockRewardsService: {
     getRewards: ReturnType<typeof vi.fn>;
@@ -77,7 +77,7 @@ describe('RewardStoreComponent', () => {
     mockSnackBar = { open: vi.fn() };
 
     await TestBed.configureTestingModule({
-      imports: [RewardStoreComponent],
+      imports: [RewardStore],
       providers: [
         { provide: RewardsService, useValue: mockRewardsService },
         { provide: CategoryService, useValue: mockCategoryService },
@@ -87,7 +87,7 @@ describe('RewardStoreComponent', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(RewardStoreComponent);
+    fixture = TestBed.createComponent(RewardStore);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -127,7 +127,7 @@ describe('RewardStoreComponent', () => {
     const addBtn = fixture.debugElement.query(By.css('.add-reward-btn')).nativeElement as HTMLButtonElement;
     addBtn.click();
 
-    expect(mockDialog.open).toHaveBeenCalledWith(RewardFormDialogComponent, {
+    expect(mockDialog.open).toHaveBeenCalledWith(RewardFormDialog, {
       width: '460px',
     });
   });
@@ -139,14 +139,14 @@ describe('RewardStoreComponent', () => {
     const emptyBtn = fixture.debugElement.query(By.css('.empty-state button')).nativeElement as HTMLButtonElement;
     emptyBtn.click();
 
-    expect(mockDialog.open).toHaveBeenCalledWith(RewardFormDialogComponent, {
+    expect(mockDialog.open).toHaveBeenCalledWith(RewardFormDialog, {
       width: '460px',
     });
   });
 
   it('should handle claim output from child card component', async () => {
-    const cardDebugEl = fixture.debugElement.query(By.directive(RewardCardComponent));
-    const cardComponent = cardDebugEl.componentInstance as RewardCardComponent;
+    const cardDebugEl = fixture.debugElement.query(By.directive(RewardCard));
+    const cardComponent = cardDebugEl.componentInstance as RewardCard;
 
     cardComponent.claim.emit(mockRewards[0]);
     await fixture.whenStable();
@@ -172,20 +172,20 @@ describe('RewardStoreComponent', () => {
   });
 
   it('should handle edit output from child card component', () => {
-    const cardDebugEl = fixture.debugElement.query(By.directive(RewardCardComponent));
-    const cardComponent = cardDebugEl.componentInstance as RewardCardComponent;
+    const cardDebugEl = fixture.debugElement.query(By.directive(RewardCard));
+    const cardComponent = cardDebugEl.componentInstance as RewardCard;
 
     cardComponent.edit.emit(mockRewards[0]);
 
-    expect(mockDialog.open).toHaveBeenCalledWith(RewardFormDialogComponent, {
+    expect(mockDialog.open).toHaveBeenCalledWith(RewardFormDialog, {
       width: '460px',
       data: { reward: mockRewards[0] },
     });
   });
 
   it('should handle delete output from child card component', async () => {
-    const cardDebugEl = fixture.debugElement.query(By.directive(RewardCardComponent));
-    const cardComponent = cardDebugEl.componentInstance as RewardCardComponent;
+    const cardDebugEl = fixture.debugElement.query(By.directive(RewardCard));
+    const cardComponent = cardDebugEl.componentInstance as RewardCard;
 
     cardComponent.delete.emit(mockRewards[0]);
     await fixture.whenStable();

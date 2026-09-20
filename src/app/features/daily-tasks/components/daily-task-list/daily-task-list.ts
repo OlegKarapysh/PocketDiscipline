@@ -4,18 +4,18 @@ import { AsyncPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
-import { DailyTaskItemComponent } from '../daily-task-item/daily-task-item.component';
+import { DailyTaskItem } from '../daily-task-item/daily-task-item';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
-import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.component';
+import { DailyTaskForm } from '../daily-task-form/daily-task-form';
 
 @Component({
-  imports: [MatButtonModule, MatIconModule, DailyTaskItemComponent, DailyTaskFormComponent, AsyncPipe],
+  imports: [MatButtonModule, MatIconModule, DailyTaskItem, DailyTaskForm, AsyncPipe],
   selector: 'app-daily-task-list',
-  styleUrl: './daily-task-list.component.scss',
-  templateUrl: './daily-task-list.component.html',
+  styleUrl: './daily-task-list.scss',
+  templateUrl: './daily-task-list.html',
 })
-export class DailyTaskListComponent implements OnInit {
+export class DailyTaskList implements OnInit {
   private dailyTasksService = inject(DailyTasksService);
 
   tasks$ = this.dailyTasksService.tasks$;

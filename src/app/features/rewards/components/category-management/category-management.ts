@@ -9,8 +9,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { CategoryService } from '../../services/category.service';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import type { CreateCategoryDto } from '../../models/create-category.dto';
-import { CategoryFormDialogComponent } from '../category-form-dialog/category-form-dialog';
-import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { CategoryFormDialog } from '../category-form-dialog/category-form-dialog';
+import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import type { ConfirmDialogData } from '../../../../shared/components/confirm-dialog/confirm-dialog-data.model';
 
 const SNACKBAR_DURATION_MS = 3000;
@@ -21,7 +21,7 @@ const SNACKBAR_DURATION_MS = 3000;
   styleUrl: './category-management.scss',
   imports: [MatButtonModule, MatIconModule, MatTooltipModule],
 })
-export class CategoryManagementComponent {
+export class CategoryManagement {
   private readonly categoryService = inject(CategoryService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
@@ -30,8 +30,8 @@ export class CategoryManagementComponent {
   readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
 
   openAddCategoryDialog(): void {
-    const dialogRef = this.dialog.open<CategoryFormDialogComponent, unknown, CreateCategoryDto>(
-      CategoryFormDialogComponent,
+    const dialogRef = this.dialog.open<CategoryFormDialog, unknown, CreateCategoryDto>(
+      CategoryFormDialog,
       {
         width: '420px',
       }
@@ -62,8 +62,8 @@ export class CategoryManagementComponent {
   }
 
   openEditCategoryDialog(category: RewardCategory): void {
-    const dialogRef = this.dialog.open<CategoryFormDialogComponent, { category: RewardCategory }, CreateCategoryDto>(
-      CategoryFormDialogComponent,
+    const dialogRef = this.dialog.open<CategoryFormDialog, { category: RewardCategory }, CreateCategoryDto>(
+      CategoryFormDialog,
       {
         width: '420px',
         data: { category },
@@ -105,8 +105,8 @@ export class CategoryManagementComponent {
       isDestructive: true,
     };
 
-    const dialogRef = this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
-      ConfirmDialogComponent,
+    const dialogRef = this.dialog.open<ConfirmDialog, ConfirmDialogData, boolean>(
+      ConfirmDialog,
       {
         width: '400px',
         data: dialogData,

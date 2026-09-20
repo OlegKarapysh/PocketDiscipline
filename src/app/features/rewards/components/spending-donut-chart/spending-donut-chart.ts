@@ -13,7 +13,7 @@ const CIRCUMFERENCE = 2 * Math.PI * 70;
   styleUrl: './spending-donut-chart.scss',
   imports: [MatIconModule, MatTooltipModule],
 })
-export class SpendingDonutChartComponent {
+export class SpendingDonutChart {
   readonly data = input<CategorySpendingBreakdown[]>([]);
   readonly totalSpent = input<number>(0);
   readonly hoveredCategoryId = signal<string | null>(null);

@@ -41,7 +41,7 @@ const DUMMY_TASK_BILL = {
   templateUrl: './task-list.html',
   styleUrl: './task-list.scss'
 })
-export class TaskListComponent {
+export class TaskList {
   taskService = inject(TaskService);
   tasks$ = from(this.taskService.tasks$);
 

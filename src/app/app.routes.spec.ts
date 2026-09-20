@@ -4,7 +4,7 @@ import { Dashboard } from './features/dashboard/dashboard';
 import { TasksPage } from './features/tasks/pages/tasks-page/tasks-page';
 import { GoalsPage } from './features/goals/pages/goals-page/goals-page';
 import { POMODORO_ROUTES } from './features/pomodoro/pomodoro.routes';
-import { DailyScoresPageComponent } from './features/daily-scores/pages/daily-scores-page.component';
+import { DailyScoresPage } from './features/daily-scores/pages/daily-scores-page';
 import { Settings } from './features/settings/settings';
 
 describe('App Routes', () => {
@@ -54,11 +54,11 @@ describe('App Routes', () => {
     expect(childRoutes).toBe(POMODORO_ROUTES);
   });
 
-  it('should lazy-load DailyScoresPageComponent for daily-scores route', async () => {
+  it('should lazy-load DailyScoresPage for daily-scores route', async () => {
     const route = routes.find(r => r.path === 'daily-scores');
     expect(route?.loadComponent).toBeDefined();
     const component = await (route?.loadComponent as () => Promise<unknown>)();
-    expect(component).toBe(DailyScoresPageComponent);
+    expect(component).toBe(DailyScoresPage);
   });
 
   it('should lazy-load Settings component for settings route', async () => {

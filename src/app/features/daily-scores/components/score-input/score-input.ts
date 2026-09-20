@@ -73,10 +73,10 @@ const SCORE_TIERS: ScoreTier[] = [
 @Component({
   selector: 'app-score-input',
   imports: [MatButtonModule, MatCardModule, MatIconModule],
-  templateUrl: './score-input.component.html',
-  styleUrl: './score-input.component.scss',
+  templateUrl: './score-input.html',
+  styleUrl: './score-input.scss',
 })
-export class ScoreInputComponent {
+export class ScoreInput {
   readonly readonly = input<boolean>(false);
   readonly selectedScore = input<number | null>(null);
   readonly scoreSubmitted = output<number>();

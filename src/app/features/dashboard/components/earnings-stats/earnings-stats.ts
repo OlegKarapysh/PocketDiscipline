@@ -14,10 +14,10 @@ const ZERO_EARNINGS = 0;
 @Component({
   selector: 'app-earnings-stats',
   imports: [MatCardModule, MatButtonModule, MatIconModule],
-  templateUrl: './earnings-stats.component.html',
-  styleUrl: './earnings-stats.component.scss'
+  templateUrl: './earnings-stats.html',
+  styleUrl: './earnings-stats.scss'
 })
-export class EarningsStatsComponent {
+export class EarningsStats {
   readonly summary = input<MonthlyEarningsSummary | null>(null);
 
   readonly monthChange = output<MonthChangeEvent>();

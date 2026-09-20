@@ -17,7 +17,7 @@ import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
 import type { WithdrawalRecord } from '../../../../core/models/withdrawal.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
-import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import type { ConfirmDialogData } from '../../../../shared/components/confirm-dialog/confirm-dialog-data.model';
 
 const SNACKBAR_DURATION_MS = 3000;
@@ -36,7 +36,7 @@ const SNACKBAR_DURATION_MS = 3000;
     MatTooltipModule,
   ],
 })
-export class WithdrawalLedgerComponent implements OnInit, OnDestroy {
+export class WithdrawalLedger implements OnInit, OnDestroy {
   private readonly withdrawalService = inject(WithdrawalService);
   private readonly categoryService = inject(CategoryService);
   private readonly dialog = inject(MatDialog);
@@ -133,8 +133,8 @@ export class WithdrawalLedgerComponent implements OnInit, OnDestroy {
       isDestructive: true,
     };
 
-    const dialogRef = this.dialog.open<ConfirmDialogComponent, ConfirmDialogData, boolean>(
-      ConfirmDialogComponent,
+    const dialogRef = this.dialog.open<ConfirmDialog, ConfirmDialogData, boolean>(
+      ConfirmDialog,
       {
         data: dialogData,
         width: '400px',

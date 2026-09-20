@@ -6,15 +6,15 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import type { RewardFormDialogData } from './reward-form-dialog';
-import { RewardFormDialogComponent } from './reward-form-dialog';
+import { RewardFormDialog } from './reward-form-dialog';
 import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 import type { RewardItem } from '../../../../core/models/reward.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 
-describe('RewardFormDialogComponent', () => {
-  let component: RewardFormDialogComponent;
-  let fixture: ComponentFixture<RewardFormDialogComponent>;
+describe('RewardFormDialog', () => {
+  let component: RewardFormDialog;
+  let fixture: ComponentFixture<RewardFormDialog>;
 
   let mockDialogRef: { close: ReturnType<typeof vi.fn> };
   let mockRewardsService: {
@@ -38,7 +38,7 @@ describe('RewardFormDialogComponent', () => {
     mockSnackBar = { open: vi.fn() };
 
     await TestBed.configureTestingModule({
-      imports: [RewardFormDialogComponent],
+      imports: [RewardFormDialog],
       providers: [
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MAT_DIALOG_DATA, useValue: data },
@@ -48,7 +48,7 @@ describe('RewardFormDialogComponent', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(RewardFormDialogComponent);
+    fixture = TestBed.createComponent(RewardFormDialog);
     component = fixture.componentInstance;
     fixture.detectChanges();
   };

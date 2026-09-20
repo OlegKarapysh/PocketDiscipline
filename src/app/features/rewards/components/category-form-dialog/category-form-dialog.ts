@@ -50,9 +50,9 @@ const PRESET_ICONS = [
   styleUrl: './category-form-dialog.scss',
   imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
 })
-export class CategoryFormDialogComponent implements OnInit {
+export class CategoryFormDialog implements OnInit {
   private readonly fb = inject(FormBuilder);
-  private readonly dialogRef = inject(MatDialogRef<CategoryFormDialogComponent>);
+  private readonly dialogRef = inject(MatDialogRef<CategoryFormDialog>);
   readonly data = inject<CategoryFormDialogData>(MAT_DIALOG_DATA, { optional: true });
 
   readonly presetColors = PRESET_COLORS;

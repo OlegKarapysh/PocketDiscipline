@@ -19,8 +19,8 @@ import type { User } from '../../../../core/models/user.model';
 import type { RewardItem } from '../../../../core/models/reward.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import type { RewardStatus } from '../../../../core/models/reward-status.type';
-import { RewardCardComponent } from '../reward-card/reward-card';
-import { RewardFormDialogComponent } from '../reward-form-dialog/reward-form-dialog';
+import { RewardCard } from '../reward-card/reward-card';
+import { RewardFormDialog } from '../reward-form-dialog/reward-form-dialog';
 
 @Component({
   selector: 'app-reward-store',
@@ -32,12 +32,12 @@ import { RewardFormDialogComponent } from '../reward-form-dialog/reward-form-dia
     MatInputModule,
     MatFormFieldModule,
     MatSelectModule,
-    RewardCardComponent,
+    RewardCard,
   ],
   templateUrl: './reward-store.html',
   styleUrl: './reward-store.scss',
 })
-export class RewardStoreComponent {
+export class RewardStore {
   private readonly rewardsService = inject(RewardsService);
   private readonly categoryService = inject(CategoryService);
   private readonly userService = inject(UserService);
@@ -95,13 +95,13 @@ export class RewardStoreComponent {
   }
 
   openAddReward(): void {
-    this.dialog.open(RewardFormDialogComponent, {
+    this.dialog.open(RewardFormDialog, {
       width: '460px',
     });
   }
 
   onEditReward(reward: RewardItem): void {
-    this.dialog.open(RewardFormDialogComponent, {
+    this.dialog.open(RewardFormDialog, {
       width: '460px',
       data: { reward },
     });

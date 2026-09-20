@@ -50,10 +50,10 @@ const SOURCE_LABELS: Record<EarningsSource, string> = {
 @Component({
   selector: 'app-earnings-chart',
   imports: [MatCardModule],
-  templateUrl: './earnings-chart.component.html',
-  styleUrl: './earnings-chart.component.scss'
+  templateUrl: './earnings-chart.html',
+  styleUrl: './earnings-chart.scss'
 })
-export class EarningsChartComponent {
+export class EarningsChart {
   readonly records = input<DailyEarningsRecord[]>([]);
 
   readonly hoveredRecord = signal<DailyEarningsRecord | null>(null);

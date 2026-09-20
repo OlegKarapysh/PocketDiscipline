@@ -5,15 +5,15 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { WithdrawalLedgerComponent } from './withdrawal-ledger';
+import { WithdrawalLedger } from './withdrawal-ledger';
 import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
 import type { WithdrawalRecord } from '../../../../core/models/withdrawal.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 
-describe('WithdrawalLedgerComponent', () => {
-  let component: WithdrawalLedgerComponent;
-  let fixture: ComponentFixture<WithdrawalLedgerComponent>;
+describe('WithdrawalLedger', () => {
+  let component: WithdrawalLedger;
+  let fixture: ComponentFixture<WithdrawalLedger>;
 
   let mockCategories: RewardCategory[];
   let mockWithdrawals: WithdrawalRecord[];
@@ -98,7 +98,7 @@ describe('WithdrawalLedgerComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [WithdrawalLedgerComponent],
+      imports: [WithdrawalLedger],
       providers: [
         { provide: WithdrawalService, useValue: mockWithdrawalService },
         { provide: CategoryService, useValue: mockCategoryService },
@@ -107,7 +107,7 @@ describe('WithdrawalLedgerComponent', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(WithdrawalLedgerComponent);
+    fixture = TestBed.createComponent(WithdrawalLedger);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

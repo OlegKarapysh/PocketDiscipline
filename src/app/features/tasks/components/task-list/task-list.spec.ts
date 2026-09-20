@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import type { Observable} from 'rxjs';
 import { of } from 'rxjs';
-import { TaskListComponent } from './task-list';
+import { TaskList } from './task-list';
 import { TaskService } from '../../../../core/services/task.service';
 import type { DisciplineItem } from '../../../../core/models/discipline-item.model';
 import { DisciplineItemType } from '../../../../core/models/discipline-item-type.enum';
@@ -13,9 +13,9 @@ const TEST_TASK_ID = 't-1';
 const TEST_TASK_TITLE = 'Drink 2L Water';
 const TEST_REWARD = 10;
 
-describe('TaskListComponent', () => {
-  let component: TaskListComponent;
-  let fixture: ComponentFixture<TaskListComponent>;
+describe('TaskList', () => {
+  let component: TaskList;
+  let fixture: ComponentFixture<TaskList>;
   let taskServiceMock: {
     tasks$: Observable<DisciplineItem[]>;
     completeTask: ReturnType<typeof vi.fn>;
@@ -42,13 +42,13 @@ describe('TaskListComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [TaskListComponent],
+      imports: [TaskList],
       providers: [
         { provide: TaskService, useValue: taskServiceMock },
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(TaskListComponent);
+    fixture = TestBed.createComponent(TaskList);
     component = fixture.componentInstance;
   });
 

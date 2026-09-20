@@ -4,17 +4,17 @@ import { of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { RewardsHubComponent } from './rewards-hub';
+import { RewardsHub } from './rewards-hub';
 import { RewardsService } from '../../services/rewards.service';
 import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
 import { SpendingAnalyticsService } from '../../services/spending-analytics.service';
 import { UserService } from '../../../../core/services/user.service';
-import { QuickSpendDialogComponent } from '../../components/quick-spend-dialog/quick-spend-dialog';
+import { QuickSpendDialog } from '../../components/quick-spend-dialog/quick-spend-dialog';
 
-describe('RewardsHubComponent', () => {
-  let component: RewardsHubComponent;
-  let fixture: ComponentFixture<RewardsHubComponent>;
+describe('RewardsHub', () => {
+  let component: RewardsHub;
+  let fixture: ComponentFixture<RewardsHub>;
 
   let mockDialog: {
     open: ReturnType<typeof vi.fn>;
@@ -66,7 +66,7 @@ describe('RewardsHubComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [RewardsHubComponent],
+      imports: [RewardsHub],
       providers: [
         { provide: MatDialog, useValue: mockDialog },
         { provide: MatSnackBar, useValue: mockSnackBar },
@@ -78,7 +78,7 @@ describe('RewardsHubComponent', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(RewardsHubComponent);
+    fixture = TestBed.createComponent(RewardsHub);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -101,7 +101,7 @@ describe('RewardsHubComponent', () => {
     const button = compiled.querySelector<HTMLButtonElement>('.quick-spend-action-button')!;
     button.click();
 
-    expect(mockDialog.open).toHaveBeenCalledWith(QuickSpendDialogComponent, {
+    expect(mockDialog.open).toHaveBeenCalledWith(QuickSpendDialog, {
       width: '400px',
     });
     expect(mockSnackBar.open).toHaveBeenCalledWith(
@@ -120,7 +120,7 @@ describe('RewardsHubComponent', () => {
     const button = compiled.querySelector<HTMLButtonElement>('.quick-spend-action-button')!;
     button.click();
 
-    expect(mockDialog.open).toHaveBeenCalledWith(QuickSpendDialogComponent, {
+    expect(mockDialog.open).toHaveBeenCalledWith(QuickSpendDialog, {
       width: '400px',
     });
     expect(mockSnackBar.open).not.toHaveBeenCalled();

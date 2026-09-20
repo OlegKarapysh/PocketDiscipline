@@ -2,10 +2,10 @@ import { Component, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { defer, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
-import { BalanceWidgetComponent } from './components/balance-widget/balance-widget';
-import { EarningsChartComponent } from './components/earnings-chart/earnings-chart.component';
-import { EarningsFilterComponent } from './components/earnings-filter/earnings-filter.component';
-import { EarningsStatsComponent } from './components/earnings-stats/earnings-stats.component';
+import { BalanceWidget } from './components/balance-widget/balance-widget';
+import { EarningsChart } from './components/earnings-chart/earnings-chart';
+import { EarningsFilter } from './components/earnings-filter/earnings-filter';
+import { EarningsStats } from './components/earnings-stats/earnings-stats';
 import { DashboardEarningsService } from './services/dashboard-earnings.service';
 import type { EarningsPeriodFilter } from './models/earnings-period-filter.model';
 import type { MonthChangeEvent } from './models/month-change-event.model';
@@ -16,10 +16,10 @@ const MONTH_STEP = 1;
 @Component({
   selector: 'app-dashboard',
   imports: [
-    BalanceWidgetComponent,
-    EarningsChartComponent,
-    EarningsFilterComponent,
-    EarningsStatsComponent,
+    BalanceWidget,
+    EarningsChart,
+    EarningsFilter,
+    EarningsStats,
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',

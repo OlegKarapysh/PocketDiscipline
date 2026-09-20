@@ -25,10 +25,10 @@ const MONTH_OFFSET_ONE = 1;
     MatNativeDateModule,
     MatInputModule,
   ],
-  templateUrl: './earnings-filter.component.html',
-  styleUrl: './earnings-filter.component.scss'
+  templateUrl: './earnings-filter.html',
+  styleUrl: './earnings-filter.scss'
 })
-export class EarningsFilterComponent {
+export class EarningsFilter {
   private readonly earningsService = inject(DashboardEarningsService);
 
   readonly filter = input<EarningsPeriodFilter>({

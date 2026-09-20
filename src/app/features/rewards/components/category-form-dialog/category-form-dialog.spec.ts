@@ -3,12 +3,12 @@ import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CategoryFormDialogComponent } from './category-form-dialog';
+import { CategoryFormDialog } from './category-form-dialog';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 
-describe('CategoryFormDialogComponent', () => {
-  let component: CategoryFormDialogComponent;
-  let fixture: ComponentFixture<CategoryFormDialogComponent>;
+describe('CategoryFormDialog', () => {
+  let component: CategoryFormDialog;
+  let fixture: ComponentFixture<CategoryFormDialog>;
 
   let mockDialogRef: {
     close: ReturnType<typeof vi.fn>;
@@ -21,14 +21,14 @@ describe('CategoryFormDialogComponent', () => {
     mockDialogRef = { close: vi.fn() };
 
     await TestBed.configureTestingModule({
-      imports: [CategoryFormDialogComponent],
+      imports: [CategoryFormDialog],
       providers: [
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MAT_DIALOG_DATA, useValue: categoryData ? { category: categoryData } : null },
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(CategoryFormDialogComponent);
+    fixture = TestBed.createComponent(CategoryFormDialog);
     component = fixture.componentInstance;
     fixture.detectChanges();
   };

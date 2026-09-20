@@ -2,19 +2,19 @@ import type { ComponentFixture} from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
-import { DailyTaskFormComponent } from './daily-task-form.component';
+import { DailyTaskForm } from './daily-task-form';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
 
-describe('DailyTaskFormComponent', () => {
-  let component: DailyTaskFormComponent;
-  let fixture: ComponentFixture<DailyTaskFormComponent>;
+describe('DailyTaskForm', () => {
+  let component: DailyTaskForm;
+  let fixture: ComponentFixture<DailyTaskForm>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DailyTaskFormComponent],
+      imports: [DailyTaskForm],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(DailyTaskFormComponent);
+    fixture = TestBed.createComponent(DailyTaskForm);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

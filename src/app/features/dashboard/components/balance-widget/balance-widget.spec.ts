@@ -3,13 +3,13 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { BehaviorSubject } from 'rxjs';
-import { BalanceWidgetComponent } from './balance-widget';
+import { BalanceWidget } from './balance-widget';
 import { UserService } from '../../../../core/services/user.service';
 import type { User } from '../../../../core/models/user.model';
 import { EventBusService } from '../../../../core/services/event-bus.service';
 
-describe('BalanceWidgetComponent', () => {
-  let fixture: ComponentFixture<BalanceWidgetComponent>;
+describe('BalanceWidget', () => {
+  let fixture: ComponentFixture<BalanceWidget>;
   let userSubject: BehaviorSubject<User | undefined>;
   let eventBusMock: { emit: ReturnType<typeof vi.fn> };
 
@@ -27,14 +27,14 @@ describe('BalanceWidgetComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [BalanceWidgetComponent],
+      imports: [BalanceWidget],
       providers: [
         { provide: UserService, useValue: { user$: userSubject.asObservable() } },
         { provide: EventBusService, useValue: eventBusMock },
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(BalanceWidgetComponent);
+    fixture = TestBed.createComponent(BalanceWidget);
   });
 
   it('should render user balance with currency symbol ₴', async () => {

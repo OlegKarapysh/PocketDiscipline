@@ -4,7 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import type { Subscription } from 'rxjs';
 import { EventBusService } from '../../../core/services/event-bus.service';
-import { QuickSpendDialogComponent } from '../components/quick-spend-dialog/quick-spend-dialog';
+import { QuickSpendDialog } from '../components/quick-spend-dialog/quick-spend-dialog';
 
 export const QUICK_SPEND_DIALOG_WIDTH = '440px';
 
@@ -23,7 +23,7 @@ export class QuickSpendEventService implements OnDestroy {
       .on('REQUEST_QUICK_SPEND')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
-        this.dialog.open(QuickSpendDialogComponent, {
+        this.dialog.open(QuickSpendDialog, {
           width: QUICK_SPEND_DIALOG_WIDTH,
         });
       });

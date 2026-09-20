@@ -5,14 +5,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CategoryManagementComponent } from './category-management';
+import { CategoryManagement } from './category-management';
 import { CategoryService } from '../../services/category.service';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import { FALLBACK_CATEGORY_ID } from '../../../../core/constants/initial-reward-categories.const';
 
-describe('CategoryManagementComponent', () => {
-  let component: CategoryManagementComponent;
-  let fixture: ComponentFixture<CategoryManagementComponent>;
+describe('CategoryManagement', () => {
+  let component: CategoryManagement;
+  let fixture: ComponentFixture<CategoryManagement>;
 
   let mockCategories: RewardCategory[];
 
@@ -69,7 +69,7 @@ describe('CategoryManagementComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [CategoryManagementComponent],
+      imports: [CategoryManagement],
       providers: [
         { provide: CategoryService, useValue: mockCategoryService },
         { provide: MatDialog, useValue: mockDialog },
@@ -77,7 +77,7 @@ describe('CategoryManagementComponent', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(CategoryManagementComponent);
+    fixture = TestBed.createComponent(CategoryManagement);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

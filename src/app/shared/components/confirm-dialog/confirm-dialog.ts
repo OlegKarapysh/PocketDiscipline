@@ -9,7 +9,7 @@ import type { ConfirmDialogData } from './confirm-dialog-data.model';
   styleUrl: './confirm-dialog.scss',
   imports: [MatDialogModule, MatButtonModule],
 })
-export class ConfirmDialogComponent {
-  readonly dialogRef = inject(MatDialogRef<ConfirmDialogComponent>);
+export class ConfirmDialog {
+  readonly dialogRef = inject(MatDialogRef<ConfirmDialog>);
   readonly data = inject<ConfirmDialogData>(MAT_DIALOG_DATA);
 }

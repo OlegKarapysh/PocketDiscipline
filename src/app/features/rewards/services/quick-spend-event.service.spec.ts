@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MatDialog } from '@angular/material/dialog';
 import { QuickSpendEventService, QUICK_SPEND_DIALOG_WIDTH } from './quick-spend-event.service';
 import { EventBusService } from '../../../core/services/event-bus.service';
-import { QuickSpendDialogComponent } from '../components/quick-spend-dialog/quick-spend-dialog';
+import { QuickSpendDialog } from '../components/quick-spend-dialog/quick-spend-dialog';
 
 describe('QuickSpendEventService', () => {
   let service: QuickSpendEventService;
@@ -31,12 +31,12 @@ describe('QuickSpendEventService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should open QuickSpendDialogComponent when REQUEST_QUICK_SPEND event is emitted', () => {
+  it('should open QuickSpendDialog when REQUEST_QUICK_SPEND event is emitted', () => {
     service.initialize();
 
     eventBus.emit({ type: 'REQUEST_QUICK_SPEND' });
 
-    expect(mockDialog.open).toHaveBeenCalledWith(QuickSpendDialogComponent, {
+    expect(mockDialog.open).toHaveBeenCalledWith(QuickSpendDialog, {
       width: QUICK_SPEND_DIALOG_WIDTH,
     });
   });

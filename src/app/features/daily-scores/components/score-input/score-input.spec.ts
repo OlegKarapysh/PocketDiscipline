@@ -2,18 +2,18 @@ import type { ComponentFixture} from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
-import { ScoreInputComponent } from './score-input.component';
+import { ScoreInput } from './score-input';
 
-describe('ScoreInputComponent', () => {
-  let component: ScoreInputComponent;
-  let fixture: ComponentFixture<ScoreInputComponent>;
+describe('ScoreInput', () => {
+  let component: ScoreInput;
+  let fixture: ComponentFixture<ScoreInput>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ScoreInputComponent],
+      imports: [ScoreInput],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ScoreInputComponent);
+    fixture = TestBed.createComponent(ScoreInput);
     component = fixture.componentInstance;
   });
 

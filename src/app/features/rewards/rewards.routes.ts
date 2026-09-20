@@ -4,12 +4,12 @@ export const REWARDS_ROUTES: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./pages/rewards-hub/rewards-hub').then(m => m.RewardsHubComponent),
+      import('./pages/rewards-hub/rewards-hub').then(m => m.RewardsHub),
   },
   {
     path: 'categories',
     loadComponent: () =>
-      import('./components/category-management/category-management').then(m => m.CategoryManagementComponent),
+      import('./components/category-management/category-management').then(m => m.CategoryManagement),
   }
 ];
 

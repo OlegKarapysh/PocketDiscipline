@@ -1,12 +1,12 @@
 import type { ComponentFixture} from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { EarningsChartComponent } from './earnings-chart.component';
+import { EarningsChart } from './earnings-chart';
 import type { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
 
-describe('EarningsChartComponent', () => {
-  let component: EarningsChartComponent;
-  let fixture: ComponentFixture<EarningsChartComponent>;
+describe('EarningsChart', () => {
+  let component: EarningsChart;
+  let fixture: ComponentFixture<EarningsChart>;
 
   const mockRecords: DailyEarningsRecord[] = [
     {
@@ -37,10 +37,10 @@ describe('EarningsChartComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [EarningsChartComponent],
+      imports: [EarningsChart],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(EarningsChartComponent);
+    fixture = TestBed.createComponent(EarningsChart);
     component = fixture.componentInstance;
   });
 

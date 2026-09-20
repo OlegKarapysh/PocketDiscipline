@@ -1,8 +1,8 @@
 import type { OnInit} from '@angular/core';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { ScoreInputComponent } from '../components/score-input/score-input.component';
-import { ScoresChartComponent } from '../components/scores-chart/scores-chart.component';
-import { ScoresStatsComponent } from '../components/scores-stats/scores-stats.component';
+import { ScoreInput } from '../components/score-input/score-input';
+import { ScoresChart } from '../components/scores-chart/scores-chart';
+import { ScoresStats } from '../components/scores-stats/scores-stats';
 import { DailyScoresService } from '../services/daily-scores.service';
 import type { DailyScore } from '../../../core/models/daily-score.model';
 import type { Subscription} from 'rxjs';
@@ -17,11 +17,11 @@ const EMPTY_LENGTH = 0;
 
 @Component({
   selector: 'app-daily-scores-page',
-  imports: [ScoreInputComponent, ScoresChartComponent, ScoresStatsComponent, MatProgressSpinnerModule],
-  templateUrl: './daily-scores-page.component.html',
-  styleUrl: './daily-scores-page.component.scss',
+  imports: [ScoreInput, ScoresChart, ScoresStats, MatProgressSpinnerModule],
+  templateUrl: './daily-scores-page.html',
+  styleUrl: './daily-scores-page.scss',
 })
-export class DailyScoresPageComponent implements OnInit {
+export class DailyScoresPage implements OnInit {
   private dailyScoresService = inject(DailyScoresService);
   private destroyRef = inject(DestroyRef);
   private loadSubscription?: Subscription;

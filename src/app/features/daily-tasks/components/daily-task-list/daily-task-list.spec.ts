@@ -4,19 +4,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import type { Observable } from 'rxjs';
 import { of } from 'rxjs';
-import { DailyTaskListComponent } from './daily-task-list.component';
+import { DailyTaskList } from './daily-task-list';
 import { DailyTasksService } from '../../services/daily-tasks.service';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
-import { DailyTaskItemComponent } from '../daily-task-item/daily-task-item.component';
-import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.component';
+import { DailyTaskItem } from '../daily-task-item/daily-task-item';
+import { DailyTaskForm } from '../daily-task-form/daily-task-form';
 
 const TEST_TASK_TITLE = 'Stretch Daily';
 const EASY_DIFFICULTY: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
 
-describe('DailyTaskListComponent', () => {
-  let component: DailyTaskListComponent;
-  let fixture: ComponentFixture<DailyTaskListComponent>;
+describe('DailyTaskList', () => {
+  let component: DailyTaskList;
+  let fixture: ComponentFixture<DailyTaskList>;
   let dailyTasksServiceMock: {
     tasks$: Observable<DailyTask[]>;
     createTask: ReturnType<typeof vi.fn>;
@@ -44,13 +44,13 @@ describe('DailyTaskListComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [DailyTaskListComponent],
+      imports: [DailyTaskList],
       providers: [
         { provide: DailyTasksService, useValue: dailyTasksServiceMock },
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(DailyTaskListComponent);
+    fixture = TestBed.createComponent(DailyTaskList);
     component = fixture.componentInstance;
   });
 
@@ -63,7 +63,7 @@ describe('DailyTaskListComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const items = fixture.debugElement.queryAll(By.directive(DailyTaskItemComponent));
+    const items = fixture.debugElement.queryAll(By.directive(DailyTaskItem));
     expect(items.length).toBe(1);
   });
 
@@ -89,17 +89,17 @@ describe('DailyTaskListComponent', () => {
     await fixture.whenStable();
 
     expect(component.showForm()).toBe(true);
-    const formEl = fixture.debugElement.query(By.directive(DailyTaskFormComponent));
+    const formEl = fixture.debugElement.query(By.directive(DailyTaskForm));
     expect(formEl).toBeTruthy();
   });
 
-  it('should close form when cancelForm event is emitted by DailyTaskFormComponent', async () => {
+  it('should close form when cancelForm event is emitted by DailyTaskForm', async () => {
     component.showForm.set(true);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const formEl = fixture.debugElement.query(By.directive(DailyTaskFormComponent));
-    const formComp = formEl.componentInstance as DailyTaskFormComponent;
+    const formEl = fixture.debugElement.query(By.directive(DailyTaskForm));
+    const formComp = formEl.componentInstance as DailyTaskForm;
 
     formComp.cancelForm.emit();
     fixture.detectChanges();
@@ -131,8 +131,8 @@ describe('DailyTaskListComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const itemEl = fixture.debugElement.query(By.directive(DailyTaskItemComponent));
-    const itemComp = itemEl.componentInstance as DailyTaskItemComponent;
+    const itemEl = fixture.debugElement.query(By.directive(DailyTaskItem));
+    const itemComp = itemEl.componentInstance as DailyTaskItem;
 
     itemComp.complete.emit(EASY_DIFFICULTY);
     await fixture.whenStable();

@@ -24,7 +24,7 @@ import type { RewardCategory } from '../../../../core/models/reward-category.mod
   templateUrl: './reward-card.html',
   styleUrl: './reward-card.scss',
 })
-export class RewardCardComponent {
+export class RewardCard {
   readonly reward = input.required<RewardItem>();
   readonly currentBalance = input<number>(0);
   readonly category = input<RewardCategory | undefined>(undefined);

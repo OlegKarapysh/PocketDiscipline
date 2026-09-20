@@ -2,13 +2,13 @@ import type { ComponentFixture} from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
-import { RewardCardComponent } from './reward-card';
+import { RewardCard } from './reward-card';
 import type { RewardItem } from '../../../../core/models/reward.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 
-describe('RewardCardComponent', () => {
-  let component: RewardCardComponent;
-  let fixture: ComponentFixture<RewardCardComponent>;
+describe('RewardCard', () => {
+  let component: RewardCard;
+  let fixture: ComponentFixture<RewardCard>;
   let mockReward: RewardItem;
   let mockCategory: RewardCategory;
 
@@ -36,10 +36,10 @@ describe('RewardCardComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [RewardCardComponent],
+      imports: [RewardCard],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(RewardCardComponent);
+    fixture = TestBed.createComponent(RewardCard);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('reward', mockReward);
     fixture.componentRef.setInput('category', mockCategory);

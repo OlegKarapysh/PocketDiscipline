@@ -33,8 +33,8 @@ import { FALLBACK_CATEGORY_ID } from '../../../../core/constants/initial-reward-
   templateUrl: './quick-spend-dialog.html',
   styleUrl: './quick-spend-dialog.scss',
 })
-export class QuickSpendDialogComponent {
-  private readonly dialogRef = inject(MatDialogRef<QuickSpendDialogComponent>);
+export class QuickSpendDialog {
+  private readonly dialogRef = inject(MatDialogRef<QuickSpendDialog>);
   private readonly withdrawalService = inject(WithdrawalService);
   private readonly categoryService = inject(CategoryService);
   private readonly userService = inject(UserService);

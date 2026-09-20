@@ -1,12 +1,12 @@
 import type { ComponentFixture} from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SpendingTrendChartComponent } from './spending-trend-chart';
+import { SpendingTrendChart } from './spending-trend-chart';
 import type { SpendingTrendPoint } from '../../models/spending-trend-point.model';
 
-describe('SpendingTrendChartComponent', () => {
-  let component: SpendingTrendChartComponent;
-  let fixture: ComponentFixture<SpendingTrendChartComponent>;
+describe('SpendingTrendChart', () => {
+  let component: SpendingTrendChart;
+  let fixture: ComponentFixture<SpendingTrendChart>;
   let mockPoints: SpendingTrendPoint[];
 
   beforeEach(async () => {
@@ -17,10 +17,10 @@ describe('SpendingTrendChartComponent', () => {
     ];
 
     await TestBed.configureTestingModule({
-      imports: [SpendingTrendChartComponent],
+      imports: [SpendingTrendChart],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(SpendingTrendChartComponent);
+    fixture = TestBed.createComponent(SpendingTrendChart);
     component = fixture.componentInstance;
   });
 

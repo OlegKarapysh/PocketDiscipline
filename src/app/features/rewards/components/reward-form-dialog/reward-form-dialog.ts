@@ -36,8 +36,8 @@ export type { RewardFormDialogData };
   templateUrl: './reward-form-dialog.html',
   styleUrl: './reward-form-dialog.scss',
 })
-export class RewardFormDialogComponent implements OnInit {
-  private readonly dialogRef = inject(MatDialogRef<RewardFormDialogComponent>);
+export class RewardFormDialog implements OnInit {
+  private readonly dialogRef = inject(MatDialogRef<RewardFormDialog>);
   private readonly data = inject<RewardFormDialogData>(MAT_DIALOG_DATA, { optional: true });
   private readonly rewardsService = inject(RewardsService);
   private readonly categoryService = inject(CategoryService);

@@ -6,11 +6,11 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import type { MatSidenav } from '@angular/material/sidenav';
 import { BehaviorSubject } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { LayoutComponent } from './layout';
+import { Layout } from './layout';
 
 describe('Layout', () => {
-  let component: LayoutComponent;
-  let fixture: ComponentFixture<LayoutComponent>;
+  let component: Layout;
+  let fixture: ComponentFixture<Layout>;
   let router: Router;
   let breakpointSubject: BehaviorSubject<BreakpointState>;
 
@@ -18,7 +18,7 @@ describe('Layout', () => {
     breakpointSubject = new BehaviorSubject<BreakpointState>({ matches: false, breakpoints: {} });
 
     await TestBed.configureTestingModule({
-      imports: [LayoutComponent],
+      imports: [Layout],
       providers: [
         provideRouter([
           { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -40,7 +40,7 @@ describe('Layout', () => {
     }).compileComponents();
 
     router = TestBed.inject(Router);
-    fixture = TestBed.createComponent(LayoutComponent);
+    fixture = TestBed.createComponent(Layout);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

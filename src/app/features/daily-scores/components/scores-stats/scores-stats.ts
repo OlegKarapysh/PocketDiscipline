@@ -11,10 +11,10 @@ const YESTERDAY_OFFSET = 1;
 @Component({
   selector: 'app-scores-stats',
   imports: [MatCardModule],
-  templateUrl: './scores-stats.component.html',
-  styleUrl: './scores-stats.component.scss',
+  templateUrl: './scores-stats.html',
+  styleUrl: './scores-stats.scss',
 })
-export class ScoresStatsComponent {
+export class ScoresStats {
   readonly monthlyScores = input<DailyScore[]>([]);
   readonly latestScore = input<DailyScore | null>(null);
   

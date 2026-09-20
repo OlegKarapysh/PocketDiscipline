@@ -2,7 +2,7 @@ import type { ComponentFixture} from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
-import { ScoresChartComponent } from './scores-chart.component';
+import { ScoresChart } from './scores-chart';
 import type { DailyScore } from '../../../../core/models/daily-score.model';
 
 const SEVEN_DAYS_COUNT = 7;
@@ -10,16 +10,16 @@ const TEST_SCORE_TEN = 10;
 const TEST_SCORE_SEVEN = 7;
 const DATE_LOCALE_CA = 'en-CA';
 
-describe('ScoresChartComponent', () => {
-  let component: ScoresChartComponent;
-  let fixture: ComponentFixture<ScoresChartComponent>;
+describe('ScoresChart', () => {
+  let component: ScoresChart;
+  let fixture: ComponentFixture<ScoresChart>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ScoresChartComponent],
+      imports: [ScoresChart],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ScoresChartComponent);
+    fixture = TestBed.createComponent(ScoresChart);
     component = fixture.componentInstance;
   });
 

@@ -15,7 +15,7 @@ import { EventBusService } from '../../../../core/services/event-bus.service';
   templateUrl: './balance-widget.html',
   styleUrl: './balance-widget.scss',
 })
-export class BalanceWidgetComponent {
+export class BalanceWidget {
   private readonly userService = inject(UserService);
   private readonly eventBus = inject(EventBusService);
 

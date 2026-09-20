@@ -13,10 +13,10 @@ const MIDNIGHT_MILLISECOND = 0;
 @Component({
   imports: [MatCardModule, MatButtonModule, MatIconModule],
   selector: 'app-daily-task-item',
-  styleUrl: './daily-task-item.component.scss',
-  templateUrl: './daily-task-item.component.html',
+  styleUrl: './daily-task-item.scss',
+  templateUrl: './daily-task-item.html',
 })
-export class DailyTaskItemComponent {
+export class DailyTaskItem {
   task = input.required<DailyTask>();
   complete = output<DailyTaskDifficulty>();
 

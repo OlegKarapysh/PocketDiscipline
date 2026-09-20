@@ -3,13 +3,13 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { Subject, of, throwError } from 'rxjs';
-import { DailyScoresPageComponent } from './daily-scores-page.component';
+import { DailyScoresPage } from './daily-scores-page';
 import { DailyScoresService } from '../services/daily-scores.service';
 import type { DailyScore } from '../../../core/models/daily-score.model';
 
-describe('DailyScoresPageComponent', () => {
-  let component: DailyScoresPageComponent;
-  let fixture: ComponentFixture<DailyScoresPageComponent>;
+describe('DailyScoresPage', () => {
+  let component: DailyScoresPage;
+  let fixture: ComponentFixture<DailyScoresPage>;
   let dailyScoresServiceMock: {
     getTodayScore: ReturnType<typeof vi.fn>;
     getCurrentMonthScores: ReturnType<typeof vi.fn>;
@@ -26,13 +26,13 @@ describe('DailyScoresPageComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [DailyScoresPageComponent],
+      imports: [DailyScoresPage],
       providers: [
         { provide: DailyScoresService, useValue: dailyScoresServiceMock },
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(DailyScoresPageComponent);
+    fixture = TestBed.createComponent(DailyScoresPage);
     component = fixture.componentInstance;
   });
 

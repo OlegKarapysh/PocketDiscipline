@@ -2,21 +2,21 @@ import type { ComponentFixture} from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
-import { ScoresStatsComponent } from './scores-stats.component';
+import { ScoresStats } from './scores-stats';
 import type { DailyScore } from '../../../../core/models/daily-score.model';
 
 const DATE_LOCALE_CA = 'en-CA';
 
-describe('ScoresStatsComponent', () => {
-  let component: ScoresStatsComponent;
-  let fixture: ComponentFixture<ScoresStatsComponent>;
+describe('ScoresStats', () => {
+  let component: ScoresStats;
+  let fixture: ComponentFixture<ScoresStats>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ScoresStatsComponent],
+      imports: [ScoresStats],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ScoresStatsComponent);
+    fixture = TestBed.createComponent(ScoresStats);
     component = fixture.componentInstance;
   });
 

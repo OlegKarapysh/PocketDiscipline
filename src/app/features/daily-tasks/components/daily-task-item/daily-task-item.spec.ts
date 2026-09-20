@@ -2,7 +2,7 @@ import type { ComponentFixture} from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
-import { DailyTaskItemComponent } from './daily-task-item.component';
+import { DailyTaskItem } from './daily-task-item';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
 
@@ -12,16 +12,16 @@ const HARD_DIFFICULTY: DailyTaskDifficulty = { id: 'hard', name: 'Hard', baseRew
 const STREAK_FOUR = 4;
 const ONE_DAY_MS = 86_400_000;
 
-describe('DailyTaskItemComponent', () => {
-  let component: DailyTaskItemComponent;
-  let fixture: ComponentFixture<DailyTaskItemComponent>;
+describe('DailyTaskItem', () => {
+  let component: DailyTaskItem;
+  let fixture: ComponentFixture<DailyTaskItem>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DailyTaskItemComponent],
+      imports: [DailyTaskItem],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(DailyTaskItemComponent);
+    fixture = TestBed.createComponent(DailyTaskItem);
     component = fixture.componentInstance;
   });
 

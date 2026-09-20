@@ -3,13 +3,13 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { SpendingAnalyticsComponent } from './spending-analytics';
+import { SpendingAnalytics } from './spending-analytics';
 import { SpendingAnalyticsService } from '../../services/spending-analytics.service';
 import type { SpendingAnalyticsSummary } from '../../models/spending-analytics.model';
 
-describe('SpendingAnalyticsComponent', () => {
-  let component: SpendingAnalyticsComponent;
-  let fixture: ComponentFixture<SpendingAnalyticsComponent>;
+describe('SpendingAnalytics', () => {
+  let component: SpendingAnalytics;
+  let fixture: ComponentFixture<SpendingAnalytics>;
 
   let mockSummaryWithData: SpendingAnalyticsSummary;
   let mockEmptySummary: SpendingAnalyticsSummary;
@@ -62,13 +62,13 @@ describe('SpendingAnalyticsComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [SpendingAnalyticsComponent],
+      imports: [SpendingAnalytics],
       providers: [
         { provide: SpendingAnalyticsService, useValue: mockAnalyticsService },
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(SpendingAnalyticsComponent);
+    fixture = TestBed.createComponent(SpendingAnalytics);
     component = fixture.componentInstance;
   });
 

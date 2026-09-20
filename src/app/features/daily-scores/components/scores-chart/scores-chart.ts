@@ -11,10 +11,10 @@ const WEEKDAY_FORMAT = 'short';
 @Component({
   selector: 'app-scores-chart',
   imports: [MatCardModule],
-  templateUrl: './scores-chart.component.html',
-  styleUrl: './scores-chart.component.scss',
+  templateUrl: './scores-chart.html',
+  styleUrl: './scores-chart.scss',
 })
-export class ScoresChartComponent {
+export class ScoresChart {
   readonly scores = input<DailyScore[]>([]);
   
   readonly chartData = computed<ChartDayData[]>(() => {

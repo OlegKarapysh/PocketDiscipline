@@ -6,7 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import type { Observable} from 'rxjs';
 import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
-import { QuickSpendDialogComponent } from './quick-spend-dialog';
+import { QuickSpendDialog } from './quick-spend-dialog';
 import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
 import { UserService } from '../../../../core/services/user.service';
@@ -14,9 +14,9 @@ import type { User } from '../../../../core/models/user.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import type { WithdrawalRecord } from '../../../../core/models/withdrawal.model';
 
-describe('QuickSpendDialogComponent', () => {
-  let component: QuickSpendDialogComponent;
-  let fixture: ComponentFixture<QuickSpendDialogComponent>;
+describe('QuickSpendDialog', () => {
+  let component: QuickSpendDialog;
+  let fixture: ComponentFixture<QuickSpendDialog>;
 
   let mockDialogRef: { close: ReturnType<typeof vi.fn> };
   let mockWithdrawalService: { withdraw: ReturnType<typeof vi.fn> };
@@ -51,7 +51,7 @@ describe('QuickSpendDialogComponent', () => {
     mockSnackBar = { open: vi.fn() };
 
     await TestBed.configureTestingModule({
-      imports: [QuickSpendDialogComponent],
+      imports: [QuickSpendDialog],
       providers: [
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: WithdrawalService, useValue: mockWithdrawalService },
@@ -61,7 +61,7 @@ describe('QuickSpendDialogComponent', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(QuickSpendDialogComponent);
+    fixture = TestBed.createComponent(QuickSpendDialog);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

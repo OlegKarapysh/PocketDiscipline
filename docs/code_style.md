@@ -10,8 +10,10 @@ server's `get_best_practices`. **Do not change a version-dependent rule from mem
 against `node_modules/@angular/` or the MCP server first.
 
 Each rule below carries a real anti-example from this repository. Those anti-examples are the
-backlog: the convention is settled, the sweeps that make the code match it mostly are not. **Rule 8
-(layering) is the exception — it has been swept and is now enforced as an error.**
+backlog: the convention is settled, the sweeps that make the code match it mostly are not.
+**Rules 1 (naming) and 8 (layering) are the exceptions — both have been swept, and rule 8 is
+enforced as an error.** A swept rule carries a "Status: swept" block recording what was wrong
+instead of a live anti-example.
 
 ---
 
@@ -64,25 +66,38 @@ Also standing Angular rules: `inject()` over constructor injection, `input()` / 
   `.routes.ts`, as already used.
 - Never invent a suffix that names mechanics. Find the precedent in the repo first.
 
-**Anti-example.** Ten component file-triples still use the old extension, and 25 of the 38 component
-classes still carry the suffix:
+**Status: swept.** The tree is uniform; what follows is the record of what was wrong, so the shape
+is recognisable if it recurs.
+
+**What it looked like.** Ten component file-quadruples still used the old extension, and 25 of the
+38 component classes still carried the suffix:
 
 ```
 src/app/features/daily-tasks/components/daily-task-form/daily-task-form.component.ts
   -> export class DailyTaskFormComponent
 ```
 
-The repo is currently split. `features/goals/`, `features/pomodoro/`, `features/settings/` and
-`features/tasks/pages/` already follow the convention; `features/daily-scores/`,
-`features/daily-tasks/`, `features/dashboard/`, `features/rewards/` and `shared/` do not. Some
-directories are mixed: `features/dashboard/components/balance-widget/balance-widget.ts` has the new
-filename but still declares `BalanceWidgetComponent`.
+The repo was split. `features/goals/`, `features/pomodoro/`, `features/settings/` and
+`features/tasks/pages/` already followed the convention; `features/daily-scores/`,
+`features/daily-tasks/`, `features/dashboard/`, `features/rewards/` and `shared/` did not. Some
+directories were mixed: `features/dashboard/components/balance-widget/balance-widget.ts` had the new
+filename but still declared `BalanceWidgetComponent`.
+
+**How it was fixed.** 40 files renamed (`.component.ts` / `.html` / `.scss` / `.spec.ts` -> the bare
+name) and all 25 classes stripped of the suffix, 264 references rewritten across 58 files.
+Selectors were **not** touched — they stay `app-*`, which is what
+`@angular-eslint/component-selector` enforces. Watch the `MatDialog` generics when renaming a dialog:
+`dialog.open<ConfirmDialog, Data, Result>(...)` names the class in a type position at several call
+sites, where a missed rename is a type error rather than a runtime one.
 
 **Do this instead.** `src/app/features/goals/components/goal-list/goal-list.ts` is the exemplar for
 the whole convention.
 
-**Why.** The split is the actual cost. Neither name is wrong on its own, but you cannot guess a
-file's name from a class name or the reverse, so every import is a lookup.
+**Why.** The split was the actual cost. Neither name is wrong on its own, but you could not guess a
+file's name from a class name or the reverse, so every import was a lookup.
+
+**Not lint-enforced.** `@angular-eslint` has no rule for the file-name half of this, so it is a
+review item. Keep it uniform.
 
 ---
 
@@ -105,7 +120,7 @@ startDate = '';
 endDate = '';
 ```
 
-`src/app/features/daily-tasks/components/daily-task-form/daily-task-form.component.ts:29-30` is the
+`src/app/features/daily-tasks/components/daily-task-form/daily-task-form.ts:29-30` is the
 worse case, because the array is mutated in place by `addDifficulty()` (line 33, `.push`) and
 `removeDifficulty()` (line 42, `.splice`):
 
@@ -164,7 +179,7 @@ already tears the stream down on destroy. The only thing the manual `unsubscribe
 actually does is cancel the *previous* filter query when filters change — which is `switchMap`, not
 teardown.
 
-Three other files store a `Subscription`: `daily-scores-page.component.ts:27`,
+Three other files store a `Subscription`: `daily-scores-page.ts:27`,
 `spending-analytics.ts:23`, `quick-spend-event.service.ts:16`.
 
 **Do this instead.** Drive the query from the filter signals and let one operator own cancellation:
@@ -230,9 +245,9 @@ readonly rewardForm = form(this.model, (path) => {
 <input matInput [formField]="rewardForm.title" />
 ```
 
-**Why.** The split is 5 reactive (`earnings-filter.component.ts`, `goal-form-dialog.ts`,
+**Why.** The split is 5 reactive (`earnings-filter.ts`, `goal-form-dialog.ts`,
 `category-form-dialog.ts`, `quick-spend-dialog.ts`, `reward-form-dialog.ts`) against 4
-template-driven (`daily-task-form.component.ts`, `session-config.ts`, `reward-store.ts`,
+template-driven (`daily-task-form.ts`, `session-config.ts`, `reward-store.ts`,
 `withdrawal-ledger.ts`) — no form in the app is a model for any other. Picking reactive forms as the
 target would mean converting four components to an API the framework has already superseded, then
 converting all nine again later. Signal forms also collapse two other rules at once: form state
@@ -257,8 +272,8 @@ is used once in one file; or it is mock data in a spec.
 **Anti-examples.** All four of these are live:
 
 ```ts
-const ZERO_VALUE = 0;     // earnings-chart.component.ts:19
-const DIVISOR_TWO = 2;    // earnings-chart.component.ts:24
+const ZERO_VALUE = 0;     // earnings-chart.ts:19
+const DIVISOR_TWO = 2;    // earnings-chart.ts:24
 ```
 
 `if (recs.length === ZERO_VALUE)` is strictly harder to read than `if (recs.length === 0)`, and

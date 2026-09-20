@@ -62,7 +62,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   templateUrl: './layout.html',
   styleUrl: './layout.scss',
 })
-export class LayoutComponent {
+export class Layout {
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);

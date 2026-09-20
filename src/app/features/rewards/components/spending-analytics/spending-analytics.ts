@@ -8,16 +8,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { SpendingAnalyticsService } from '../../services/spending-analytics.service';
 import type { AnalyticsPeriod } from '../../models/analytics-period.type';
 import type { SpendingAnalyticsSummary } from '../../models/spending-analytics.model';
-import { SpendingDonutChartComponent } from '../spending-donut-chart/spending-donut-chart';
-import { SpendingTrendChartComponent } from '../spending-trend-chart/spending-trend-chart';
+import { SpendingDonutChart } from '../spending-donut-chart/spending-donut-chart';
+import { SpendingTrendChart } from '../spending-trend-chart/spending-trend-chart';
 
 @Component({
   selector: 'app-spending-analytics',
   templateUrl: './spending-analytics.html',
   styleUrl: './spending-analytics.scss',
-  imports: [MatButtonToggleModule, MatIconModule, SpendingDonutChartComponent, SpendingTrendChartComponent],
+  imports: [MatButtonToggleModule, MatIconModule, SpendingDonutChart, SpendingTrendChart],
 })
-export class SpendingAnalyticsComponent implements OnInit, OnDestroy {
+export class SpendingAnalytics implements OnInit, OnDestroy {
   private readonly analyticsService = inject(SpendingAnalyticsService);
   private readonly destroyRef = inject(DestroyRef);
   private analyticsSub?: Subscription;
