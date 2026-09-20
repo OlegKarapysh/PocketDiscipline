@@ -1,16 +1,22 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it, beforeEach, vi } from 'vitest';
-import Dexie from 'dexie';
 import { DbService } from './db.service';
-import { EngagementType } from '../core/models/engagement-type.enum';
-import { PomodoroSessionStatus } from '../core/models/pomodoro-session-status.enum';
+import { LegacyPomodoroMigrationService } from './legacy-pomodoro-migration.service';
+import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../core/models/user.model';
+import type { User } from '../core/models/user.model';
 
 describe('DbService', () => {
   let service: DbService;
+  let migrationMock: { migrate: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
+    migrationMock = { migrate: vi.fn().mockResolvedValue(undefined) };
+
     TestBed.configureTestingModule({
-      providers: [DbService],
+      providers: [
+        DbService,
+        { provide: LegacyPomodoroMigrationService, useValue: migrationMock },
+      ],
     });
     service = TestBed.inject(DbService);
   });
@@ -34,58 +40,49 @@ describe('DbService', () => {
     expect(service.rewardCategories).toBeDefined();
   });
 
-  it('should validate valid PomodoroSession objects in isValidPomodoroSession', () => {
-    const validSession = {
-      id: 'session-123',
-      durationMinutes: 25,
-      engagementType: EngagementType.WORK,
-      startTime: Date.now(),
-      status: PomodoroSessionStatus.COMPLETED,
+  it('should declare the schema up to version 8', () => {
+    expect(service.verno).toBe(8);
+  });
+
+  describe('on ready', () => {
+    const existingUser: User = {
+      id: CURRENT_USER_ID,
+      name: CURRENT_USER_NAME,
+      balance: DEFAULT_INITIAL_BALANCE,
+      createdAt: 0,
+      updatedAt: 0,
     };
 
-    expect(service.isValidPomodoroSession(validSession)).toBe(true);
-  });
+    it('should hand the pomodoro sessions table to the legacy migration', async () => {
+      vi.spyOn(service.users, 'get').mockResolvedValue(existingUser);
 
-  it('should reject invalid PomodoroSession objects in isValidPomodoroSession', () => {
-    expect(service.isValidPomodoroSession(null)).toBe(false);
-    expect(service.isValidPomodoroSession(undefined)).toBe(false);
-    expect(service.isValidPomodoroSession({})).toBe(false);
-    expect(service.isValidPomodoroSession({ id: '', durationMinutes: 25, startTime: 1000, status: 'active' })).toBe(false);
-    expect(service.isValidPomodoroSession({ id: 's-1', durationMinutes: '25', startTime: 1000, status: 'active' })).toBe(false);
-    expect(service.isValidPomodoroSession({ id: 's-1', durationMinutes: 25, startTime: '1000', status: 'active' })).toBe(false);
-  });
+      await service.on.ready.fire(service);
 
-  it('should return predefined initial goals with valid structures', () => {
-    const initialGoals = service.getInitialGoals();
-
-    expect(initialGoals).toHaveLength(3);
-    expect(initialGoals[0].title).toBe('do 50 push-ups on fists');
-    expect(initialGoals[1].title).toBe('do 100 squats');
-    expect(initialGoals[2].title).toBe('do 12 pomodoro a day');
-  });
-
-  describe('migrateLegacyPomodoroDatabase', () => {
-    it('should skip migration when legacy database does not exist', async () => {
-      vi.spyOn(Dexie, 'exists').mockResolvedValue(false);
-      const deleteSpy = vi.spyOn(Dexie, 'delete');
-
-      await service.migrateLegacyPomodoroDatabase();
-
-      expect(deleteSpy).not.toHaveBeenCalled();
+      expect(migrationMock.migrate).toHaveBeenCalledWith(service.pomodoroSessions);
     });
 
-    it('should catch error and log error when migration fails', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
-        // suppress expected console error in test
-      });
-      vi.spyOn(Dexie, 'exists').mockRejectedValue(new Error('IndexedDB failure'));
+    it('should seed the single user when the table is empty', async () => {
+      vi.spyOn(service.users, 'get').mockResolvedValue(undefined);
+      const addSpy = vi.spyOn(service.users, 'add').mockResolvedValue(CURRENT_USER_ID);
 
-      await service.migrateLegacyPomodoroDatabase();
+      await service.on.ready.fire(service);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to migrate legacy Pomodoro database:',
-        expect.any(Error)
+      expect(addSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: CURRENT_USER_ID,
+          name: CURRENT_USER_NAME,
+          balance: DEFAULT_INITIAL_BALANCE,
+        })
       );
+    });
+
+    it('should not re-seed the user when one already exists', async () => {
+      vi.spyOn(service.users, 'get').mockResolvedValue(existingUser);
+      const addSpy = vi.spyOn(service.users, 'add');
+
+      await service.on.ready.fire(service);
+
+      expect(addSpy).not.toHaveBeenCalled();
     });
   });
 });
