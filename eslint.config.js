@@ -41,6 +41,29 @@ module.exports = defineConfig(
     },
   },
   {
+    files: ['src/app/core/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/features/**'],
+              message:
+                'core/ must not import from features/. Move the shape into core/models/, or invert the dependency through EventBusService. See docs/code_style.md rule 8.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/app/**/*.ts'],
+    rules: {
+      '@typescript-eslint/unbound-method': ['error', { ignoreStatic: true }],
+    },
+  },
+  {
     files: ['**/*.spec.ts'],
     rules: {
       '@typescript-eslint/unbound-method': 'off',
