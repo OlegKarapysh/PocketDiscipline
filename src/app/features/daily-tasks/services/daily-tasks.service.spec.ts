@@ -4,11 +4,13 @@ import { firstValueFrom } from 'rxjs';
 import { DailyTasksService } from './daily-tasks.service';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
-import { DailyTask } from '../models/daily-task.model';
-import { DailyTaskDifficulty } from '../models/daily-task-difficulty.model';
+import type { DailyTask } from '../models/daily-task.model';
+import type { DailyTaskDifficulty } from '../models/daily-task-difficulty.model';
 
 vi.mock('dexie', () => {
-  class MockDexie {}
+  class MockDexie {
+    readonly isMock = true;
+  }
   return {
     default: MockDexie,
     Dexie: MockDexie,
@@ -21,7 +23,7 @@ vi.mock('dexie', () => {
                 subscriber.next(val);
                 subscriber.complete();
               },
-              (err) => subscriber.error(err)
+              (err: unknown) => { subscriber.error(err); }
             );
             return {
               unsubscribe() {
@@ -128,7 +130,7 @@ describe('DailyTasksService', () => {
       expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
     });
 
-    it('should reset broken streak to 0 and persist to DB when task was missed for more than 1 day', async () => {
+    it('should reset broken streak to 0 in stream when task was missed for more than 1 day', async () => {
       const staleTask: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
@@ -142,6 +144,22 @@ describe('DailyTasksService', () => {
       const tasks = await firstValueFrom(service.tasks$);
 
       expect(tasks[0].streak).toBe(0);
+      expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
+    });
+
+    it('should persist broken streak reset to DB via resetBrokenStreaks', async () => {
+      const staleTask: DailyTask = {
+        id: 'test-daily-task-1',
+        title: 'Morning Workout',
+        difficulties: [EASY_DIFFICULTY],
+        createdAt: Date.now() - (10 * ONE_DAY_MS),
+        streak: 5,
+        lastCompletedAt: Date.now() - TWO_DAYS_MS,
+      };
+      dbMock.dailyTasks.toArray.mockResolvedValue([staleTask]);
+
+      await service.resetBrokenStreaks();
+
       expect(dbMock.dailyTasks.update).toHaveBeenCalledWith('test-daily-task-1', { streak: 0 });
     });
 

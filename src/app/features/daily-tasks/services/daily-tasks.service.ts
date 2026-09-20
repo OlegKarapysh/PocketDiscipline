@@ -1,10 +1,11 @@
 import { Service, inject } from '@angular/core';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
-import { DailyTask } from '../models/daily-task.model';
-import { DailyTaskDifficulty } from '../models/daily-task-difficulty.model';
+import type { DailyTask } from '../models/daily-task.model';
+import type { DailyTaskDifficulty } from '../models/daily-task-difficulty.model';
 import { liveQuery } from 'dexie';
-import { Observable, from } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { from } from 'rxjs';
 
 const MILLISECONDS_IN_DAY = 86_400_000;
 const INITIAL_STREAK = 0;
@@ -41,31 +42,43 @@ export class DailyTasksService {
       const tasks = await this.db.dailyTasks.toArray();
       const now = Date.now();
 
-      const updatedTasks: DailyTask[] = [];
-      for (const task of tasks) {
+      return tasks.map((task) => {
         let currentStreak = task.streak;
-        let needsUpdate = false;
-
         if (task.lastCompletedAt) {
           const diffDays = this.getDiffDays(now, task.lastCompletedAt);
           if (diffDays > DAYS_THRESHOLD_CONSECUTIVE && currentStreak > INITIAL_STREAK) {
             currentStreak = INITIAL_STREAK;
-            needsUpdate = true;
           }
         }
-
-        if (needsUpdate) {
-          await this.db.dailyTasks.update(task.id, { streak: currentStreak });
-          task.streak = currentStreak;
-        }
-        updatedTasks.push(task);
-      }
-      return updatedTasks;
+        return {
+          ...task,
+          streak: currentStreak,
+        };
+      });
     })
   );
 
   get tasks$(): Observable<DailyTask[]> {
     return this._tasks$;
+  }
+
+  async resetBrokenStreaks(): Promise<void> {
+    const tasks = await this.db.dailyTasks.toArray();
+    const now = Date.now();
+    const staleTasks = tasks.filter(
+      (task) =>
+        task.lastCompletedAt &&
+        this.getDiffDays(now, task.lastCompletedAt) > DAYS_THRESHOLD_CONSECUTIVE &&
+        task.streak > INITIAL_STREAK
+    );
+
+    if (staleTasks.length > 0) {
+      await this.db.transaction(TRANSACTION_READ_WRITE, this.db.dailyTasks, async () => {
+        for (const task of staleTasks) {
+          await this.db.dailyTasks.update(task.id, { streak: INITIAL_STREAK });
+        }
+      });
+    }
   }
 
   async createTask(title: string, difficulties: DailyTaskDifficulty[]): Promise<void> {
@@ -75,13 +88,13 @@ export class DailyTasksService {
       difficulties,
       createdAt: Date.now(),
       streak: INITIAL_STREAK,
-      lastCompletedAt: null
+      lastCompletedAt: null,
     };
     await this.db.dailyTasks.add(newTask);
   }
 
   async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
-    if (!difficulty || !Number.isFinite(difficulty.baseReward) || difficulty.baseReward <= MIN_BASE_REWARD) {
+    if (!Number.isFinite(difficulty.baseReward) || difficulty.baseReward <= MIN_BASE_REWARD) {
       return;
     }
 
@@ -94,7 +107,7 @@ export class DailyTasksService {
       this.db.users,
       this.db.dailyTaskCompletions,
       async () => {
-        const freshTask = (await this.db.dailyTasks?.get?.(task.id)) ?? task;
+        const freshTask = (await this.db.dailyTasks.get(task.id)) ?? task;
 
         let newStreak = freshTask.streak;
         if (freshTask.lastCompletedAt) {
@@ -115,7 +128,7 @@ export class DailyTasksService {
 
         await this.db.dailyTasks.update(freshTask.id, {
           lastCompletedAt: now,
-          streak: newStreak
+          streak: newStreak,
         });
 
         await this.db.dailyTaskCompletions.add({
@@ -124,7 +137,7 @@ export class DailyTasksService {
           date: todayStr,
           difficultyId: difficulty.id,
           rewardEarned: finalReward,
-          completedAt: now
+          completedAt: now,
         });
 
         await this.userService.addBalance(finalReward);

@@ -1,11 +1,13 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
-import { Observable, of } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { of } from 'rxjs';
 import { DailyTaskListComponent } from './daily-task-list.component';
 import { DailyTasksService } from '../../services/daily-tasks.service';
-import { DailyTask } from '../../models/daily-task.model';
-import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
+import type { DailyTask } from '../../models/daily-task.model';
+import type { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 import { DailyTaskItemComponent } from '../daily-task-item/daily-task-item.component';
 import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.component';
 
@@ -19,6 +21,7 @@ describe('DailyTaskListComponent', () => {
     tasks$: Observable<DailyTask[]>;
     createTask: ReturnType<typeof vi.fn>;
     completeTask: ReturnType<typeof vi.fn>;
+    resetBrokenStreaks: ReturnType<typeof vi.fn>;
   };
 
   const mockTasks: DailyTask[] = [
@@ -37,6 +40,7 @@ describe('DailyTaskListComponent', () => {
       tasks$: of(mockTasks),
       createTask: vi.fn().mockResolvedValue(undefined),
       completeTask: vi.fn().mockResolvedValue(undefined),
+      resetBrokenStreaks: vi.fn().mockResolvedValue(undefined),
     };
 
     await TestBed.configureTestingModule({
@@ -48,6 +52,11 @@ describe('DailyTaskListComponent', () => {
 
     fixture = TestBed.createComponent(DailyTaskListComponent);
     component = fixture.componentInstance;
+  });
+
+  it('should call resetBrokenStreaks on initialization', () => {
+    fixture.detectChanges();
+    expect(dailyTasksServiceMock.resetBrokenStreaks).toHaveBeenCalled();
   });
 
   it('should render daily task items from service stream', async () => {
