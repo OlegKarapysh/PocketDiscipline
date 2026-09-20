@@ -125,8 +125,8 @@ describe('SpendingAnalytics', () => {
     expect(mockAnalyticsService.getAnalytics).toHaveBeenCalledWith('last30');
   });
 
-  it('should cleanly unsubscribe on component destroy', () => {
+  it('should tear down cleanly when the component is destroyed', () => {
     fixture.detectChanges();
-    expect(() => { component.ngOnDestroy(); }).not.toThrow();
+    expect(() => { fixture.destroy(); }).not.toThrow();
   });
 });

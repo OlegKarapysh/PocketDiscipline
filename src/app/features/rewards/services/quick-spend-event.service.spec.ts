@@ -50,9 +50,10 @@ describe('QuickSpendEventService', () => {
     expect(mockDialog.open).toHaveBeenCalledTimes(1);
   });
 
-  it('should unsubscribe on ngOnDestroy and ignore subsequent events', () => {
+  it('should ignore events once the injector that owns it is destroyed', () => {
     service.initialize();
-    service.ngOnDestroy();
+
+    TestBed.resetTestingModule();
 
     eventBus.emit({ type: 'REQUEST_QUICK_SPEND' });
 

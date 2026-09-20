@@ -11,9 +11,10 @@ against `node_modules/@angular/` or the MCP server first.
 
 Each rule below carries a real anti-example from this repository. Those anti-examples are the
 backlog: the convention is settled, the sweeps that make the code match it mostly are not.
-**Rules 1 (naming) and 8 (layering) are the exceptions — both have been swept, and rule 8 is
-enforced as an error.** A swept rule carries a "Status: swept" block recording what was wrong
-instead of a live anti-example.
+**Rules 1 (naming), 2 (component state), 3 (teardown) and 8 (layering) have been swept**; rule 8
+is additionally enforced as an error. A swept rule carries a "Status: swept" block recording what
+was wrong instead of a live anti-example. Rules 4 (forms), 5 (constants), 6 (SCSS) and 7 (template
+bindings) are still open.
 
 ---
 
@@ -47,7 +48,7 @@ agent that "restores" them is working from a pre-v22 memory:
 | `changeDetection: ChangeDetectionStrategy.OnPush` | `OnPush` is the default in v22. `@angular-eslint/prefer-on-push-component-change-detection` is obsolete here and is deliberately **not** enabled. |
 | `standalone: true` | Default since v20. |
 | `provideZonelessChangeDetection()` | Zoneless is the default; `zone.js` is not installed. |
-| `@Injectable({ providedIn: 'root' })` | Use `@Service()` for singleton services (v22+). 19 services already do; `features/rewards/services/quick-spend-event.service.ts:11` is the last holdout. |
+| `@Injectable({ providedIn: 'root' })` | Use `@Service()` for singleton services (v22+). All 20 services do; there are no holdouts left. |
 
 Also standing Angular rules: `inject()` over constructor injection, `input()` / `output()` /
 `model()` over decorators, native control flow (`@if` / `@for` / `@switch`), the `host` object over
@@ -108,26 +109,34 @@ review item. Keep it uniform.
 `computed()`, never a field kept in sync by hand. Never mutate a signal's value in place — use
 `set()` / `update()` with a new value.
 
-**Anti-example.** `src/app/features/rewards/components/withdrawal-ledger/withdrawal-ledger.ts:48-51`
-holds four plain fields next to three properly declared signals, and binds all four with
-`[(ngModel)]`:
+**Status: swept.** No `[(ngModel)]` two-way binding to a plain field remains anywhere in the app.
+
+**What it looked like.** `withdrawal-ledger.ts` held four plain fields next to three properly
+declared signals, and bound all four with `[(ngModel)]`:
 
 ```ts
 readonly withdrawals = signal<WithdrawalRecord[]>([]);   // correct
-searchQuery = '';                                        // lines 48-51: not signals
+searchQuery = '';                                        // not signals
 selectedCategoryId = '';
 startDate = '';
 endDate = '';
 ```
 
-`src/app/features/daily-tasks/components/daily-task-form/daily-task-form.ts:29-30` is the
-worse case, because the array is mutated in place by `addDifficulty()` (line 33, `.push`) and
-`removeDifficulty()` (line 42, `.splice`):
+`daily-task-form.ts` was the worse case, because the array was mutated in place by
+`addDifficulty()` (`.push`) and `removeDifficulty()` (`.splice`), and the template additionally
+bound `[(ngModel)]="diff.name"` straight onto array *elements*:
 
 ```ts
 title = '';
 difficulties: DailyTaskDifficulty[] = DEFAULT_DIFFICULTIES.map((d) => ({ ...d }));
 ```
+
+**How it was fixed.** Six fields became signals across the two components. Where a template needs to
+write back, the binding is one-way plus an explicit set — `[ngModel]="title()"` with
+`(ngModelChange)="title.set($event)"` — which is the pattern `reward-store.ts` and
+`session-config.ts` already used. Element-level writes became index-addressed update methods
+(`updateDifficultyName(i, name)`) so the array is replaced rather than mutated, and derived template
+state (`canSubmit`, `canRemoveDifficulty`, `hasActiveFilters`) became `computed()`.
 
 **Do this instead.**
 
@@ -149,9 +158,12 @@ of those mutations into a subscription callback, a `setTimeout`, a promise conti
 `afterClosed()` and the field changes with no re-render and no error. Signals remove the dependency
 on where the write came from.
 
-**Scope note.** `session-config.ts` and `reward-store.ts` also import `FormsModule`, but they bind
-one-way to signals (`[ngModel]="duration()"` plus `(ngModelChange)="..."`), which is fine under this
-rule. The rule-2 sweep is two components and six fields.
+**Scope note.** `session-config.ts` and `reward-store.ts` were already binding one-way to signals
+(`[ngModel]="duration()"` plus `(ngModelChange)="..."`), which is fine under this rule, and they set
+the pattern the sweep then applied to the other two. Importing `FormsModule` is not itself a rule-2
+violation — binding `[(ngModel)]` to a plain field is. Those four components remain the
+[rule 4](#4-forms) backlog for a separate reason: they are template-driven and the target is signal
+forms.
 
 ---
 
@@ -167,20 +179,39 @@ rule. The rule-2 sweep is two components and six fields.
 An `ngOnDestroy` is legitimate only when it releases something Angular does not own — an interval, a
 `Notification` handle, an `AbortController`.
 
-**Anti-example.** `withdrawal-ledger.ts` stacks all three styles in one file:
+**Status: swept.** No `Subscription` is stored in a field anywhere, and there is not a single
+`.unsubscribe()` call left in `src/`. One `ngOnDestroy` remains, in
+`pomodoro/services/pomodoro-timer.service.ts`, and it is the legitimate kind: it clears an interval
+and removes a `document` listener, neither of which Angular owns.
 
-- line 53 — `private withdrawalsSub?: Subscription;`
-- lines 58, 94, 151 — `takeUntilDestroyed(this.destroyRef)` on the same and neighbouring streams
-- lines 88-90 and 106-111 — manual `unsubscribe()` in `loadWithdrawals()`, and again in a
-  teardown-only `ngOnDestroy()`
+**What it looked like.** `withdrawal-ledger.ts` stacked all three styles in one file:
 
-The `Subscription` field and the `ngOnDestroy` are both dead weight: `takeUntilDestroyed` on line 96
-already tears the stream down on destroy. The only thing the manual `unsubscribe()` on line 89
-actually does is cancel the *previous* filter query when filters change — which is `switchMap`, not
-teardown.
+- `private withdrawalsSub?: Subscription;`
+- `takeUntilDestroyed(this.destroyRef)` on the same and neighbouring streams
+- manual `unsubscribe()` in `loadWithdrawals()`, and again in a teardown-only `ngOnDestroy()`
 
-Three other files store a `Subscription`: `daily-scores-page.ts:27`,
-`spending-analytics.ts:23`, `quick-spend-event.service.ts:16`.
+The `Subscription` field and the `ngOnDestroy` were both dead weight: `takeUntilDestroyed` already
+tore the stream down on destroy. The only thing the manual `unsubscribe()` actually did was cancel
+the *previous* filter query when filters changed — which is `switchMap`, not teardown.
+
+Three other files stored a `Subscription`: `daily-scores-page.ts`, `spending-analytics.ts` and
+`quick-spend-event.service.ts`.
+
+**How it was fixed.** Every stored `Subscription` turned out to be one of two things, and each has a
+proper operator:
+
+- *Cancel the previous query when an input changes* — `withdrawal-ledger` (filters),
+  `spending-analytics` (period) and `daily-scores-page` (reload) all became a source driving
+  `switchMap`, which is what cancellation actually means. `spending-analytics` lost `ngOnInit`,
+  `loadAnalytics` and `ngOnDestroy` outright and is now one `toSignal` over
+  `toObservable(selectedPeriod)`.
+- *Guard against double-subscribing* — `quick-spend-event.service` used
+  `subscription && !subscription.closed` as an idempotence flag. That is a boolean, not a
+  subscription, so it is one now.
+
+Watch for one trap when moving a repeated load onto a single long-lived `switchMap`: an error in the
+inner stream kills the outer one permanently, where the old subscribe-per-call shape happened to
+survive it. The `catchError` belongs *inside* the `switchMap`, on the inner observable.
 
 **Do this instead.** Drive the query from the filter signals and let one operator own cancellation:
 
@@ -194,8 +225,9 @@ readonly withdrawals = toSignal(
 ```
 
 **Why.** Three mechanisms for one concern means every reader has to prove to themselves that the
-stream is torn down once — not zero times, not twice. Repo-wide today: 8 files use `toSignal`, 9 use
-`takeUntilDestroyed`, 4 store a `Subscription`, 4 implement `ngOnDestroy`.
+stream is torn down once — not zero times, not twice. Repo-wide now: 9 files use `toSignal`, 8 use
+`takeUntilDestroyed`, none store a `Subscription`, and one `ngOnDestroy` remains for the
+non-Angular-owned resources described above.
 
 ---
 

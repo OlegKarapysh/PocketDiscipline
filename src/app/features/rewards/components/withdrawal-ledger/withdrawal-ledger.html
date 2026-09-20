@@ -5,8 +5,8 @@
         <mat-label>Search withdrawals</mat-label>
         <input
           matInput
-          [(ngModel)]="searchQuery"
-          (ngModelChange)="onFilterChange()"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event); onFilterChange()"
           placeholder="Search by title or notes..."
         />
         <mat-icon matPrefix>search</mat-icon>
@@ -15,8 +15,8 @@
       <mat-form-field appearance="outline" class="category-field">
         <mat-label>Category</mat-label>
         <mat-select
-          [(ngModel)]="selectedCategoryId"
-          (ngModelChange)="onFilterChange()"
+          [ngModel]="selectedCategoryId()"
+          (ngModelChange)="selectedCategoryId.set($event); onFilterChange()"
         >
           <mat-option value="">All Categories</mat-option>
           @for (category of categories(); track category.id) {
@@ -32,8 +32,8 @@
         <input
           matInput
           type="date"
-          [(ngModel)]="startDate"
-          (ngModelChange)="onFilterChange()"
+          [ngModel]="startDate()"
+          (ngModelChange)="startDate.set($event); onFilterChange()"
         />
       </mat-form-field>
 
@@ -42,8 +42,8 @@
         <input
           matInput
           type="date"
-          [(ngModel)]="endDate"
-          (ngModelChange)="onFilterChange()"
+          [ngModel]="endDate()"
+          (ngModelChange)="endDate.set($event); onFilterChange()"
         />
       </mat-form-field>
 
@@ -51,7 +51,7 @@
         mat-button
         class="clear-button"
         (click)="clearFilters()"
-        [disabled]="!searchQuery && !selectedCategoryId && !startDate && !endDate"
+        [disabled]="!hasActiveFilters()"
       >
         <mat-icon>filter_alt_off</mat-icon>
         Clear

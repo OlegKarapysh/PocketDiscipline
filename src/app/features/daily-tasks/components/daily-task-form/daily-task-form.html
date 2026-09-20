@@ -9,7 +9,8 @@
       <input
         matInput
         type="text"
-        [(ngModel)]="title"
+        [ngModel]="title()"
+        (ngModelChange)="title.set($event)"
         (keydown.enter)="submit()"
         placeholder="e.g. Morning Workout"
       />
@@ -17,23 +18,35 @@
 
     <div class="difficulties-section">
       <h4 class="section-title">Difficulties</h4>
-      @for (diff of difficulties; track diff.id; let i = $index) {
+      @for (diff of difficulties(); track diff.id; let i = $index) {
         <div class="difficulty-row">
           <mat-form-field appearance="outline" subscriptSizing="dynamic" class="diff-name">
             <mat-label>Name</mat-label>
-            <input matInput type="text" [(ngModel)]="diff.name" placeholder="e.g. Easy" />
+            <input
+              matInput
+              type="text"
+              [ngModel]="diff.name"
+              (ngModelChange)="updateDifficultyName(i, $event)"
+              placeholder="e.g. Easy"
+            />
           </mat-form-field>
 
           <mat-form-field appearance="outline" subscriptSizing="dynamic" class="diff-reward">
             <mat-label>Reward</mat-label>
-            <input matInput type="number" [(ngModel)]="diff.baseReward" placeholder="Reward" />
+            <input
+              matInput
+              type="number"
+              [ngModel]="diff.baseReward"
+              (ngModelChange)="updateDifficultyReward(i, $event)"
+              placeholder="Reward"
+            />
           </mat-form-field>
 
           <button
             mat-icon-button
             color="warn"
             (click)="removeDifficulty(i)"
-            [disabled]="difficulties.length === 1"
+            [disabled]="!canRemoveDifficulty()"
             aria-label="Remove difficulty"
             type="button"
           >
@@ -49,7 +62,7 @@
 
   <mat-card-actions align="end" class="actions">
     <button mat-button type="button" (click)="cancelForm.emit()">Cancel</button>
-    <button mat-flat-button color="primary" type="button" [disabled]="!title.trim()" (click)="submit()">
+    <button mat-flat-button color="primary" type="button" [disabled]="!canSubmit()" (click)="submit()">
       Save Task
     </button>
   </mat-card-actions>

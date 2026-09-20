@@ -5,8 +5,7 @@ import { ScoresChart } from '../components/scores-chart/scores-chart';
 import { ScoresStats } from '../components/scores-stats/scores-stats';
 import { DailyScoresService } from '../services/daily-scores.service';
 import type { DailyScore } from '../../../core/models/daily-score.model';
-import type { Subscription} from 'rxjs';
-import { forkJoin } from 'rxjs';
+import { EMPTY, Subject, catchError, forkJoin, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
@@ -24,7 +23,7 @@ const EMPTY_LENGTH = 0;
 export class DailyScoresPage implements OnInit {
   private dailyScoresService = inject(DailyScoresService);
   private destroyRef = inject(DestroyRef);
-  private loadSubscription?: Subscription;
+  private readonly reload = new Subject<void>();
 
   loading = signal<boolean>(true);
   hasScoreToday = signal<boolean>(false);
@@ -35,47 +34,55 @@ export class DailyScoresPage implements OnInit {
   weeklyScores = signal<DailyScore[]>([]);
   latestScore = signal<DailyScore | null>(null);
 
+  constructor() {
+    this.reload
+      .pipe(
+        tap(() => { this.loading.set(true); }),
+        // switchMap, not a stored Subscription: reloading cancels the in-flight load.
+        switchMap(() =>
+          forkJoin({
+            todayScore: this.dailyScoresService.getTodayScore(),
+            monthlyScores: this.dailyScoresService.getCurrentMonthScores(),
+            weeklyScores: this.dailyScoresService.getLast7DaysScores()
+          }).pipe(
+            catchError((e: unknown) => {
+              console.error(e);
+              this.loading.set(false);
+              return EMPTY;
+            })
+          )
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((results) => {
+        if (results.todayScore) {
+          this.hasScoreToday.set(true);
+          this.currentScore.set(results.todayScore.score);
+        } else {
+          this.hasScoreToday.set(false);
+          this.currentScore.set(null);
+        }
+
+        this.monthlyScores.set(results.monthlyScores);
+        this.weeklyScores.set(results.weeklyScores);
+
+        if (results.weeklyScores.length > EMPTY_LENGTH) {
+          const latest = results.weeklyScores.reduce((prev, curr) => (prev.date > curr.date) ? prev : curr);
+          this.latestScore.set(latest);
+        } else {
+          this.latestScore.set(null);
+        }
+
+        this.loading.set(false);
+      });
+  }
+
   ngOnInit() {
     this.loadData();
   }
 
   loadData() {
-    this.loading.set(true);
-
-    this.loadSubscription?.unsubscribe();
-    this.loadSubscription = forkJoin({
-      todayScore: this.dailyScoresService.getTodayScore(),
-      monthlyScores: this.dailyScoresService.getCurrentMonthScores(),
-      weeklyScores: this.dailyScoresService.getLast7DaysScores()
-    })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (results) => {
-          if (results.todayScore) {
-            this.hasScoreToday.set(true);
-            this.currentScore.set(results.todayScore.score);
-          } else {
-            this.hasScoreToday.set(false);
-            this.currentScore.set(null);
-          }
-
-          this.monthlyScores.set(results.monthlyScores);
-          this.weeklyScores.set(results.weeklyScores);
-
-          if (results.weeklyScores.length > EMPTY_LENGTH) {
-            const latest = results.weeklyScores.reduce((prev, curr) => (prev.date > curr.date) ? prev : curr);
-            this.latestScore.set(latest);
-          } else {
-            this.latestScore.set(null);
-          }
-
-          this.loading.set(false);
-        },
-        error: (e) => {
-          console.error(e);
-          this.loading.set(false);
-        }
-      });
+    this.reload.next();
   }
 
   async onScoreSubmit(score: number) {
@@ -96,4 +103,3 @@ export class DailyScoresPage implements OnInit {
     }
   }
 }
-

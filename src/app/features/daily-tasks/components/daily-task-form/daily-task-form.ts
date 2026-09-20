@@ -1,4 +1,4 @@
-import { Component, output } from '@angular/core';
+import { Component, computed, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -26,27 +26,43 @@ export class DailyTaskForm {
   taskCreated = output<{ title: string; difficulties: DailyTaskDifficulty[] }>();
   cancelForm = output();
 
-  title = '';
-  difficulties: DailyTaskDifficulty[] = DEFAULT_DIFFICULTIES.map((d) => ({ ...d }));
+  readonly title = signal('');
+  readonly difficulties = signal<DailyTaskDifficulty[]>(DEFAULT_DIFFICULTIES.map((d) => ({ ...d })));
 
-  addDifficulty() {
-    this.difficulties.push({
-      id: crypto.randomUUID(),
-      name: DEFAULT_NEW_DIFFICULTY_NAME,
-      baseReward: DEFAULT_NEW_DIFFICULTY_REWARD,
-    });
+  readonly canSubmit = computed(() => this.title().trim().length > 0);
+  readonly canRemoveDifficulty = computed(() => this.difficulties().length > MIN_DIFFICULTIES_COUNT);
+
+  addDifficulty(): void {
+    this.difficulties.update((list) => [
+      ...list,
+      {
+        id: crypto.randomUUID(),
+        name: DEFAULT_NEW_DIFFICULTY_NAME,
+        baseReward: DEFAULT_NEW_DIFFICULTY_REWARD,
+      },
+    ]);
   }
 
-  removeDifficulty(index: number) {
-    if (this.difficulties.length > MIN_DIFFICULTIES_COUNT) {
-      this.difficulties.splice(index, 1);
-    }
+  removeDifficulty(index: number): void {
+    this.difficulties.update((list) =>
+      list.length > MIN_DIFFICULTIES_COUNT ? list.filter((_, i) => i !== index) : list
+    );
   }
 
-  submit() {
-    const trimmedTitle = this.title.trim();
-    if (trimmedTitle && this.difficulties.length > 0) {
-      const sanitizedDifficulties = this.difficulties.map((diff) => ({
+  updateDifficultyName(index: number, name: string): void {
+    this.difficulties.update((list) => list.map((d, i) => (i === index ? { ...d, name } : d)));
+  }
+
+  updateDifficultyReward(index: number, baseReward: number): void {
+    this.difficulties.update((list) => list.map((d, i) => (i === index ? { ...d, baseReward } : d)));
+  }
+
+  submit(): void {
+    const trimmedTitle = this.title().trim();
+    const difficulties = this.difficulties();
+
+    if (trimmedTitle && difficulties.length > 0) {
+      const sanitizedDifficulties = difficulties.map((diff) => ({
         ...diff,
         name: diff.name.trim() || DEFAULT_NEW_DIFFICULTY_NAME,
         baseReward: diff.baseReward || DEFAULT_NEW_DIFFICULTY_REWARD,
@@ -55,8 +71,8 @@ export class DailyTaskForm {
         title: trimmedTitle,
         difficulties: sanitizedDifficulties,
       });
-      this.title = '';
-      this.difficulties = DEFAULT_DIFFICULTIES.map((d) => ({ ...d }));
+      this.title.set('');
+      this.difficulties.set(DEFAULT_DIFFICULTIES.map((d) => ({ ...d })));
     }
   }
 }

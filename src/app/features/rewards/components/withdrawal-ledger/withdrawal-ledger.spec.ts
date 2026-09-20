@@ -1,6 +1,6 @@
 import type { ComponentFixture} from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
@@ -136,7 +136,7 @@ describe('WithdrawalLedger', () => {
 
   it('should show empty state when there are no withdrawals', () => {
     mockWithdrawalService.getWithdrawals.mockReturnValue(of([]));
-    component.loadWithdrawals();
+    component.onFilterChange();
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -173,10 +173,10 @@ describe('WithdrawalLedger', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.searchQuery).toBe('');
-    expect(component.selectedCategoryId).toBe('');
-    expect(component.startDate).toBe('');
-    expect(component.endDate).toBe('');
+    expect(component.searchQuery()).toBe('');
+    expect(component.selectedCategoryId()).toBe('');
+    expect(component.startDate()).toBe('');
+    expect(component.endDate()).toBe('');
     expect(mockWithdrawalService.getWithdrawals).toHaveBeenCalledWith({
       searchQuery: undefined,
       categoryId: undefined,
@@ -203,7 +203,7 @@ describe('WithdrawalLedger', () => {
       'Close',
       { duration: 3000 }
     );
-    expect(mockWithdrawalService.getWithdrawals).toHaveBeenCalledTimes(2);
+    expect(mockWithdrawalService.revertWithdrawal).toHaveBeenCalledTimes(1);
   });
 
   it('should not revert withdrawal when dialog is cancelled', async () => {
@@ -239,19 +239,62 @@ describe('WithdrawalLedger', () => {
     );
   });
 
-  it('should cleanly unsubscribe on component destroy', () => {
-    expect(() => { component.ngOnDestroy(); }).not.toThrow();
+  it('should stop querying once the component is destroyed', () => {
+    const pending = new Subject<WithdrawalRecord[]>();
+    mockWithdrawalService.getWithdrawals.mockReturnValue(pending);
+
+    const f = TestBed.createComponent(WithdrawalLedger);
+    f.detectChanges();
+    expect(pending.observed).toBe(true);
+
+    f.destroy();
+    expect(pending.observed).toBe(false);
+  });
+
+  it('should reflect later emissions from the live query without re-querying', () => {
+    const live = new Subject<WithdrawalRecord[]>();
+    mockWithdrawalService.getWithdrawals.mockReturnValue(live);
+    mockWithdrawalService.getWithdrawals.mockClear();
+
+    const f = TestBed.createComponent(WithdrawalLedger);
+    f.detectChanges();
+    const c = f.componentInstance;
+
+    live.next(mockWithdrawals);
+    expect(c.withdrawals().length).toBe(2);
+
+    live.next([mockWithdrawals[0]]);
+    expect(c.withdrawals().length).toBe(1);
+    expect(mockWithdrawalService.getWithdrawals).toHaveBeenCalledTimes(1);
   });
 
   it('should show error snackbar when loading categories fails', () => {
     mockCategoryService.getCategories.mockReturnValue(throwError(() => new Error('Categories DB failure')));
-    component.ngOnInit();
+
+    const f = TestBed.createComponent(WithdrawalLedger);
+    f.detectChanges();
+
     expect(mockSnackBar.open).toHaveBeenCalledWith('Categories DB failure', 'Close', { duration: 3000 });
   });
 
   it('should show error snackbar when loading withdrawals fails', () => {
     mockWithdrawalService.getWithdrawals.mockReturnValue(throwError(() => new Error('Withdrawals DB failure')));
-    component.loadWithdrawals();
+
+    const f = TestBed.createComponent(WithdrawalLedger);
+    f.detectChanges();
+
     expect(mockSnackBar.open).toHaveBeenCalledWith('Withdrawals DB failure', 'Close', { duration: 3000 });
+  });
+
+  it('should keep the current results and warn when the date range is inverted', () => {
+    mockWithdrawalService.getWithdrawals.mockClear();
+    component.startDate.set('2026-09-10');
+    component.endDate.set('2026-09-01');
+
+    component.onFilterChange();
+
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Start date cannot be after end date', 'Close', { duration: 3000 });
+    expect(mockWithdrawalService.getWithdrawals).not.toHaveBeenCalled();
+    expect(component.withdrawals().length).toBe(2);
   });
 });

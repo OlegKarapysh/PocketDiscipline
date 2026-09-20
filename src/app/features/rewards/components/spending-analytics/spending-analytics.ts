@@ -1,7 +1,6 @@
-import type { OnInit, OnDestroy} from '@angular/core';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import type { Subscription } from 'rxjs';
+import { Component, computed, inject, signal } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { switchMap } from 'rxjs';
 
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,26 +10,32 @@ import type { SpendingAnalyticsSummary } from '../../models/spending-analytics.m
 import { SpendingDonutChart } from '../spending-donut-chart/spending-donut-chart';
 import { SpendingTrendChart } from '../spending-trend-chart/spending-trend-chart';
 
+const EMPTY_ANALYTICS: SpendingAnalyticsSummary = {
+  period: 'thisMonth',
+  granularity: 'daily',
+  totalSpent: 0,
+  withdrawalCount: 0,
+  categoryBreakdown: [],
+  spendingTrend: [],
+};
+
 @Component({
   selector: 'app-spending-analytics',
   templateUrl: './spending-analytics.html',
   styleUrl: './spending-analytics.scss',
   imports: [MatButtonToggleModule, MatIconModule, SpendingDonutChart, SpendingTrendChart],
 })
-export class SpendingAnalytics implements OnInit, OnDestroy {
+export class SpendingAnalytics {
   private readonly analyticsService = inject(SpendingAnalyticsService);
-  private readonly destroyRef = inject(DestroyRef);
-  private analyticsSub?: Subscription;
 
   readonly selectedPeriod = signal<AnalyticsPeriod>('thisMonth');
-  readonly analytics = signal<SpendingAnalyticsSummary>({
-    period: 'thisMonth',
-    granularity: 'daily',
-    totalSpent: 0,
-    withdrawalCount: 0,
-    categoryBreakdown: [],
-    spendingTrend: [],
-  });
+
+  readonly analytics = toSignal(
+    toObservable(this.selectedPeriod).pipe(
+      switchMap((period) => this.analyticsService.getAnalytics(period))
+    ),
+    { initialValue: EMPTY_ANALYTICS }
+  );
 
   readonly topCategory = computed(() => {
     const breakdown = this.analytics().categoryBreakdown;
@@ -43,27 +48,7 @@ export class SpendingAnalytics implements OnInit, OnDestroy {
     return Math.round(data.totalSpent / data.withdrawalCount);
   });
 
-  ngOnInit(): void {
-    this.loadAnalytics();
-  }
-
   onPeriodChange(period: AnalyticsPeriod): void {
     this.selectedPeriod.set(period);
-    this.loadAnalytics();
-  }
-
-  loadAnalytics(): void {
-    this.analyticsSub?.unsubscribe();
-    this.analyticsSub = this.analyticsService
-      .getAnalytics(this.selectedPeriod())
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((summary) => {
-        this.analytics.set(summary);
-      });
-  }
-
-  ngOnDestroy(): void {
-    this.analyticsSub?.unsubscribe();
-    this.analyticsSub = undefined;
   }
 }

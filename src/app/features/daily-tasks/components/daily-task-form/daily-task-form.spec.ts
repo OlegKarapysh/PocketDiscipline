@@ -20,27 +20,27 @@ describe('DailyTaskForm', () => {
   });
 
   it('should initialize with default 3 difficulties', () => {
-    expect(component.difficulties.length).toBe(3);
-    expect(component.difficulties[0].name).toBe('Easy');
-    expect(component.difficulties[1].name).toBe('Medium');
-    expect(component.difficulties[2].name).toBe('Hard');
+    expect(component.difficulties().length).toBe(3);
+    expect(component.difficulties()[0].name).toBe('Easy');
+    expect(component.difficulties()[1].name).toBe('Medium');
+    expect(component.difficulties()[2].name).toBe('Hard');
   });
 
   it('should add a new difficulty when addDifficulty is called', () => {
     component.addDifficulty();
-    expect(component.difficulties.length).toBe(4);
+    expect(component.difficulties().length).toBe(4);
   });
 
   it('should remove a difficulty at specified index', () => {
     component.removeDifficulty(1);
-    expect(component.difficulties.length).toBe(2);
-    expect(component.difficulties.some((d) => d.name === 'Medium')).toBe(false);
+    expect(component.difficulties().length).toBe(2);
+    expect(component.difficulties().some((d) => d.name === 'Medium')).toBe(false);
   });
 
   it('should not remove difficulty when only 1 difficulty remains', () => {
-    component.difficulties = [{ id: '1', name: 'Only', baseReward: 100 }];
+    component.difficulties.set([{ id: '1', name: 'Only', baseReward: 100 }]);
     component.removeDifficulty(0);
-    expect(component.difficulties.length).toBe(1);
+    expect(component.difficulties().length).toBe(1);
   });
 
   it('should emit taskCreated and reset title upon submitting valid form', () => {
@@ -52,12 +52,12 @@ describe('DailyTaskForm', () => {
       emittedDifficulties = data.difficulties;
     });
 
-    component.title = 'Read 30 mins';
+    component.title.set('Read 30 mins');
     component.submit();
 
     expect(emittedTitle).toBe('Read 30 mins');
     expect(emittedDifficulties.length).toBe(3);
-    expect(component.title).toBe('');
+    expect(component.title()).toBe('');
   });
 
   it('should not emit taskCreated when title is empty or blank', () => {
@@ -66,7 +66,7 @@ describe('DailyTaskForm', () => {
       emitted = true;
     });
 
-    component.title = '   ';
+    component.title.set('   ');
     component.submit();
 
     expect(emitted).toBe(false);
@@ -92,7 +92,7 @@ describe('DailyTaskForm', () => {
       emittedData = data;
     });
 
-    component.title = 'Evening Reading';
+    component.title.set('Evening Reading');
     fixture.detectChanges();
     await fixture.whenStable();
 

@@ -1,25 +1,25 @@
-import type { OnDestroy} from '@angular/core';
-import { DestroyRef, Injectable, inject } from '@angular/core';
+import { DestroyRef, Service, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import type { Subscription } from 'rxjs';
 import { EventBusService } from '../../../core/services/event-bus.service';
 import { QuickSpendDialog } from '../components/quick-spend-dialog/quick-spend-dialog';
 
 export const QUICK_SPEND_DIALOG_WIDTH = '440px';
 
-@Injectable({ providedIn: 'root' })
-export class QuickSpendEventService implements OnDestroy {
+@Service()
+export class QuickSpendEventService {
   private readonly eventBus = inject(EventBusService);
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
-  private subscription?: Subscription;
+  private initialized = false;
 
   initialize(): void {
-    if (this.subscription && !this.subscription.closed) {
+    if (this.initialized) {
       return;
     }
-    this.subscription = this.eventBus
+    this.initialized = true;
+
+    this.eventBus
       .on('REQUEST_QUICK_SPEND')
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
@@ -27,12 +27,5 @@ export class QuickSpendEventService implements OnDestroy {
           width: QUICK_SPEND_DIALOG_WIDTH,
         });
       });
-  }
-
-  ngOnDestroy(): void {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-      this.subscription = undefined;
-    }
   }
 }
