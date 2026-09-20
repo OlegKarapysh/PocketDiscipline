@@ -2,8 +2,8 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MonthlyEarningsSummary } from '../../models/monthly-earnings-summary.model';
-import { MonthChangeEvent } from '../../models/month-change-event.model';
+import type { MonthlyEarningsSummary } from '../../models/monthly-earnings-summary.model';
+import type { MonthChangeEvent } from '../../models/month-change-event.model';
 
 const MONTH_JANUARY = 1;
 const MONTH_DECEMBER = 12;

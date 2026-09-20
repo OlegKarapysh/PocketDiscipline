@@ -1,9 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { RewardCardComponent } from './reward-card';
-import { RewardItem } from '../../models/reward.model';
-import { RewardCategory } from '../../models/reward-category.model';
+import type { RewardItem } from '../../models/reward.model';
+import type { RewardCategory } from '../../models/reward-category.model';
 
 describe('RewardCardComponent', () => {
   let component: RewardCardComponent;
@@ -49,10 +50,10 @@ describe('RewardCardComponent', () => {
   it('should create and render reward details and category info', () => {
     expect(component).toBeTruthy();
     const titleEl = fixture.debugElement.query(By.css('.card-title')).nativeElement as HTMLElement;
-    expect(titleEl.textContent?.trim()).toBe('Noise-Cancelling Headphones');
+    expect(titleEl.textContent.trim()).toBe('Noise-Cancelling Headphones');
 
     const subtitleEl = fixture.debugElement.query(By.css('.card-subtitle')).nativeElement as HTMLElement;
-    expect(subtitleEl.textContent?.trim()).toBe('Gear & Tech');
+    expect(subtitleEl.textContent.trim()).toBe('Gear & Tech');
   });
 
   it('should calculate 50% progress and display disabled "Need X ₴ more" button when unaffordable', () => {
@@ -61,7 +62,7 @@ describe('RewardCardComponent', () => {
     expect(component.remainingNeeded()).toBe(600);
 
     const progressEl = fixture.debugElement.query(By.css('.progress-text .percentage')).nativeElement as HTMLElement;
-    expect(progressEl.textContent?.trim()).toBe('50%');
+    expect(progressEl.textContent.trim()).toBe('50%');
 
     const needMoreBtn = fixture.debugElement.query(By.css('.need-more-btn')).nativeElement as HTMLButtonElement;
     expect(needMoreBtn).toBeTruthy();
@@ -134,7 +135,7 @@ describe('RewardCardComponent', () => {
     fixture.detectChanges();
 
     const subtitleEl = fixture.debugElement.query(By.css('.card-subtitle')).nativeElement as HTMLElement;
-    expect(subtitleEl.textContent?.trim()).toBe('General');
+    expect(subtitleEl.textContent.trim()).toBe('General');
   });
 
   it('should emit edit and delete outputs when menu actions are clicked in the DOM', async () => {

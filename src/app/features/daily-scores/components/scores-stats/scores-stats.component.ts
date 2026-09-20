@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
-import { DailyScore } from '../../models/daily-score.model';
+import type { DailyScore } from '../../models/daily-score.model';
 
 const DEFAULT_AVERAGE = 0;
 const DEFAULT_STREAK = 0;

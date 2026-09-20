@@ -3,11 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { CategoryService } from './category.service';
 import { DbService } from '../../../core/services/db.service';
-import { RewardCategory } from '../models/reward-category.model';
+import type { RewardCategory } from '../models/reward-category.model';
 import { FALLBACK_CATEGORY_ID } from '../../../core/constants/initial-reward-categories.const';
 
 vi.mock('dexie', () => {
-  class MockDexie {}
+  class MockDexie {
+    version = vi.fn();
+  }
   return {
     default: MockDexie,
     Dexie: MockDexie,
@@ -20,7 +22,7 @@ vi.mock('dexie', () => {
                 subscriber.next(val);
                 subscriber.complete();
               },
-              (err) => subscriber.error(err)
+              (err: unknown) => { subscriber.error(err); }
             );
             return {
               unsubscribe() {

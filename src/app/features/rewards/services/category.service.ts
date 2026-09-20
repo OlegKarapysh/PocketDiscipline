@@ -1,9 +1,10 @@
 import { Service, inject } from '@angular/core';
 import { liveQuery } from 'dexie';
-import { from, Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { from } from 'rxjs';
 import { DbService } from '../../../core/services/db.service';
-import { RewardCategory } from '../models/reward-category.model';
-import { CreateCategoryDto } from '../models/create-category.dto';
+import type { RewardCategory } from '../models/reward-category.model';
+import type { CreateCategoryDto } from '../models/create-category.dto';
 import { FALLBACK_CATEGORY_ID } from '../../../core/constants/initial-reward-categories.const';
 
 const DEFAULT_CATEGORY_COLOR = '#6b7280';

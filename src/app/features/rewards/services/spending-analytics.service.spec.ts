@@ -3,11 +3,13 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { SpendingAnalyticsService } from './spending-analytics.service';
 import { DbService } from '../../../core/services/db.service';
-import { WithdrawalRecord } from '../models/withdrawal.model';
-import { RewardCategory } from '../models/reward-category.model';
+import type { WithdrawalRecord } from '../models/withdrawal.model';
+import type { RewardCategory } from '../models/reward-category.model';
 
 vi.mock('dexie', () => {
-  class MockDexie {}
+  class MockDexie {
+    version = vi.fn();
+  }
   return {
     default: MockDexie,
     Dexie: MockDexie,
@@ -20,7 +22,7 @@ vi.mock('dexie', () => {
                 subscriber.next(val);
                 subscriber.complete();
               },
-              (err) => subscriber.error(err)
+              (err: unknown) => { subscriber.error(err); }
             );
             return {
               unsubscribe() {
@@ -41,6 +43,7 @@ describe('SpendingAnalyticsService', () => {
   let mockDb: {
     withdrawals: {
       toArray: ReturnType<typeof vi.fn>;
+      where: ReturnType<typeof vi.fn>;
     };
     rewardCategories: {
       toArray: ReturnType<typeof vi.fn>;
@@ -69,9 +72,16 @@ describe('SpendingAnalyticsService', () => {
       },
     ];
 
+    const toArrayFn = vi.fn().mockResolvedValue([]);
+    const chain = { toArray: toArrayFn };
     mockDb = {
       withdrawals: {
-        toArray: vi.fn().mockResolvedValue([]),
+        where: vi.fn().mockReturnValue({
+          between: vi.fn().mockReturnValue(chain),
+          aboveOrEqual: vi.fn().mockReturnValue(chain),
+          belowOrEqual: vi.fn().mockReturnValue(chain),
+        }),
+        toArray: toArrayFn,
       },
       rewardCategories: {
         toArray: vi.fn().mockResolvedValue(mockCategories),

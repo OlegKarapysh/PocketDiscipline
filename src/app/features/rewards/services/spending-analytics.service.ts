@@ -1,14 +1,15 @@
 import { Service, inject } from '@angular/core';
 import { liveQuery } from 'dexie';
-import { from, Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { from } from 'rxjs';
 import { DbService } from '../../../core/services/db.service';
-import { AnalyticsPeriod } from '../models/analytics-period.type';
-import { TrendGranularity } from '../models/trend-granularity.type';
-import { SpendingAnalyticsSummary } from '../models/spending-analytics.model';
-import { CategorySpendingBreakdown } from '../models/category-spending-breakdown.model';
-import { SpendingTrendPoint } from '../models/spending-trend-point.model';
-import { WithdrawalRecord } from '../models/withdrawal.model';
-import { RewardCategory } from '../models/reward-category.model';
+import type { AnalyticsPeriod } from '../models/analytics-period.type';
+import type { TrendGranularity } from '../models/trend-granularity.type';
+import type { SpendingAnalyticsSummary } from '../models/spending-analytics.model';
+import type { CategorySpendingBreakdown } from '../models/category-spending-breakdown.model';
+import type { SpendingTrendPoint } from '../models/spending-trend-point.model';
+import type { WithdrawalRecord } from '../models/withdrawal.model';
+import type { RewardCategory } from '../models/reward-category.model';
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const ONE_DAY_MS = 86_400_000;
@@ -52,11 +53,11 @@ export class SpendingAnalyticsService {
         }
 
         let withdrawalsPromise;
-        if (this.db.withdrawals.where && startDate && endDate) {
+        if (startDate && endDate) {
           withdrawalsPromise = this.db.withdrawals.where('date').between(startDate, endDate, true, true).toArray();
-        } else if (this.db.withdrawals.where && startDate) {
+        } else if (startDate) {
           withdrawalsPromise = this.db.withdrawals.where('date').aboveOrEqual(startDate).toArray();
-        } else if (this.db.withdrawals.where && endDate) {
+        } else if (endDate) {
           withdrawalsPromise = this.db.withdrawals.where('date').belowOrEqual(endDate).toArray();
         } else {
           withdrawalsPromise = this.db.withdrawals.toArray();

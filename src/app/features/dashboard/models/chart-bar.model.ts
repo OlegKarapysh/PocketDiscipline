@@ -1,5 +1,5 @@
-import { ChartBarSegment } from './chart-bar-segment.model';
-import { DailyEarningsRecord } from './daily-earnings-record.model';
+import type { ChartBarSegment } from './chart-bar-segment.model';
+import type { DailyEarningsRecord } from './daily-earnings-record.model';
 
 export interface ChartBar {
   date: string;

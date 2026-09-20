@@ -1,11 +1,13 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { GoalsPage } from './goals-page';
 import { GoalService } from '../../services/goal.service';
-import { Goal, GOAL_STATUS } from '../../models/goal.model';
+import type { Goal} from '../../models/goal.model';
+import { GOAL_STATUS } from '../../models/goal.model';
 
 const TEST_GOAL_ID = 'g-1';
 const TEST_GOAL_TITLE = 'do 50 push-ups on fists';

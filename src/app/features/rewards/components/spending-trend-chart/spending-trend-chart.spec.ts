@@ -1,7 +1,8 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SpendingTrendChartComponent } from './spending-trend-chart';
-import { SpendingTrendPoint } from '../../models/spending-trend-point.model';
+import type { SpendingTrendPoint } from '../../models/spending-trend-point.model';
 
 describe('SpendingTrendChartComponent', () => {
   let component: SpendingTrendChartComponent;

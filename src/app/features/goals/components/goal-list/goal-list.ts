@@ -1,8 +1,8 @@
 import { Component, computed, input, output } from '@angular/core';
 
 import { GoalItem } from '../goal-item/goal-item';
-import { Goal } from '../../models/goal.model';
-import { MonthGoalGroup } from '../../models/month-goal-group.model';
+import type { Goal } from '../../models/goal.model';
+import type { MonthGoalGroup } from '../../models/month-goal-group.model';
 
 const LOCALE_DEFAULT = 'default';
 const DATE_FORMAT_MONTH_YEAR: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' };
@@ -31,11 +31,13 @@ export class GoalList {
       if (!goal.completedAt) continue;
       const date = new Date(goal.completedAt);
       const monthYear = date.toLocaleString(LOCALE_DEFAULT, DATE_FORMAT_MONTH_YEAR);
-      if (!map.has(monthYear)) {
-        map.set(monthYear, []);
-        groups.push({ month: monthYear, goals: map.get(monthYear)! });
+      let list = map.get(monthYear);
+      if (!list) {
+        list = [];
+        map.set(monthYear, list);
+        groups.push({ month: monthYear, goals: list });
       }
-      map.get(monthYear)!.push(goal);
+      list.push(goal);
     }
 
     return groups;

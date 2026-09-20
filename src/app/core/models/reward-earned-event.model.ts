@@ -1,4 +1,4 @@
-import { AppEvent } from './app-event.model';
+import type { AppEvent } from './app-event.model';
 
 export const EVENT_TYPE = {
   REWARD_EARNED: 'RewardEarned',

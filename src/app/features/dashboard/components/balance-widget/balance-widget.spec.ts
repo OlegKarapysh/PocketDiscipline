@@ -1,10 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { BehaviorSubject } from 'rxjs';
 import { BalanceWidgetComponent } from './balance-widget';
 import { UserService } from '../../../../core/services/user.service';
-import { User } from '../../../../core/models/user.model';
+import type { User } from '../../../../core/models/user.model';
 import { EventBusService } from '../../../../core/services/event-bus.service';
 
 describe('BalanceWidgetComponent', () => {
@@ -41,7 +42,7 @@ describe('BalanceWidgetComponent', () => {
     await fixture.whenStable();
 
     const amountEl = fixture.debugElement.query(By.css('.amount'));
-    expect((amountEl.nativeElement as HTMLElement).textContent?.trim()).toBe('2,500 ₴');
+    expect((amountEl.nativeElement as HTMLElement).textContent.trim()).toBe('2,500 ₴');
   });
 
   it('should render placeholder "-- ₴" when user is undefined', async () => {
@@ -50,7 +51,7 @@ describe('BalanceWidgetComponent', () => {
     await fixture.whenStable();
 
     const amountEl = fixture.debugElement.query(By.css('.amount'));
-    expect((amountEl.nativeElement as HTMLElement).textContent?.trim()).toBe('-- ₴');
+    expect((amountEl.nativeElement as HTMLElement).textContent.trim()).toBe('-- ₴');
   });
 
   it('should emit REQUEST_QUICK_SPEND event when clicking the Quick Spend button in the DOM', async () => {
@@ -71,7 +72,7 @@ describe('BalanceWidgetComponent', () => {
     await fixture.whenStable();
 
     const amountEl = fixture.debugElement.query(By.css('.amount'));
-    expect((amountEl.nativeElement as HTMLElement).textContent?.trim()).toBe('-- ₴');
+    expect((amountEl.nativeElement as HTMLElement).textContent.trim()).toBe('-- ₴');
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });

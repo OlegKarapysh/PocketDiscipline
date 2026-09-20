@@ -5,7 +5,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
+import type { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 
 const DEFAULT_DIFFICULTIES: DailyTaskDifficulty[] = [
   { id: 'easy', name: 'Easy', baseReward: 100 },
@@ -24,10 +24,10 @@ const MIN_DIFFICULTIES_COUNT = 1;
 })
 export class DailyTaskFormComponent {
   taskCreated = output<{ title: string; difficulties: DailyTaskDifficulty[] }>();
-  cancelForm = output<void>();
+  cancelForm = output();
 
   title = '';
-  difficulties: DailyTaskDifficulty[] = [...DEFAULT_DIFFICULTIES];
+  difficulties: DailyTaskDifficulty[] = DEFAULT_DIFFICULTIES.map((d) => ({ ...d }));
 
   addDifficulty() {
     this.difficulties.push({
@@ -44,12 +44,19 @@ export class DailyTaskFormComponent {
   }
 
   submit() {
-    if (this.title.trim() && this.difficulties.length > 0) {
+    const trimmedTitle = this.title.trim();
+    if (trimmedTitle && this.difficulties.length > 0) {
+      const sanitizedDifficulties = this.difficulties.map((diff) => ({
+        ...diff,
+        name: diff.name.trim() || DEFAULT_NEW_DIFFICULTY_NAME,
+        baseReward: diff.baseReward || DEFAULT_NEW_DIFFICULTY_REWARD,
+      }));
       this.taskCreated.emit({
-        title: this.title.trim(),
-        difficulties: [...this.difficulties],
+        title: trimmedTitle,
+        difficulties: sanitizedDifficulties,
       });
       this.title = '';
+      this.difficulties = DEFAULT_DIFFICULTIES.map((d) => ({ ...d }));
     }
   }
 }

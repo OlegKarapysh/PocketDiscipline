@@ -1,7 +1,8 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EarningsStatsComponent } from './earnings-stats.component';
-import { MonthlyEarningsSummary } from '../../models/monthly-earnings-summary.model';
+import type { MonthlyEarningsSummary } from '../../models/monthly-earnings-summary.model';
 
 describe('EarningsStatsComponent', () => {
   let component: EarningsStatsComponent;

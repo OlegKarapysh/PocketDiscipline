@@ -1,9 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CategoryFormDialogComponent } from './category-form-dialog';
-import { RewardCategory } from '../../models/reward-category.model';
+import type { RewardCategory } from '../../models/reward-category.model';
 
 describe('CategoryFormDialogComponent', () => {
   let component: CategoryFormDialogComponent;
@@ -53,7 +54,7 @@ describe('CategoryFormDialogComponent', () => {
 
     const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(true);
-    expect(submitBtn.textContent?.trim()).toBe('Create Category');
+    expect(submitBtn.textContent.trim()).toBe('Create Category');
   });
 
   it('should initialize with existing category data and enabled submit button in edit mode', async () => {
@@ -68,7 +69,7 @@ describe('CategoryFormDialogComponent', () => {
 
     const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(false);
-    expect(submitBtn.textContent?.trim()).toBe('Save Changes');
+    expect(submitBtn.textContent.trim()).toBe('Save Changes');
   });
 
   it('should select color and icon via DOM clicks and submit form when clicking submit button', async () => {

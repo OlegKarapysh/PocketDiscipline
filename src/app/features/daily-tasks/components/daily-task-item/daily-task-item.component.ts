@@ -2,8 +2,8 @@ import { Component, input, output, computed } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { DailyTask } from '../../models/daily-task.model';
-import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
+import type { DailyTask } from '../../models/daily-task.model';
+import type { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 
 const MIDNIGHT_HOUR = 0;
 const MIDNIGHT_MINUTE = 0;

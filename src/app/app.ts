@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import type { OnInit} from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { LayoutComponent } from './shared/components/layout/layout';
 import { NotificationService } from './core/services/notification.service';
 import { QuickSpendEventService } from './features/rewards/services/quick-spend-event.service';

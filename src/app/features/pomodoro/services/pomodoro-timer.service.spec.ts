@@ -1,12 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MatDialog } from '@angular/material/dialog';
-import { PomodoroTimerService, TimerConfig } from './pomodoro-timer.service';
+import type { TimerConfig } from './pomodoro-timer.service';
+import { PomodoroTimerService } from './pomodoro-timer.service';
 import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
 import { EngagementType } from '../models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../models/pomodoro-session-status.enum';
-import { PomodoroSession } from '../models/pomodoro-session.model';
+import type { PomodoroSession } from '../models/pomodoro-session.model';
 
 const DEFAULT_DURATION = 25;
 const CUSTOM_DURATION = 50;

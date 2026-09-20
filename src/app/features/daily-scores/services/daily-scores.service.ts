@@ -1,7 +1,8 @@
 import { Service, inject } from '@angular/core';
 import { DbService } from '../../../core/services/db.service';
-import { DailyScore } from '../models/daily-score.model';
-import { Observable, from } from 'rxjs';
+import type { DailyScore } from '../models/daily-score.model';
+import type { Observable} from 'rxjs';
+import { from } from 'rxjs';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
 
 const REWARD_PERFECT = 500;

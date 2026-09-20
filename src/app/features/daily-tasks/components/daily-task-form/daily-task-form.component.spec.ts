@@ -1,8 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { DailyTaskFormComponent } from './daily-task-form.component';
-import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
+import type { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 
 describe('DailyTaskFormComponent', () => {
   let component: DailyTaskFormComponent;
@@ -78,7 +79,7 @@ describe('DailyTaskFormComponent', () => {
     });
 
     const cancelBtn = fixture.debugElement.query(By.css('button[mat-button]'));
-    expect((cancelBtn.nativeElement as HTMLElement).textContent?.trim()).toBe('Cancel');
+    expect((cancelBtn.nativeElement as HTMLElement).textContent.trim()).toBe('Cancel');
 
     (cancelBtn.nativeElement as HTMLElement).click();
 

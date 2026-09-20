@@ -6,7 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { UserService } from '../../../../core/services/user.service';
-import { User } from '../../../../core/models/user.model';
+import type { User } from '../../../../core/models/user.model';
 import { EventBusService } from '../../../../core/services/event-bus.service';
 
 @Component({

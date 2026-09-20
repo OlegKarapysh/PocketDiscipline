@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { EventBusService, EVENT_TYPE, RewardEarnedEvent } from './event-bus.service';
+import type { RewardEarnedEvent } from './event-bus.service';
+import { EventBusService, EVENT_TYPE } from './event-bus.service';
 
 
 describe('EventBusService', () => {

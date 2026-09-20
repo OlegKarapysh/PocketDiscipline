@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { signal } from '@angular/core';
@@ -38,8 +39,8 @@ describe('TimerDisplay', () => {
     const timeEl = fixture.debugElement.query(By.css('.time'));
     const statusEl = fixture.debugElement.query(By.css('.status'));
 
-    expect((timeEl.nativeElement as HTMLElement).textContent?.trim()).toBe('25:00');
-    expect((statusEl.nativeElement as HTMLElement).textContent?.trim()).toBe('Ready to start');
+    expect((timeEl.nativeElement as HTMLElement).textContent.trim()).toBe('25:00');
+    expect((statusEl.nativeElement as HTMLElement).textContent.trim()).toBe('Ready to start');
   });
 
   it('should format 65 seconds as "01:05" and show "Focusing on study" when active', async () => {
@@ -53,8 +54,8 @@ describe('TimerDisplay', () => {
     const timeEl = fixture.debugElement.query(By.css('.time'));
     const statusEl = fixture.debugElement.query(By.css('.status'));
 
-    expect((timeEl.nativeElement as HTMLElement).textContent?.trim()).toBe('01:05');
-    expect((statusEl.nativeElement as HTMLElement).textContent?.trim()).toBe('Focusing on study');
+    expect((timeEl.nativeElement as HTMLElement).textContent.trim()).toBe('01:05');
+    expect((statusEl.nativeElement as HTMLElement).textContent.trim()).toBe('Focusing on study');
   });
 
   it('should format 5 seconds as "00:05" with leading zero padding', async () => {
@@ -64,7 +65,7 @@ describe('TimerDisplay', () => {
     await fixture.whenStable();
 
     const timeEl = fixture.debugElement.query(By.css('.time'));
-    expect((timeEl.nativeElement as HTMLElement).textContent?.trim()).toBe('00:05');
+    expect((timeEl.nativeElement as HTMLElement).textContent.trim()).toBe('00:05');
   });
 
   it('should format 0 seconds as "00:00"', async () => {
@@ -74,6 +75,6 @@ describe('TimerDisplay', () => {
     await fixture.whenStable();
 
     const timeEl = fixture.debugElement.query(By.css('.time'));
-    expect((timeEl.nativeElement as HTMLElement).textContent?.trim()).toBe('00:00');
+    expect((timeEl.nativeElement as HTMLElement).textContent.trim()).toBe('00:00');
   });
 });

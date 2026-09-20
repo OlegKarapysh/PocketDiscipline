@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
 
-import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import type { AbstractControl, FormGroup} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { GoalFormDialogData } from '../../models/goal-form-dialog-data.model';
+import type { GoalFormDialogData } from '../../models/goal-form-dialog-data.model';
 
 const MIN_TITLE_LENGTH = 3;
 const MAX_TITLE_LENGTH = 100;

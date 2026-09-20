@@ -1,6 +1,7 @@
 import { Service, inject } from '@angular/core';
 import { DailyScoresService } from '../../features/daily-scores/services/daily-scores.service';
-import { catchError, firstValueFrom, from, Observable, of, tap } from 'rxjs';
+import type { Observable} from 'rxjs';
+import { catchError, firstValueFrom, from, of, tap } from 'rxjs';
 
 const REMINDER_HOUR = 21;
 const REMINDER_MINUTE = 30;

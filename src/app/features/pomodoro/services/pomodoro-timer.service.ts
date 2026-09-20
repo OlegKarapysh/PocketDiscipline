@@ -1,18 +1,15 @@
-import { Service, signal, OnDestroy, inject, DestroyRef } from '@angular/core';
+import type { OnDestroy} from '@angular/core';
+import { Service, signal, inject, DestroyRef } from '@angular/core';
 import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
-import { PomodoroSession } from '../models/pomodoro-session.model';
+import type { PomodoroSession } from '../models/pomodoro-session.model';
 import { EngagementType } from '../models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../models/pomodoro-session-status.enum';
 import { MatDialog } from '@angular/material/dialog';
 import { CompletionDialog } from '../components/completion-dialog/completion-dialog';
-import { TimerConfig } from '../models/timer-config.model';
+import type { TimerConfig } from '../models/timer-config.model';
 
 export type { TimerConfig };
-
-declare class TimestampTrigger {
-  constructor(timestamp: number);
-}
 
 const DEFAULT_DURATION_MINUTES = 25;
 const SECONDS_IN_MINUTE = 60;

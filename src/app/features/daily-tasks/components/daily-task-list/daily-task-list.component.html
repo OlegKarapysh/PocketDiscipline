@@ -12,7 +12,7 @@
 
   @if (tasks$ | async; as tasks) {
     <div class="task-list">
-      @for (task of tasks; track task) {
+      @for (task of tasks; track task.id) {
         <app-daily-task-item [task]="task" (complete)="onCompleteTask(task, $event)" />
       }
       @if (tasks.length === 0) {

@@ -1,7 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { BreakpointObserver, BreakpointState } from '@angular/cdk/layout';
-import { MatSidenav } from '@angular/material/sidenav';
+import type { BreakpointState } from '@angular/cdk/layout';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import type { MatSidenav } from '@angular/material/sidenav';
 import { BehaviorSubject } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LayoutComponent } from './layout';
@@ -79,7 +81,7 @@ describe('Layout', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const topToolbar = compiled.querySelector('mat-sidenav-content mat-toolbar');
     expect(topToolbar).not.toBeNull();
-    expect(topToolbar?.querySelector('.tab-title')?.textContent?.trim()).toBe('Dashboard');
+    expect(topToolbar?.querySelector('.tab-title')?.textContent.trim()).toBe('Dashboard');
     expect(compiled.textContent).not.toContain('Pocket Discipline');
   });
 
@@ -90,32 +92,32 @@ describe('Layout', () => {
     await router.navigateByUrl('/tasks');
     fixture.detectChanges();
     let titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent?.trim()).toBe('Tasks');
+    expect(titleEl?.textContent.trim()).toBe('Tasks');
 
     await router.navigateByUrl('/goals');
     fixture.detectChanges();
     titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent?.trim()).toBe('Goals');
+    expect(titleEl?.textContent.trim()).toBe('Goals');
 
     await router.navigateByUrl('/pomodoro');
     fixture.detectChanges();
     titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent?.trim()).toBe('Pomodoro');
+    expect(titleEl?.textContent.trim()).toBe('Pomodoro');
 
     await router.navigateByUrl('/daily-scores');
     fixture.detectChanges();
     titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent?.trim()).toBe('Daily Scores');
+    expect(titleEl?.textContent.trim()).toBe('Daily Scores');
 
     await router.navigateByUrl('/rewards');
     fixture.detectChanges();
     titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent?.trim()).toBe('Rewards');
+    expect(titleEl?.textContent.trim()).toBe('Rewards');
 
     await router.navigateByUrl('/settings');
     fixture.detectChanges();
     titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent?.trim()).toBe('Settings');
+    expect(titleEl?.textContent.trim()).toBe('Settings');
   });
 
   it('should strip query parameters and hash fragments when determining active tab title', async () => {
@@ -125,7 +127,7 @@ describe('Layout', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     const titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent?.trim()).toBe('Tasks');
+    expect(titleEl?.textContent.trim()).toBe('Tasks');
   });
 
   it('should close drawer on mobile when onNavClick is called', () => {

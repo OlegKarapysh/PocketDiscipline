@@ -1,7 +1,8 @@
-import { DestroyRef, Injectable, OnDestroy, inject } from '@angular/core';
+import type { OnDestroy} from '@angular/core';
+import { DestroyRef, Injectable, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { Subscription } from 'rxjs';
+import type { Subscription } from 'rxjs';
 import { EventBusService } from '../../../core/services/event-bus.service';
 import { QuickSpendDialogComponent } from '../components/quick-spend-dialog/quick-spend-dialog';
 

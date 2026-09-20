@@ -1,16 +1,18 @@
 import { Service, inject } from '@angular/core';
-import { Observable, from, of } from 'rxjs';
+import type { Observable} from 'rxjs';
+import { from, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { liveQuery } from 'dexie';
 import { DbService } from '../../../core/services/db.service';
-import { DailyEarningsRecord } from '../models/daily-earnings-record.model';
-import { MonthlyEarningsSummary } from '../models/monthly-earnings-summary.model';
-import { PeriodPreset } from '../models/period-preset.type';
-import { Goal, GOAL_STATUS } from '../../goals/models/goal.model';
-import { PomodoroSession } from '../../pomodoro/models/pomodoro-session.model';
+import type { DailyEarningsRecord } from '../models/daily-earnings-record.model';
+import type { MonthlyEarningsSummary } from '../models/monthly-earnings-summary.model';
+import type { PeriodPreset } from '../models/period-preset.type';
+import type { Goal} from '../../goals/models/goal.model';
+import { GOAL_STATUS } from '../../goals/models/goal.model';
+import type { PomodoroSession } from '../../pomodoro/models/pomodoro-session.model';
 import { PomodoroSessionStatus } from '../../pomodoro/models/pomodoro-session-status.enum';
-import { DailyScore } from '../../daily-scores/models/daily-score.model';
-import { DailyTaskCompletion } from '../../daily-tasks/models/daily-task-completion.model';
+import type { DailyScore } from '../../daily-scores/models/daily-score.model';
+import type { DailyTaskCompletion } from '../../daily-tasks/models/daily-task-completion.model';
 
 const DATE_LOCALE_US = 'en-US';
 const PRESET_OFFSET_7_DAYS = 6;
@@ -90,7 +92,7 @@ export class DashboardEarningsService {
       }
 
       const [completedGoalsInRange, scoresInRange, completedSessionsInRange, taskCompletionsInRange] = await Promise.all([
-        this.getCompletedGoalsInRange(startDate, endDate).catch(error => {
+        this.getCompletedGoalsInRange(startDate, endDate).catch((error: unknown) => {
           console.error('Failed to get completed goals in range:', error);
           return [] as Goal[];
         }),
@@ -98,11 +100,11 @@ export class DashboardEarningsService {
           .where('date')
           .between(startDate, endDate, true, true)
           .toArray()
-          .catch(error => {
+          .catch((error: unknown) => {
             console.error('Failed to get daily scores in range:', error);
             return [] as DailyScore[];
           }),
-        this.getCompletedPomodoroSessionsInRange(startDate, endDate).catch(error => {
+        this.getCompletedPomodoroSessionsInRange(startDate, endDate).catch((error: unknown) => {
           console.error('Failed to get completed pomodoro sessions in range:', error);
           return [] as PomodoroSession[];
         }),
@@ -110,7 +112,7 @@ export class DashboardEarningsService {
           .where('date')
           .between(startDate, endDate, true, true)
           .toArray()
-          .catch(error => {
+          .catch((error: unknown) => {
             console.error('Failed to get daily task completions in range:', error);
             return [] as DailyTaskCompletion[];
           }),
@@ -133,7 +135,7 @@ export class DashboardEarningsService {
         dayCount += CALENDAR_DAY_STEP;
       }
 
-      for (const goal of completedGoalsInRange ?? []) {
+      for (const goal of completedGoalsInRange) {
         if (goal.completedAt) {
           const dateStr = this.formatLocalDate(new Date(goal.completedAt));
           const record = dateMap.get(dateStr);
@@ -144,7 +146,7 @@ export class DashboardEarningsService {
         }
       }
 
-      for (const score of scoresInRange ?? []) {
+      for (const score of scoresInRange) {
         const record = dateMap.get(score.date);
         if (record) {
           record.dailyScoresEarned += score.rewardEarned;
@@ -152,7 +154,7 @@ export class DashboardEarningsService {
         }
       }
 
-      for (const session of completedSessionsInRange ?? []) {
+      for (const session of completedSessionsInRange) {
         const sessionTimestamp = session.endTime ?? session.startTime;
         const dateStr = this.formatLocalDate(new Date(sessionTimestamp));
         const record = dateMap.get(dateStr);
@@ -162,7 +164,7 @@ export class DashboardEarningsService {
         }
       }
 
-      for (const taskComp of taskCompletionsInRange ?? []) {
+      for (const taskComp of taskCompletionsInRange) {
         const record = dateMap.get(taskComp.date);
         if (record) {
           record.dailyTasksEarned += taskComp.rewardEarned;
@@ -192,7 +194,7 @@ export class DashboardEarningsService {
       const monthLabel = dateForLabel.toLocaleDateString(DATE_LOCALE_US, { month: 'long', year: 'numeric' });
 
       const dailyRecords = await this.calculateDailyEarnings(startDate, endDate);
-      const totalEarned = (dailyRecords ?? []).reduce((sum, r) => sum + (r.totalEarned ?? ZERO_AMOUNT), ZERO_AMOUNT);
+      const totalEarned = dailyRecords.reduce((sum, r) => sum + r.totalEarned, ZERO_AMOUNT);
 
       const now = new Date();
       const isCurrentMonth = now.getFullYear() === year && now.getMonth() + MONTH_OFFSET_ONE === month;
@@ -253,7 +255,7 @@ export class DashboardEarningsService {
         .between(startTimestamp, endTimestamp, true, true)
         .toArray();
 
-      return (goals ?? []).filter(goal => goal?.status === GOAL_STATUS.COMPLETED);
+      return goals.filter(goal => goal.status === GOAL_STATUS.COMPLETED);
     } catch (error) {
       console.error('Failed to get completed goals in range:', error);
       return [];
@@ -294,7 +296,7 @@ export class DashboardEarningsService {
         .between(startTimestamp, endTimestamp, true, true)
         .toArray();
 
-      return (sessions ?? []).filter(session => session?.status === PomodoroSessionStatus.COMPLETED);
+      return sessions.filter(session => session.status === PomodoroSessionStatus.COMPLETED);
     } catch (error) {
       console.error('Failed to get completed pomodoro sessions in range:', error);
       return [];

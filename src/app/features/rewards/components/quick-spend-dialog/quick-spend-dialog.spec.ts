@@ -1,16 +1,18 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Observable, of } from 'rxjs';
+import type { Observable} from 'rxjs';
+import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { QuickSpendDialogComponent } from './quick-spend-dialog';
 import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
 import { UserService } from '../../../../core/services/user.service';
-import { User } from '../../../../core/models/user.model';
-import { RewardCategory } from '../../models/reward-category.model';
-import { WithdrawalRecord } from '../../models/withdrawal.model';
+import type { User } from '../../../../core/models/user.model';
+import type { RewardCategory } from '../../models/reward-category.model';
+import type { WithdrawalRecord } from '../../models/withdrawal.model';
 
 describe('QuickSpendDialogComponent', () => {
   let component: QuickSpendDialogComponent;

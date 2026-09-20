@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { ScoreInputComponent } from './score-input.component';
@@ -22,8 +23,8 @@ describe('ScoreInputComponent', () => {
 
     const buttons = fixture.debugElement.queryAll(By.css('button.score-btn'));
     expect(buttons.length).toBe(10);
-    expect((buttons[0].nativeElement as HTMLElement).textContent?.trim()).toBe('1');
-    expect((buttons[9].nativeElement as HTMLElement).textContent?.trim()).toBe('10');
+    expect((buttons[0].nativeElement as HTMLElement).textContent.trim()).toBe('1');
+    expect((buttons[9].nativeElement as HTMLElement).textContent.trim()).toBe('10');
   });
 
   it('should update internalSelectedScore when a score button is clicked', async () => {

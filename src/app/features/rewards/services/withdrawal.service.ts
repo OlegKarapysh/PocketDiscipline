@@ -1,11 +1,12 @@
 import { Service, inject } from '@angular/core';
 import { liveQuery } from 'dexie';
-import { from, Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { from } from 'rxjs';
 import { DbService } from '../../../core/services/db.service';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
-import { WithdrawalRecord } from '../models/withdrawal.model';
-import { CreateWithdrawalDto } from '../models/create-withdrawal.dto';
-import { WithdrawalFilter } from '../models/withdrawal-filter.model';
+import type { WithdrawalRecord } from '../models/withdrawal.model';
+import type { CreateWithdrawalDto } from '../models/create-withdrawal.dto';
+import type { WithdrawalFilter } from '../models/withdrawal-filter.model';
 
 const ERROR_INVALID_AMOUNT = 'Amount must be greater than zero';
 const ERROR_EMPTY_TITLE = 'Title cannot be empty';
@@ -15,7 +16,7 @@ const TRANSACTION_READ_WRITE = 'rw';
 
 function getTodayDateString(): string {
   const now = new Date();
-  const year = now.getFullYear();
+  const year = String(now.getFullYear());
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
@@ -39,9 +40,7 @@ export class WithdrawalService {
       throw new Error('Notes must not exceed 1000 characters');
     }
 
-    let createdRecord: WithdrawalRecord;
-
-    await this.db.transaction(
+    return await this.db.transaction(
       TRANSACTION_READ_WRITE,
       this.db.users,
       this.db.withdrawals,
@@ -56,7 +55,7 @@ export class WithdrawalService {
           updatedAt: Date.now(),
         });
 
-        createdRecord = {
+        const createdRecord: WithdrawalRecord = {
           id: crypto.randomUUID(),
           amount: dto.amount,
           title: trimmedTitle,
@@ -68,10 +67,9 @@ export class WithdrawalService {
         };
 
         await this.db.withdrawals.add(createdRecord);
+        return createdRecord;
       }
     );
-
-    return createdRecord!;
   }
 
   async revertWithdrawal(id: string): Promise<void> {
@@ -103,7 +101,7 @@ export class WithdrawalService {
                 claimedAt: null,
                 updatedAt: Date.now(),
               });
-            } else if (reward.type === 'repeatable') {
+            } else {
               await this.db.rewards.update(reward.id, {
                 claimCount: Math.max(0, (reward.claimCount || 1) - 1),
                 updatedAt: Date.now(),
@@ -126,10 +124,12 @@ export class WithdrawalService {
           records = records.filter(r => r.categoryId === filter.categoryId);
         }
         if (filter?.startDate) {
-          records = records.filter(r => r.date >= filter.startDate!);
+          const start = filter.startDate;
+          records = records.filter(r => r.date >= start);
         }
         if (filter?.endDate) {
-          records = records.filter(r => r.date <= filter.endDate!);
+          const end = filter.endDate;
+          records = records.filter(r => r.date <= end);
         }
         if (filter?.searchQuery) {
           const query = filter.searchQuery.toLowerCase().trim();

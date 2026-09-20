@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import type { OnInit} from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -13,10 +14,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 
-import { RewardCategory } from '../../models/reward-category.model';
-import { RewardType } from '../../models/reward-type.type';
+import type { RewardCategory } from '../../models/reward-category.model';
+import type { RewardType } from '../../models/reward-type.type';
 import { FALLBACK_CATEGORY_ID } from '../../../../core/constants/initial-reward-categories.const';
-import { RewardFormDialogData } from './reward-form-dialog-data.model';
+import type { RewardFormDialogData } from './reward-form-dialog-data.model';
 
 export type { RewardFormDialogData };
 
@@ -48,20 +49,13 @@ export class RewardFormDialogComponent implements OnInit {
   readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
 
   readonly form = new FormGroup({
-    title: new FormControl<string>('', [
-      (control) => Validators.required(control),
-      (control) => Validators.maxLength(100)(control),
-    ]),
+    title: new FormControl('', { nonNullable: true, validators: [(control) => Validators.required(control), (control) => Validators.maxLength(100)(control)] }),
     cost: new FormControl<number | null>(null, [
       (control) => Validators.required(control),
       (control) => Validators.min(0.01)(control),
     ]),
-    categoryId: new FormControl<string>(FALLBACK_CATEGORY_ID, [
-      (control) => Validators.required(control),
-    ]),
-    type: new FormControl<RewardType>('repeatable', [
-      (control) => Validators.required(control),
-    ]),
+    categoryId: new FormControl(FALLBACK_CATEGORY_ID, { nonNullable: true, validators: [(control) => Validators.required(control)] }),
+    type: new FormControl<RewardType>('repeatable', { nonNullable: true, validators: [(control) => Validators.required(control)] }),
   });
 
   ngOnInit(): void {
@@ -82,26 +76,27 @@ export class RewardFormDialogComponent implements OnInit {
       return;
     }
 
-    const { title, cost, categoryId, type } = this.form.value;
+    const raw = this.form.getRawValue();
+    if (raw.cost === null) {
+      return;
+    }
+
     this.isSubmitting.set(true);
+
+    const payload = {
+      title: raw.title,
+      cost: raw.cost,
+      categoryId: raw.categoryId,
+      type: raw.type,
+    };
 
     try {
       if (this.isEditing() && this.data?.reward) {
-        const updated = await this.rewardsService.updateReward(this.data.reward.id, {
-          title: title!,
-          cost: cost!,
-          categoryId: categoryId!,
-          type: type!,
-        });
+        const updated = await this.rewardsService.updateReward(this.data.reward.id, payload);
         this.snackBar.open(`Updated reward "${updated.title}"`, 'Close', { duration: 3000 });
         this.dialogRef.close(updated);
       } else {
-        const created = await this.rewardsService.createReward({
-          title: title!,
-          cost: cost!,
-          categoryId: categoryId!,
-          type: type!,
-        });
+        const created = await this.rewardsService.createReward(payload);
         this.snackBar.open(`Created reward "${created.title}"`, 'Close', { duration: 3000 });
         this.dialogRef.close(created);
       }

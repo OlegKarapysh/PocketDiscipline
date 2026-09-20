@@ -6,8 +6,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { DashboardEarningsService } from '../../services/dashboard-earnings.service';
-import { EarningsPeriodFilter } from '../../models/earnings-period-filter.model';
-import { PeriodPreset } from '../../models/period-preset.type';
+import type { EarningsPeriodFilter } from '../../models/earnings-period-filter.model';
+import type { PeriodPreset } from '../../models/period-preset.type';
 
 const DEFAULT_PRESET: PeriodPreset = 'last7';
 const PRESET_CUSTOM: PeriodPreset = 'custom';
