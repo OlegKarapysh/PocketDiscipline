@@ -1,6 +1,6 @@
 import { Service, inject } from '@angular/core';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 
 const ORDER_BY_FIELD = 'startTime';
 

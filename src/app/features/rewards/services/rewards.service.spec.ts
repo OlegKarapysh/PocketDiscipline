@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { RewardsService } from './rewards.service';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import type { RewardItem } from '../../../core/models/reward.model';
 

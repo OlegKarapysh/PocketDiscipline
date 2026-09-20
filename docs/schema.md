@@ -8,7 +8,13 @@ All application data is consolidated in a single database:
 ---
 
 ## Database (`pocket-discipline-db`)
-Defined in: `src/app/core/services/db.service.ts`
+Defined in: `src/app/database/db.service.ts` — the persistence composition root. It sits outside
+`core/` deliberately: the Dexie schema is version-ordered and cannot be split across feature
+folders, so this one file is allowed to know every slice. The row interfaces below live in
+`src/app/core/models/`.
+
+**The database name and every existing `version(N).stores({...})` block are load-bearing.** Changing
+either discards existing users' IndexedDB data. Add a new version; never edit an old one.
 
 ### Tables
 

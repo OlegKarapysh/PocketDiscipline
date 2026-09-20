@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DailyScoresService } from './daily-scores.service';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import type { DailyScore } from '../../../core/models/daily-score.model';
 import { firstValueFrom } from 'rxjs';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';

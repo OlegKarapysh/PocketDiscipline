@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { DailyTasksService } from './daily-tasks.service';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import { UserService } from '../../../core/services/user.service';
 import type { DailyTask } from '../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../core/models/daily-task-difficulty.model';

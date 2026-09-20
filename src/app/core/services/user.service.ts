@@ -1,7 +1,7 @@
 import { Service, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { concatMap, filter } from 'rxjs/operators';
-import { DbService } from './db.service';
+import { DbService } from '../../database/db.service';
 import { liveQuery } from 'dexie';
 import type { RewardEarnedEvent } from './event-bus.service';
 import { EventBusService, EVENT_TYPE } from './event-bus.service';

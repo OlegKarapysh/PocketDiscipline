@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom, from } from 'rxjs';
 import { TaskService } from './task.service';
-import { DbService } from './db.service';
+import { DbService } from '../../database/db.service';
 import { UserService } from './user.service';
 import type { DisciplineItem } from '../models/discipline-item.model';
 import { DisciplineItemType } from '../models/discipline-item-type.enum';

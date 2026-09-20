@@ -1,5 +1,5 @@
 import { Service, inject } from '@angular/core';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import { UserService } from '../../../core/services/user.service';
 import type { Goal} from '../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../core/models/goal.model';

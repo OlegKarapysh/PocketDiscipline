@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { WithdrawalService } from './withdrawal.service';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import type { User } from '../../../core/models/user.model';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';

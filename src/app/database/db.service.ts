@@ -1,21 +1,34 @@
 import { Service } from '@angular/core';
 import type { Table } from 'dexie';
 import Dexie from 'dexie';
-import type { User} from '../models/user.model';
-import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
-import type { DisciplineItem } from '../models/discipline-item.model';
-import type { Goal} from '../models/goal.model';
-import { GOAL_STATUS } from '../models/goal.model';
-import type { DailyTask } from '../models/daily-task.model';
-import type { DailyScore } from '../models/daily-score.model';
-import type { PomodoroSession } from '../models/pomodoro-session.model';
-import type { DailyTaskCompletion } from '../models/daily-task-completion.model';
-import type { WithdrawalRecord } from '../models/withdrawal.model';
-import type { RewardItem } from '../models/reward.model';
-import type { RewardCategory } from '../models/reward-category.model';
-import { INITIAL_REWARD_CATEGORIES } from '../constants/initial-reward-categories.const';
+import type { User} from '../core/models/user.model';
+import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../core/models/user.model';
+import type { DisciplineItem } from '../core/models/discipline-item.model';
+import type { Goal} from '../core/models/goal.model';
+import { GOAL_STATUS } from '../core/models/goal.model';
+import type { DailyTask } from '../core/models/daily-task.model';
+import type { DailyScore } from '../core/models/daily-score.model';
+import type { PomodoroSession } from '../core/models/pomodoro-session.model';
+import type { DailyTaskCompletion } from '../core/models/daily-task-completion.model';
+import type { WithdrawalRecord } from '../core/models/withdrawal.model';
+import type { RewardItem } from '../core/models/reward.model';
+import type { RewardCategory } from '../core/models/reward-category.model';
+import { INITIAL_REWARD_CATEGORIES } from '../core/constants/initial-reward-categories.const';
 
 
+/**
+ * The persistence composition root.
+ *
+ * This is the one place allowed to know every vertical slice at once: the Dexie schema is
+ * version-ordered, so the table declarations and the version(N).stores() blocks cannot be split
+ * across feature folders without inviting migration bugs. It lives outside core/ for that reason:
+ * core/ is forbidden from importing features/, and this file is deliberately exempt from that rule.
+ *
+ * The database name and every existing version(N).stores() block are load-bearing: changing either
+ * discards existing users' IndexedDB data. Add a new version, never edit an old one.
+ *
+ * See docs/schema.md for the table-by-table reference.
+ */
 @Service()
 export class DbService extends Dexie {
   users!: Table<User, number>;

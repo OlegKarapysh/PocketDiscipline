@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { DashboardEarningsService } from './dashboard-earnings.service';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import { GOAL_STATUS } from '../../../core/models/goal.model';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
 

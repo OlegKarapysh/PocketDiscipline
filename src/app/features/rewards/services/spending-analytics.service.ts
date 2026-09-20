@@ -2,7 +2,7 @@ import { Service, inject } from '@angular/core';
 import { liveQuery } from 'dexie';
 import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import type { AnalyticsPeriod } from '../models/analytics-period.type';
 import type { TrendGranularity } from '../models/trend-granularity.type';
 import type { SpendingAnalyticsSummary } from '../models/spending-analytics.model';

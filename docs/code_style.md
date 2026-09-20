@@ -292,7 +292,7 @@ const PERMISSION_GRANTED = 'granted';   // pomodoro-timer.service.ts:38
 
 This one is the real failure. It *is* shared, so it qualified for extraction — and was then
 copy-pasted into two files instead of being shared. `TRANSACTION_READ_WRITE` appears in 7 files,
-`DATE_LOCALE_CA` in 7, `SNACKBAR_DURATION_MS` in 4, `ONE_DAY_MS` in 4.
+`DATE_LOCALE_CA` in 5, `SNACKBAR_DURATION_MS` in 4, `ONE_DAY_MS` in 4.
 
 A fourth shape to watch for: `withdrawal-ledger.ts` declares `SNACKBAR_DURATION_MS = 3000` on line 23
 and then writes `{ duration: 3000 }` inline on line 78 anyway.
@@ -430,20 +430,48 @@ import { DailyScoresService } from '../../features/daily-scores/services/daily-s
    violation from inside `core/models/`. 14 files moved, 116 import specifiers rewritten across 68
    files.
 2. **`NotificationService`.** *Not* via `EventBusService`, which was the obvious-looking answer and
-   the wrong one: the bus is a plain `Subject` with no replay, and `checkAndNotify()` needs to
-   **pull** ("is there a score for today?") at 21:30, which a fire-and-forget event stream cannot
-   answer across an app restart. The real observation is that it never needed the feature at all —
-   it wanted one row from `dailyScores`, a table core already owns. It now injects `DbService` and
-   reads that row directly, and the feature service is out of the picture.
+   the wrong one: the bus is a plain `Subject` with no replay, and the 21:30 check needs to **pull**
+   ("is there a score for today?"), which a fire-and-forget event stream cannot answer across an app
+   restart. The first pass made core pull the row itself — core injected `DbService` and read
+   `dailyScores` directly. That removed the *import* violation but left the real problem in place:
+   core still owned a daily-scores **policy**.
 
-   The date key format had to become shared for this: `NotificationService` computes the same
-   `dailyScores` key the writer does, so both now import `DATE_LOCALE_CA` from
-   `core/constants/date-locale.const.ts`. The other five copies of that literal are left for the
-   [rule 5](#5-constants) sweep — only the writer and the new reader *must* agree.
+   The second pass split the service along the seam between mechanism and policy:
+
+   - `core/services/browser-notification.service.ts` — `BrowserNotificationService`, the generic
+     mechanism: permission handling plus `show(title, options)`. Nothing about scores. Core is the
+     right home because pomodoro needs the same mechanism.
+   - `features/daily-scores/services/daily-score-reminder.service.ts` —
+     `DailyScoreReminderService`, the policy: *remind me at 21:30 if today has no score*. It lives
+     in the slice that owns the concept, injects `BrowserNotificationService` for the mechanism and
+     `DailyScoresService` for the data, and is what `App.ngOnInit` now calls.
+
+   Core no longer computes a `dailyScores` key at all, so the shared-`DATE_LOCALE_CA` coupling the
+   first pass introduced is gone: the reminder calls `DailyScoresService.getTodayScore()` and the
+   slice keeps its own date format to itself.
+
+   Splitting it also surfaced a latent bug the old shape hid. The re-arm guard was
+   `now > reminderTime`; when the timer fires exactly on its deadline those are equal, so instead of
+   rolling to tomorrow it re-armed with a 0ms delay and fired a duplicate reminder. Real browsers
+   fire timers late so it rarely bit, but fake timers hit it every run. It is `>=` now.
+
+3. **`DbService`.** Moved out of core entirely, to `src/app/database/db.service.ts`, and documented
+   there as the **persistence composition root** — the one file allowed to know every slice at once.
+   The Dexie schema is version-ordered, so the `version(N).stores({...})` blocks cannot be split
+   across feature folders without inviting migration bugs; the answer is to name the exception
+   rather than pretend core owns it. The database name and every existing version block are
+   load-bearing — changing either discards existing users' IndexedDB data, so the file moved and the
+   schema did not.
+
+   The row types stay in `core/models/` (move 1). That is not a cycle: `core/models/` imports only
+   its own siblings, so the file-level graph is `core/models ← database ← core/services ← features`.
 
 **Generalisation.** Before reaching for an event or a token to invert a core→feature dependency, ask
-what core actually wants. If the answer is data from a table core already owns, there is no
-dependency to invert — only a misplaced call.
+what core actually wants. If it wants *data*, it may already own the table — that is a misplaced
+call, not a dependency to invert. If it wants a *decision* ("should I remind the user?"), the
+dependency is real, and the fix is to split mechanism from policy and let the slice own the policy.
+And if a file genuinely must know every slice, move it out of core and say so in writing, rather
+than leaving it in core with an exemption nobody can see.
 
 **Lint-enforced as an error.** `no-restricted-imports` in `eslint.config.js` is `error` and reports
 zero violations. Keep it that way: it is no longer a budget to spend.

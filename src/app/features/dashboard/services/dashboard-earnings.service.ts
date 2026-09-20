@@ -3,7 +3,7 @@ import type { Observable} from 'rxjs';
 import { from, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { liveQuery } from 'dexie';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import type { DailyEarningsRecord } from '../models/daily-earnings-record.model';
 import type { MonthlyEarningsSummary } from '../models/monthly-earnings-summary.model';
 import type { PeriodPreset } from '../models/period-preset.type';

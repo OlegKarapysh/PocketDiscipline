@@ -1,5 +1,5 @@
 import { Service, inject } from '@angular/core';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import type { DailyScore } from '../../../core/models/daily-score.model';
 import type { Observable} from 'rxjs';
 import { from } from 'rxjs';

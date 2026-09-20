@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, describe, expect, it, beforeEach, vi } from 'vitest';
 import Dexie from 'dexie';
 import { DbService } from './db.service';
-import { EngagementType } from '../models/engagement-type.enum';
-import { PomodoroSessionStatus } from '../models/pomodoro-session-status.enum';
+import { EngagementType } from '../core/models/engagement-type.enum';
+import { PomodoroSessionStatus } from '../core/models/pomodoro-session-status.enum';
 
 describe('DbService', () => {
   let service: DbService;

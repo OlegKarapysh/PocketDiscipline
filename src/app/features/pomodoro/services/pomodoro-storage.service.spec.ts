@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PomodoroStorageService } from './pomodoro-storage.service';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';

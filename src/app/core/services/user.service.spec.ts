@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom, from } from 'rxjs';
 import { UserService } from './user.service';
-import { DbService } from './db.service';
+import { DbService } from '../../database/db.service';
 import { EventBusService, EVENT_TYPE } from './event-bus.service';
 import type { User} from '../models/user.model';
 import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';

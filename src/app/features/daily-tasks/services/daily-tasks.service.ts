@@ -1,5 +1,5 @@
 import { Service, inject } from '@angular/core';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import { UserService } from '../../../core/services/user.service';
 import type { DailyTask } from '../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../core/models/daily-task-difficulty.model';

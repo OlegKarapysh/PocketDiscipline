@@ -1,5 +1,5 @@
 import { Service, inject } from '@angular/core';
-import { DbService } from './db.service';
+import { DbService } from '../../database/db.service';
 import type { DisciplineItem } from '../models/discipline-item.model';
 import { DisciplineItemType } from '../models/discipline-item-type.enum';
 import { UserService } from './user.service';

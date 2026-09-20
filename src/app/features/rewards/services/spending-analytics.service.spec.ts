@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { SpendingAnalyticsService } from './spending-analytics.service';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 import type { RewardCategory } from '../../../core/models/reward-category.model';
 

@@ -2,7 +2,7 @@ import { Service, inject } from '@angular/core';
 import { liveQuery } from 'dexie';
 import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import type { RewardItem } from '../../../core/models/reward.model';
 import type { RewardStatus } from '../../../core/models/reward-status.type';

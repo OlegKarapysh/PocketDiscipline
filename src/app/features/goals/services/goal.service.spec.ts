@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { GoalService } from './goal.service';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import { UserService } from '../../../core/services/user.service';
 import type { Goal} from '../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../core/models/goal.model';

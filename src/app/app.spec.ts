@@ -3,15 +3,15 @@ import { provideRouter } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { App } from './app';
-import { NotificationService } from './core/services/notification.service';
+import { DailyScoreReminderService } from './features/daily-scores/services/daily-score-reminder.service';
 
 describe('App', () => {
-  let notificationServiceMock: {
+  let reminderServiceMock: {
     scheduleDailyReminder: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
-    notificationServiceMock = {
+    reminderServiceMock = {
       scheduleDailyReminder: vi.fn().mockReturnValue(of(true)),
     };
 
@@ -19,7 +19,7 @@ describe('App', () => {
       imports: [App],
       providers: [
         provideRouter([]),
-        { provide: NotificationService, useValue: notificationServiceMock },
+        { provide: DailyScoreReminderService, useValue: reminderServiceMock },
       ],
     }).compileComponents();
   });
@@ -31,7 +31,7 @@ describe('App', () => {
   });
 
   it('should schedule daily reminder on init', async () => {
-    const service = TestBed.inject(NotificationService);
+    const service = TestBed.inject(DailyScoreReminderService);
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
 

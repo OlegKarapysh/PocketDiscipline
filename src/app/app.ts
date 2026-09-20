@@ -1,7 +1,7 @@
 import type { OnInit} from '@angular/core';
 import { Component, inject, signal } from '@angular/core';
 import { Layout } from './shared/components/layout/layout';
-import { NotificationService } from './core/services/notification.service';
+import { DailyScoreReminderService } from './features/daily-scores/services/daily-score-reminder.service';
 import { QuickSpendEventService } from './features/rewards/services/quick-spend-event.service';
 
 @Component({
@@ -12,11 +12,11 @@ import { QuickSpendEventService } from './features/rewards/services/quick-spend-
 })
 export class App implements OnInit {
   protected readonly title = signal('pocket-discipline');
-  private notificationService = inject(NotificationService);
+  private dailyScoreReminderService = inject(DailyScoreReminderService);
   private quickSpendEventService = inject(QuickSpendEventService);
 
   ngOnInit() {
-    this.notificationService.scheduleDailyReminder().subscribe();
+    this.dailyScoreReminderService.scheduleDailyReminder().subscribe();
     this.quickSpendEventService.initialize();
   }
 }

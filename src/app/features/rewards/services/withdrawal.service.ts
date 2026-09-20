@@ -2,7 +2,7 @@ import { Service, inject } from '@angular/core';
 import { liveQuery } from 'dexie';
 import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
-import { DbService } from '../../../core/services/db.service';
+import { DbService } from '../../../database/db.service';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 import type { CreateWithdrawalDto } from '../models/create-withdrawal.dto';
