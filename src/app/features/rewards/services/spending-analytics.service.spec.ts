@@ -3,8 +3,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { SpendingAnalyticsService } from './spending-analytics.service';
 import { DbService } from '../../../core/services/db.service';
-import type { WithdrawalRecord } from '../models/withdrawal.model';
-import type { RewardCategory } from '../models/reward-category.model';
+import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
+import type { RewardCategory } from '../../../core/models/reward-category.model';
 
 vi.mock('dexie', () => {
   class MockDexie {

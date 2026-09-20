@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { DailyTaskItemComponent } from './daily-task-item.component';
-import type { DailyTask } from '../../models/daily-task.model';
-import type { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
+import type { DailyTask } from '../../../../core/models/daily-task.model';
+import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
 
 const TEST_TASK_TITLE = 'Evening Reading';
 const EASY_DIFFICULTY: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };

@@ -10,7 +10,7 @@ import { RewardStoreComponent } from '../../components/reward-store/reward-store
 import { WithdrawalLedgerComponent } from '../../components/withdrawal-ledger/withdrawal-ledger';
 import { SpendingAnalyticsComponent } from '../../components/spending-analytics/spending-analytics';
 import { QuickSpendDialogComponent } from '../../components/quick-spend-dialog/quick-spend-dialog';
-import type { WithdrawalRecord } from '../../models/withdrawal.model';
+import type { WithdrawalRecord } from '../../../../core/models/withdrawal.model';
 
 const SNACKBAR_DURATION_MS = 3000;
 

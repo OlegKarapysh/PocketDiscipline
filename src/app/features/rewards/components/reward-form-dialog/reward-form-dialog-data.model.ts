@@ -1,4 +1,4 @@
-import type { RewardItem } from '../../models/reward.model';
+import type { RewardItem } from '../../../../core/models/reward.model';
 
 export interface RewardFormDialogData {
   reward?: RewardItem;

@@ -15,8 +15,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
-import type { WithdrawalRecord } from '../../models/withdrawal.model';
-import type { RewardCategory } from '../../models/reward-category.model';
+import type { WithdrawalRecord } from '../../../../core/models/withdrawal.model';
+import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
 import type { ConfirmDialogData } from '../../../../shared/components/confirm-dialog/confirm-dialog-data.model';
 

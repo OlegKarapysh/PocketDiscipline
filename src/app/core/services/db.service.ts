@@ -4,15 +4,15 @@ import Dexie from 'dexie';
 import type { User} from '../models/user.model';
 import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
 import type { DisciplineItem } from '../models/discipline-item.model';
-import type { Goal} from '../../features/goals/models/goal.model';
-import { GOAL_STATUS } from '../../features/goals/models/goal.model';
-import type { DailyTask } from '../../features/daily-tasks/models/daily-task.model';
-import type { DailyScore } from '../../features/daily-scores/models/daily-score.model';
-import type { PomodoroSession } from '../../features/pomodoro/models/pomodoro-session.model';
-import type { DailyTaskCompletion } from '../../features/daily-tasks/models/daily-task-completion.model';
-import type { WithdrawalRecord } from '../../features/rewards/models/withdrawal.model';
-import type { RewardItem } from '../../features/rewards/models/reward.model';
-import type { RewardCategory } from '../../features/rewards/models/reward-category.model';
+import type { Goal} from '../models/goal.model';
+import { GOAL_STATUS } from '../models/goal.model';
+import type { DailyTask } from '../models/daily-task.model';
+import type { DailyScore } from '../models/daily-score.model';
+import type { PomodoroSession } from '../models/pomodoro-session.model';
+import type { DailyTaskCompletion } from '../models/daily-task-completion.model';
+import type { WithdrawalRecord } from '../models/withdrawal.model';
+import type { RewardItem } from '../models/reward.model';
+import type { RewardCategory } from '../models/reward-category.model';
 import { INITIAL_REWARD_CATEGORIES } from '../constants/initial-reward-categories.const';
 
 

@@ -1,4 +1,4 @@
-import type { Goal } from './goal.model';
+import type { Goal } from '../../../core/models/goal.model';
 
 export interface MonthGoalGroup {
   month: string;

@@ -5,7 +5,7 @@ import { By } from '@angular/platform-browser';
 import { signal } from '@angular/core';
 import { SessionConfig } from './session-config';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
-import { EngagementType } from '../../models/engagement-type.enum';
+import { EngagementType } from '../../../../core/models/engagement-type.enum';
 
 describe('SessionConfig', () => {
   let component: SessionConfig;

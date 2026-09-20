@@ -16,9 +16,9 @@ import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 import { UserService } from '../../../../core/services/user.service';
 import type { User } from '../../../../core/models/user.model';
-import type { RewardItem } from '../../models/reward.model';
-import type { RewardCategory } from '../../models/reward-category.model';
-import type { RewardStatus } from '../../models/reward-status.type';
+import type { RewardItem } from '../../../../core/models/reward.model';
+import type { RewardCategory } from '../../../../core/models/reward-category.model';
+import type { RewardStatus } from '../../../../core/models/reward-status.type';
 import { RewardCardComponent } from '../reward-card/reward-card';
 import { RewardFormDialogComponent } from '../reward-form-dialog/reward-form-dialog';
 

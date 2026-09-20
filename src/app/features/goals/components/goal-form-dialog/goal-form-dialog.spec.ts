@@ -5,8 +5,8 @@ import { FormBuilder } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { GoalFormDialog } from './goal-form-dialog';
 import type { GoalFormDialogData } from '../../models/goal-form-dialog-data.model';
-import type { Goal} from '../../models/goal.model';
-import { GOAL_STATUS } from '../../models/goal.model';
+import type { Goal} from '../../../../core/models/goal.model';
+import { GOAL_STATUS } from '../../../../core/models/goal.model';
 
 const TEST_TITLE = 'Run a Marathon';
 const TEST_REWARD = 5000;

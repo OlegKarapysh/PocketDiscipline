@@ -1,9 +1,10 @@
 import { Service, inject } from '@angular/core';
 import { DbService } from '../../../core/services/db.service';
-import type { DailyScore } from '../models/daily-score.model';
+import type { DailyScore } from '../../../core/models/daily-score.model';
 import type { Observable} from 'rxjs';
 import { from } from 'rxjs';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
+import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
 
 const REWARD_PERFECT = 500;
 const REWARD_GOOD = 100;
@@ -16,7 +17,6 @@ const DAYS_IN_WEEK_OFFSET = 6;
 const YESTERDAY_OFFSET = 1;
 const INITIAL_STREAK = 0;
 const STREAK_INCREMENT = 1;
-const DATE_LOCALE_CA = 'en-CA';
 const TRANSACTION_READ_WRITE = 'rw';
 const MONTH_START_DAY = '01';
 const MONTH_END_DAY = '31';

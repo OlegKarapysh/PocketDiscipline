@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { RewardCardComponent } from './reward-card';
-import type { RewardItem } from '../../models/reward.model';
-import type { RewardCategory } from '../../models/reward-category.model';
+import type { RewardItem } from '../../../../core/models/reward.model';
+import type { RewardCategory } from '../../../../core/models/reward-category.model';
 
 describe('RewardCardComponent', () => {
   let component: RewardCardComponent;

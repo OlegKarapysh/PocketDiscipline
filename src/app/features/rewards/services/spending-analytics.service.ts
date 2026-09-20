@@ -8,8 +8,8 @@ import type { TrendGranularity } from '../models/trend-granularity.type';
 import type { SpendingAnalyticsSummary } from '../models/spending-analytics.model';
 import type { CategorySpendingBreakdown } from '../models/category-spending-breakdown.model';
 import type { SpendingTrendPoint } from '../models/spending-trend-point.model';
-import type { WithdrawalRecord } from '../models/withdrawal.model';
-import type { RewardCategory } from '../models/reward-category.model';
+import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
+import type { RewardCategory } from '../../../core/models/reward-category.model';
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const ONE_DAY_MS = 86_400_000;

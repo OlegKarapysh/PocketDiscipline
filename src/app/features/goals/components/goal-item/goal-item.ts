@@ -3,7 +3,7 @@ import { Component, input, output } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import type { Goal } from '../../models/goal.model';
+import type { Goal } from '../../../../core/models/goal.model';
 
 @Component({
   imports: [MatCardModule, MatButtonModule, MatIconModule],

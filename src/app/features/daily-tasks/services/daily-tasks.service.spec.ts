@@ -4,8 +4,8 @@ import { firstValueFrom } from 'rxjs';
 import { DailyTasksService } from './daily-tasks.service';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
-import type { DailyTask } from '../models/daily-task.model';
-import type { DailyTaskDifficulty } from '../models/daily-task-difficulty.model';
+import type { DailyTask } from '../../../core/models/daily-task.model';
+import type { DailyTaskDifficulty } from '../../../core/models/daily-task-difficulty.model';
 
 vi.mock('dexie', () => {
   class MockDexie {

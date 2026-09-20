@@ -5,9 +5,9 @@ import type { TimerConfig } from './pomodoro-timer.service';
 import { PomodoroTimerService } from './pomodoro-timer.service';
 import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
-import { EngagementType } from '../models/engagement-type.enum';
-import { PomodoroSessionStatus } from '../models/pomodoro-session-status.enum';
-import type { PomodoroSession } from '../models/pomodoro-session.model';
+import { EngagementType } from '../../../core/models/engagement-type.enum';
+import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
+import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 
 const DEFAULT_DURATION = 25;
 const CUSTOM_DURATION = 50;

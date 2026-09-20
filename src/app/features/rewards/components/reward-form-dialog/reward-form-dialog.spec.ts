@@ -9,8 +9,8 @@ import type { RewardFormDialogData } from './reward-form-dialog';
 import { RewardFormDialogComponent } from './reward-form-dialog';
 import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
-import type { RewardItem } from '../../models/reward.model';
-import type { RewardCategory } from '../../models/reward-category.model';
+import type { RewardItem } from '../../../../core/models/reward.model';
+import type { RewardCategory } from '../../../../core/models/reward-category.model';
 
 describe('RewardFormDialogComponent', () => {
   let component: RewardFormDialogComponent;

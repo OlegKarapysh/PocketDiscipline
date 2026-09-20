@@ -5,8 +5,8 @@ import { WithdrawalService } from './withdrawal.service';
 import { DbService } from '../../../core/services/db.service';
 import type { User } from '../../../core/models/user.model';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
-import type { WithdrawalRecord } from '../models/withdrawal.model';
-import type { RewardItem } from '../models/reward.model';
+import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
+import type { RewardItem } from '../../../core/models/reward.model';
 
 vi.mock('dexie', () => {
   class MockDexie {

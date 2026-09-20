@@ -1,8 +1,8 @@
 import { Service, inject } from '@angular/core';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
-import type { DailyTask } from '../models/daily-task.model';
-import type { DailyTaskDifficulty } from '../models/daily-task-difficulty.model';
+import type { DailyTask } from '../../../core/models/daily-task.model';
+import type { DailyTaskDifficulty } from '../../../core/models/daily-task-difficulty.model';
 import { liveQuery } from 'dexie';
 import type { Observable } from 'rxjs';
 import { from } from 'rxjs';

@@ -7,12 +7,12 @@ import { DbService } from '../../../core/services/db.service';
 import type { DailyEarningsRecord } from '../models/daily-earnings-record.model';
 import type { MonthlyEarningsSummary } from '../models/monthly-earnings-summary.model';
 import type { PeriodPreset } from '../models/period-preset.type';
-import type { Goal} from '../../goals/models/goal.model';
-import { GOAL_STATUS } from '../../goals/models/goal.model';
-import type { PomodoroSession } from '../../pomodoro/models/pomodoro-session.model';
-import { PomodoroSessionStatus } from '../../pomodoro/models/pomodoro-session-status.enum';
-import type { DailyScore } from '../../daily-scores/models/daily-score.model';
-import type { DailyTaskCompletion } from '../../daily-tasks/models/daily-task-completion.model';
+import type { Goal} from '../../../core/models/goal.model';
+import { GOAL_STATUS } from '../../../core/models/goal.model';
+import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
+import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
+import type { DailyScore } from '../../../core/models/daily-score.model';
+import type { DailyTaskCompletion } from '../../../core/models/daily-task-completion.model';
 
 const DATE_LOCALE_US = 'en-US';
 const PRESET_OFFSET_7_DAYS = 6;

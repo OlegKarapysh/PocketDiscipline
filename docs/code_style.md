@@ -10,7 +10,8 @@ server's `get_best_practices`. **Do not change a version-dependent rule from mem
 against `node_modules/@angular/` or the MCP server first.
 
 Each rule below carries a real anti-example from this repository. Those anti-examples are the
-backlog: the convention is settled, the sweeps that make the code match it are not.
+backlog: the convention is settled, the sweeps that make the code match it mostly are not. **Rule 8
+(layering) is the exception — it has been swept and is now enforced as an error.**
 
 ---
 
@@ -281,8 +282,8 @@ copy-pasted into two files instead of being shared. `TRANSACTION_READ_WRITE` app
 A fourth shape to watch for: `withdrawal-ledger.ts` declares `SNACKBAR_DURATION_MS = 3000` on line 23
 and then writes `{ duration: 3000 }` inline on line 78 anyway.
 
-**Scale.** 262 module-level `SCREAMING_CASE` constants outside specs; 152 are referenced once or
-never. The sweep deletes names, it does not add them.
+**Scale.** 262 module-level `SCREAMING_CASE` constants outside specs; about 150 are referenced once
+or never inside their own file. The sweep deletes names, it does not add them.
 
 ---
 
@@ -379,9 +380,12 @@ If core needs a shape that today lives in a feature, the shape belongs in `core/
 needs behaviour from a feature, the dependency is inverted — core defines the interface or emits the
 event, and the feature subscribes. `EventBusService` already exists for exactly this.
 
-**Anti-example.** 11 violations, and they are not all the same severity.
+**Status: swept.** `no-restricted-imports` is `error` and the tree is clean. What follows is the
+record of what was wrong and how it was fixed, so the shape is recognisable if it recurs.
 
-Ten are type-only model imports — structural coupling, mechanical to fix by moving the model into
+**What it looked like.** 11 violations, and they were not all the same severity.
+
+Ten were type-only model imports — structural coupling, mechanical to fix by moving the model into
 `core/models/`:
 
 ```ts
@@ -393,7 +397,7 @@ import type { DailyScore } from '../../features/daily-scores/models/daily-score.
 import type { RewardCategory } from '../../features/rewards/models/reward-category.model';
 ```
 
-One is a runtime dependency on a feature service, and it is the one that actually inverts the
+One was a runtime dependency on a feature service, and it was the one that actually inverted the
 architecture:
 
 ```ts
@@ -401,17 +405,33 @@ architecture:
 import { DailyScoresService } from '../../features/daily-scores/services/daily-scores.service';
 ```
 
-**Do this instead.** Move the nine Dexie table models into `core/models/` — the Dexie schema is core
-infrastructure, and `docs/schema.md` already documents it as one thing. For `NotificationService`,
-invert: have `DailyScoresService` emit on `EventBusService` and let core subscribe, matching how
-`REWARD_EARNED` already works.
+**How it was fixed.** Two separate moves:
 
-**Lint-enforced as a warning.** `no-restricted-imports` in `eslint.config.js` reports 15 warnings:
-these 11, plus 4 more in core's own specs (`db.service.spec.ts:5-6`,
-`notification.service.spec.ts:5-6`) that mirror them and go away with them. It is `warn`, not
-`error`, on purpose: `ng lint` still exits 0, so the gate stays green while the sweep is
-outstanding. **Raise it to `error` as the last commit of the layering sweep** — a warning nobody
-promotes is a warning everybody ignores.
+1. **The models.** The 8 Dexie table row types moved into `core/models/` — the Dexie schema is core
+   infrastructure, and `docs/schema.md` already documents it as one thing. Moving them dragged 6
+   more files that the row shapes depend on (`goal-status.type`, `daily-task-difficulty.model`,
+   `engagement-type.enum`, `pomodoro-session-status.enum`, `reward-type.type`,
+   `reward-status.type`), because a model left behind in a feature would have re-created the
+   violation from inside `core/models/`. 14 files moved, 116 import specifiers rewritten across 68
+   files.
+2. **`NotificationService`.** *Not* via `EventBusService`, which was the obvious-looking answer and
+   the wrong one: the bus is a plain `Subject` with no replay, and `checkAndNotify()` needs to
+   **pull** ("is there a score for today?") at 21:30, which a fire-and-forget event stream cannot
+   answer across an app restart. The real observation is that it never needed the feature at all —
+   it wanted one row from `dailyScores`, a table core already owns. It now injects `DbService` and
+   reads that row directly, and the feature service is out of the picture.
+
+   The date key format had to become shared for this: `NotificationService` computes the same
+   `dailyScores` key the writer does, so both now import `DATE_LOCALE_CA` from
+   `core/constants/date-locale.const.ts`. The other five copies of that literal are left for the
+   [rule 5](#5-constants) sweep — only the writer and the new reader *must* agree.
+
+**Generalisation.** Before reaching for an event or a token to invert a core→feature dependency, ask
+what core actually wants. If the answer is data from a table core already owns, there is no
+dependency to invert — only a misplaced call.
+
+**Lint-enforced as an error.** `no-restricted-imports` in `eslint.config.js` is `error` and reports
+zero violations. Keep it that way: it is no longer a budget to spend.
 
 ---
 
@@ -421,7 +441,7 @@ Two entries in `eslint.config.js` exist to serve rules in this document, and sho
 without changing the rule here first.
 
 - **`no-restricted-imports`** (see [rule 8](#8-layering)) — bans `features/**` from
-  `src/app/core/**`, including `import type`, at `warn`.
+  `src/app/core/**`, including `import type`, at `error`. Currently zero violations.
 - **`@typescript-eslint/unbound-method: ['error', { ignoreStatic: true }]`**, scoped to
   `src/app/**/*.ts`. `Validators.required` is a *static* method
   (`@angular/forms/types/forms.d.ts:5246`), so the default rule fires when it is passed by

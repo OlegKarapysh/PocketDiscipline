@@ -8,7 +8,7 @@ import { TimerDisplay } from '../components/timer-display/timer-display';
 import { TimerControls } from '../components/timer-controls/timer-controls';
 import { SessionConfig } from '../components/session-config/session-config';
 import { PomodoroTimerService } from '../services/pomodoro-timer.service';
-import { EngagementType } from '../models/engagement-type.enum';
+import { EngagementType } from '../../../core/models/engagement-type.enum';
 
 describe('PomodoroContainer', () => {
   let fixture: ComponentFixture<PomodoroContainer>;

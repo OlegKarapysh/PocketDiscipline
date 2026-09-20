@@ -7,7 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { CategoryService } from '../../services/category.service';
-import type { RewardCategory } from '../../models/reward-category.model';
+import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import type { CreateCategoryDto } from '../../models/create-category.dto';
 import { CategoryFormDialogComponent } from '../category-form-dialog/category-form-dialog';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';

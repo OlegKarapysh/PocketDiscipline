@@ -4,8 +4,8 @@ import { firstValueFrom } from 'rxjs';
 import { GoalService } from './goal.service';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
-import type { Goal} from '../models/goal.model';
-import { GOAL_STATUS } from '../models/goal.model';
+import type { Goal} from '../../../core/models/goal.model';
+import { GOAL_STATUS } from '../../../core/models/goal.model';
 
 vi.mock('dexie', () => {
   class MockDexie {

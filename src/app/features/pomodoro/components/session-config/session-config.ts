@@ -4,7 +4,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
-import { EngagementType } from '../../models/engagement-type.enum';
+import { EngagementType } from '../../../../core/models/engagement-type.enum';
 
 const MIN_DURATION_MINUTES = 15;
 const MAX_DURATION_MINUTES = 120;

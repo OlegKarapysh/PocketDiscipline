@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { ScoresStatsComponent } from './scores-stats.component';
-import type { DailyScore } from '../../models/daily-score.model';
+import type { DailyScore } from '../../../../core/models/daily-score.model';
 
 const DATE_LOCALE_CA = 'en-CA';
 

@@ -15,7 +15,7 @@ import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
 import { UserService } from '../../../../core/services/user.service';
 import type { User } from '../../../../core/models/user.model';
-import type { RewardCategory } from '../../models/reward-category.model';
+import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import { FALLBACK_CATEGORY_ID } from '../../../../core/constants/initial-reward-categories.const';
 
 @Component({

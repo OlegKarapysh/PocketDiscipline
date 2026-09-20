@@ -6,8 +6,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { GoalsPage } from './goals-page';
 import { GoalService } from '../../services/goal.service';
-import type { Goal} from '../../models/goal.model';
-import { GOAL_STATUS } from '../../models/goal.model';
+import type { Goal} from '../../../../core/models/goal.model';
+import { GOAL_STATUS } from '../../../../core/models/goal.model';
 
 const TEST_GOAL_ID = 'g-1';
 const TEST_GOAL_TITLE = 'do 50 push-ups on fists';

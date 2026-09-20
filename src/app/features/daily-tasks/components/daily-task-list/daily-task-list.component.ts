@@ -5,8 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
 import { DailyTaskItemComponent } from '../daily-task-item/daily-task-item.component';
-import type { DailyTask } from '../../models/daily-task.model';
-import type { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
+import type { DailyTask } from '../../../../core/models/daily-task.model';
+import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
 import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.component';
 
 @Component({

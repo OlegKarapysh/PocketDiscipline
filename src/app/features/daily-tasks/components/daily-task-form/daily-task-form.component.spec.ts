@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { DailyTaskFormComponent } from './daily-task-form.component';
-import type { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
+import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
 
 describe('DailyTaskFormComponent', () => {
   let component: DailyTaskFormComponent;

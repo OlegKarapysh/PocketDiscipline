@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { CategoryService } from './category.service';
 import { DbService } from '../../../core/services/db.service';
-import type { RewardCategory } from '../models/reward-category.model';
+import type { RewardCategory } from '../../../core/models/reward-category.model';
 import { FALLBACK_CATEGORY_ID } from '../../../core/constants/initial-reward-categories.const';
 
 vi.mock('dexie', () => {

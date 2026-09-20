@@ -14,8 +14,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 
-import type { RewardCategory } from '../../models/reward-category.model';
-import type { RewardType } from '../../models/reward-type.type';
+import type { RewardCategory } from '../../../../core/models/reward-category.model';
+import type { RewardType } from '../../../../core/models/reward-type.type';
 import { FALLBACK_CATEGORY_ID } from '../../../../core/constants/initial-reward-categories.const';
 import type { RewardFormDialogData } from './reward-form-dialog-data.model';
 

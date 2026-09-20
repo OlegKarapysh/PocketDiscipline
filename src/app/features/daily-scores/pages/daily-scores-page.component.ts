@@ -4,7 +4,7 @@ import { ScoreInputComponent } from '../components/score-input/score-input.compo
 import { ScoresChartComponent } from '../components/scores-chart/scores-chart.component';
 import { ScoresStatsComponent } from '../components/scores-stats/scores-stats.component';
 import { DailyScoresService } from '../services/daily-scores.service';
-import type { DailyScore } from '../models/daily-score.model';
+import type { DailyScore } from '../../../core/models/daily-score.model';
 import type { Subscription} from 'rxjs';
 import { forkJoin } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';

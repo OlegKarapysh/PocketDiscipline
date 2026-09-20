@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { DashboardEarningsService } from './dashboard-earnings.service';
 import { DbService } from '../../../core/services/db.service';
-import { GOAL_STATUS } from '../../goals/models/goal.model';
-import { PomodoroSessionStatus } from '../../pomodoro/models/pomodoro-session-status.enum';
+import { GOAL_STATUS } from '../../../core/models/goal.model';
+import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
 
 vi.mock('dexie', () => {
   class MockDexie {

@@ -1,7 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
 
 import { GoalItem } from '../goal-item/goal-item';
-import type { Goal } from '../../models/goal.model';
+import type { Goal } from '../../../../core/models/goal.model';
 import type { MonthGoalGroup } from '../../models/month-goal-group.model';
 
 const LOCALE_DEFAULT = 'default';

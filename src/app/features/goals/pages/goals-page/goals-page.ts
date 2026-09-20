@@ -6,7 +6,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { GoalList } from '../../components/goal-list/goal-list';
 import { GoalService } from '../../services/goal.service';
-import type { Goal } from '../../models/goal.model';
+import type { Goal } from '../../../../core/models/goal.model';
 import { GoalFormDialog } from '../../components/goal-form-dialog/goal-form-dialog';
 import type { GoalFormDialogData } from '../../models/goal-form-dialog-data.model';
 import { catchError, EMPTY, filter, from, switchMap, tap } from 'rxjs';

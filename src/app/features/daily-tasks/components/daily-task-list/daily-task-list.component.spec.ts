@@ -6,8 +6,8 @@ import type { Observable } from 'rxjs';
 import { of } from 'rxjs';
 import { DailyTaskListComponent } from './daily-task-list.component';
 import { DailyTasksService } from '../../services/daily-tasks.service';
-import type { DailyTask } from '../../models/daily-task.model';
-import type { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
+import type { DailyTask } from '../../../../core/models/daily-task.model';
+import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
 import { DailyTaskItemComponent } from '../daily-task-item/daily-task-item.component';
 import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.component';
 

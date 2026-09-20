@@ -1,4 +1,4 @@
-import type { RewardType } from './reward-type.type';
+import type { RewardType } from '../../../core/models/reward-type.type';
 
 export interface UpdateRewardDto {
   title?: string;

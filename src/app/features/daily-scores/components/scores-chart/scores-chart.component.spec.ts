@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { ScoresChartComponent } from './scores-chart.component';
-import type { DailyScore } from '../../models/daily-score.model';
+import type { DailyScore } from '../../../../core/models/daily-score.model';
 
 const SEVEN_DAYS_COUNT = 7;
 const TEST_SCORE_TEN = 10;

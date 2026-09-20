@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
-import type { DailyScore } from '../../models/daily-score.model';
+import type { DailyScore } from '../../../../core/models/daily-score.model';
 import type { ChartDayData } from '../../models/chart-day-data.model';
 
 const DAYS_OFFSET_START = 6;

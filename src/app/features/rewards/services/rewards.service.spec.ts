@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { RewardsService } from './rewards.service';
 import { DbService } from '../../../core/services/db.service';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
-import type { RewardItem } from '../models/reward.model';
+import type { RewardItem } from '../../../core/models/reward.model';
 
 vi.mock('dexie', () => {
   class MockDexie {

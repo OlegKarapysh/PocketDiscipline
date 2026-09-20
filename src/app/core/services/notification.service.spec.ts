@@ -1,28 +1,28 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { firstValueFrom, of } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { NotificationService } from './notification.service';
-import { DailyScoresService } from '../../features/daily-scores/services/daily-scores.service';
-import type { DailyScore } from '../../features/daily-scores/models/daily-score.model';
+import { DbService } from './db.service';
+import type { DailyScore } from '../models/daily-score.model';
 
 describe('NotificationService', () => {
   let service: NotificationService;
-  let dailyScoresServiceMock: {
-    getTodayScore: ReturnType<typeof vi.fn>;
+  let dbMock: {
+    dailyScores: { get: ReturnType<typeof vi.fn> };
   };
   const originalNotification = window.Notification;
 
   beforeEach(() => {
     vi.useFakeTimers();
 
-    dailyScoresServiceMock = {
-      getTodayScore: vi.fn().mockReturnValue(of(undefined)),
+    dbMock = {
+      dailyScores: { get: vi.fn().mockResolvedValue(undefined) },
     };
 
     TestBed.configureTestingModule({
       providers: [
         NotificationService,
-        { provide: DailyScoresService, useValue: dailyScoresServiceMock },
+        { provide: DbService, useValue: dbMock },
       ],
     });
 
@@ -101,7 +101,7 @@ describe('NotificationService', () => {
 
       // Set time to 10:00:00 on test day
       vi.setSystemTime(new Date(2026, 7, 28, 10, 0, 0));
-      dailyScoresServiceMock.getTodayScore.mockReturnValue(of(undefined));
+      dbMock.dailyScores.get.mockResolvedValue(undefined);
 
       const granted = await firstValueFrom(service.scheduleDailyReminder());
       expect(granted).toBe(true);
@@ -137,7 +137,7 @@ describe('NotificationService', () => {
         streakAtThisDay: 1,
         createdAt: Date.now(),
       };
-      dailyScoresServiceMock.getTodayScore.mockReturnValue(of(mockScore));
+      dbMock.dailyScores.get.mockResolvedValue(mockScore);
 
       const granted = await firstValueFrom(service.scheduleDailyReminder());
       expect(granted).toBe(true);

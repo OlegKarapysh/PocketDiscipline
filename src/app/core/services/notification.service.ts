@@ -1,7 +1,8 @@
 import { Service, inject } from '@angular/core';
-import { DailyScoresService } from '../../features/daily-scores/services/daily-scores.service';
+import { DbService } from './db.service';
+import { DATE_LOCALE_CA } from '../constants/date-locale.const';
 import type { Observable} from 'rxjs';
-import { catchError, firstValueFrom, from, of, tap } from 'rxjs';
+import { catchError, from, of, tap } from 'rxjs';
 
 const REMINDER_HOUR = 21;
 const REMINDER_MINUTE = 30;
@@ -16,7 +17,7 @@ const NOTIFICATION_ICON_PATH = '/assets/icons/icon-192x192.png';
 
 @Service()
 export class NotificationService {
-  private dailyScoresService = inject(DailyScoresService);
+  private db = inject(DbService);
   private timerId: ReturnType<typeof setTimeout> | null = null;
 
   async requestPermission(): Promise<boolean> {
@@ -76,7 +77,8 @@ export class NotificationService {
 
   private async checkAndNotify() {
     try {
-      const score = await firstValueFrom(this.dailyScoresService.getTodayScore());
+      const today = new Date().toLocaleDateString(DATE_LOCALE_CA);
+      const score = await this.db.dailyScores.get(today);
       if (!score) {
         new Notification(APP_TITLE, {
           body: NOTIFICATION_REMINDER_BODY,

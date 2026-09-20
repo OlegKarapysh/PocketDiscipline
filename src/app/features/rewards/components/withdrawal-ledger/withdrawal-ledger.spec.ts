@@ -8,8 +8,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { WithdrawalLedgerComponent } from './withdrawal-ledger';
 import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
-import type { WithdrawalRecord } from '../../models/withdrawal.model';
-import type { RewardCategory } from '../../models/reward-category.model';
+import type { WithdrawalRecord } from '../../../../core/models/withdrawal.model';
+import type { RewardCategory } from '../../../../core/models/reward-category.model';
 
 describe('WithdrawalLedgerComponent', () => {
   let component: WithdrawalLedgerComponent;

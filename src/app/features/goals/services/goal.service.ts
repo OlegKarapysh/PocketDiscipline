@@ -1,8 +1,8 @@
 import { Service, inject } from '@angular/core';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
-import type { Goal} from '../models/goal.model';
-import { GOAL_STATUS } from '../models/goal.model';
+import type { Goal} from '../../../core/models/goal.model';
+import { GOAL_STATUS } from '../../../core/models/goal.model';
 import { liveQuery } from 'dexie';
 import type { Observable} from 'rxjs';
 import { from } from 'rxjs';

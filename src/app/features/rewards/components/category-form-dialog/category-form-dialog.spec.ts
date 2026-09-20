@@ -4,7 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CategoryFormDialogComponent } from './category-form-dialog';
-import type { RewardCategory } from '../../models/reward-category.model';
+import type { RewardCategory } from '../../../../core/models/reward-category.model';
 
 describe('CategoryFormDialogComponent', () => {
   let component: CategoryFormDialogComponent;

@@ -4,11 +4,11 @@ import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
 import { DbService } from '../../../core/services/db.service';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
-import type { RewardItem } from '../models/reward.model';
-import type { RewardStatus } from '../models/reward-status.type';
+import type { RewardItem } from '../../../core/models/reward.model';
+import type { RewardStatus } from '../../../core/models/reward-status.type';
 import type { CreateRewardDto } from '../models/create-reward.dto';
 import type { UpdateRewardDto } from '../models/update-reward.dto';
-import type { WithdrawalRecord } from '../models/withdrawal.model';
+import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 
 const ERROR_INVALID_COST = 'Reward cost must be greater than zero';
 const ERROR_EMPTY_TITLE = 'Reward title cannot be empty';

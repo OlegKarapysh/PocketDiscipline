@@ -5,7 +5,7 @@ import { By } from '@angular/platform-browser';
 import { Subject, of, throwError } from 'rxjs';
 import { DailyScoresPageComponent } from './daily-scores-page.component';
 import { DailyScoresService } from '../services/daily-scores.service';
-import type { DailyScore } from '../models/daily-score.model';
+import type { DailyScore } from '../../../core/models/daily-score.model';
 
 describe('DailyScoresPageComponent', () => {
   let component: DailyScoresPageComponent;

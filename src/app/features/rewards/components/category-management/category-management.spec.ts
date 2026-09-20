@@ -7,7 +7,7 @@ import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CategoryManagementComponent } from './category-management';
 import { CategoryService } from '../../services/category.service';
-import type { RewardCategory } from '../../models/reward-category.model';
+import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import { FALLBACK_CATEGORY_ID } from '../../../../core/constants/initial-reward-categories.const';
 
 describe('CategoryManagementComponent', () => {
