@@ -4,10 +4,13 @@ import { firstValueFrom } from 'rxjs';
 import { GoalService } from './goal.service';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
-import { Goal, GOAL_STATUS } from '../models/goal.model';
+import type { Goal} from '../models/goal.model';
+import { GOAL_STATUS } from '../models/goal.model';
 
 vi.mock('dexie', () => {
-  class MockDexie {}
+  class MockDexie {
+    version = vi.fn();
+  }
   return {
     default: MockDexie,
     Dexie: MockDexie,
@@ -20,7 +23,7 @@ vi.mock('dexie', () => {
                 subscriber.next(val);
                 subscriber.complete();
               },
-              (err) => subscriber.error(err)
+              (err: unknown) => { subscriber.error(err); }
             );
             return {
               unsubscribe() {

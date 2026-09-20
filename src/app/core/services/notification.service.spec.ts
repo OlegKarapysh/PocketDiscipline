@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom, of } from 'rxjs';
 import { NotificationService } from './notification.service';
 import { DailyScoresService } from '../../features/daily-scores/services/daily-scores.service';
-import { DailyScore } from '../../features/daily-scores/models/daily-score.model';
+import type { DailyScore } from '../../features/daily-scores/models/daily-score.model';
 
 describe('NotificationService', () => {
   let service: NotificationService;

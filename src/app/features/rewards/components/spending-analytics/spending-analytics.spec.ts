@@ -1,10 +1,11 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SpendingAnalyticsComponent } from './spending-analytics';
 import { SpendingAnalyticsService } from '../../services/spending-analytics.service';
-import { SpendingAnalyticsSummary } from '../../models/spending-analytics.model';
+import type { SpendingAnalyticsSummary } from '../../models/spending-analytics.model';
 
 describe('SpendingAnalyticsComponent', () => {
   let component: SpendingAnalyticsComponent;
@@ -126,6 +127,6 @@ describe('SpendingAnalyticsComponent', () => {
 
   it('should cleanly unsubscribe on component destroy', () => {
     fixture.detectChanges();
-    expect(() => component.ngOnDestroy()).not.toThrow();
+    expect(() => { component.ngOnDestroy(); }).not.toThrow();
   });
 });

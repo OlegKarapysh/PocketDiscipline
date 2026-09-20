@@ -1,8 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EarningsFilterComponent } from './earnings-filter.component';
 import { DashboardEarningsService } from '../../services/dashboard-earnings.service';
-import { PeriodPreset } from '../../models/period-preset.type';
+import type { PeriodPreset } from '../../models/period-preset.type';
 
 describe('EarningsFilterComponent', () => {
   let component: EarningsFilterComponent;

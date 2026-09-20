@@ -1,7 +1,8 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SpendingDonutChartComponent } from './spending-donut-chart';
-import { CategorySpendingBreakdown } from '../../models/category-spending-breakdown.model';
+import type { CategorySpendingBreakdown } from '../../models/category-spending-breakdown.model';
 
 describe('SpendingDonutChartComponent', () => {
   let component: SpendingDonutChartComponent;

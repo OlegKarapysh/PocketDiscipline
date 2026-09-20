@@ -1,14 +1,16 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
-import { RewardFormDialogComponent, RewardFormDialogData } from './reward-form-dialog';
+import type { RewardFormDialogData } from './reward-form-dialog';
+import { RewardFormDialogComponent } from './reward-form-dialog';
 import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
-import { RewardItem } from '../../models/reward.model';
-import { RewardCategory } from '../../models/reward-category.model';
+import type { RewardItem } from '../../models/reward.model';
+import type { RewardCategory } from '../../models/reward-category.model';
 
 describe('RewardFormDialogComponent', () => {
   let component: RewardFormDialogComponent;
@@ -81,7 +83,7 @@ describe('RewardFormDialogComponent', () => {
 
     const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(true);
-    expect(submitBtn.textContent?.trim()).toBe('Create Reward');
+    expect(submitBtn.textContent.trim()).toBe('Create Reward');
   });
 
   it('should prefill form fields when editing an existing reward and show "Save Changes"', async () => {
@@ -96,7 +98,7 @@ describe('RewardFormDialogComponent', () => {
 
     const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(false);
-    expect(submitBtn.textContent?.trim()).toBe('Save Changes');
+    expect(submitBtn.textContent.trim()).toBe('Save Changes');
   });
 
   it('should create new reward and close dialog when clicking submit in DOM', async () => {

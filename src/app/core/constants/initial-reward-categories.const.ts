@@ -1,4 +1,4 @@
-import { RewardCategory } from '../../features/rewards/models/reward-category.model';
+import type { RewardCategory } from '../../features/rewards/models/reward-category.model';
 
 export const FALLBACK_CATEGORY_ID = 'cat-general';
 

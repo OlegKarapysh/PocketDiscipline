@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
@@ -7,8 +8,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { WithdrawalLedgerComponent } from './withdrawal-ledger';
 import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
-import { WithdrawalRecord } from '../../models/withdrawal.model';
-import { RewardCategory } from '../../models/reward-category.model';
+import type { WithdrawalRecord } from '../../models/withdrawal.model';
+import type { RewardCategory } from '../../models/reward-category.model';
 
 describe('WithdrawalLedgerComponent', () => {
   let component: WithdrawalLedgerComponent;
@@ -239,7 +240,7 @@ describe('WithdrawalLedgerComponent', () => {
   });
 
   it('should cleanly unsubscribe on component destroy', () => {
-    expect(() => component.ngOnDestroy()).not.toThrow();
+    expect(() => { component.ngOnDestroy(); }).not.toThrow();
   });
 
   it('should show error snackbar when loading categories fails', () => {

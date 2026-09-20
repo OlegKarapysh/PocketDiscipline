@@ -1,5 +1,5 @@
-import { RewardType } from './reward-type.type';
-import { RewardStatus } from './reward-status.type';
+import type { RewardType } from './reward-type.type';
+import type { RewardStatus } from './reward-status.type';
 
 export interface RewardItem {
   id: string;

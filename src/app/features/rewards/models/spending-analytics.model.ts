@@ -1,7 +1,7 @@
-import { AnalyticsPeriod } from './analytics-period.type';
-import { TrendGranularity } from './trend-granularity.type';
-import { CategorySpendingBreakdown } from './category-spending-breakdown.model';
-import { SpendingTrendPoint } from './spending-trend-point.model';
+import type { AnalyticsPeriod } from './analytics-period.type';
+import type { TrendGranularity } from './trend-granularity.type';
+import type { CategorySpendingBreakdown } from './category-spending-breakdown.model';
+import type { SpendingTrendPoint } from './spending-trend-point.model';
 
 export interface SpendingAnalyticsSummary {
   period: AnalyticsPeriod;

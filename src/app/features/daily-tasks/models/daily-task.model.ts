@@ -1,4 +1,4 @@
-import { DailyTaskDifficulty } from './daily-task-difficulty.model';
+import type { DailyTaskDifficulty } from './daily-task-difficulty.model';
 
 export interface DailyTask {
   id: string;

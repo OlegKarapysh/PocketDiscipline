@@ -1,11 +1,12 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Observable, of } from 'rxjs';
 import { Dashboard } from './dashboard';
 import { DashboardEarningsService } from './services/dashboard-earnings.service';
 import { UserService } from '../../core/services/user.service';
-import { EarningsPeriodFilter } from './models/earnings-period-filter.model';
-import { MonthChangeEvent } from './models/month-change-event.model';
+import type { EarningsPeriodFilter } from './models/earnings-period-filter.model';
+import type { MonthChangeEvent } from './models/month-change-event.model';
 
 describe('Dashboard', () => {
   let component: Dashboard;
@@ -100,7 +101,7 @@ describe('Dashboard', () => {
     });
 
     earningsServiceMock.getDailyEarnings.mockReturnValue(
-      new Observable(subscriber => subscriber.error(new Error('IndexedDB error')))
+      new Observable(subscriber => { subscriber.error(new Error('IndexedDB error')); })
     );
 
     component.onFilterChange({
@@ -122,7 +123,7 @@ describe('Dashboard', () => {
     });
 
     earningsServiceMock.getMonthlyEarningsSummary.mockReturnValue(
-      new Observable(subscriber => subscriber.error(new Error('Monthly summary error')))
+      new Observable(subscriber => { subscriber.error(new Error('Monthly summary error')); })
     );
 
     component.onMonthChange({

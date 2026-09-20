@@ -1,6 +1,8 @@
-import { Component, OnInit, OnDestroy, inject, signal, DestroyRef } from '@angular/core';
+import type { OnInit, OnDestroy} from '@angular/core';
+import { Component, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subscription, catchError, EMPTY, filter, from, switchMap, tap } from 'rxjs';
+import type { Subscription} from 'rxjs';
+import { catchError, EMPTY, filter, from, switchMap, tap } from 'rxjs';
 
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,10 +15,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
-import { WithdrawalRecord } from '../../models/withdrawal.model';
-import { RewardCategory } from '../../models/reward-category.model';
+import type { WithdrawalRecord } from '../../models/withdrawal.model';
+import type { RewardCategory } from '../../models/reward-category.model';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
-import { ConfirmDialogData } from '../../../../shared/components/confirm-dialog/confirm-dialog-data.model';
+import type { ConfirmDialogData } from '../../../../shared/components/confirm-dialog/confirm-dialog-data.model';
 
 const SNACKBAR_DURATION_MS = 3000;
 

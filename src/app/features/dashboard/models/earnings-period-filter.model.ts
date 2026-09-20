@@ -1,4 +1,4 @@
-import { PeriodPreset } from './period-preset.type';
+import type { PeriodPreset } from './period-preset.type';
 
 export interface EarningsPeriodFilter {
   preset: PeriodPreset;

@@ -7,11 +7,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { CategoryService } from '../../services/category.service';
-import { RewardCategory } from '../../models/reward-category.model';
-import { CreateCategoryDto } from '../../models/create-category.dto';
+import type { RewardCategory } from '../../models/reward-category.model';
+import type { CreateCategoryDto } from '../../models/create-category.dto';
 import { CategoryFormDialogComponent } from '../category-form-dialog/category-form-dialog';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog';
-import { ConfirmDialogData } from '../../../../shared/components/confirm-dialog/confirm-dialog-data.model';
+import type { ConfirmDialogData } from '../../../../shared/components/confirm-dialog/confirm-dialog-data.model';
 
 const SNACKBAR_DURATION_MS = 3000;
 

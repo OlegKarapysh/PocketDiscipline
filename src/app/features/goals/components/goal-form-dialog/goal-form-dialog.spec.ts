@@ -1,10 +1,12 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FormBuilder } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { GoalFormDialog } from './goal-form-dialog';
-import { GoalFormDialogData } from '../../models/goal-form-dialog-data.model';
-import { Goal, GOAL_STATUS } from '../../models/goal.model';
+import type { GoalFormDialogData } from '../../models/goal-form-dialog-data.model';
+import type { Goal} from '../../models/goal.model';
+import { GOAL_STATUS } from '../../models/goal.model';
 
 const TEST_TITLE = 'Run a Marathon';
 const TEST_REWARD = 5000;

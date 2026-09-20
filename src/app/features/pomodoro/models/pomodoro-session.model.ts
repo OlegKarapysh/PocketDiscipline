@@ -1,5 +1,5 @@
-import { EngagementType } from './engagement-type.enum';
-import { PomodoroSessionStatus } from './pomodoro-session-status.enum';
+import type { EngagementType } from './engagement-type.enum';
+import type { PomodoroSessionStatus } from './pomodoro-session-status.enum';
 
 export interface PomodoroSession {
   id: string;

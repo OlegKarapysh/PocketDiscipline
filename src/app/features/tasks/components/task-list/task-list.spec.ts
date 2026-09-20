@@ -1,10 +1,12 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
-import { Observable, of } from 'rxjs';
+import type { Observable} from 'rxjs';
+import { of } from 'rxjs';
 import { TaskListComponent } from './task-list';
 import { TaskService } from '../../../../core/services/task.service';
-import { DisciplineItem } from '../../../../core/models/discipline-item.model';
+import type { DisciplineItem } from '../../../../core/models/discipline-item.model';
 import { DisciplineItemType } from '../../../../core/models/discipline-item-type.enum';
 
 const TEST_TASK_ID = 't-1';
@@ -55,7 +57,7 @@ describe('TaskListComponent', () => {
     await fixture.whenStable();
 
     const titleEl = fixture.debugElement.query(By.css('.task-title')).nativeElement as HTMLElement;
-    expect(titleEl.textContent?.trim()).toBe(TEST_TASK_TITLE);
+    expect(titleEl.textContent.trim()).toBe(TEST_TASK_TITLE);
 
     const chipEl = fixture.debugElement.query(By.css('.reward-chip')).nativeElement as HTMLElement;
     expect(chipEl.textContent).toContain('+10 ₴');

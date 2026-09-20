@@ -1,8 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ConfirmDialogComponent } from './confirm-dialog';
-import { ConfirmDialogData } from './confirm-dialog-data.model';
+import type { ConfirmDialogData } from './confirm-dialog-data.model';
 
 describe('ConfirmDialogComponent', () => {
   let component: ConfirmDialogComponent;
@@ -74,8 +75,8 @@ describe('ConfirmDialogComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     const buttons = compiled.querySelectorAll('button');
-    expect(buttons[0].textContent?.trim()).toBe('Cancel');
-    expect(buttons[1].textContent?.trim()).toBe('Confirm');
+    expect(buttons[0].textContent.trim()).toBe('Cancel');
+    expect(buttons[1].textContent.trim()).toBe('Confirm');
   });
 
   it('should apply "mat-warn" class when isDestructive is true', () => {

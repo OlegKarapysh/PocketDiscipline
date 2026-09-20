@@ -1,13 +1,14 @@
 import { Service, inject } from '@angular/core';
 import { liveQuery } from 'dexie';
-import { from, Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { from } from 'rxjs';
 import { DbService } from '../../../core/services/db.service';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
-import { RewardItem } from '../models/reward.model';
-import { RewardStatus } from '../models/reward-status.type';
-import { CreateRewardDto } from '../models/create-reward.dto';
-import { UpdateRewardDto } from '../models/update-reward.dto';
-import { WithdrawalRecord } from '../models/withdrawal.model';
+import type { RewardItem } from '../models/reward.model';
+import type { RewardStatus } from '../models/reward-status.type';
+import type { CreateRewardDto } from '../models/create-reward.dto';
+import type { UpdateRewardDto } from '../models/update-reward.dto';
+import type { WithdrawalRecord } from '../models/withdrawal.model';
 
 const ERROR_INVALID_COST = 'Reward cost must be greater than zero';
 const ERROR_EMPTY_TITLE = 'Reward title cannot be empty';
@@ -17,7 +18,7 @@ const TRANSACTION_READ_WRITE = 'rw';
 
 function getTodayDateString(): string {
   const now = new Date();
-  const year = now.getFullYear();
+  const year = String(now.getFullYear());
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
@@ -116,9 +117,7 @@ export class RewardsService {
   }
 
   async claimReward(reward: RewardItem): Promise<WithdrawalRecord> {
-    let createdRecord: WithdrawalRecord;
-
-    await this.db.transaction(
+    return await this.db.transaction(
       TRANSACTION_READ_WRITE,
       this.db.users,
       this.db.withdrawals,
@@ -140,7 +139,7 @@ export class RewardsService {
           updatedAt: Date.now(),
         });
 
-        createdRecord = {
+        const createdRecord: WithdrawalRecord = {
           id: crypto.randomUUID(),
           amount: currentReward.cost,
           title: `Claimed: ${currentReward.title}`,
@@ -165,9 +164,8 @@ export class RewardsService {
             updatedAt: Date.now(),
           });
         }
+        return createdRecord;
       }
     );
-
-    return createdRecord!;
   }
 }

@@ -1,12 +1,13 @@
-import { Component, OnInit, OnDestroy, DestroyRef, computed, inject, signal } from '@angular/core';
+import type { OnInit, OnDestroy} from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subscription } from 'rxjs';
+import type { Subscription } from 'rxjs';
 
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { SpendingAnalyticsService } from '../../services/spending-analytics.service';
-import { AnalyticsPeriod } from '../../models/analytics-period.type';
-import { SpendingAnalyticsSummary } from '../../models/spending-analytics.model';
+import type { AnalyticsPeriod } from '../../models/analytics-period.type';
+import type { SpendingAnalyticsSummary } from '../../models/spending-analytics.model';
 import { SpendingDonutChartComponent } from '../spending-donut-chart/spending-donut-chart';
 import { SpendingTrendChartComponent } from '../spending-trend-chart/spending-trend-chart';
 

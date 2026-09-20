@@ -1,7 +1,8 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { EarningsChartComponent } from './earnings-chart.component';
-import { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
+import type { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
 
 describe('EarningsChartComponent', () => {
   let component: EarningsChartComponent;

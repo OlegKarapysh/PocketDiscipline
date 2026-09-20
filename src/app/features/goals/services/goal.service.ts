@@ -1,9 +1,11 @@
 import { Service, inject } from '@angular/core';
 import { DbService } from '../../../core/services/db.service';
 import { UserService } from '../../../core/services/user.service';
-import { Goal, GOAL_STATUS } from '../models/goal.model';
+import type { Goal} from '../models/goal.model';
+import { GOAL_STATUS } from '../models/goal.model';
 import { liveQuery } from 'dexie';
-import { Observable, from } from 'rxjs';
+import type { Observable} from 'rxjs';
+import { from } from 'rxjs';
 
 const ERROR_DUPLICATE_GOAL_TITLE = 'A goal with this title already exists.';
 const TRANSACTION_READ_WRITE = 'rw';

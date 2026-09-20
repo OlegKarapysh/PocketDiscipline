@@ -1,4 +1,4 @@
-import { CategorySpendingBreakdown } from '../../models/category-spending-breakdown.model';
+import type { CategorySpendingBreakdown } from '../../models/category-spending-breakdown.model';
 
 export interface DonutSlice {
   category: CategorySpendingBreakdown;

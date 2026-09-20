@@ -1,11 +1,12 @@
+import type { OnInit } from '@angular/core';
 import { Component, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
 import { DailyTaskItemComponent } from '../daily-task-item/daily-task-item.component';
-import { DailyTask } from '../../models/daily-task.model';
-import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
+import type { DailyTask } from '../../models/daily-task.model';
+import type { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.component';
 
 @Component({
@@ -14,11 +15,17 @@ import { DailyTaskFormComponent } from '../daily-task-form/daily-task-form.compo
   styleUrl: './daily-task-list.component.scss',
   templateUrl: './daily-task-list.component.html',
 })
-export class DailyTaskListComponent {
+export class DailyTaskListComponent implements OnInit {
   private dailyTasksService = inject(DailyTasksService);
 
   tasks$ = this.dailyTasksService.tasks$;
   readonly showForm = signal(false);
+
+  ngOnInit(): void {
+    void this.dailyTasksService.resetBrokenStreaks().catch((e: unknown) => {
+      console.error(e);
+    });
+  }
 
   openForm() {
     this.showForm.set(true);

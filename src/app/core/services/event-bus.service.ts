@@ -1,9 +1,11 @@
 import { Service } from '@angular/core';
-import { Subject, Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
-import { AppEvent } from '../models/app-event.model';
-import { EVENT_TYPE, RewardEarnedEvent } from '../models/reward-earned-event.model';
+import type { AppEvent } from '../models/app-event.model';
+import type { RewardEarnedEvent } from '../models/reward-earned-event.model';
+import { EVENT_TYPE } from '../models/reward-earned-event.model';
 
 export { EVENT_TYPE };
 export type { AppEvent, RewardEarnedEvent };

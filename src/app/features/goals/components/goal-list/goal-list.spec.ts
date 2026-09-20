@@ -1,8 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { GoalList } from './goal-list';
-import { Goal, GOAL_STATUS } from '../../models/goal.model';
+import type { Goal} from '../../models/goal.model';
+import { GOAL_STATUS } from '../../models/goal.model';
 import { GoalItem } from '../goal-item/goal-item';
 
 const TEST_GOAL_TITLE_1 = 'do 50 push-ups on fists';

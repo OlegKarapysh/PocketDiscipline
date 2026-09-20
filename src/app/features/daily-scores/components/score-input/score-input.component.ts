@@ -2,7 +2,7 @@ import { Component, computed, input, linkedSignal, output } from '@angular/core'
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { ScoreTier } from '../../models/score-tier.model';
+import type { ScoreTier } from '../../models/score-tier.model';
 
 const AVAILABLE_SCORES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 

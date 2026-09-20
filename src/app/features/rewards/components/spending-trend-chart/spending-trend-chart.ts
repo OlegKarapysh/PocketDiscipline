@@ -1,7 +1,7 @@
 import { Component, computed, input, signal } from '@angular/core';
 
-import { SpendingTrendPoint } from '../../models/spending-trend-point.model';
-import { TrendGranularity } from '../../models/trend-granularity.type';
+import type { SpendingTrendPoint } from '../../models/spending-trend-point.model';
+import type { TrendGranularity } from '../../models/trend-granularity.type';
 
 const SVG_WIDTH = 600;
 const SVG_HEIGHT = 200;
@@ -10,7 +10,7 @@ const MARGIN_RIGHT = 20;
 const MARGIN_BOTTOM = 40;
 const MARGIN_LEFT = 50;
 
-import { RenderedBar } from './rendered-bar.model';
+import type { RenderedBar } from './rendered-bar.model';
 
 @Component({
   selector: 'app-spending-trend-chart',

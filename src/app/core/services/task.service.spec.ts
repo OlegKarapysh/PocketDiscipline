@@ -4,11 +4,13 @@ import { firstValueFrom, from } from 'rxjs';
 import { TaskService } from './task.service';
 import { DbService } from './db.service';
 import { UserService } from './user.service';
-import { DisciplineItem } from '../models/discipline-item.model';
+import type { DisciplineItem } from '../models/discipline-item.model';
 import { DisciplineItemType } from '../models/discipline-item-type.enum';
 
 vi.mock('dexie', () => {
-  class MockDexie {}
+  class MockDexie {
+    version = vi.fn();
+  }
   return {
     default: MockDexie,
     Dexie: MockDexie,
@@ -21,7 +23,7 @@ vi.mock('dexie', () => {
                 subscriber.next(val);
                 subscriber.complete();
               },
-              (err) => subscriber.error(err)
+              (err: unknown) => { subscriber.error(err); }
             );
             return {
               unsubscribe() {

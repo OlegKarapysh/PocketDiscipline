@@ -6,12 +6,18 @@
   <mat-card-content class="form-content">
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Title</mat-label>
-      <input matInput type="text" [(ngModel)]="title" placeholder="e.g. Morning Workout" />
+      <input
+        matInput
+        type="text"
+        [(ngModel)]="title"
+        (keydown.enter)="submit()"
+        placeholder="e.g. Morning Workout"
+      />
     </mat-form-field>
 
     <div class="difficulties-section">
       <h4 class="section-title">Difficulties</h4>
-      @for (diff of difficulties; track diff; let i = $index) {
+      @for (diff of difficulties; track diff.id; let i = $index) {
         <div class="difficulty-row">
           <mat-form-field appearance="outline" subscriptSizing="dynamic" class="diff-name">
             <mat-label>Name</mat-label>
@@ -43,7 +49,7 @@
 
   <mat-card-actions align="end" class="actions">
     <button mat-button type="button" (click)="cancelForm.emit()">Cancel</button>
-    <button mat-flat-button color="primary" type="button" [disabled]="!title" (click)="submit()">
+    <button mat-flat-button color="primary" type="button" [disabled]="!title.trim()" (click)="submit()">
       Save Task
     </button>
   </mat-card-actions>

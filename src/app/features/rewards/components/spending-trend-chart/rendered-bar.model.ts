@@ -1,4 +1,4 @@
-import { SpendingTrendPoint } from '../../models/spending-trend-point.model';
+import type { SpendingTrendPoint } from '../../models/spending-trend-point.model';
 
 export interface RenderedBar {
   point: SpendingTrendPoint;

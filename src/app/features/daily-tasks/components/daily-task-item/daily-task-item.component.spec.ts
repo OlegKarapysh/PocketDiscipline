@@ -1,9 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { DailyTaskItemComponent } from './daily-task-item.component';
-import { DailyTask } from '../../models/daily-task.model';
-import { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
+import type { DailyTask } from '../../models/daily-task.model';
+import type { DailyTaskDifficulty } from '../../models/daily-task-difficulty.model';
 
 const TEST_TASK_TITLE = 'Evening Reading';
 const EASY_DIFFICULTY: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
@@ -41,7 +42,7 @@ describe('DailyTaskItemComponent', () => {
     const titleEl = fixture.debugElement.query(By.css('mat-card-title'));
     const streakEl = fixture.debugElement.query(By.css('.streak-badge'));
 
-    expect((titleEl.nativeElement as HTMLElement).textContent?.trim()).toBe(TEST_TASK_TITLE);
+    expect((titleEl.nativeElement as HTMLElement).textContent.trim()).toBe(TEST_TASK_TITLE);
     expect((streakEl.nativeElement as HTMLElement).textContent).toContain('4 Day Streak');
   });
 

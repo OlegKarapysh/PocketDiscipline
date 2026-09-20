@@ -1,10 +1,10 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
-import { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
-import { ChartBar } from '../../models/chart-bar.model';
-import { ChartBarSegment } from '../../models/chart-bar-segment.model';
-import { ChartGridLine } from '../../models/chart-grid-line.model';
-import { TooltipPosition } from '../../models/tooltip-position.model';
+import type { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
+import type { ChartBar } from '../../models/chart-bar.model';
+import type { ChartBarSegment } from '../../models/chart-bar-segment.model';
+import type { ChartGridLine } from '../../models/chart-grid-line.model';
+import type { TooltipPosition } from '../../models/tooltip-position.model';
 import { EarningsSource } from '../../models/earnings-source.enum';
 
 const VIEWBOX_WIDTH = 600;
@@ -201,7 +201,7 @@ export class EarningsChartComponent {
   }
 
   onBarFocus(record: DailyEarningsRecord, event: FocusEvent): void {
-    const target = event.currentTarget as HTMLElement | null;
+    const target = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
     const rect = target?.getBoundingClientRect();
     this.hoveredRecord.set(record);
     this.tooltipPosition.set({

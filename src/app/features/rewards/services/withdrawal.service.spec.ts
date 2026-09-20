@@ -3,12 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { WithdrawalService } from './withdrawal.service';
 import { DbService } from '../../../core/services/db.service';
-import { CURRENT_USER_ID, User } from '../../../core/models/user.model';
-import { WithdrawalRecord } from '../models/withdrawal.model';
-import { RewardItem } from '../models/reward.model';
+import type { User } from '../../../core/models/user.model';
+import { CURRENT_USER_ID } from '../../../core/models/user.model';
+import type { WithdrawalRecord } from '../models/withdrawal.model';
+import type { RewardItem } from '../models/reward.model';
 
 vi.mock('dexie', () => {
-  class MockDexie {}
+  class MockDexie {
+    version = vi.fn();
+  }
   return {
     default: MockDexie,
     Dexie: MockDexie,
@@ -21,7 +24,7 @@ vi.mock('dexie', () => {
                 subscriber.next(val);
                 subscriber.complete();
               },
-              (err) => subscriber.error(err)
+              (err: unknown) => { subscriber.error(err); }
             );
             return {
               unsubscribe() {
@@ -99,7 +102,8 @@ describe('WithdrawalService', () => {
       },
       transaction: vi.fn().mockImplementation(async (...args: unknown[]) => {
         const fn = args.find((arg): arg is () => Promise<unknown> => typeof arg === 'function');
-        if (fn) await fn();
+        if (fn) return await fn();
+        return undefined;
       }),
     };
 

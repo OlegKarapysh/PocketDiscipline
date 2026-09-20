@@ -3,7 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { concatMap, filter } from 'rxjs/operators';
 import { DbService } from './db.service';
 import { liveQuery } from 'dexie';
-import { EventBusService, EVENT_TYPE, RewardEarnedEvent } from './event-bus.service';
+import type { RewardEarnedEvent } from './event-bus.service';
+import { EventBusService, EVENT_TYPE } from './event-bus.service';
 import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
 
 @Service()
@@ -14,12 +15,12 @@ export class UserService {
   constructor() {
     this.eventBus.on<RewardEarnedEvent>(EVENT_TYPE.REWARD_EARNED)
       .pipe(
-        filter(event => !!event.payload?.points),
+        filter(event => Boolean(event.payload.points)),
         concatMap(event => this.addBalance(event.payload.points)),
         takeUntilDestroyed()
       )
       .subscribe({
-        error: (error) => console.error('Failed to update balance from event', error)
+        error: (error: unknown) => { console.error('Failed to update balance from event', error); }
       });
   }
 

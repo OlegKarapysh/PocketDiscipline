@@ -4,12 +4,13 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, map, catchError } from 'rxjs/operators';
 import { from, EMPTY } from 'rxjs';
-import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
+import type { MatSidenav} from '@angular/material/sidenav';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
-import { NavItem } from '../../models/nav-item.model';
+import type { NavItem } from '../../models/nav-item.model';
 
 const ROUTE_DASHBOARD = 'dashboard';
 const ROUTE_TASKS = 'tasks';

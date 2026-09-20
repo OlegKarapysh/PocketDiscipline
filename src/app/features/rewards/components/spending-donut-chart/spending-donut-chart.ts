@@ -2,8 +2,8 @@ import { Component, computed, input, signal } from '@angular/core';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CategorySpendingBreakdown } from '../../models/category-spending-breakdown.model';
-import { DonutSlice } from './donut-slice.model';
+import type { CategorySpendingBreakdown } from '../../models/category-spending-breakdown.model';
+import type { DonutSlice } from './donut-slice.model';
 
 const CIRCUMFERENCE = 2 * Math.PI * 70;
 

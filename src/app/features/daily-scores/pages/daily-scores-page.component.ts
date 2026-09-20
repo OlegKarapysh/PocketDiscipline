@@ -1,10 +1,12 @@
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import type { OnInit} from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { ScoreInputComponent } from '../components/score-input/score-input.component';
 import { ScoresChartComponent } from '../components/scores-chart/scores-chart.component';
 import { ScoresStatsComponent } from '../components/scores-stats/scores-stats.component';
 import { DailyScoresService } from '../services/daily-scores.service';
-import { DailyScore } from '../models/daily-score.model';
-import { Subscription, forkJoin } from 'rxjs';
+import type { DailyScore } from '../models/daily-score.model';
+import type { Subscription} from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 

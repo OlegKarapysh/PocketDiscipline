@@ -1,9 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { CompletionDialog } from './completion-dialog';
-import { CompletionDialogData } from '../../models/completion-dialog-data.model';
+import type { CompletionDialogData } from '../../models/completion-dialog-data.model';
 
 const TEST_REWARD_POINTS = 50;
 const TEST_ENGAGEMENT_TYPE = 'study';
@@ -39,7 +40,7 @@ describe('CompletionDialog', () => {
     expect(textContent).toContain('50');
 
     const rewardEl = fixture.debugElement.query(By.css('.reward strong'));
-    expect((rewardEl.nativeElement as HTMLElement).textContent?.trim()).toBe('50');
+    expect((rewardEl.nativeElement as HTMLElement).textContent.trim()).toBe('50');
   });
 
   it('should render an action button to dismiss the dialog', async () => {
@@ -48,6 +49,6 @@ describe('CompletionDialog', () => {
 
     const button = fixture.debugElement.query(By.css('button[mat-dialog-close]'));
     expect(button).toBeTruthy();
-    expect((button.nativeElement as HTMLElement).textContent?.trim()).toBe('Awesome');
+    expect((button.nativeElement as HTMLElement).textContent.trim()).toBe('Awesome');
   });
 });

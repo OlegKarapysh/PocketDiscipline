@@ -1,8 +1,10 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { GoalItem } from './goal-item';
-import { Goal, GOAL_STATUS } from '../../models/goal.model';
+import type { Goal} from '../../models/goal.model';
+import { GOAL_STATUS } from '../../models/goal.model';
 
 const TEST_GOAL_ID = 'g-1';
 const TEST_GOAL_TITLE = 'do 50 push-ups on fists';
@@ -37,7 +39,7 @@ describe('GoalItem', () => {
 
     const titleEl = fixture.debugElement.query(By.css('mat-card-title'));
     const subtitleEl = fixture.debugElement.query(By.css('mat-card-subtitle'));
-    expect((titleEl.nativeElement as HTMLElement).textContent?.trim()).toBe(TEST_GOAL_TITLE);
+    expect((titleEl.nativeElement as HTMLElement).textContent.trim()).toBe(TEST_GOAL_TITLE);
     expect((subtitleEl.nativeElement as HTMLElement).textContent).toContain('2000 ₴');
 
     const editBtn = fixture.debugElement.query(By.css('button[aria-label="Edit"]'));

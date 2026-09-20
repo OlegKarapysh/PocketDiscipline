@@ -6,8 +6,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { RewardItem } from '../../models/reward.model';
-import { RewardCategory } from '../../models/reward-category.model';
+import type { RewardItem } from '../../models/reward.model';
+import type { RewardCategory } from '../../models/reward-category.model';
 
 @Component({
   selector: 'app-reward-card',

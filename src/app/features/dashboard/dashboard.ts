@@ -7,8 +7,8 @@ import { EarningsChartComponent } from './components/earnings-chart/earnings-cha
 import { EarningsFilterComponent } from './components/earnings-filter/earnings-filter.component';
 import { EarningsStatsComponent } from './components/earnings-stats/earnings-stats.component';
 import { DashboardEarningsService } from './services/dashboard-earnings.service';
-import { EarningsPeriodFilter } from './models/earnings-period-filter.model';
-import { MonthChangeEvent } from './models/month-change-event.model';
+import type { EarningsPeriodFilter } from './models/earnings-period-filter.model';
+import type { MonthChangeEvent } from './models/month-change-event.model';
 
 const DEFAULT_PRESET = 'last7';
 const MONTH_STEP = 1;

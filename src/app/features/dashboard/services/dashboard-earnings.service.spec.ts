@@ -7,7 +7,9 @@ import { GOAL_STATUS } from '../../goals/models/goal.model';
 import { PomodoroSessionStatus } from '../../pomodoro/models/pomodoro-session-status.enum';
 
 vi.mock('dexie', () => {
-  class MockDexie {}
+  class MockDexie {
+    version = vi.fn();
+  }
   return {
     default: MockDexie,
     Dexie: MockDexie,

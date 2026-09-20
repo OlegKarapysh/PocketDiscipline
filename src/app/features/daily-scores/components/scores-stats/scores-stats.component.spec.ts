@@ -1,8 +1,9 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ComponentFixture} from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { ScoresStatsComponent } from './scores-stats.component';
-import { DailyScore } from '../../models/daily-score.model';
+import type { DailyScore } from '../../models/daily-score.model';
 
 const DATE_LOCALE_CA = 'en-CA';
 
@@ -26,7 +27,7 @@ describe('ScoresStatsComponent', () => {
     expect(component.monthlyAverage()).toBe(0);
     expect(component.currentStreak()).toBe(0);
     const noDataEl = fixture.debugElement.query(By.css('.stat-value.no-data'));
-    expect((noDataEl.nativeElement as HTMLElement).textContent?.trim()).toBe('-');
+    expect((noDataEl.nativeElement as HTMLElement).textContent.trim()).toBe('-');
   });
 
   it('should correctly calculate monthly average rounded to 1 decimal place', async () => {
@@ -42,7 +43,7 @@ describe('ScoresStatsComponent', () => {
 
     expect(component.monthlyAverage()).toBe(8.7);
     const statValues = fixture.debugElement.queryAll(By.css('.stat-value'));
-    expect((statValues[0].nativeElement as HTMLElement).textContent?.trim()).toBe('8.7');
+    expect((statValues[0].nativeElement as HTMLElement).textContent.trim()).toBe('8.7');
   });
 
   it('should display current streak when latest score is from today', async () => {
@@ -61,7 +62,7 @@ describe('ScoresStatsComponent', () => {
 
     expect(component.currentStreak()).toBe(5);
     const streakEl = fixture.debugElement.query(By.css('.stat-value.streak'));
-    expect((streakEl.nativeElement as HTMLElement).textContent?.trim()).toBe('5');
+    expect((streakEl.nativeElement as HTMLElement).textContent.trim()).toBe('5');
   });
 
   it('should display current streak when latest score is from yesterday', async () => {

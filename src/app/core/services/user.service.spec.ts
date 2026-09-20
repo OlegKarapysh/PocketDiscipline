@@ -4,10 +4,13 @@ import { firstValueFrom, from } from 'rxjs';
 import { UserService } from './user.service';
 import { DbService } from './db.service';
 import { EventBusService, EVENT_TYPE } from './event-bus.service';
-import { User, CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
+import type { User} from '../models/user.model';
+import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
 
 vi.mock('dexie', () => {
-  class MockDexie {}
+  class MockDexie {
+    version = vi.fn();
+  }
   return {
     default: MockDexie,
     Dexie: MockDexie,
@@ -20,7 +23,7 @@ vi.mock('dexie', () => {
                 subscriber.next(val);
                 subscriber.complete();
               },
-              (err) => subscriber.error(err)
+              (err: unknown) => { subscriber.error(err); }
             );
             return {
               unsubscribe() {

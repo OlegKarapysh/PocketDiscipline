@@ -1,4 +1,4 @@
-import { DisciplineItemType } from './discipline-item-type.enum';
+import type { DisciplineItemType } from './discipline-item-type.enum';
 
 export interface DisciplineItem {
   id: string;
