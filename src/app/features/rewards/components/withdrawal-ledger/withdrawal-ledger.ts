@@ -2,7 +2,7 @@ import type { OnInit, OnDestroy} from '@angular/core';
 import { Component, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { Subscription} from 'rxjs';
-import { catchError, EMPTY, filter, from, switchMap, tap } from 'rxjs';
+import { catchError, EMPTY, from, switchMap, tap } from 'rxjs';
 
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,13 +12,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
 import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
 import type { WithdrawalRecord } from '../../../../core/models/withdrawal.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
-import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
-import type { ConfirmDialogData } from '../../../../shared/components/confirm-dialog/confirm-dialog-data.model';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 
 const SNACKBAR_DURATION_MS = 3000;
 
@@ -39,7 +37,7 @@ const SNACKBAR_DURATION_MS = 3000;
 export class WithdrawalLedger implements OnInit, OnDestroy {
   private readonly withdrawalService = inject(WithdrawalService);
   private readonly categoryService = inject(CategoryService);
-  private readonly dialog = inject(MatDialog);
+  private readonly confirmService = inject(ConfirmService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -125,26 +123,15 @@ export class WithdrawalLedger implements OnInit, OnDestroy {
   }
 
   confirmRevert(withdrawal: WithdrawalRecord): void {
-    const dialogData: ConfirmDialogData = {
-      title: 'Revert Withdrawal',
-      message: `Are you sure you want to revert "${withdrawal.title}" (${withdrawal.amount} ₴)? The amount will be refunded to your balance.`,
-      confirmText: 'Revert & Refund',
-      cancelText: 'Cancel',
-      isDestructive: true,
-    };
-
-    const dialogRef = this.dialog.open<ConfirmDialog, ConfirmDialogData, boolean>(
-      ConfirmDialog,
-      {
-        data: dialogData,
-        width: '400px',
-      }
-    );
-
-    dialogRef
-      .afterClosed()
+    this.confirmService
+      .ask({
+        title: 'Revert Withdrawal',
+        message: `Are you sure you want to revert "${withdrawal.title}" (${withdrawal.amount} ₴)? The amount will be refunded to your balance.`,
+        confirmText: 'Revert & Refund',
+        cancelText: 'Cancel',
+        isDestructive: true,
+      })
       .pipe(
-        filter(Boolean),
         switchMap(() =>
           from(this.withdrawalService.revertWithdrawal(withdrawal.id)).pipe(
             tap(() => {

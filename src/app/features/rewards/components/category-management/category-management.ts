@@ -10,8 +10,7 @@ import { CategoryService } from '../../services/category.service';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import type { CreateCategoryDto } from '../../models/create-category.dto';
 import { CategoryFormDialog } from '../category-form-dialog/category-form-dialog';
-import { ConfirmDialog } from '../../../../shared/components/confirm-dialog/confirm-dialog';
-import type { ConfirmDialogData } from '../../../../shared/components/confirm-dialog/confirm-dialog-data.model';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 
 const SNACKBAR_DURATION_MS = 3000;
 
@@ -25,6 +24,7 @@ export class CategoryManagement {
   private readonly categoryService = inject(CategoryService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly confirmService = inject(ConfirmService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
@@ -97,26 +97,15 @@ export class CategoryManagement {
   confirmDeleteCategory(category: RewardCategory): void {
     if (category.isProtected) return;
 
-    const dialogData: ConfirmDialogData = {
-      title: 'Delete Category',
-      message: `Are you sure you want to delete "${category.name}"? Any existing rewards or withdrawals in this category will be safely reassigned to "General".`,
-      confirmText: 'Delete & Reassign',
-      cancelText: 'Cancel',
-      isDestructive: true,
-    };
-
-    const dialogRef = this.dialog.open<ConfirmDialog, ConfirmDialogData, boolean>(
-      ConfirmDialog,
-      {
-        width: '400px',
-        data: dialogData,
-      }
-    );
-
-    dialogRef
-      .afterClosed()
+    this.confirmService
+      .ask({
+        title: 'Delete Category',
+        message: `Are you sure you want to delete "${category.name}"? Any existing rewards or withdrawals in this category will be safely reassigned to "General".`,
+        confirmText: 'Delete & Reassign',
+        cancelText: 'Cancel',
+        isDestructive: true,
+      })
       .pipe(
-        filter((res): res is NonNullable<typeof res> => !!res),
         switchMap(() =>
           from(this.categoryService.deleteCategory(category.id)).pipe(
             tap(() => {

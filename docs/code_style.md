@@ -47,7 +47,7 @@ agent that "restores" them is working from a pre-v22 memory:
 | `changeDetection: ChangeDetectionStrategy.OnPush` | `OnPush` is the default in v22. `@angular-eslint/prefer-on-push-component-change-detection` is obsolete here and is deliberately **not** enabled. |
 | `standalone: true` | Default since v20. |
 | `provideZonelessChangeDetection()` | Zoneless is the default; `zone.js` is not installed. |
-| `@Injectable({ providedIn: 'root' })` | Use `@Service()` for singleton services (v22+). 15 services already do; `features/rewards/services/quick-spend-event.service.ts:11` is the last holdout. |
+| `@Injectable({ providedIn: 'root' })` | Use `@Service()` for singleton services (v22+). 19 services already do; `features/rewards/services/quick-spend-event.service.ts:11` is the last holdout. |
 
 Also standing Angular rules: `inject()` over constructor injection, `input()` / `output()` /
 `model()` over decorators, native control flow (`@if` / `@for` / `@switch`), the `host` object over
@@ -108,13 +108,13 @@ review item. Keep it uniform.
 `computed()`, never a field kept in sync by hand. Never mutate a signal's value in place — use
 `set()` / `update()` with a new value.
 
-**Anti-example.** `src/app/features/rewards/components/withdrawal-ledger/withdrawal-ledger.ts:50-53`
+**Anti-example.** `src/app/features/rewards/components/withdrawal-ledger/withdrawal-ledger.ts:48-51`
 holds four plain fields next to three properly declared signals, and binds all four with
 `[(ngModel)]`:
 
 ```ts
 readonly withdrawals = signal<WithdrawalRecord[]>([]);   // correct
-searchQuery = '';                                        // lines 50-53: not signals
+searchQuery = '';                                        // lines 48-51: not signals
 selectedCategoryId = '';
 startDate = '';
 endDate = '';
@@ -169,13 +169,13 @@ An `ngOnDestroy` is legitimate only when it releases something Angular does not 
 
 **Anti-example.** `withdrawal-ledger.ts` stacks all three styles in one file:
 
-- line 55 — `private withdrawalsSub?: Subscription;`
-- lines 60, 96, 164 — `takeUntilDestroyed(this.destroyRef)` on the same and neighbouring streams
-- lines 90-92 and 108-113 — manual `unsubscribe()` in `loadWithdrawals()`, and again in a
+- line 53 — `private withdrawalsSub?: Subscription;`
+- lines 58, 94, 151 — `takeUntilDestroyed(this.destroyRef)` on the same and neighbouring streams
+- lines 88-90 and 106-111 — manual `unsubscribe()` in `loadWithdrawals()`, and again in a
   teardown-only `ngOnDestroy()`
 
 The `Subscription` field and the `ngOnDestroy` are both dead weight: `takeUntilDestroyed` on line 96
-already tears the stream down on destroy. The only thing the manual `unsubscribe()` on line 91
+already tears the stream down on destroy. The only thing the manual `unsubscribe()` on line 89
 actually does is cancel the *previous* filter query when filters change — which is `switchMap`, not
 teardown.
 
@@ -294,8 +294,14 @@ This one is the real failure. It *is* shared, so it qualified for extraction —
 copy-pasted into two files instead of being shared. `TRANSACTION_READ_WRITE` appears in 7 files,
 `DATE_LOCALE_CA` in 5, `SNACKBAR_DURATION_MS` in 4, `ONE_DAY_MS` in 4.
 
-A fourth shape to watch for: `withdrawal-ledger.ts` declares `SNACKBAR_DURATION_MS = 3000` on line 23
-and then writes `{ duration: 3000 }` inline on line 78 anyway.
+`SNACKBAR_DURATION_MS` is the one now part-way fixed: `shared/services/snack-bar.service.ts` owns the
+canonical copy, and `SnackBarService.show()` / `.error(e, fallback?)` replace the
+`snackBar.open(msg, 'Close', { duration })` triple plus the
+`e instanceof Error ? e.message : fallback` dance. `goals-page.ts` is converted; the three remaining
+declarations are call sites that have not been swept yet.
+
+A fourth shape to watch for: `withdrawal-ledger.ts` declares `SNACKBAR_DURATION_MS = 3000` on line 21
+and then writes `{ duration: 3000 }` inline on line 77 anyway.
 
 **Scale.** 262 module-level `SCREAMING_CASE` constants outside specs; about 150 are referenced once
 or never inside their own file. The sweep deletes names, it does not add them.
