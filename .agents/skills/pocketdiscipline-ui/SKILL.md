@@ -65,7 +65,7 @@ Sentence case ("Quick spend", not "Quick Spend"). Keep it short and specific ("M
 Everything must work in both schemes without extra code. If you think you need a `prefers-color-scheme` query, you are using a raw colour. Check both by setting `document.documentElement.dataset.theme = 'dark'` in dev tools.
 
 ## Before you finish
-- [ ] `npm run lint` passes. It includes `scripts/check-ui.mjs`, which fails on new raw colours, var fallbacks, hand-written media queries, raw radii, `::ng-deep`, inline styles, `color=` attributes, emoji and hand-formatted ₴.
+- [ ] `npm run lint` passes. It includes `scripts/check-ui.mjs`; the Enforcement section of `docs/design_system.md` lists what it checks. To check only the files you touched, run `node scripts/check-ui.mjs <file...>`.
 - [ ] Never "fix" the UI check by editing `scripts/ui-baseline.json` by hand. The baseline may only shrink. Run `node scripts/check-ui.mjs --update-baseline` only after *removing* violations.
 - [ ] The screen was checked at 390px and at 1280px, in light and dark.
 - [ ] Any new shared component is in the gallery page and in `docs/design_system.md`.

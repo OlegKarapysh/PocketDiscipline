@@ -9,7 +9,7 @@ are project *workflow* rules, which is a separate concern.
   (`core/` must never import `features/`) is rule 8 in the code style guide.
 - Don't add unnecessary packages.
 - **Verification with Linting**: After writing or modifying code, run `npm run lint` as a mandatory verification step. Fix any resulting lint errors before completing the task. Use `npm run lint -- --fix` for automated formatting fixes. **Never use `eslint-disable` comments or similar suppression directives to hide or bypass lint errors and code style violations. You must structurally fix the underlying code issue instead.**
-- Use Angular Material UI kit as the default for new components instead of creating custom ones.
+- **UI work**: reuse the shared components in `src/app/shared/components` first, then plain Angular Material, before building anything custom. Before touching `.html` or `.scss` under `src/app`, or adding a screen, read `.agents/skills/pocketdiscipline-ui/SKILL.md`; `docs/design_system.md` is the source of truth. `npm run lint` includes `scripts/check-ui.mjs`, a ratchet against `scripts/ui-baseline.json`: fix what it reports and never edit the baseline by hand.
 - Refer to the official Angular v22 documentation for best practices and reference.
 - Always ensure the Angular CLI MCP server is used when developing this project to leverage its workspace awareness, CLI automation, and official documentation access. If the server is not active or configured, prompt the user to start it via `ng mcp`.
 - Do not commit code changes automatically. Let the user review and commit the changes manually.

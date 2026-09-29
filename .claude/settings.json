@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "deny": ["Edit(/scripts/ui-baseline.json)"],
+    "ask": ["Edit(/scripts/check-ui.mjs)"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/design-system-check.mjs"],
+            "timeout": 30,
+            "statusMessage": "Checking the design system"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/design-system-check.mjs"],
+            "timeout": 30,
+            "statusMessage": "Checking the design system"
+          }
+        ]
+      }
+    ]
+  }
+}

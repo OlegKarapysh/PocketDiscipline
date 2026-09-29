@@ -31,7 +31,7 @@ const MULTIPLIER_TIER_4 = 3;
 
 const EVENT_SOURCE_POMODORO = 'pomodoro';
 const NOTIFICATION_TITLE = 'Pomodoro Completed!';
-const NOTIFICATION_ICON_PATH = '/assets/icons/icon-192x192.png';
+const NOTIFICATION_ICON_PATH = 'icons/icon-192x192.png';
 const EVENT_VISIBILITY_CHANGE = 'visibilitychange';
 const VISIBILITY_STATE_VISIBLE = 'visible';
 const PERMISSION_DEFAULT = 'default';

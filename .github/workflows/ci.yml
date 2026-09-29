@@ -12,7 +12,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+      with:
+        # The design-system step reads the baseline as it was on the base commit.
+        fetch-depth: 0
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -24,6 +27,11 @@ jobs:
 
     - name: Lint (ESLint + design-system check)
       run: npm run lint
+
+    - name: Design-system baseline may only shrink
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+      run: node scripts/check-ui.mjs --baseline-against="$BASE_SHA"
       
     - name: Run Unit Tests
       run: npm run test -- --watch=false

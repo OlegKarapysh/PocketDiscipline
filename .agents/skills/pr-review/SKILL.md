@@ -19,6 +19,7 @@ Perform an exhaustive, multi-dimensional code review of a pull request or branch
    - Enforce Vertical Slice Architecture.
    - Enforce [`docs/code_style.md`](file:///c:/Projects/MyProjects/PocketDiscipline/docs/code_style.md) (naming conventions, no magic numbers, explicit types).
    - Enforce [`docs/schema.md`](file:///c:/Projects/MyProjects/PocketDiscipline/docs/schema.md) for data persistence and Dexie operations.
+   - Enforce [`docs/design_system.md`](file:///c:/Projects/MyProjects/PocketDiscipline/docs/design_system.md) for every UI change (shared components, theme tokens, `scripts/check-ui.mjs`).
    - Adhere to Angular v22 zoneless/signals best practices and Angular Material UI usage.
 3. **Actionable & Constructive Feedback**:
    - Classify findings clearly: **CRITICAL** (blocking bugs/security flaws), **MAJOR** (architectural/functional issues), and **MINOR** (nits, styling, small optimizations).
@@ -45,6 +46,7 @@ Perform an exhaustive, multi-dimensional code review of a pull request or branch
   - Does the implementation comply with [`docs/code_style.md`](file:///c:/Projects/MyProjects/PocketDiscipline/docs/code_style.md) and [`docs/schema.md`](file:///c:/Projects/MyProjects/PocketDiscipline/docs/schema.md)?
   - Are there unnecessary dependencies, tight couplings, or circular dependencies?
   - Are naming conventions, file organizations, and modern Angular patterns consistent across the slice?
+  - Does any UI follow [`docs/design_system.md`](file:///c:/Projects/MyProjects/PocketDiscipline/docs/design_system.md): shared components before raw Material, theme and token layer only, one `app-page-header` per routed page? Did `scripts/ui-baseline.json` only shrink, and is any change to `scripts/check-ui.mjs` a tightening?
 
 ### 3. Cybersecurity Expert Subagent
 - **Focus**: Application security, threat modeling, data privacy, injection prevention, secure storage.
@@ -71,7 +73,7 @@ Perform an exhaustive, multi-dimensional code review of a pull request or branch
    ```
 2. Gather project context:
    - Changed files list.
-   - Project rules: `GEMINI.md`, `docs/code_style.md`, `docs/schema.md`.
+   - Project rules: `GEMINI.md`, `docs/code_style.md`, `docs/schema.md`, `docs/design_system.md`.
    - Relevant feature specs in `specs/`.
 
 ### Step 2: Parallel Subagent Dispatch
@@ -89,7 +91,7 @@ Invoke the 3 review subagents concurrently using a single `invoke_subagent` tool
     {
       TypeName: "research",
       Role: "Software Architect Reviewer",
-      Prompt: `Perform an architectural and code style review of the following pull request / changes:\n[DIFF & CONTEXT]\n\nFocus on: Vertical slice architecture, modularity, separation of concerns, docs/code_style.md compliance (no magic values, naming), docs/schema.md compliance, and Angular v22 best practices. Categorize findings into Critical, Major, and Minor with file/line references.`
+      Prompt: `Perform an architectural and code style review of the following pull request / changes:\n[DIFF & CONTEXT]\n\nFocus on: Vertical slice architecture, modularity, separation of concerns, docs/code_style.md compliance (no magic values, naming), docs/schema.md compliance, docs/design_system.md compliance for any UI (shared components, tokens, a baseline that only shrinks), and Angular v22 best practices. Categorize findings into Critical, Major, and Minor with file/line references.`
     },
     {
       TypeName: "research",

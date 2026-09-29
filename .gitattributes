@@ -1,0 +1,7 @@
+# LF everywhere, in the repository and in every working tree, whatever core.autocrlf is set to.
+* text=auto eol=lf
+
+# Binary assets: never convert, never diff as text.
+*.png binary
+*.ico binary
+*.woff2 binary

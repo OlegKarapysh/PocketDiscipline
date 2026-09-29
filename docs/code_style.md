@@ -392,7 +392,9 @@ not.
 
 **Lint-enforced as a ratchet.** `scripts/check-ui.mjs` runs as part of `npm run lint` and fails any
 file that gains a violation against `scripts/ui-baseline.json`. The baseline may only shrink, and
-`--update-baseline` refuses to write while anything has regressed.
+`--update-baseline` refuses to write while anything has regressed. CI also fails a pull request whose
+baseline grew. The rules it checks are listed under
+[Enforcement in design_system.md](./design_system.md#enforcement).
 
 ---
 

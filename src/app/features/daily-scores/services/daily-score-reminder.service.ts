@@ -8,7 +8,7 @@ const REMINDER_HOUR = 21;
 const REMINDER_MINUTE = 30;
 const APP_TITLE = 'Pocket Discipline';
 const REMINDER_BODY = 'Time to set your daily score!';
-const REMINDER_ICON_PATH = '/assets/icons/icon-192x192.png';
+const REMINDER_ICON_PATH = 'icons/icon-192x192.png';
 
 @Service()
 export class DailyScoreReminderService {

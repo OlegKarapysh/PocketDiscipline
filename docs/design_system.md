@@ -51,7 +51,7 @@ Hanken Grotesk via `mat.theme` typography; use the M3 roles (`var(--mat-sys-titl
 
 All three families (Hanken Grotesk, Geist Mono, Material Symbols Rounded) are self-hosted so the app renders offline. The woff2 files and their licences live in `src/styles/fonts/`, the `@font-face` rules in `src/styles/_fonts.scss`, and `ngsw-config.json` precaches them in the `app` group. Never link a font CDN from `index.html`.
 
-To refresh or add a font, request its css2 URL from Google Fonts with a current Chrome user agent (other agents get other formats), download every woff2 it lists, and copy each `@font-face` block into `_fonts.scss` with its `unicode-range` unchanged and `url()` pointing at the local file. Keep the icon font whole: category icons are read from IndexedDB, so a subset could turn a stored icon name into literal text.
+To refresh or add a font, request its css2 URL from Google Fonts with a current Chrome user agent (other agents get other formats), download every woff2 it lists except the `vietnamese` subsets (the app has no Vietnamese text), and copy each `@font-face` block into `_fonts.scss` with its `unicode-range` unchanged and `url()` pointing at the local file. Keep the icon font whole: category icons are read from IndexedDB, so a subset could turn a stored icon name into literal text.
 
 ## Tokens (`_tokens.scss`)
 
@@ -123,3 +123,35 @@ Rules:
 - Money is always `app-amount`. Never interpolate `{{ x }} ₴` by hand.
 - Use `CelebrationService` for earning moments, and `SnackBarService` for everything else ("Morning run done · +200 ₴").
 - One `app-page-header` per routed page.
+
+## Enforcement
+
+`scripts/check-ui.mjs` runs first in `npm run lint`. It records legacy violations per file and rule in `scripts/ui-baseline.json`, and fails any file that gains one. The baseline may only shrink.
+
+| Rule | Fails on | Use instead |
+| --- | --- | --- |
+| `raw-hex`, `raw-rgb`, `raw-named-color` | Literal colours in styles or templates | `var(--mat-sys-*)`, `var(--pd-sys-*)` |
+| `var-fallback` | `var(--token, fallback)` | The token alone |
+| `raw-media` | `@media` | `t.up()`, `t.down()` |
+| `raw-radius` | `border-radius` in px | `t.radius()` |
+| `raw-spacing` | px, rem or em in `padding`, `margin`, `gap` | `t.space()` |
+| `raw-shadow` | A `box-shadow` other than an elevation token or `none` | `var(--pd-sys-elevation-1)`, `var(--pd-sys-elevation-2)` |
+| `raw-font-family` | `font-family` in a component | Type roles, `t.numeric` |
+| `local-token` | A `$variable` or `--custom-property` defined in a component | Ask, then add it to `styles.scss` or `_tokens.scss` |
+| `ng-deep` | `::ng-deep` | `mat.<component>-overrides` |
+| `hand-formatted-money` | `{{ x }} ₴`, `₴ {{ x }}`, `\| currency` | `app-amount` |
+| `m2-color-attr`, `m2-button` | `color="primary"` and friends, `mat-raised-button` | Theme defaults, `mat-flat-button`, `matButton="tonal"` |
+| `inline-style` | `style="..."` | The component `.scss` |
+| `emoji` | Emoji in a template | `mat-icon` |
+| `feature-toolbar` | `mat-toolbar` | `app-page-header` |
+| `raw-toggle-group` | `mat-button-toggle-group` outside `app-segmented-control` | `app-segmented-control` |
+| `mascot` | The mascot image outside `app-empty-state` and the celebration dialog | Nothing: it is a reward |
+| `inline-template` | `template:` or `styles:` in a component, which the check cannot see | `templateUrl`, `styleUrl` |
+| `raw-snackbar`, `raw-dialog` | `inject(MatSnackBar)`; opening `ConfirmDialog` or `CelebrationDialog` directly | `SnackBarService`, `ConfirmService`, `CelebrationService` |
+| `page-header` | A routed page without exactly one `app-page-header` | One `app-page-header` |
+
+- **Locally:** `node scripts/check-ui.mjs [file...]` checks everything, or reports only the given files. After *removing* violations, `--update-baseline` locks the improvement in; it refuses while anything has regressed. Never edit the baseline by hand.
+- **Adding a rule:** add it to `check-ui.mjs` and to this table, confirm that only the new rule regresses, then run `--update-baseline --accept-new-rule=<id>` to record its legacy hits.
+- **CI:** `--baseline-against=<base commit>` fails a pull request whose baseline grew for any rule that already existed on the base branch.
+- **Claude Code:** `.claude/settings.json` runs the check after every edit under `src/app` and again before Claude ends a turn, denies edits to the baseline, and asks before `check-ui.mjs` changes. `.claude/rules/design-system.md` points Claude at the UI skill when it reads a UI file.
+- **Not checked:** layout at 390px and 1280px, dark mode, copy, touch targets, and colour roles such as amber meaning "earned". Those stay with the skill's checklist and review.

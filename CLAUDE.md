@@ -1,6 +1,6 @@
 # PocketDiscipline — agent instructions
 
-Read these two files before writing or reviewing code. They are the source; this file is only a
+Read these files before writing or reviewing code. They are the source; this file is only a
 pointer and deliberately does not repeat what they say.
 
 1. **[docs/code_style.md](docs/code_style.md)** — the single source of truth for code conventions:
@@ -10,6 +10,9 @@ pointer and deliberately does not repeat what they say.
    committing, the Angular CLI MCP server). They apply to every agent working here, not just Gemini.
 3. **[docs/schema.md](docs/schema.md)** — required reading before touching Dexie queries or any data
    access code.
+4. **[docs/design_system.md](docs/design_system.md)** — required reading before any UI change, with the
+   `pocketdiscipline-ui` skill. Claude Code does not discover skills under `.agents/skills/`, so read
+   `.agents/skills/pocketdiscipline-ui/SKILL.md` directly.
 
 If a convention needs to change, change it in `docs/code_style.md`. Do not restate a rule here or in
 `GEMINI.md` — a rule that lives in two places drifts.
