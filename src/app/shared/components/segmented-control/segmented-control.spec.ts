@@ -12,7 +12,8 @@ const OPTIONS: readonly SegmentOption<string>[] = [
 describe('SegmentedControl', () => {
   let fixture: ComponentFixture<SegmentedControl<string>>;
 
-  const toggles = () => Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('mat-button-toggle button'));
+  const toggles = () =>
+    Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('mat-button-toggle button'));
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -28,11 +29,11 @@ describe('SegmentedControl', () => {
   });
 
   it('should render one toggle per option', () => {
-    expect(toggles().map(toggle => toggle.textContent.trim())).toEqual(['7 days', '30 days']);
+    expect(toggles().map((toggle) => toggle.textContent.trim())).toEqual(['7 days', '30 days']);
   });
 
   it('should mark the current value as selected', () => {
-    expect(toggles().map(toggle => toggle.getAttribute('aria-checked'))).toEqual(['true', 'false']);
+    expect(toggles().map((toggle) => toggle.getAttribute('aria-checked'))).toEqual(['true', 'false']);
   });
 
   it('should update the value when another option is chosen', () => {

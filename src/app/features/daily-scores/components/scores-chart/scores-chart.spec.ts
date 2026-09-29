@@ -1,14 +1,10 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { ScoresChart } from './scores-chart';
 import type { DailyScore } from '../../../../core/models/daily-score.model';
-
-const SEVEN_DAYS_COUNT = 7;
-const TEST_SCORE_TEN = 10;
-const TEST_SCORE_SEVEN = 7;
-const DATE_LOCALE_CA = 'en-CA';
+import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
 
 describe('ScoresChart', () => {
   let component: ScoresChart;
@@ -28,9 +24,9 @@ describe('ScoresChart', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.chartData().length).toBe(SEVEN_DAYS_COUNT);
+    expect(component.chartData().length).toBe(7);
     const barWrappers = fixture.debugElement.queryAll(By.css('.bar-wrapper'));
-    expect(barWrappers.length).toBe(SEVEN_DAYS_COUNT);
+    expect(barWrappers.length).toBe(7);
   });
 
   it('should correctly map score values to matching dates in the last 7 days', async () => {
@@ -40,7 +36,7 @@ describe('ScoresChart', () => {
     const mockScores: DailyScore[] = [
       {
         date: todayStr,
-        score: TEST_SCORE_TEN,
+        score: 10,
         rewardEarned: 500,
         streakAtThisDay: 1,
         createdAt: Date.now(),
@@ -53,7 +49,7 @@ describe('ScoresChart', () => {
 
     const todayEntry = component.chartData().find((d) => d.date === todayStr);
     expect(todayEntry).toBeDefined();
-    expect(todayEntry?.score).toBe(TEST_SCORE_TEN);
+    expect(todayEntry?.score).toBe(10);
   });
 
   it('should assign null score for days without a recorded score', async () => {
@@ -71,7 +67,7 @@ describe('ScoresChart', () => {
     const mockScores: DailyScore[] = [
       {
         date: todayStr,
-        score: TEST_SCORE_TEN,
+        score: 10,
         rewardEarned: 500,
         streakAtThisDay: 1,
         createdAt: Date.now(),
@@ -93,7 +89,7 @@ describe('ScoresChart', () => {
     const mockScores: DailyScore[] = [
       {
         date: todayStr,
-        score: TEST_SCORE_SEVEN,
+        score: 7,
         rewardEarned: 0,
         streakAtThisDay: 0,
         createdAt: Date.now(),

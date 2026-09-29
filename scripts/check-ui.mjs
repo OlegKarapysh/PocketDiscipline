@@ -15,25 +15,46 @@ const ROOT = process.cwd();
 const SRC = join(ROOT, 'src/app');
 const BASELINE = join(ROOT, 'scripts/ui-baseline.json');
 const args = process.argv.slice(2);
-const option = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
+const option = (name) => args.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
 const update = args.includes('--update-baseline');
-const acceptedNewRules = args.filter(arg => arg.startsWith('--accept-new-rule=')).map(arg => arg.slice(18));
+const acceptedNewRules = args.filter((arg) => arg.startsWith('--accept-new-rule=')).map((arg) => arg.slice(18));
 const against = option('baseline-against');
-const toKeyPath = path => relative(ROOT, resolve(ROOT, path)).replaceAll('\\', '/');
-const only = new Set(args.filter(arg => !arg.startsWith('--')).map(toKeyPath));
+const toKeyPath = (path) => relative(ROOT, resolve(ROOT, path)).replaceAll('\\', '/');
+const only = new Set(args.filter((arg) => !arg.startsWith('--')).map(toKeyPath));
 
 // [id, pattern, hint, exempt path prefixes]. An exemption is the one wrapper that owns a primitive.
 const SCSS_RULES = [
   ['raw-hex', /#[0-9a-fA-F]{3,8}\b/g, 'Use var(--mat-sys-*) / var(--pd-sys-*) instead of hex'],
   ['raw-rgb', /\b(rgba?|hsla?)\(/g, 'Use theme tokens instead of rgb()/hsl()'],
-  ['raw-named-color', /\b(?:color|background|border|outline|fill|stroke|box-shadow)[\w-]*\s*:[^;{]*\b(?:white|black|red|green|blue|gr[ae]y|orange|yellow|purple|pink|silver|gold)\b/g, 'Use theme tokens instead of named colours'],
+  [
+    'raw-named-color',
+    /\b(?:color|background|border|outline|fill|stroke|box-shadow)[\w-]*\s*:[^;{]*\b(?:white|black|red|green|blue|gr[ae]y|orange|yellow|purple|pink|silver|gold)\b/g,
+    'Use theme tokens instead of named colours',
+  ],
   ['var-fallback', /var\(\s*--[\w-]+\s*,/g, 'No fallback inside var()'],
   ['raw-media', /@media\b/g, 'Use @include t.up(...) / t.down(...)'],
   ['raw-radius', /border-radius\s*:\s*[^;]*\d+px/g, 'Use t.radius(...)'],
-  ['raw-spacing', /(?:^|[\s;{])(?:padding|margin|gap|row-gap|column-gap)(?:-[a-z-]+)?\s*:[^;{]*?\b[1-9]\d*(?:\.\d+)?(?:px|rem|em)\b/g, 'Use t.space(n)'],
-  ['raw-shadow', /box-shadow\s*:(?!\s*(?:none\b|var\(--pd-sys-elevation-\d\)\s*(?:[;}]|$)))/g, 'Use var(--pd-sys-elevation-1) or var(--pd-sys-elevation-2)'],
+  [
+    'raw-spacing',
+    /(?:^|[\s;{])(?:padding|margin|gap|row-gap|column-gap)(?:-[a-z-]+)?\s*:[^;{]*?\b[1-9]\d*(?:\.\d+)?(?:px|rem|em)\b/g,
+    'Use t.space(n)',
+  ],
+  [
+    'raw-shadow',
+    /box-shadow\s*:(?!\s*(?:none\b|var\(--pd-sys-elevation-\d\)\s*(?:[;}]|$)))/g,
+    'Use var(--pd-sys-elevation-1) or var(--pd-sys-elevation-2)',
+  ],
   ['raw-font-family', /font-family\s*:/g, 'Use Material type roles or t.numeric'],
-  ['local-token', /^\s*(?:\$|--)[\w-]+\s*:/g, 'Component styles do not define their own tokens; ask, then add it to styles.scss or _tokens.scss'],
+  [
+    'raw-font-size',
+    /(?:^|[\s;{])font(?:-size)?\s*:[^;{]*?\b\d+(?:\.\d+)?(?:px|rem)\b/g,
+    'Use a Material type role, t.numeric-size(...) or t.icon-size(...)',
+  ],
+  [
+    'local-token',
+    /^\s*(?:\$|--)[\w-]+\s*:/g,
+    'Component styles do not define their own tokens; ask, then add it to styles.scss or _tokens.scss',
+  ],
   ['ng-deep', /::ng-deep/g, 'Use mat.<component>-overrides inside the host selector'],
 ];
 
@@ -46,14 +67,38 @@ const HTML_RULES = [
   ['inline-style', /\sstyle="/g, 'Move styles to the component .scss'],
   ['emoji', /\p{Extended_Pictographic}/gu, 'Use <mat-icon> instead of emoji'],
   ['feature-toolbar', /<mat-toolbar/g, 'Use <app-page-header>; the shell owns navigation'],
-  ['raw-toggle-group', /<mat-button-toggle-group\b/g, 'Use <app-segmented-control>', ['src/app/shared/components/segmented-control/']],
-  ['mascot', /icons\/icon-192x192\.png/g, 'The mascot appears only in app-empty-state and the celebration dialog', ['src/app/shared/components/empty-state/', 'src/app/shared/components/celebration-dialog/']],
+  [
+    'raw-toggle-group',
+    /<mat-button-toggle-group\b/g,
+    'Use <app-segmented-control>',
+    ['src/app/shared/components/segmented-control/'],
+  ],
+  [
+    'mascot',
+    /icons\/icon-192x192\.png/g,
+    'The mascot appears only in app-empty-state and the celebration dialog',
+    ['src/app/shared/components/empty-state/', 'src/app/shared/components/celebration-dialog/'],
+  ],
 ];
 
 const TS_RULES = [
-  ['inline-template', /^\s*(?:template|styles)\s*:/g, 'Use templateUrl / styleUrl, so this check can see the markup and styles'],
-  ['raw-snackbar', /\binject\(\s*MatSnackBar\b/g, 'Use SnackBarService', ['src/app/shared/services/snack-bar.service.ts']],
-  ['raw-dialog', /\.open\s*(?:<[^>]*>)?\(\s*(?:ConfirmDialog|CelebrationDialog)\b/g, 'Use ConfirmService.ask() or CelebrationService.show()', ['src/app/shared/services/']],
+  [
+    'inline-template',
+    /^\s*(?:template|styles)\s*:/g,
+    'Use templateUrl / styleUrl, so this check can see the markup and styles',
+  ],
+  [
+    'raw-snackbar',
+    /\binject\(\s*MatSnackBar\b/g,
+    'Use SnackBarService',
+    ['src/app/shared/services/snack-bar.service.ts'],
+  ],
+  [
+    'raw-dialog',
+    /\.open\s*(?:<[^>]*>)?\(\s*(?:ConfirmDialog|CelebrationDialog)\b/g,
+    'Use ConfirmService.ask() or CelebrationService.show()',
+    ['src/app/shared/services/'],
+  ],
 ];
 
 const PAGE_HEADER = ['page-header', 'A routed page renders exactly one <app-page-header>'];
@@ -77,7 +122,7 @@ function rulesFor(file) {
 
 // Comments are blanked rather than removed, so reported line numbers stay right.
 function stripComments(text, ext) {
-  const blank = comment => comment.replace(/[^\n]/g, '');
+  const blank = (comment) => comment.replace(/[^\n]/g, '');
   if (ext === '.html') return text.replace(/<!--[\s\S]*?-->/g, blank);
   return text.replace(/\/\*[\s\S]*?\*\//g, blank).replace(/(^|[^:])\/\/.*$/gm, '$1');
 }
@@ -85,25 +130,26 @@ function stripComments(text, ext) {
 // Templates of the components that routes load, found through loadComponent imports and component: references.
 function routedTemplates(files) {
   const templates = new Set();
-  for (const file of files.filter(path => path.endsWith('.routes.ts'))) {
+  for (const file of files.filter((path) => path.endsWith('.routes.ts'))) {
     const source = readFileSync(file, 'utf8');
-    const modules = [...source.matchAll(/loadComponent:\s*\(\)\s*=>\s*import\(\s*'([^']+)'/g)].map(match => match[1]);
+    const modules = [...source.matchAll(/loadComponent:\s*\(\)\s*=>\s*import\(\s*'([^']+)'/g)].map((match) => match[1]);
     for (const [, name] of source.matchAll(/\bcomponent:\s*(\w+)/g)) {
       const from = source.match(new RegExp(`import\\s*\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*'([^']+)'`));
       if (from) modules.push(from[1]);
     }
     for (const module of modules) {
       const component = join(dirname(file), `${module}.ts`);
-      const templateUrl = existsSync(component) && readFileSync(component, 'utf8').match(/templateUrl:\s*'([^']+)'/)?.[1];
+      const templateUrl =
+        existsSync(component) && readFileSync(component, 'utf8').match(/templateUrl:\s*'([^']+)'/)?.[1];
       if (templateUrl) templates.add(join(dirname(component), templateUrl));
     }
   }
   return templates;
 }
 
-const fileOf = key => key.split('::')[0];
-const ruleOf = key => key.split('::')[1];
-const inScope = key => !only.size || only.has(fileOf(key));
+const fileOf = (key) => key.split('::')[0];
+const ruleOf = (key) => key.split('::')[1];
+const inScope = (key) => !only.size || only.has(fileOf(key));
 
 const counts = {};
 const findings = [];
@@ -114,7 +160,7 @@ for (const file of files) {
   if (!rules || (only.size && !only.has(rel))) continue;
   const lines = stripComments(readFileSync(file, 'utf8'), extname(file)).split('\n');
   for (const [id, pattern, hint, exempt = []] of rules) {
-    if (exempt.some(prefix => rel.startsWith(prefix))) continue;
+    if (exempt.some((prefix) => rel.startsWith(prefix))) continue;
     lines.forEach((line, i) => {
       const hits = line.match(pattern);
       if (!hits) return;
@@ -137,14 +183,15 @@ const hasBaseline = existsSync(BASELINE);
 const baseline = hasBaseline ? JSON.parse(readFileSync(BASELINE, 'utf8')) : {};
 
 if (against) {
-  const git = (...gitArgs) => execFileSync('git', gitArgs, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  const git = (...gitArgs) =>
+    execFileSync('git', gitArgs, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
   try {
     git('rev-parse', '--verify', '--quiet', `${against}^{commit}`);
   } catch {
     console.error(`Unknown git ref: ${against}`);
     process.exit(1);
   }
-  const atRef = path => {
+  const atRef = (path) => {
     try {
       return git('show', `${against}:${path}`);
     } catch {
@@ -153,7 +200,9 @@ if (against) {
   };
   const before = JSON.parse(atRef('scripts/ui-baseline.json') || '{}');
   // A rule added since <ref> brings its own legacy entries; every older rule may only shrink.
-  const rulesBefore = new Set([...atRef('scripts/check-ui.mjs').matchAll(/\['([a-z][\w-]*)',\s*[/']/g)].map(match => match[1]));
+  const rulesBefore = new Set(
+    [...atRef('scripts/check-ui.mjs').matchAll(/\['([a-z][\w-]*)',\s*[/']/g)].map((match) => match[1]),
+  );
   const grown = Object.entries(baseline).filter(([key, n]) => rulesBefore.has(ruleOf(key)) && n > (before[key] ?? 0));
   if (grown.length) {
     console.error(`scripts/ui-baseline.json grew against ${against}:\n`);
@@ -176,7 +225,9 @@ if (update) {
     process.exit(1);
   }
   const baselinedRules = new Set(Object.keys(baseline).map(ruleOf));
-  const blocking = regressions.filter(([key]) => !acceptedNewRules.includes(ruleOf(key)) || baselinedRules.has(ruleOf(key)));
+  const blocking = regressions.filter(
+    ([key]) => !acceptedNewRules.includes(ruleOf(key)) || baselinedRules.has(ruleOf(key)),
+  );
   if (!hasBaseline || !blocking.length) {
     writeFileSync(BASELINE, JSON.stringify(Object.fromEntries(Object.entries(counts).sort()), null, 2) + '\n');
     console.log(`ui-baseline.json written (${Object.keys(counts).length} entries).`);
@@ -188,15 +239,19 @@ if (regressions.length) {
   console.error('Design-system check failed:\n');
   for (const [key, n] of regressions) {
     console.error(`  ${fileOf(key)}  [${ruleOf(key)}]  ${n} (baseline ${baseline[key] ?? 0})`);
-    for (const f of findings.filter(f => f.key === key)) console.error(`    ${f.where}  ${f.hint}`);
+    for (const f of findings.filter((f) => f.key === key)) console.error(`    ${f.where}  ${f.hint}`);
   }
-  console.error(`\nFix the code. ${update ? 'The baseline was not updated: it may only shrink.' : 'Do not edit scripts/ui-baseline.json to pass.'} Rules: docs/design_system.md#enforcement`);
+  console.error(
+    `\nFix the code. ${update ? 'The baseline was not updated: it may only shrink.' : 'Do not edit scripts/ui-baseline.json to pass.'} Rules: docs/design_system.md#enforcement`,
+  );
   process.exit(1);
 }
 
 const scope = only.size ? ` for ${only.size} file${only.size === 1 ? '' : 's'}` : '';
 if (improved.length) {
-  console.log(`Design-system check passed${scope}. ${improved.length} baseline entr${improved.length === 1 ? 'y' : 'ies'} improved: run \`node scripts/check-ui.mjs --update-baseline\` to lock it in.`);
+  console.log(
+    `Design-system check passed${scope}. ${improved.length} baseline entr${improved.length === 1 ? 'y' : 'ies'} improved: run \`node scripts/check-ui.mjs --update-baseline\` to lock it in.`,
+  );
 } else {
   console.log(`Design-system check passed${scope}.`);
 }

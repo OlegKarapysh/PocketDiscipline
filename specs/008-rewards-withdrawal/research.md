@@ -2,7 +2,7 @@
 
 ## 1. Technology Stack & Zero External Dependencies
 
-- **Decision**: 
+- **Decision**:
   - Build all UI components using Angular v22 standalone components, Angular Material (`@angular/material` - Dialog, Tabs, Card, Form Field, Input, Select, Button, Icon, Menu, ProgressBar, SnackBar), and Angular CDK.
   - Implement the Category Breakdown (Donut/Pie Chart) and Spending Over Time (Bar/Trend Chart) using native, responsive SVG without installing any external charting libraries (e.g., no Chart.js, no D3, no ngx-charts).
 - **Rationale**:
@@ -15,7 +15,7 @@
 
 ## 2. Data Integrity & Atomic Transactions in Dexie.js
 
-- **Decision**: 
+- **Decision**:
   - Bump `DbService` schema to `version(8)` adding three new tables:
     - `withdrawals`: `'id, date, categoryId, timestamp, rewardId'`
     - `rewards`: `'id, categoryId, type, status, createdAt'`
@@ -29,7 +29,7 @@
       }
       await this.db.users.update(CURRENT_USER_ID, {
         balance: user.balance - amount,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       });
       await this.db.withdrawals.add(withdrawalRecord);
       if (isClaim && rewardId) {
@@ -46,7 +46,7 @@
 
 ## 3. Ledger Snapshot Immutability & Reference Model
 
-- **Decision**: 
+- **Decision**:
   - Every `WithdrawalRecord` stores a self-contained snapshot of transaction data at execution time: `title` (string), `amount` (number), `categoryId` (string), `date` (`YYYY-MM-DD`), and `timestamp` (number), plus an optional `rewardId` (string).
   - If a reward is later modified (e.g., cost or title changed) or deleted from the Store, past withdrawal records remain 100% immutable. The `rewardId` remains as a historical pointer or clears without altering the title or amount snapshot in the ledger.
 - **Rationale**:
@@ -57,7 +57,7 @@
 
 ## 4. Category Lifecycle, Safeguards, and Protected Fallback
 
-- **Decision**: 
+- **Decision**:
   - Seed 6 default categories on initial database creation and migration:
     1. "Food & Treats" (icon: `restaurant`, color: `#f59e0b`)
     2. "Entertainment" (icon: `movie`, color: `#8b5cf6`)
@@ -75,7 +75,7 @@
 
 ## 5. Quick Spend UX & Component Sharing
 
-- **Decision**: 
+- **Decision**:
   - Encapsulate the Quick Spend form in `QuickSpendDialogComponent` (Angular Material dialog).
   - Triggerable from:
     1. The `BalanceWidgetComponent` on the Dashboard tab via an intuitive spend icon button (`remove_circle_outline` / `payments`).
@@ -89,7 +89,7 @@
 
 ## 6. Architecture & Slice Layout
 
-- **Decision**: 
+- **Decision**:
   - Create feature slice `src/app/features/rewards/` containing its models, services, components, and pages.
   - Route: `/rewards` loaded lazily in `app.routes.ts`.
   - Main Navigation: Add "Rewards" (`/rewards`, icon: `card_giftcard`) to `NAV_ITEMS` in `src/app/shared/components/layout/layout.ts`.

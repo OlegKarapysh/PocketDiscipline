@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -88,6 +88,19 @@ describe('CategoryManagement', () => {
     expect(component.categories().length).toBe(2);
   });
 
+  it('should render a single page header holding the Add category action', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const headers = compiled.querySelectorAll('app-page-header');
+    expect(headers.length).toBe(1);
+    expect(headers[0].querySelector('h1')?.textContent).toContain('Categories');
+    expect(headers[0].querySelector('.add-category-button')).toBeTruthy();
+  });
+
+  it('should paint each category icon tile with the category colour', () => {
+    const tiles = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.category-icon-box');
+    expect(tiles[1].style.backgroundColor).toBe('rgb(63, 81, 181)');
+  });
+
   it('should render categories with protected lock on General and delete on custom', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const rows = compiled.querySelectorAll('.category-row');
@@ -152,7 +165,9 @@ describe('CategoryManagement', () => {
 
     expect(mockDialog.open).toHaveBeenCalled();
     expect(mockCategoryService.deleteCategory).toHaveBeenCalledWith('cat-custom');
-    expect(mockSnackBar.open).toHaveBeenCalledWith('Category "Hobbies" deleted and items reassigned', 'Close', { duration: 3000 });
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Category "Hobbies" deleted and items reassigned', 'Close', {
+      duration: 3000,
+    });
   });
 
   it('should not delete category when confirmation dialog is cancelled', async () => {

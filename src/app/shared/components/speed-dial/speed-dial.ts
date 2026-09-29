@@ -24,8 +24,8 @@ export class SpeedDial {
     // The dial lives in the app shell, so a back gesture would otherwise leave it open over the next page.
     inject(Router)
       .events.pipe(
-        filter(event => event instanceof NavigationStart),
-        takeUntilDestroyed()
+        filter((event) => event instanceof NavigationStart),
+        takeUntilDestroyed(),
       )
       .subscribe(() => {
         this.close();
@@ -33,7 +33,7 @@ export class SpeedDial {
   }
 
   toggle(): void {
-    this.isOpen.update(open => !open);
+    this.isOpen.update((open) => !open);
   }
 
   close(): void {

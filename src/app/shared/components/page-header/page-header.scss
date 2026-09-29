@@ -16,7 +16,7 @@
 .titles {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: t.space(1);
   min-width: 0;
 }
 

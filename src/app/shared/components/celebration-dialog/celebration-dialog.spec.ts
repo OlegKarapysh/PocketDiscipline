@@ -51,13 +51,13 @@ describe('CelebrationDialog', () => {
   it('should offer only the confirm button, labelled Nice, unless undo is allowed', async () => {
     await setup({ title: 'Goal complete' });
 
-    expect(buttons().map(button => button.textContent.trim())).toEqual(['Nice']);
+    expect(buttons().map((button) => button.textContent.trim())).toEqual(['Nice']);
   });
 
   it('should close with dismissed when the confirm button is clicked', async () => {
     await setup({ title: 'Goal complete', confirmText: 'Great' });
 
-    const confirm = buttons().find(button => button.textContent.includes('Great'));
+    const confirm = buttons().find((button) => button.textContent.includes('Great'));
     confirm?.click();
 
     expect(dialogRefMock.close).toHaveBeenCalledWith('dismissed');
@@ -66,7 +66,7 @@ describe('CelebrationDialog', () => {
   it('should close with undo when Undo is clicked', async () => {
     await setup({ title: 'Goal complete', canUndo: true });
 
-    const undo = buttons().find(button => button.textContent.includes('Undo'));
+    const undo = buttons().find((button) => button.textContent.includes('Undo'));
     undo?.click();
 
     expect(dialogRefMock.close).toHaveBeenCalledWith('undo');

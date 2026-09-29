@@ -48,19 +48,26 @@ export class DesignSystemPage {
 
   readonly period = signal<Period>('last7');
   readonly periodOptions: readonly SegmentOption<Period>[] = [
-    { value: 'last7', label: '7 Days' },
-    { value: 'last14', label: '14 Days' },
-    { value: 'last30', label: '30 Days' },
+    { value: 'last7', label: '7 days' },
+    { value: 'last14', label: '14 days' },
+    { value: 'last30', label: '30 days' },
     { value: 'custom', label: 'Custom' },
   ];
 
   celebrate(): void {
-    this.celebration.show({ title: 'Goal complete', subtitle: 'do 100 squats', amount: 1500, canUndo: true }).subscribe();
+    this.celebration
+      .show({ title: 'Goal complete', subtitle: 'do 100 squats', amount: 1500, canUndo: true })
+      .subscribe();
   }
 
   askDelete(): void {
     this.confirm
-      .ask({ title: 'Delete this goal?', message: 'Its history will be removed. This can’t be undone.', confirmText: 'Delete', isDestructive: true })
+      .ask({
+        title: 'Delete this goal?',
+        message: 'Its history will be removed. This can’t be undone.',
+        confirmText: 'Delete',
+        isDestructive: true,
+      })
       .subscribe();
   }
 }

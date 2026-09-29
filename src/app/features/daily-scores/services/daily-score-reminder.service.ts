@@ -6,9 +6,6 @@ import { DailyScoresService } from './daily-scores.service';
 
 const REMINDER_HOUR = 21;
 const REMINDER_MINUTE = 30;
-const APP_TITLE = 'Pocket Discipline';
-const REMINDER_BODY = 'Time to set your daily score!';
-const REMINDER_ICON_PATH = 'icons/icon-192x192.png';
 
 @Service()
 export class DailyScoreReminderService {
@@ -24,7 +21,7 @@ export class DailyScoreReminderService {
       catchError((err: unknown) => {
         console.error('Failed to schedule daily reminder:', err);
         return of(false);
-      })
+      }),
     );
   }
 
@@ -53,7 +50,10 @@ export class DailyScoreReminderService {
     try {
       const score = await firstValueFrom(this.dailyScoresService.getTodayScore());
       if (!score) {
-        this.notifications.show(APP_TITLE, { body: REMINDER_BODY, icon: REMINDER_ICON_PATH });
+        this.notifications.show('Pocket Discipline', {
+          body: 'Time to set your daily score!',
+          icon: 'icons/icon-192x192.png',
+        });
       }
     } catch (e) {
       console.error('Failed to check today score for notification', e);

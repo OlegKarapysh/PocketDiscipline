@@ -1,7 +1,33 @@
+@use '@angular/material' as mat;
+@use '../../../../../styles/tokens' as t;
+
 .goal-card {
   transition: opacity 0.3s ease;
 
   &.completed {
     opacity: 0.65;
   }
+}
+
+.title {
+  @include t.card-title;
+}
+
+.reward {
+  display: flex;
+  align-items: baseline;
+  gap: t.space(1);
+}
+
+.actions {
+  flex-wrap: wrap;
+  gap: t.space(1);
+}
+
+.delete {
+  @include mat.icon-button-overrides(
+    (
+      icon-color: var(--mat-sys-error),
+    )
+  );
 }

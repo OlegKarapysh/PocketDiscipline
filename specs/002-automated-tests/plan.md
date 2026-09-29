@@ -7,6 +7,7 @@
 **Note**: This template is filled in by the `/speckit-plan` command; its definition describes the execution workflow.
 
 ## Summary
+
 Implement a continuous integration setup using GitHub Actions for the Angular application, incorporating unit testing with the existing Vitest configuration, and introducing Playwright for End-to-End testing. Test failures will strictly break the build with no automatic retries.
 
 ## Technical Context
@@ -36,7 +37,8 @@ Implement a continuous integration setup using GitHub Actions for the Angular ap
 **Scale/Scope**: E2E for core user journeys, Unit tests for components/services
 
 ## Constitution Check
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 No specific constitution violations found. The plan aligns with standard Angular development practices.
 
 ## Project Structure
@@ -74,4 +76,4 @@ src/                     # Application code and unit tests (*.spec.ts)
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-*No violations to justify.*
+_No violations to justify._

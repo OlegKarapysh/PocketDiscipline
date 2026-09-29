@@ -16,7 +16,7 @@
 - Q: How are rewards represented to the user? → A: Completed task rewarded in money (virtual currency)
 - Q: Should the app include a manual data export/import feature for v1? → A: No, basic local storage is fine for now; export can wait
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Responsive Core Navigation (Priority: P1)
 
@@ -52,7 +52,7 @@ As a user, I want to see a Dashboard showing my balance and a Tasks tab where I 
 - How does the system handle extremely small screens (e.g., small older mobile devices or watch screens)?
 - What happens if the dashboard is loaded with zero tracked discipline items? Display an empty state with a call to action.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -66,7 +66,7 @@ As a user, I want to see a Dashboard showing my balance and a Tasks tab where I 
 - **User**: Represents the person using the app to develop discipline, including their virtual money balance.
 - **DisciplineItem**: The core tracking entity, which can be either a recurring habit or a one-off task, with an associated monetary reward value.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

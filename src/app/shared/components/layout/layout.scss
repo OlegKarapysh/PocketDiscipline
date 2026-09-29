@@ -23,7 +23,7 @@
 .content {
   max-width: t.$content-max-width;
   margin: 0 auto;
-  padding: calc(t.space(4) + env(safe-area-inset-top)) t.space(5) calc(t.space(12) + 60px);
+  padding: calc(t.space(4) + env(safe-area-inset-top)) t.space(5) calc(t.$bottom-nav-height + t.space(8));
   box-sizing: border-box;
 
   @include t.up(expanded) {

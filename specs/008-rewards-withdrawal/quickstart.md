@@ -22,6 +22,7 @@ This guide outlines runnable end-to-end validation scenarios to verify the Rewar
 ## Validation Scenarios
 
 ### Scenario 1: Quick Spend from Dashboard Balance Widget
+
 - **Goal**: Verify ad-hoc balance deduction, atomic ledger entry creation, and zero negative balance constraint.
 - **Steps**:
   1. Open Dashboard (`http://localhost:4200/dashboard`).
@@ -38,6 +39,7 @@ This guide outlines runnable end-to-end validation scenarios to verify the Rewar
 ---
 
 ### Scenario 2: Create Custom Rewards & Track Progress
+
 - **Goal**: Verify reward creation and real-time progress calculation in the Store / Wishlist.
 - **Steps**:
   1. Navigate to the Rewards hub (`http://localhost:4200/rewards`) via the main sidebar navigation.
@@ -52,6 +54,7 @@ This guide outlines runnable end-to-end validation scenarios to verify the Rewar
 ---
 
 ### Scenario 3: Claim Rewards & Ledger Synchronicity
+
 - **Goal**: Verify claiming rewards deducts balance, updates one-time status, and logs a withdrawal record.
 - **Steps**:
   1. In the Store tab, click "Claim" on "Specialty Coffee".
@@ -64,6 +67,7 @@ This guide outlines runnable end-to-end validation scenarios to verify the Rewar
 ---
 
 ### Scenario 4: Revert / Delete a Ledger Transaction
+
 - **Goal**: Verify balance refund and reset of claimed one-time rewards upon reverting a withdrawal.
 - **Steps**:
   1. On the "History / Ledger" tab, find the `"Claimed: Specialty Coffee"` withdrawal (80 ₴).
@@ -76,6 +80,7 @@ This guide outlines runnable end-to-end validation scenarios to verify the Rewar
 ---
 
 ### Scenario 5: Category Management & Protected Fallback
+
 - **Goal**: Verify custom category creation and safe reassignment to protected "General".
 - **Steps**:
   1. Navigate to Settings (`http://localhost:4200/settings`).
@@ -91,6 +96,7 @@ This guide outlines runnable end-to-end validation scenarios to verify the Rewar
 ---
 
 ### Scenario 6: Spending Analytics
+
 - **Goal**: Verify category breakdown donut chart and spending timeline.
 - **Steps**:
   1. Navigate to the Rewards Hub -> "Analytics" tab.
@@ -104,11 +110,13 @@ This guide outlines runnable end-to-end validation scenarios to verify the Rewar
 ## Automated Verification
 
 Run unit test suites:
+
 ```bash
 npm test
 ```
 
 Run linting verification:
+
 ```bash
 npm run lint
 ```

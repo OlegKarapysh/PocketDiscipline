@@ -107,7 +107,9 @@ describe('BrowserNotificationService', () => {
     it('should do nothing when the Notification API is unsupported', () => {
       Reflect.deleteProperty(window, 'Notification');
 
-      expect(() => { service.show('Pocket Discipline'); }).not.toThrow();
+      expect(() => {
+        service.show('Pocket Discipline');
+      }).not.toThrow();
     });
   });
 

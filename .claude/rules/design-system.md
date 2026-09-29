@@ -1,9 +1,9 @@
 ---
 paths:
-  - "src/app/**/*.html"
-  - "src/app/**/*.scss"
-  - "src/styles.scss"
-  - "src/styles/**"
+  - 'src/app/**/*.html'
+  - 'src/app/**/*.scss'
+  - 'src/styles.scss'
+  - 'src/styles/**'
 ---
 
 # UI changes follow the design system

@@ -5,3 +5,11 @@ coverage/
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+# Vendored spec-kit tooling: overwritten on upgrade, so keep it byte-identical to upstream.
+.agents/skills/speckit-*/
+.specify/workflows/
+.specify/scripts/
+.specify/templates/
+.specify/extensions.yml
+.specify/integration.json

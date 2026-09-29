@@ -1,30 +1,25 @@
 import { Component, computed, input } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
 import type { DailyScore } from '../../../../core/models/daily-score.model';
-
-const DEFAULT_AVERAGE = 0;
-const DEFAULT_STREAK = 0;
-const DECIMAL_ROUNDING_FACTOR = 10;
-const DATE_LOCALE_CA = 'en-CA';
-const YESTERDAY_OFFSET = 1;
+import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
+import { StatCard } from '../../../../shared/components/stat-card/stat-card';
 
 @Component({
   selector: 'app-scores-stats',
-  imports: [MatCardModule],
+  imports: [StatCard],
   templateUrl: './scores-stats.html',
   styleUrl: './scores-stats.scss',
 })
 export class ScoresStats {
   readonly monthlyScores = input<DailyScore[]>([]);
   readonly latestScore = input<DailyScore | null>(null);
-  
+
   readonly monthlyAverage = computed<number>(() => {
     const scores = this.monthlyScores();
     if (scores.length > 0) {
       const sum = scores.reduce((acc, curr) => acc + curr.score, 0);
-      return Math.round((sum / scores.length) * DECIMAL_ROUNDING_FACTOR) / DECIMAL_ROUNDING_FACTOR;
+      return Math.round((sum / scores.length) * 10) / 10;
     }
-    return DEFAULT_AVERAGE;
+    return 0;
   });
 
   readonly currentStreak = computed<number>(() => {
@@ -33,13 +28,13 @@ export class ScoresStats {
       const today = new Date();
       const todayStr = today.toLocaleDateString(DATE_LOCALE_CA);
       const yesterday = new Date();
-      yesterday.setDate(today.getDate() - YESTERDAY_OFFSET);
+      yesterday.setDate(today.getDate() - 1);
       const yesterdayStr = yesterday.toLocaleDateString(DATE_LOCALE_CA);
 
       if (latest.date === todayStr || latest.date === yesterdayStr) {
         return latest.streakAtThisDay;
       }
     }
-    return DEFAULT_STREAK;
+    return 0;
   });
 }

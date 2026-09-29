@@ -1,17 +1,15 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
-import type { Observable} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { of } from 'rxjs';
 import { TaskList } from './task-list';
 import { TaskService } from '../../../../core/services/task.service';
 import type { DisciplineItem } from '../../../../core/models/discipline-item.model';
 import { DisciplineItemType } from '../../../../core/models/discipline-item-type.enum';
-
-const TEST_TASK_ID = 't-1';
-const TEST_TASK_TITLE = 'Drink 2L Water';
-const TEST_REWARD = 10;
+import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 
 describe('TaskList', () => {
   let component: TaskList;
@@ -24,10 +22,10 @@ describe('TaskList', () => {
 
   const mockTasks: DisciplineItem[] = [
     {
-      id: TEST_TASK_ID,
-      title: TEST_TASK_TITLE,
+      id: 't-1',
+      title: 'Drink 2L Water',
       type: DisciplineItemType.HABIT,
-      rewardValue: TEST_REWARD,
+      rewardValue: 1500,
       isCompleted: false,
       lastCompletedAt: null,
       createdAt: Date.now(),
@@ -43,9 +41,7 @@ describe('TaskList', () => {
 
     await TestBed.configureTestingModule({
       imports: [TaskList],
-      providers: [
-        { provide: TaskService, useValue: taskServiceMock },
-      ],
+      providers: [{ provide: TaskService, useValue: taskServiceMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TaskList);
@@ -57,15 +53,16 @@ describe('TaskList', () => {
     await fixture.whenStable();
 
     const titleEl = fixture.debugElement.query(By.css('.task-title')).nativeElement as HTMLElement;
-    expect(titleEl.textContent.trim()).toBe(TEST_TASK_TITLE);
+    expect(titleEl.textContent.trim()).toBe('Drink 2L Water');
 
     const chipEl = fixture.debugElement.query(By.css('.reward-chip')).nativeElement as HTMLElement;
-    expect(chipEl.textContent).toContain('+10 ₴');
+    expect(chipEl.textContent.replace(/\s+/g, ' ')).toContain(`+${MONEY_FORMAT.format(1500)}`.replace(/\s+/g, ' '));
+    expect(chipEl.textContent).toContain('₴');
   });
 
   it('should complete task when completeTask is invoked for uncompleted task', async () => {
     await component.completeTask(mockTasks[0]);
-    expect(taskServiceMock.completeTask).toHaveBeenCalledWith(TEST_TASK_ID);
+    expect(taskServiceMock.completeTask).toHaveBeenCalledWith('t-1');
   });
 
   it('should complete task when checkbox is clicked in template', async () => {
@@ -81,7 +78,7 @@ describe('TaskList', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(taskServiceMock.completeTask).toHaveBeenCalledWith(TEST_TASK_ID);
+    expect(taskServiceMock.completeTask).toHaveBeenCalledWith('t-1');
   });
 
   it('should not call completeTask if task is already completed', async () => {
@@ -94,15 +91,17 @@ describe('TaskList', () => {
   });
 
   it('should render empty state when task stream is empty and trigger addDummyTask on button click', async () => {
+    taskServiceMock.tasks$ = of([]);
+    fixture = TestBed.createComponent(TaskList);
+    component = fixture.componentInstance;
     const addDummySpy = vi.spyOn(component, 'addDummyTask');
-    component.tasks$ = of([]);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const emptyState = fixture.debugElement.query(By.css('.empty-state'));
+    const emptyState = fixture.debugElement.query(By.directive(EmptyState));
     expect(emptyState).toBeTruthy();
 
-    const addBtn = fixture.debugElement.query(By.css('.empty-state button'));
+    const addBtn = emptyState.query(By.css('button'));
     expect(addBtn).toBeTruthy();
 
     const addBtnEl = addBtn.nativeElement as HTMLElement;
@@ -116,24 +115,9 @@ describe('TaskList', () => {
   it('should sequentially add dummy tasks when addDummyTask is called directly', async () => {
     await component.addDummyTask();
     expect(taskServiceMock.addTask).toHaveBeenCalledTimes(3);
-    expect(taskServiceMock.addTask).toHaveBeenNthCalledWith(
-      1,
-      'Drink 2L Water',
-      DisciplineItemType.HABIT,
-      10
-    );
-    expect(taskServiceMock.addTask).toHaveBeenNthCalledWith(
-      2,
-      'Read 10 pages',
-      DisciplineItemType.HABIT,
-      20
-    );
-    expect(taskServiceMock.addTask).toHaveBeenNthCalledWith(
-      3,
-      'Pay internet bill',
-      DisciplineItemType.ONEOFF,
-      5
-    );
+    expect(taskServiceMock.addTask).toHaveBeenNthCalledWith(1, 'Drink 2L Water', DisciplineItemType.HABIT, 10);
+    expect(taskServiceMock.addTask).toHaveBeenNthCalledWith(2, 'Read 10 pages', DisciplineItemType.HABIT, 20);
+    expect(taskServiceMock.addTask).toHaveBeenNthCalledWith(3, 'Pay internet bill', DisciplineItemType.ONEOFF, 5);
   });
 
   it('should handle errors gracefully when completeTask fails', async () => {

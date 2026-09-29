@@ -1,4 +1,4 @@
-import type { GoalStatus} from './goal-status.type';
+import type { GoalStatus } from './goal-status.type';
 import { GOAL_STATUS } from './goal-status.type';
 
 export { GOAL_STATUS };

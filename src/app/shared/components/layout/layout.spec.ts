@@ -25,7 +25,9 @@ describe('Layout', () => {
   };
 
   const isRailOpen = () =>
-    fixture.debugElement.queryAll(By.directive(MatSidenav)).some(rail => (rail.componentInstance as MatSidenav).opened);
+    fixture.debugElement
+      .queryAll(By.directive(MatSidenav))
+      .some((rail) => (rail.componentInstance as MatSidenav).opened);
 
   beforeEach(async () => {
     compactSubject = new BehaviorSubject<BreakpointState>({ matches: false, breakpoints: {} });
@@ -34,7 +36,7 @@ describe('Layout', () => {
       imports: [Layout],
       providers: [
         // Any standalone component without required inputs will do as the routed page.
-        provideRouter(SECTION_PATHS.map(path => ({ path: path.slice(1), component: Badge }))),
+        provideRouter(SECTION_PATHS.map((path) => ({ path: path.slice(1), component: Badge }))),
         { provide: BreakpointObserver, useValue: { observe: () => compactSubject.asObservable() } },
       ],
     }).compileComponents();
@@ -48,7 +50,7 @@ describe('Layout', () => {
   it('should link every section from the rail', () => {
     const links = fixture.debugElement
       .queryAll(By.css('mat-sidenav a[mat-list-item]'))
-      .map(link => (link.nativeElement as HTMLAnchorElement).getAttribute('href'));
+      .map((link) => (link.nativeElement as HTMLAnchorElement).getAttribute('href'));
 
     expect(links).toEqual(expect.arrayContaining(SECTION_PATHS));
   });
@@ -73,7 +75,7 @@ describe('Layout', () => {
     await setCompact(true);
 
     const bottomNav = fixture.debugElement.query(By.directive(BottomNav)).componentInstance as BottomNav;
-    const reachable = [...bottomNav.items(), ...bottomNav.moreItems()].map(item => item.path);
+    const reachable = [...bottomNav.items(), ...bottomNav.moreItems()].map((item) => item.path);
 
     expect(reachable).toEqual(expect.arrayContaining(SECTION_PATHS));
   });

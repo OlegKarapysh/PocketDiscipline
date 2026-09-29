@@ -4,7 +4,7 @@ import { firstValueFrom, from } from 'rxjs';
 import { UserService } from './user.service';
 import { DbService } from '../../database/db.service';
 import { EventBusService, EVENT_TYPE } from './event-bus.service';
-import type { User} from '../models/user.model';
+import type { User } from '../models/user.model';
 import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
 
 vi.mock('dexie', () => {
@@ -18,13 +18,17 @@ vi.mock('dexie', () => {
       '@@observable'() {
         return {
           subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
-            Promise.resolve().then(fn).then(
-              (val) => {
-                subscriber.next(val);
-                subscriber.complete();
-              },
-              (err: unknown) => { subscriber.error(err); }
-            );
+            Promise.resolve()
+              .then(fn)
+              .then(
+                (val) => {
+                  subscriber.next(val);
+                  subscriber.complete();
+                },
+                (err: unknown) => {
+                  subscriber.error(err);
+                },
+              );
             return {
               unsubscribe() {
                 // no-op for test mock
@@ -98,7 +102,7 @@ describe('UserService', () => {
           id: CURRENT_USER_ID,
           name: CURRENT_USER_NAME,
           balance: DEFAULT_INITIAL_BALANCE,
-        })
+        }),
       );
     });
   });
@@ -120,7 +124,7 @@ describe('UserService', () => {
         CURRENT_USER_ID,
         expect.objectContaining({
           balance: 700,
-        })
+        }),
       );
     });
 
@@ -140,7 +144,7 @@ describe('UserService', () => {
         CURRENT_USER_ID,
         expect.objectContaining({
           balance: 300,
-        })
+        }),
       );
     });
 
@@ -153,7 +157,7 @@ describe('UserService', () => {
         expect.objectContaining({
           id: CURRENT_USER_ID,
           balance: 200,
-        })
+        }),
       );
     });
   });
@@ -182,7 +186,7 @@ describe('UserService', () => {
         CURRENT_USER_ID,
         expect.objectContaining({
           balance: DEFAULT_INITIAL_BALANCE + 200,
-        })
+        }),
       );
     });
 

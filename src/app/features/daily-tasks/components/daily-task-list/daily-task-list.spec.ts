@@ -10,13 +10,12 @@ import { DailyTaskList } from './daily-task-list';
 import { DailyTasksService } from '../../services/daily-tasks.service';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { DailyTaskItem } from '../daily-task-item/daily-task-item';
 import { DailyTaskForm } from '../daily-task-form/daily-task-form';
 
-const TEST_TASK_TITLE = 'Stretch Daily';
-const EASY_DIFFICULTY: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
-
 describe('DailyTaskList', () => {
+  const easy: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
   let component: DailyTaskList;
   let fixture: ComponentFixture<DailyTaskList>;
   let dailyTasksServiceMock: {
@@ -29,8 +28,8 @@ describe('DailyTaskList', () => {
   const mockTasks: DailyTask[] = [
     {
       id: 'task-1',
-      title: TEST_TASK_TITLE,
-      difficulties: [EASY_DIFFICULTY],
+      title: 'Stretch Daily',
+      difficulties: [easy],
       createdAt: Date.now(),
       streak: 2,
       lastCompletedAt: null,
@@ -71,20 +70,21 @@ describe('DailyTaskList', () => {
   });
 
   it('should render empty state when task stream is empty', async () => {
-    component.tasks$ = of([]);
+    dailyTasksServiceMock.tasks$ = of([]);
+    fixture = TestBed.createComponent(DailyTaskList);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const emptyState = fixture.debugElement.query(By.css('.empty-state'));
-    expect(emptyState).toBeTruthy();
-    expect((emptyState.nativeElement as HTMLElement).textContent).toContain('No daily tasks configured yet.');
+    expect(fixture.debugElement.queryAll(By.directive(DailyTaskItem)).length).toBe(0);
+    const emptyState = fixture.debugElement.query(By.directive(EmptyState));
+    expect((emptyState.nativeElement as HTMLElement).textContent).toContain('No daily tasks yet');
   });
 
   it('should open form when Add Daily Task button is clicked in header', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const addBtn = fixture.debugElement.query(By.css('.header button[mat-fab]'));
+    const addBtn = fixture.debugElement.query(By.css('.header button.add'));
     expect(addBtn).toBeTruthy();
 
     (addBtn.nativeElement as HTMLElement).click();
@@ -112,9 +112,9 @@ describe('DailyTaskList', () => {
 
   it('should toggle form visibility and create task upon onTaskCreated', async () => {
     component.showForm.set(true);
-    await component.onTaskCreated({ title: TEST_TASK_TITLE, difficulties: [EASY_DIFFICULTY] });
+    await component.onTaskCreated({ title: 'Stretch Daily', difficulties: [easy] });
 
-    expect(dailyTasksServiceMock.createTask).toHaveBeenCalledWith(TEST_TASK_TITLE, [EASY_DIFFICULTY]);
+    expect(dailyTasksServiceMock.createTask).toHaveBeenCalledWith('Stretch Daily', [easy]);
     expect(component.showForm()).toBe(false);
   });
 
@@ -123,7 +123,7 @@ describe('DailyTaskList', () => {
     dailyTasksServiceMock.createTask.mockRejectedValueOnce(new Error('Create error'));
 
     component.showForm.set(true);
-    await component.onTaskCreated({ title: TEST_TASK_TITLE, difficulties: [EASY_DIFFICULTY] });
+    await component.onTaskCreated({ title: 'Stretch Daily', difficulties: [easy] });
 
     expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
     expect(component.showForm()).toBe(false);
@@ -137,10 +137,10 @@ describe('DailyTaskList', () => {
     const itemEl = fixture.debugElement.query(By.directive(DailyTaskItem));
     const itemComp = itemEl.componentInstance as DailyTaskItem;
 
-    itemComp.complete.emit(EASY_DIFFICULTY);
+    itemComp.complete.emit(easy);
     await fixture.whenStable();
 
-    expect(dailyTasksServiceMock.completeTask).toHaveBeenCalledWith(mockTasks[0], EASY_DIFFICULTY);
+    expect(dailyTasksServiceMock.completeTask).toHaveBeenCalledWith(mockTasks[0], easy);
   });
 
   it('should open the form when reached with ?new, then drop the param from the URL', async () => {
@@ -175,7 +175,7 @@ describe('DailyTaskList', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
     dailyTasksServiceMock.completeTask.mockRejectedValueOnce(new Error('Complete error'));
 
-    await component.onCompleteTask(mockTasks[0], EASY_DIFFICULTY);
+    await component.onCompleteTask(mockTasks[0], easy);
 
     expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
     consoleSpy.mockRestore();

@@ -1,12 +1,14 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import type { Goal } from '../../../../core/models/goal.model';
+import { GOAL_STATUS } from '../../../../core/models/goal.model';
+import { Amount } from '../../../../shared/components/amount/amount';
 
 @Component({
-  imports: [MatCardModule, MatButtonModule, MatIconModule],
+  imports: [MatCardModule, MatButtonModule, MatIconModule, Amount],
   selector: 'app-goal-item',
   styleUrl: './goal-item.scss',
   templateUrl: './goal-item.html',
@@ -17,4 +19,7 @@ export class GoalItem {
   undo = output<string>();
   edit = output<Goal>();
   delete = output<string>();
+
+  readonly isActive = computed(() => this.goal().status === GOAL_STATUS.ACTIVE);
+  readonly isCompleted = computed(() => this.goal().status === GOAL_STATUS.COMPLETED);
 }

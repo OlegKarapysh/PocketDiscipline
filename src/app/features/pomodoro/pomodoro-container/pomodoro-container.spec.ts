@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
@@ -35,9 +35,7 @@ describe('PomodoroContainer', () => {
 
     await TestBed.configureTestingModule({
       imports: [PomodoroContainer],
-      providers: [
-        { provide: PomodoroTimerService, useValue: timerServiceMock },
-      ],
+      providers: [{ provide: PomodoroTimerService, useValue: timerServiceMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PomodoroContainer);
@@ -54,5 +52,14 @@ describe('PomodoroContainer', () => {
     expect(display).toBeTruthy();
     expect(controls).toBeTruthy();
     expect(config).toBeTruthy();
+  });
+
+  it('should render a single page header titled Pomodoro', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const headers = fixture.debugElement.queryAll(By.css('app-page-header'));
+    expect(headers.length).toBe(1);
+    expect((headers[0].nativeElement as HTMLElement).textContent).toContain('Pomodoro');
   });
 });

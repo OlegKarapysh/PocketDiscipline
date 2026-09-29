@@ -7,6 +7,7 @@
 ## Summary
 
 Implement a comprehensive Rewards and Balance Withdrawal system that allows users to redeem their earned discipline balance for real-world rewards and track personal spending. The feature provides:
+
 1. Quick Spend ad-hoc withdrawals directly from the Dashboard balance widget and Rewards hub.
 2. Reward Store & Wishlist with visual savings progress indicators, repeatable treat vs. one-time milestone distinction, and instant claiming.
 3. Dedicated Rewards Hub with Store, History / Ledger (searchable, filterable, with balance-refunding reverts), and Spending Analytics (native SVG category donut and timeline trend charts).
@@ -35,12 +36,12 @@ Implement a comprehensive Rewards and Balance Withdrawal system that allows user
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-- [x] Does the implementation use a Vertical Slice Architecture? *(Feature is completely encapsulated under `src/app/features/rewards/` with minimal integration touchpoints in Dashboard, Settings, and Layout).*
-- [x] Have we minimized external dependencies (i.e., are all new packages strictly necessary)? *(Zero new npm packages installed; native SVG used for donut and trend charts).*
-- [x] Will the new code comply with ESLint, EditorConfig, and Prettier configurations? *(Standard mandatory `npm run lint` verification).*
-- [x] Does the design adhere to SOLID principles and established developer best practices? *(Services strictly separate concerns: `WithdrawalService`, `RewardsService`, `CategoryService`, `SpendingAnalyticsService`).*
+- [x] Does the implementation use a Vertical Slice Architecture? _(Feature is completely encapsulated under `src/app/features/rewards/` with minimal integration touchpoints in Dashboard, Settings, and Layout)._
+- [x] Have we minimized external dependencies (i.e., are all new packages strictly necessary)? _(Zero new npm packages installed; native SVG used for donut and trend charts)._
+- [x] Will the new code comply with ESLint, EditorConfig, and Prettier configurations? _(Standard mandatory `npm run lint` verification)._
+- [x] Does the design adhere to SOLID principles and established developer best practices? _(Services strictly separate concerns: `WithdrawalService`, `RewardsService`, `CategoryService`, `SpendingAnalyticsService`)._
 
 ## Project Structure
 
@@ -112,6 +113,6 @@ src/
 
 ## Complexity Tracking
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| *None* | *Fully compliant with Constitution and Project Rules* | *N/A* |
+| Violation | Why Needed                                            | Simpler Alternative Rejected Because |
+| --------- | ----------------------------------------------------- | ------------------------------------ |
+| _None_    | _Fully compliant with Constitution and Project Rules_ | _N/A_                                |

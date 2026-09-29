@@ -22,10 +22,10 @@ export class BottomNav {
   private readonly url = toSignal(
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-      map(event => event.urlAfterRedirects)
+      map((event) => event.urlAfterRedirects),
     ),
-    { initialValue: this.router.url }
+    { initialValue: this.router.url },
   );
 
-  readonly isMoreActive = computed(() => this.moreItems().some(item => this.url().startsWith(item.path)));
+  readonly isMoreActive = computed(() => this.moreItems().some((item) => this.url().startsWith(item.path)));
 }

@@ -1,14 +1,12 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { GoalList } from './goal-list';
-import type { Goal} from '../../../../core/models/goal.model';
+import type { Goal } from '../../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../../core/models/goal.model';
 import { GoalItem } from '../goal-item/goal-item';
-
-const TEST_GOAL_TITLE_1 = 'do 50 push-ups on fists';
-const TEST_GOAL_TITLE_2 = 'do 100 squats';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 
 describe('GoalList', () => {
   let component: GoalList;
@@ -27,7 +25,7 @@ describe('GoalList', () => {
     const activeGoals: Goal[] = [
       {
         id: 'g-1',
-        title: TEST_GOAL_TITLE_1,
+        title: 'do 50 push-ups on fists',
         rewardValue: 2000,
         status: GOAL_STATUS.ACTIVE,
         completedAt: null,
@@ -52,16 +50,16 @@ describe('GoalList', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const emptyState = fixture.debugElement.query(By.css('.empty-state'));
+    const emptyState = fixture.debugElement.query(By.directive(EmptyState));
     expect(emptyState).toBeTruthy();
-    expect((emptyState.nativeElement as HTMLElement).textContent).toContain('No active goals right now.');
+    expect((emptyState.nativeElement as HTMLElement).textContent).toContain('No active goals right now');
   });
 
   it('should group completed goals by month and year', async () => {
     const completedGoals: Goal[] = [
       {
         id: 'g-1',
-        title: TEST_GOAL_TITLE_1,
+        title: 'do 50 push-ups on fists',
         rewardValue: 2000,
         status: GOAL_STATUS.COMPLETED,
         completedAt: new Date(2026, 7, 25).getTime(), // Month is 0-indexed (7 = August)
@@ -69,7 +67,7 @@ describe('GoalList', () => {
       },
       {
         id: 'g-2',
-        title: TEST_GOAL_TITLE_2,
+        title: 'do 100 squats',
         rewardValue: 1500,
         status: GOAL_STATUS.COMPLETED,
         completedAt: new Date(2026, 6, 25).getTime(), // Month is 0-indexed (6 = July)
@@ -95,7 +93,7 @@ describe('GoalList', () => {
     const activeGoals: Goal[] = [
       {
         id: 'g-1',
-        title: TEST_GOAL_TITLE_1,
+        title: 'do 50 push-ups on fists',
         rewardValue: 2000,
         status: GOAL_STATUS.ACTIVE,
         completedAt: null,
@@ -132,7 +130,7 @@ describe('GoalList', () => {
     const completedGoals: Goal[] = [
       {
         id: 'g-1',
-        title: TEST_GOAL_TITLE_1,
+        title: 'do 50 push-ups on fists',
         rewardValue: 2000,
         status: GOAL_STATUS.COMPLETED,
         completedAt: new Date(2026, 7, 25).getTime(),

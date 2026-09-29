@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
@@ -36,7 +36,7 @@ describe('ScoreInput', () => {
     fixture.detectChanges();
 
     expect(component.internalSelectedScore()).toBe(5);
-    expect(component.activeTier()?.label).toBe('Moderate Discipline');
+    expect(component.activeTier()?.label).toBe('Moderate discipline');
   });
 
   it('should not update internalSelectedScore when readonly is true', async () => {
@@ -89,7 +89,7 @@ describe('ScoreInput', () => {
     const feedbackBanner = fixture.debugElement.query(By.css('.feedback-banner'));
     expect(feedbackBanner).toBeTruthy();
     expect(component.internalSelectedScore()).toBe(1);
-    expect(component.activeTier()?.label).toBe('Low Discipline');
+    expect(component.activeTier()?.label).toBe('Low discipline');
   });
 
   it('should render readonly score display when readonly is true', async () => {

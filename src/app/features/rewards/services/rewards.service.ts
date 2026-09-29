@@ -10,12 +10,6 @@ import type { CreateRewardDto } from '../models/create-reward.dto';
 import type { UpdateRewardDto } from '../models/update-reward.dto';
 import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 
-const ERROR_INVALID_COST = 'Reward cost must be greater than zero';
-const ERROR_EMPTY_TITLE = 'Reward title cannot be empty';
-const ERROR_REWARD_NOT_FOUND = 'Reward not found';
-const ERROR_INSUFFICIENT_BALANCE = 'Insufficient balance to claim reward';
-const TRANSACTION_READ_WRITE = 'rw';
-
 function getTodayDateString(): string {
   const now = new Date();
   const year = String(now.getFullYear());
@@ -33,10 +27,10 @@ export class RewardsService {
       liveQuery(async () => {
         let rewards = await this.db.rewards.orderBy('createdAt').reverse().toArray();
         if (status) {
-          rewards = rewards.filter(r => r.status === status);
+          rewards = rewards.filter((r) => r.status === status);
         }
         return rewards;
-      })
+      }),
     );
   }
 
@@ -46,12 +40,12 @@ export class RewardsService {
 
   async createReward(dto: CreateRewardDto): Promise<RewardItem> {
     if (dto.cost <= 0 || !Number.isFinite(dto.cost)) {
-      throw new Error(ERROR_INVALID_COST);
+      throw new Error('Reward cost must be greater than zero');
     }
 
     const trimmedTitle = dto.title.trim();
     if (!trimmedTitle) {
-      throw new Error(ERROR_EMPTY_TITLE);
+      throw new Error('Reward title cannot be empty');
     }
 
     const newReward: RewardItem = {
@@ -74,7 +68,7 @@ export class RewardsService {
   async updateReward(id: string, dto: UpdateRewardDto): Promise<RewardItem> {
     const existing = await this.db.rewards.get(id);
     if (!existing) {
-      throw new Error(ERROR_REWARD_NOT_FOUND);
+      throw new Error('Reward not found');
     }
 
     const updates: Partial<RewardItem> = {
@@ -84,14 +78,14 @@ export class RewardsService {
     if (dto.title !== undefined) {
       const trimmed = dto.title.trim();
       if (!trimmed) {
-        throw new Error(ERROR_EMPTY_TITLE);
+        throw new Error('Reward title cannot be empty');
       }
       updates.title = trimmed;
     }
 
     if (dto.cost !== undefined) {
       if (dto.cost <= 0 || !Number.isFinite(dto.cost)) {
-        throw new Error(ERROR_INVALID_COST);
+        throw new Error('Reward cost must be greater than zero');
       }
       updates.cost = dto.cost;
     }
@@ -111,61 +105,55 @@ export class RewardsService {
   async deleteReward(id: string): Promise<void> {
     const existing = await this.db.rewards.get(id);
     if (!existing) {
-      throw new Error(ERROR_REWARD_NOT_FOUND);
+      throw new Error('Reward not found');
     }
     await this.db.rewards.delete(id);
   }
 
   async claimReward(reward: RewardItem): Promise<WithdrawalRecord> {
-    return await this.db.transaction(
-      TRANSACTION_READ_WRITE,
-      this.db.users,
-      this.db.withdrawals,
-      this.db.rewards,
-      async () => {
-        const currentReward = await this.db.rewards.get(reward.id);
-        if (!currentReward) throw new Error(ERROR_REWARD_NOT_FOUND);
-        if (currentReward.type === 'one-time' && currentReward.status === 'claimed') {
-          throw new Error('Reward already claimed');
-        }
+    return await this.db.transaction('rw', this.db.users, this.db.withdrawals, this.db.rewards, async () => {
+      const currentReward = await this.db.rewards.get(reward.id);
+      if (!currentReward) throw new Error('Reward not found');
+      if (currentReward.type === 'one-time' && currentReward.status === 'claimed') {
+        throw new Error('Reward already claimed');
+      }
 
-        const user = await this.db.users.get(CURRENT_USER_ID);
-        if (!user || user.balance < currentReward.cost) {
-          throw new Error(ERROR_INSUFFICIENT_BALANCE);
-        }
+      const user = await this.db.users.get(CURRENT_USER_ID);
+      if (!user || user.balance < currentReward.cost) {
+        throw new Error('Insufficient balance to claim reward');
+      }
 
-        await this.db.users.update(CURRENT_USER_ID, {
-          balance: user.balance - currentReward.cost,
+      await this.db.users.update(CURRENT_USER_ID, {
+        balance: user.balance - currentReward.cost,
+        updatedAt: Date.now(),
+      });
+
+      const createdRecord: WithdrawalRecord = {
+        id: crypto.randomUUID(),
+        amount: currentReward.cost,
+        title: `Claimed: ${currentReward.title}`,
+        categoryId: currentReward.categoryId,
+        notes: `Redeemed ${currentReward.type === 'one-time' ? 'milestone' : 'reward'} from store`,
+        date: getTodayDateString(),
+        timestamp: Date.now(),
+        rewardId: currentReward.id,
+      };
+
+      await this.db.withdrawals.add(createdRecord);
+
+      if (currentReward.type === 'one-time') {
+        await this.db.rewards.update(currentReward.id, {
+          status: 'claimed',
+          claimedAt: Date.now(),
           updatedAt: Date.now(),
         });
-
-        const createdRecord: WithdrawalRecord = {
-          id: crypto.randomUUID(),
-          amount: currentReward.cost,
-          title: `Claimed: ${currentReward.title}`,
-          categoryId: currentReward.categoryId,
-          notes: `Redeemed ${currentReward.type === 'one-time' ? 'milestone' : 'reward'} from store`,
-          date: getTodayDateString(),
-          timestamp: Date.now(),
-          rewardId: currentReward.id,
-        };
-
-        await this.db.withdrawals.add(createdRecord);
-
-        if (currentReward.type === 'one-time') {
-          await this.db.rewards.update(currentReward.id, {
-            status: 'claimed',
-            claimedAt: Date.now(),
-            updatedAt: Date.now(),
-          });
-        } else {
-          await this.db.rewards.update(currentReward.id, {
-            claimCount: (currentReward.claimCount || 0) + 1,
-            updatedAt: Date.now(),
-          });
-        }
-        return createdRecord;
+      } else {
+        await this.db.rewards.update(currentReward.id, {
+          claimCount: (currentReward.claimCount || 0) + 1,
+          updatedAt: Date.now(),
+        });
       }
-    );
+      return createdRecord;
+    });
   }
 }

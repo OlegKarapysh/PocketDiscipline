@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EarningsStats } from './earnings-stats';
@@ -37,9 +37,12 @@ describe('EarningsStats', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('September 2026');
-    expect(compiled.textContent).toContain('1500');
-    expect(compiled.textContent).toContain('3000');
-    expect(compiled.textContent).toContain('2 elapsed days');
+    const [average, total] = Array.from(compiled.querySelectorAll('app-stat-card'));
+    expect(average.textContent).toContain('Daily average');
+    expect(average.querySelector('app-amount')?.textContent).toBe(`${(1500).toLocaleString('uk-UA')}₴/day`);
+    expect(average.textContent).toContain('Based on 2 elapsed days');
+    expect(total.textContent).toContain('Total earned');
+    expect(total.querySelector('app-amount')?.textContent).toBe(`${(3000).toLocaleString('uk-UA')}₴`);
   });
 
   it('should navigate to previous month and emit monthChange', () => {
@@ -92,7 +95,9 @@ describe('EarningsStats', () => {
 
     expect(component.isNextDisabled()).toBe(true);
 
-    const nextBtn = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('button[aria-label="Next Month"]');
+    const nextBtn = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      'button[aria-label="Next month"]',
+    );
     expect(nextBtn?.disabled).toBe(true);
 
     component.goToNextMonth();
@@ -117,6 +122,7 @@ describe('EarningsStats', () => {
     const emptyIndicator = compiled.querySelector('.empty-earnings-indicator');
     expect(emptyIndicator).toBeTruthy();
     expect(emptyIndicator?.textContent).toContain('No earnings recorded for this month');
+    expect(compiled.textContent).toContain('Based on 31 calendar days');
   });
 
   it('should not display empty earnings indicator when totalEarned is greater than 0', () => {
@@ -133,8 +139,7 @@ describe('EarningsStats', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.stat-highlight')).toBeNull();
+    expect(compiled.querySelector('app-stat-card')).toBeNull();
     expect(compiled.querySelector('.empty-earnings-indicator')).toBeNull();
   });
 });
-

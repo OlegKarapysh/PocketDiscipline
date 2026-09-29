@@ -17,13 +17,17 @@ vi.mock('dexie', () => {
       '@@observable'() {
         return {
           subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
-            Promise.resolve().then(fn).then(
-              (val) => {
-                subscriber.next(val);
-                subscriber.complete();
-              },
-              (err: unknown) => { subscriber.error(err); }
-            );
+            Promise.resolve()
+              .then(fn)
+              .then(
+                (val) => {
+                  subscriber.next(val);
+                  subscriber.complete();
+                },
+                (err: unknown) => {
+                  subscriber.error(err);
+                },
+              );
             return {
               unsubscribe() {
                 // no-op for mock
@@ -89,10 +93,7 @@ describe('SpendingAnalyticsService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        SpendingAnalyticsService,
-        { provide: DbService, useValue: mockDb },
-      ],
+      providers: [SpendingAnalyticsService, { provide: DbService, useValue: mockDb }],
     });
 
     service = TestBed.inject(SpendingAnalyticsService);
@@ -154,7 +155,7 @@ describe('SpendingAnalyticsService', () => {
     ];
 
     const categoryMap = new Map<string, RewardCategory>();
-    mockCategories.forEach(c => categoryMap.set(c.id, c));
+    mockCategories.forEach((c) => categoryMap.set(c.id, c));
 
     const result = service.computeAnalytics('thisMonth', withdrawals, categoryMap);
 
@@ -162,8 +163,8 @@ describe('SpendingAnalyticsService', () => {
     expect(result.withdrawalCount).toBe(2);
     expect(result.categoryBreakdown.length).toBe(2);
 
-    const gearBreakdown = result.categoryBreakdown.find(c => c.categoryId === 'cat-gear');
-    const foodBreakdown = result.categoryBreakdown.find(c => c.categoryId === 'cat-food');
+    const gearBreakdown = result.categoryBreakdown.find((c) => c.categoryId === 'cat-gear');
+    const foodBreakdown = result.categoryBreakdown.find((c) => c.categoryId === 'cat-food');
 
     expect(gearBreakdown?.totalSpent).toBe(700);
     expect(gearBreakdown?.percentage).toBe(70);
@@ -173,7 +174,7 @@ describe('SpendingAnalyticsService', () => {
 
   it('should handle empty withdrawals gracefully', () => {
     const categoryMap = new Map<string, RewardCategory>();
-    mockCategories.forEach(c => categoryMap.set(c.id, c));
+    mockCategories.forEach((c) => categoryMap.set(c.id, c));
 
     const result = service.computeAnalytics('thisMonth', [], categoryMap);
 
@@ -206,7 +207,7 @@ describe('SpendingAnalyticsService', () => {
 
     expect(result.granularity).toBe('daily');
     expect(result.spendingTrend.length).toBe(30);
-    const todayPoint = result.spendingTrend.find(p => p.dateOrMonth === todayStr);
+    const todayPoint = result.spendingTrend.find((p) => p.dateOrMonth === todayStr);
     expect(todayPoint?.amount).toBe(120);
   });
 
@@ -237,8 +238,8 @@ describe('SpendingAnalyticsService', () => {
     expect(result.granularity).toBe('monthly');
     expect(result.spendingTrend.length).toBe(12);
 
-    const janPoint = result.spendingTrend.find(p => p.dateOrMonth === `${year}-01`);
-    const febPoint = result.spendingTrend.find(p => p.dateOrMonth === `${year}-02`);
+    const janPoint = result.spendingTrend.find((p) => p.dateOrMonth === `${year}-01`);
+    const febPoint = result.spendingTrend.find((p) => p.dateOrMonth === `${year}-02`);
     expect(janPoint?.amount).toBe(500);
     expect(febPoint?.amount).toBe(250);
   });
@@ -264,7 +265,7 @@ describe('SpendingAnalyticsService', () => {
     ];
 
     const categoryMap = new Map<string, RewardCategory>();
-    mockCategories.forEach(c => categoryMap.set(c.id, c));
+    mockCategories.forEach((c) => categoryMap.set(c.id, c));
 
     const result = service.computeAnalytics('allTime', withdrawals, categoryMap);
 

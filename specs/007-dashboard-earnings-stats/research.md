@@ -3,7 +3,7 @@
 ## Technology Stack & Zero External Dependencies
 
 - **Decision**: Implement the stacked bar chart using native SVG within an Angular standalone component (`EarningsChartComponent`), styled with SCSS and integrated with Angular Material for filters (`MatButtonToggleModule`, `MatDatepickerModule`, `MatNativeDateModule`) and cards (`MatCardModule`, `MatIconModule`).
-- **Rationale**: 
+- **Rationale**:
   - Adheres strictly to Principle II (Minimal Dependencies) and user rules.
   - Adding charting libraries like Chart.js or D3 increases bundle size significantly, introduces third-party lifecycle quirks, and is unnecessary for clean 2D stacked bar charts.
   - Native SVG with dynamic `viewBox` is lightweight, sharp at any DPI, natively reactive to Angular signals/RxJS, and easy to unit test without DOM canvas mock hacks.
@@ -14,7 +14,7 @@
 
 ## Historical Earnings Data Sourcing & Aggregation
 
-- **Decision**: 
+- **Decision**:
   - PocketDiscipline tracks earnings across four distinct disciplines:
     1. **Goals**: Table `goals` already records `completedAt` timestamp and `rewardValue`.
     2. **Daily Scores**: Table `dailyScores` already records `date` (`YYYY-MM-DD`) and `rewardEarned`.
@@ -31,7 +31,7 @@
 
 ## Date Range, Calendar Calculations & Timezone Handling
 
-- **Decision**: 
+- **Decision**:
   - Standardize on ISO date strings (`YYYY-MM-DD`) using local timezone (`en-CA` locale, matching `DailyScoresService`).
   - For preset ranges (`last7`, `last14`, `last30`): calculate start date by subtracting $(N - 1)$ days from the current local date, ensuring $N$ total consecutive days including today.
   - Every day in the range is explicitly generated in chronological sequence; days with no activities receive 0 earnings.
@@ -48,7 +48,7 @@
 
 ## Component Architecture & State Management
 
-- **Decision**: 
+- **Decision**:
   - Structure the dashboard slice under `src/app/features/dashboard/`:
     - `Dashboard` (Container): orchestrates layout and connects services.
     - `BalanceWidgetComponent`: existing balance card.

@@ -64,7 +64,7 @@ describe('DailyScoreReminderService', () => {
 
     expect(notificationsMock.show).toHaveBeenCalledWith(
       'Pocket Discipline',
-      expect.objectContaining({ body: 'Time to set your daily score!' })
+      expect.objectContaining({ body: 'Time to set your daily score!' }),
     );
   });
 
@@ -119,10 +119,7 @@ describe('DailyScoreReminderService', () => {
     const granted = await firstValueFrom(service.scheduleDailyReminder());
 
     expect(granted).toBe(false);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Failed to schedule daily reminder:',
-      expect.any(Error)
-    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to schedule daily reminder:', expect.any(Error));
     expect(vi.getTimerCount()).toBe(0);
   });
 
@@ -136,10 +133,7 @@ describe('DailyScoreReminderService', () => {
     await firstValueFrom(service.scheduleDailyReminder());
     await vi.advanceTimersByTimeAsync(11.5 * 60 * 60 * 1000);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Failed to check today score for notification',
-      expect.any(Error)
-    );
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to check today score for notification', expect.any(Error));
     expect(notificationsMock.show).not.toHaveBeenCalled();
     expect(vi.getTimerCount()).toBeGreaterThan(0);
   });

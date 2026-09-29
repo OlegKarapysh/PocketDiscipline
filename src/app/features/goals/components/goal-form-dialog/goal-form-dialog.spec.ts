@@ -1,35 +1,26 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { FormBuilder } from '@angular/forms';
+import { describe, expect, it, vi } from 'vitest';
+import { By } from '@angular/platform-browser';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { GoalFormDialog } from './goal-form-dialog';
 import type { GoalFormDialogData } from '../../models/goal-form-dialog-data.model';
-import type { Goal} from '../../../../core/models/goal.model';
+import type { Goal } from '../../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../../core/models/goal.model';
-
-const TEST_TITLE = 'Run a Marathon';
-const TEST_REWARD = 5000;
-const INVALID_SHORT_TITLE = 'ab';
-const INVALID_ZERO_REWARD = 0;
 
 describe('GoalFormDialog', () => {
   let component: GoalFormDialog;
   let fixture: ComponentFixture<GoalFormDialog>;
   let dialogRefMock: { close: ReturnType<typeof vi.fn> };
-  let mockData: GoalFormDialogData;
 
-  const setupTestBed = async (data: GoalFormDialogData = {}) => {
-    TestBed.resetTestingModule();
-    mockData = data;
+  const setup = async (data: GoalFormDialogData = {}) => {
     dialogRefMock = { close: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [GoalFormDialog],
       providers: [
-        FormBuilder,
         { provide: MatDialogRef, useValue: dialogRefMock },
-        { provide: MAT_DIALOG_DATA, useValue: mockData },
+        { provide: MAT_DIALOG_DATA, useValue: data },
       ],
     }).compileComponents();
 
@@ -38,63 +29,85 @@ describe('GoalFormDialog', () => {
     fixture.detectChanges();
   };
 
-  beforeEach(async () => {
-    await setupTestBed({});
+  const saveButton = (): HTMLButtonElement =>
+    fixture.debugElement.query(By.css('.save')).nativeElement as HTMLButtonElement;
+
+  it('should start empty and invalid for a new goal', async () => {
+    await setup();
+
+    expect(component.model()).toEqual({ title: '', rewardValue: null });
+    expect(component.goalForm().valid()).toBe(false);
+    expect(saveButton().disabled).toBe(true);
   });
 
-  it('should initialize with empty fields and invalid form for new goal', () => {
-    expect(component.form.valid).toBe(false);
-    expect(component.form.get('title')?.value).toBe('');
-    expect(component.form.get('rewardValue')?.value).toBeNull();
-  });
-
-  it('should initialize with prefilled fields when editing an existing goal', async () => {
+  it('should prefill and be valid when editing an existing goal', async () => {
     const existingGoal: Goal = {
       id: 'g-1',
-      title: TEST_TITLE,
-      rewardValue: TEST_REWARD,
+      title: 'Run a Marathon',
+      rewardValue: 5000,
       status: GOAL_STATUS.ACTIVE,
       completedAt: null,
       createdAt: Date.now(),
     };
 
-    await setupTestBed({ goal: existingGoal });
+    await setup({ goal: existingGoal });
 
-    expect(component.form.valid).toBe(true);
-    expect(component.form.get('title')?.value).toBe(TEST_TITLE);
-    expect(component.form.get('rewardValue')?.value).toBe(TEST_REWARD);
+    expect(component.model()).toEqual({ title: 'Run a Marathon', rewardValue: 5000 });
+    expect(component.goalForm().valid()).toBe(true);
   });
 
-  it('should invalidate title if shorter than 3 chars or empty', () => {
-    const titleControl = component.form.get('title');
-    titleControl?.setValue(INVALID_SHORT_TITLE);
-    expect(titleControl?.valid).toBe(false);
-    expect(titleControl?.errors?.['minlength']).toBeDefined();
+  it('should reject a title shorter than 3 characters', async () => {
+    await setup();
+    component.goalForm.title().value.set('ab');
+
+    expect(component.goalForm.title().invalid()).toBe(true);
+    expect(
+      component.goalForm
+        .title()
+        .errors()
+        .map((e) => e.kind),
+    ).toContain('minLength');
   });
 
-  it('should invalidate rewardValue if less than 1', () => {
-    const rewardControl = component.form.get('rewardValue');
-    rewardControl?.setValue(INVALID_ZERO_REWARD);
-    expect(rewardControl?.valid).toBe(false);
-    expect(rewardControl?.errors?.['min']).toBeDefined();
+  it('should reject a reward below 1', async () => {
+    await setup();
+    component.goalForm.rewardValue().value.set(0);
+
+    expect(component.goalForm.rewardValue().invalid()).toBe(true);
+    expect(
+      component.goalForm
+        .rewardValue()
+        .errors()
+        .map((e) => e.kind),
+    ).toContain('min');
   });
 
-  it('should close dialog with form values when valid form is submitted', () => {
-    component.form.setValue({
-      title: TEST_TITLE,
-      rewardValue: TEST_REWARD,
-    });
+  it('should show the error message once a touched field is invalid', async () => {
+    await setup();
+    component.goalForm.title().value.set('ab');
+    component.goalForm.title().markAsTouched();
+    fixture.detectChanges();
+    await fixture.whenStable();
 
+    const error = fixture.debugElement.query(By.css('mat-error'));
+    expect((error.nativeElement as HTMLElement).textContent).toContain('at least 3 characters');
+  });
+
+  it('should close with the entered values when Save is clicked on a valid form', async () => {
+    await setup();
+    component.model.set({ title: 'Run a Marathon', rewardValue: 5000 });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    saveButton().click();
+
+    expect(dialogRefMock.close).toHaveBeenCalledWith({ title: 'Run a Marathon', rewardValue: 5000 });
+  });
+
+  it('should not close when submitted while invalid', async () => {
+    await setup();
     component.onSubmit();
 
-    expect(dialogRefMock.close).toHaveBeenCalledWith({
-      title: TEST_TITLE,
-      rewardValue: TEST_REWARD,
-    });
-  });
-
-  it('should not close dialog if form is invalid upon submission', () => {
-    component.onSubmit();
     expect(dialogRefMock.close).not.toHaveBeenCalled();
   });
 });

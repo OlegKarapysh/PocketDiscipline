@@ -15,23 +15,29 @@ Sync Impact Report:
 - Follow-up TODOs:
   - None
 -->
+
 # PocketDiscipline Constitution
 
 ## Core Principles
 
 ### I. Vertical Slice Architecture
+
 Every new feature MUST use vertical slice architecture. Organize code by feature rather than technical layer to ensure features are cohesive, independently testable, and maintainable.
 
 ### II. Minimal Dependencies
+
 Do not add unnecessary packages. The project MUST remain lightweight. Any new external dependencies must have a clear, justifiable purpose and be reviewed before inclusion.
 
 ### III. Consistent Code Style
+
 All code MUST follow `docs/code_style.md`, the single source of code conventions. ESLint, EditorConfig, and Prettier MUST pass locally and in CI, and branches with lint or formatting violations are rejected. Conventions change in `docs/code_style.md`, not in this constitution.
 
 ### IV. SOLID Principles & Best Practices
+
 All code MUST adhere to SOLID principles (Single Responsibility, Open-Closed, Liskov Substitution, Interface Segregation, Dependency Inversion) and established developer best practices. Code should be clean, readable, maintainable, and designed for extensibility.
 
 ### V. Design System Compliance
+
 All UI MUST follow `docs/design_system.md`: reuse the shared components before plain Angular Material, and style only through the theme and token layer. `scripts/check-ui.mjs`, part of `npm run lint`, MUST pass, and its baseline `scripts/ui-baseline.json` may only shrink.
 
 ## Development Standards

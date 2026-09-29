@@ -29,6 +29,24 @@ $breakpoints: (
   large: 1200px,
 );
 
+// Glyph sizes for mat-icon. Text sizes come from the Material type roles, not from a scale here.
+$icon-size: (
+  xs: 16px,
+  sm: 18px,
+  md: 20px,
+  lg: 24px,
+);
+
+// Sizes for tabular numbers (app-amount, timers, chart values), which have no Material type role.
+$numeric-size: (
+  sm: 13px,
+  md: 22px,
+  lg: 30px,
+  xl: 38px,
+  xxl: 44px,
+  display: 80px,
+);
+
 $touch-target: 44px;
 $rail-width: 240px;
 $bottom-nav-height: 80px;
@@ -40,6 +58,26 @@ $content-max-width: 1200px;
 
 @function radius($size) {
   @return map.get($radius, $size);
+}
+
+@function numeric-size($size) {
+  @return map.get($numeric-size, $size);
+}
+
+// A mat-icon's box does not follow its font-size, so the glyph and the box are sized together.
+@mixin icon-size($size) {
+  $value: map.get($icon-size, $size);
+  font-size: $value;
+  width: $value;
+  height: $value;
+}
+
+// The design's card title: title-medium at 17px. Overriding the role itself would also resize
+// Material's card subtitles and every other title-medium use.
+@mixin card-title {
+  font: var(--mat-sys-title-medium);
+  font-size: 17px;
+  font-weight: 600;
 }
 
 @mixin up($bp) {

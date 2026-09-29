@@ -11,10 +11,11 @@
 ## Clarifications
 
 ### Session 2026-08-25
+
 - Q: A strict reset to 0 after missing one day can be demotivating for long streaks. Should we include a "streak freeze" (grace day) mechanism in this MVP? → A: (Recommended) Strict reset: Keep the MVP simple; reset to 0 immediately upon missing a day.
 - Q: The reward bonus caps at 100% (11 days). Should the visible streak counter keep growing indefinitely (e.g., "Day 45") to motivate the user, or should it cap at 11? → A: (Recommended) Grow indefinitely: The counter keeps tracking total consecutive days for motivation, even though the reward is capped.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Complete a daily task with difficulty selection (Priority: P1)
 
@@ -64,9 +65,10 @@ As a user, I want to create and configure my own recurring daily tasks, setting 
 - What happens when a user crosses a timezone boundary? (Tasks should ideally reset based on the user's local timezone).
 - How does the system handle if a user tries to complete a task twice in one day? (It should only allow one completion per day, or allow editing the difficulty of an already completed task).
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Architectural Constraints
+
 - **AC-001**: Feature MUST be structured as a Vertical Slice, keeping all related concerns together.
 - **AC-002**: Feature MUST NOT introduce unnecessary external dependencies.
 - **AC-003**: Code design MUST adhere to SOLID principles and established developer best practices.
@@ -87,7 +89,7 @@ As a user, I want to create and configure my own recurring daily tasks, setting 
 - **DailyTask**: Represents the habit definition. Contains name, and configuration for difficulty levels and their corresponding base rewards.
 - **DailyTaskCompletion**: Records a specific completion event. Contains the date, reference to the DailyTask, the difficulty level chosen, the streak at the time of completion, and the final reward granted.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

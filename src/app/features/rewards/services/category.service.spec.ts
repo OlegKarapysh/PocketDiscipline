@@ -17,13 +17,17 @@ vi.mock('dexie', () => {
       '@@observable'() {
         return {
           subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
-            Promise.resolve().then(fn).then(
-              (val) => {
-                subscriber.next(val);
-                subscriber.complete();
-              },
-              (err: unknown) => { subscriber.error(err); }
-            );
+            Promise.resolve()
+              .then(fn)
+              .then(
+                (val) => {
+                  subscriber.next(val);
+                  subscriber.complete();
+                },
+                (err: unknown) => {
+                  subscriber.error(err);
+                },
+              );
             return {
               unsubscribe() {
                 // no-op for mock
@@ -59,8 +63,24 @@ describe('CategoryService', () => {
 
   beforeEach(() => {
     mockCategories = [
-      { id: FALLBACK_CATEGORY_ID, name: 'General', color: '#6b7280', icon: 'category', isDefault: true, isProtected: true, createdAt: 0 },
-      { id: 'cat-food', name: 'Food & Treats', color: '#f59e0b', icon: 'restaurant', isDefault: true, isProtected: false, createdAt: 0 },
+      {
+        id: FALLBACK_CATEGORY_ID,
+        name: 'General',
+        color: '#6b7280',
+        icon: 'category',
+        isDefault: true,
+        isProtected: true,
+        createdAt: 0,
+      },
+      {
+        id: 'cat-food',
+        name: 'Food & Treats',
+        color: '#f59e0b',
+        icon: 'restaurant',
+        isDefault: true,
+        isProtected: false,
+        createdAt: 0,
+      },
     ];
 
     const rewardsModifyMock = vi.fn().mockResolvedValue(1);
@@ -69,7 +89,7 @@ describe('CategoryService', () => {
     dbMock = {
       rewardCategories: {
         toArray: vi.fn().mockResolvedValue(mockCategories),
-        get: vi.fn().mockImplementation((id: string) => Promise.resolve(mockCategories.find(c => c.id === id))),
+        get: vi.fn().mockImplementation((id: string) => Promise.resolve(mockCategories.find((c) => c.id === id))),
         add: vi.fn().mockResolvedValue('new-cat-id'),
         update: vi.fn().mockResolvedValue(1),
         delete: vi.fn().mockResolvedValue(undefined),
@@ -94,10 +114,7 @@ describe('CategoryService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        CategoryService,
-        { provide: DbService, useValue: dbMock },
-      ],
+      providers: [CategoryService, { provide: DbService, useValue: dbMock }],
     });
 
     service = TestBed.inject(CategoryService);

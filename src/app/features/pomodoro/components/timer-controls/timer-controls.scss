@@ -1,6 +1,18 @@
+@use '@angular/material' as mat;
+@use '../../../../../styles/tokens' as t;
+
 .controls {
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  padding: 1rem;
+  gap: t.space(4);
+  padding: t.space(4);
+}
+
+.stop {
+  @include mat.fab-overrides(
+    (
+      container-color: var(--mat-sys-error),
+      foreground-color: var(--mat-sys-on-error),
+    )
+  );
 }

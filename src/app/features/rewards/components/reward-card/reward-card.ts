@@ -1,25 +1,26 @@
 import { Component, computed, input, output } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import type { RewardItem } from '../../../../core/models/reward.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
+import { Amount } from '../../../../shared/components/amount/amount';
+import { Badge } from '../../../../shared/components/badge/badge';
 
 @Component({
   selector: 'app-reward-card',
   imports: [
-    DecimalPipe,
     DatePipe,
     MatCardModule,
     MatProgressBarModule,
-    MatChipsModule,
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
+    Amount,
+    Badge,
   ],
   templateUrl: './reward-card.html',
   styleUrl: './reward-card.scss',

@@ -1,8 +1,10 @@
+@use '../../../../../styles/tokens' as t;
+
 .donut-chart-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2rem;
+  gap: t.space(8);
   flex-wrap: wrap;
 }
 
@@ -17,8 +19,14 @@
     height: 100%;
   }
 
+  .donut-track {
+    stroke: var(--mat-sys-surface-container);
+  }
+
   .donut-segment {
-    transition: stroke-width 0.2s ease, opacity 0.2s ease;
+    transition:
+      stroke-width 0.2s ease,
+      opacity 0.2s ease;
     cursor: pointer;
 
     &:hover,
@@ -32,21 +40,20 @@
     pointer-events: none;
 
     .center-label {
-      font-size: 13px;
-      font-weight: 500;
-      fill: var(--mat-sys-on-surface-variant, #616161);
+      font: var(--mat-sys-label-medium);
+      fill: var(--mat-sys-on-surface-variant);
     }
 
     .center-value {
-      font-size: 20px;
+      font-size: t.numeric-size(md);
       font-weight: 700;
-      fill: var(--mat-sys-on-surface, #212121);
+      fill: var(--mat-sys-on-surface);
     }
 
     .center-sub {
-      font-size: 12px;
+      font-size: var(--mat-sys-label-medium-size);
       font-weight: 600;
-      fill: var(--mat-sys-primary, #673ab7);
+      fill: var(--mat-sys-primary);
     }
   }
 }
@@ -54,39 +61,39 @@
 .chart-legend {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: t.space(1);
   flex: 1;
-  min-width: 220px;
+  min-width: min(100%, 220px);
   max-width: 380px;
 
   .legend-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: 8px;
+    gap: t.space(3);
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: t.space(2) t.space(3);
+    border-radius: t.radius(sm);
     cursor: pointer;
     transition: background-color 0.15s ease;
 
     &:hover,
     &.highlighted {
-      background-color: var(--mat-sys-surface-container-high, rgba(0, 0, 0, 0.04));
+      background-color: var(--mat-sys-surface-container);
     }
 
     .legend-swatch {
       width: 28px;
       height: 28px;
-      border-radius: 6px;
+      border-radius: t.radius(xs);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #ffffff;
+      color: var(--pd-sys-on-category);
       flex-shrink: 0;
 
       mat-icon {
-        font-size: 16px;
-        width: 16px;
-        height: 16px;
+        @include t.icon-size(xs);
       }
     }
 
@@ -94,23 +101,18 @@
       display: flex;
       flex-direction: column;
       flex: 1;
+      min-width: 0;
 
       .legend-name {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--mat-sys-on-surface, #212121);
+        font: var(--mat-sys-body-medium);
+        font-weight: 600;
+        color: var(--mat-sys-on-surface);
       }
 
       .legend-percent {
-        font-size: 0.75rem;
-        color: var(--mat-sys-on-surface-variant, #757575);
+        font-size: var(--mat-sys-body-small-size);
+        color: var(--mat-sys-on-surface-variant);
       }
-    }
-
-    .legend-amount {
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: var(--mat-sys-on-surface, #212121);
     }
   }
 }

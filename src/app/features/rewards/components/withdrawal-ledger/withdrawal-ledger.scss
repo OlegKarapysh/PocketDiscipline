@@ -1,99 +1,79 @@
+@use '@angular/material' as mat;
+@use '../../../../../styles/tokens' as t;
+
 .withdrawal-ledger {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 1rem 0;
+  gap: t.space(4);
+  padding: t.space(4) 0;
+
+  @include t.up(expanded) {
+    gap: t.space(6);
+  }
 }
 
 .filters-card {
-  padding: 1rem;
-  background: var(--mat-sys-surface-container, #f8f9fa);
-  border-radius: 12px;
-  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  @include t.card-padding;
+  background: var(--mat-sys-surface-container-lowest);
+  border-radius: t.radius(lg);
+  border: 1px solid var(--mat-sys-outline-variant);
 }
 
 .filters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: t.space(3);
   align-items: center;
 
   .search-field {
-    flex: 2;
-    min-width: 220px;
+    flex: 2 1 220px;
   }
 
   .category-field {
-    flex: 1;
-    min-width: 180px;
+    flex: 1 1 180px;
   }
 
   .date-field {
-    flex: 1;
-    min-width: 150px;
-  }
-
-  .clear-button {
-    height: 56px;
-    margin-bottom: 22px;
+    flex: 1 1 150px;
   }
 }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  background: var(--mat-sys-surface-container-lowest, #ffffff);
-  border-radius: 12px;
-  border: 1px dashed var(--mat-sys-outline-variant, #e0e0e0);
-
-  .empty-icon {
-    font-size: 48px;
-    width: 48px;
-    height: 48px;
-    color: var(--mat-sys-outline, #757575);
-    margin-bottom: 1rem;
-  }
-
-  h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
-
-  p {
-    margin: 0;
-    color: var(--mat-sys-on-surface-variant, #616161);
-  }
+.range-error {
+  margin: t.space(2) 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-error);
 }
 
 .ledger-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: t.space(3);
 }
 
 .ledger-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.25rem;
-  background: var(--mat-sys-surface, #ffffff);
-  border-radius: 12px;
-  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  gap: t.space(3);
+  padding: t.space(3) t.space(4);
+  background: var(--mat-sys-surface-container-lowest);
+  border-radius: t.radius(md);
+  border: 1px solid var(--mat-sys-outline-variant);
+  transition: box-shadow 0.15s ease;
+
+  @include t.up(expanded) {
+    padding: t.space(4) t.space(5);
+  }
 
   &:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--pd-sys-elevation-1);
   }
 
   .item-left {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: t.space(4);
+    min-width: 0;
 
     .category-indicator {
       display: flex;
@@ -101,47 +81,40 @@
       justify-content: center;
       width: 44px;
       height: 44px;
-      border-radius: 10px;
-      color: #ffffff;
+      border-radius: t.radius(sm);
+      background: var(--mat-sys-outline);
+      color: var(--pd-sys-on-category);
       flex-shrink: 0;
 
       mat-icon {
-        font-size: 22px;
-        width: 22px;
-        height: 22px;
+        @include t.icon-size(lg);
       }
     }
 
     .item-details {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: t.space(1);
+      min-width: 0;
 
       .item-title {
-        font-size: 1rem;
+        font: var(--mat-sys-title-medium);
         font-weight: 600;
-        color: var(--mat-sys-on-surface, #212121);
+        color: var(--mat-sys-on-surface);
       }
 
       .item-meta {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 0.5rem;
-        font-size: 0.8125rem;
-        color: var(--mat-sys-on-surface-variant, #616161);
-
-        .reward-tag {
-          background: rgba(103, 58, 183, 0.12);
-          color: #673ab7;
-          padding: 1px 6px;
-          border-radius: 4px;
-          font-weight: 500;
-        }
+        gap: t.space(2);
+        font: var(--mat-sys-body-small);
+        color: var(--mat-sys-on-surface-variant);
       }
 
       .item-notes {
-        font-size: 0.8125rem;
-        color: var(--mat-sys-on-surface-variant, #757575);
+        font: var(--mat-sys-body-small);
+        color: var(--mat-sys-on-surface-variant);
         font-style: italic;
       }
     }
@@ -150,17 +123,15 @@
   .item-right {
     display: flex;
     align-items: center;
-    gap: 1rem;
-
-    .item-amount {
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: #d32f2f;
-      white-space: nowrap;
-    }
+    gap: t.space(2);
+    flex-shrink: 0;
 
     .revert-button {
-      color: var(--mat-sys-error, #d32f2f);
+      @include mat.icon-button-overrides(
+        (
+          icon-color: var(--mat-sys-error),
+        )
+      );
     }
   }
 }

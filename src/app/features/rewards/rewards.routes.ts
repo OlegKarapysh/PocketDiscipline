@@ -3,13 +3,11 @@ import type { Routes } from '@angular/router';
 export const REWARDS_ROUTES: Routes = [
   {
     path: '',
-    loadComponent: () =>
-      import('./pages/rewards-hub/rewards-hub').then(m => m.RewardsHub),
+    loadComponent: () => import('./pages/rewards-hub/rewards-hub').then((m) => m.RewardsHub),
   },
   {
     path: 'categories',
     loadComponent: () =>
-      import('./components/category-management/category-management').then(m => m.CategoryManagement),
-  }
+      import('./components/category-management/category-management').then((m) => m.CategoryManagement),
+  },
 ];
-

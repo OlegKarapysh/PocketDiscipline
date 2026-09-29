@@ -1,6 +1,6 @@
 <mat-card appearance="outlined">
   <mat-card-header>
-    <mat-card-title>Add New Daily Task</mat-card-title>
+    <mat-card-title>New daily task</mat-card-title>
   </mat-card-header>
 
   <mat-card-content class="form-content">
@@ -9,8 +9,7 @@
       <input
         matInput
         type="text"
-        [ngModel]="title()"
-        (ngModelChange)="title.set($event)"
+        [formField]="taskForm.title"
         (keydown.enter)="submit()"
         placeholder="e.g. Morning Workout"
       />
@@ -18,33 +17,21 @@
 
     <div class="difficulties-section">
       <h4 class="section-title">Difficulties</h4>
-      @for (diff of difficulties(); track diff.id; let i = $index) {
+      @for (diff of draft().difficulties; track diff.id; let i = $index) {
         <div class="difficulty-row">
           <mat-form-field appearance="outline" subscriptSizing="dynamic" class="diff-name">
             <mat-label>Name</mat-label>
-            <input
-              matInput
-              type="text"
-              [ngModel]="diff.name"
-              (ngModelChange)="updateDifficultyName(i, $event)"
-              placeholder="e.g. Easy"
-            />
+            <input matInput type="text" [formField]="taskForm.difficulties[i].name" placeholder="e.g. Easy" />
           </mat-form-field>
 
           <mat-form-field appearance="outline" subscriptSizing="dynamic" class="diff-reward">
             <mat-label>Reward</mat-label>
-            <input
-              matInput
-              type="number"
-              [ngModel]="diff.baseReward"
-              (ngModelChange)="updateDifficultyReward(i, $event)"
-              placeholder="Reward"
-            />
+            <input matInput type="number" [formField]="taskForm.difficulties[i].baseReward" placeholder="Reward" />
           </mat-form-field>
 
           <button
             mat-icon-button
-            color="warn"
+            class="remove"
             (click)="removeDifficulty(i)"
             [disabled]="!canRemoveDifficulty()"
             aria-label="Remove difficulty"
@@ -54,16 +41,14 @@
           </button>
         </div>
       }
-      <button mat-stroked-button color="primary" type="button" (click)="addDifficulty()">
-        <mat-icon>add</mat-icon> Add Difficulty
+      <button mat-stroked-button type="button" (click)="addDifficulty()">
+        <mat-icon>add</mat-icon> Add difficulty
       </button>
     </div>
   </mat-card-content>
 
   <mat-card-actions align="end" class="actions">
     <button mat-button type="button" (click)="cancelForm.emit()">Cancel</button>
-    <button mat-flat-button color="primary" type="button" [disabled]="!canSubmit()" (click)="submit()">
-      Save Task
-    </button>
+    <button mat-flat-button type="button" class="save" [disabled]="!canSubmit()" (click)="submit()">Save task</button>
   </mat-card-actions>
 </mat-card>

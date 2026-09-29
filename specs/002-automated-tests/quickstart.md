@@ -3,18 +3,22 @@
 This guide provides instructions to validate that the new testing infrastructure works as expected.
 
 ## Prerequisites
+
 - Node.js installed
 - Project dependencies installed (`npm install`)
 
 ## 1. Validating Unit Tests
+
 Ensure the unit test suite runs successfully via Vitest.
 
 ```bash
 npm run test
 ```
+
 **Expected Outcome**: The command should execute all `*.spec.ts` files and exit with a `0` status code, displaying a summary of passing tests.
 
 ## 2. Validating E2E Tests
+
 Ensure the Playwright E2E tests run successfully against the application.
 
 ```bash
@@ -24,9 +28,11 @@ npm start
 # Terminal 2: Run Playwright tests
 npx playwright test
 ```
+
 **Expected Outcome**: Playwright should execute the tests in the `e2e` directory and report success. If running locally, you can also use `npx playwright show-report` to view the HTML report.
 
 ## 3. Validating CI Pipeline
+
 To validate the GitHub Actions CI pipeline:
 
 1. Create a new branch and make a small commit.

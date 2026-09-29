@@ -19,13 +19,17 @@ vi.mock('dexie', () => {
       '@@observable'() {
         return {
           subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
-            Promise.resolve().then(fn).then(
-              (val) => {
-                subscriber.next(val);
-                subscriber.complete();
-              },
-              (err: unknown) => { subscriber.error(err); }
-            );
+            Promise.resolve()
+              .then(fn)
+              .then(
+                (val) => {
+                  subscriber.next(val);
+                  subscriber.complete();
+                },
+                (err: unknown) => {
+                  subscriber.error(err);
+                },
+              );
             return {
               unsubscribe() {
                 // no-op for mock
@@ -108,10 +112,7 @@ describe('WithdrawalService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        WithdrawalService,
-        { provide: DbService, useValue: dbMock },
-      ],
+      providers: [WithdrawalService, { provide: DbService, useValue: dbMock }],
     });
 
     service = TestBed.inject(WithdrawalService);
@@ -153,59 +154,73 @@ describe('WithdrawalService', () => {
   });
 
   it('should reject non-positive amounts', async () => {
-    await expect(service.withdraw({
-      amount: 0,
-      title: 'Coffee',
-      categoryId: 'cat-food',
-    })).rejects.toThrow('Amount must be greater than zero');
+    await expect(
+      service.withdraw({
+        amount: 0,
+        title: 'Coffee',
+        categoryId: 'cat-food',
+      }),
+    ).rejects.toThrow('Amount must be greater than zero');
 
-    await expect(service.withdraw({
-      amount: -50,
-      title: 'Coffee',
-      categoryId: 'cat-food',
-    })).rejects.toThrow('Amount must be greater than zero');
+    await expect(
+      service.withdraw({
+        amount: -50,
+        title: 'Coffee',
+        categoryId: 'cat-food',
+      }),
+    ).rejects.toThrow('Amount must be greater than zero');
   });
 
   it('should reject non-finite amounts (NaN, Infinity)', async () => {
-    await expect(service.withdraw({
-      amount: Number.NaN,
-      title: 'Coffee',
-      categoryId: 'cat-food',
-    })).rejects.toThrow('Amount must be greater than zero');
+    await expect(
+      service.withdraw({
+        amount: Number.NaN,
+        title: 'Coffee',
+        categoryId: 'cat-food',
+      }),
+    ).rejects.toThrow('Amount must be greater than zero');
 
-    await expect(service.withdraw({
-      amount: Number.POSITIVE_INFINITY,
-      title: 'Coffee',
-      categoryId: 'cat-food',
-    })).rejects.toThrow('Amount must be greater than zero');
+    await expect(
+      service.withdraw({
+        amount: Number.POSITIVE_INFINITY,
+        title: 'Coffee',
+        categoryId: 'cat-food',
+      }),
+    ).rejects.toThrow('Amount must be greater than zero');
   });
 
   it('should reject empty title or whitespace-only title', async () => {
-    await expect(service.withdraw({
-      amount: 50,
-      title: '   ',
-      categoryId: 'cat-food',
-    })).rejects.toThrow('Title cannot be empty');
+    await expect(
+      service.withdraw({
+        amount: 50,
+        title: '   ',
+        categoryId: 'cat-food',
+      }),
+    ).rejects.toThrow('Title cannot be empty');
   });
 
   it('should reject withdrawal when balance is insufficient', async () => {
     dbMock.users.get.mockResolvedValueOnce({ ...mockUser, balance: 50 });
 
-    await expect(service.withdraw({
-      amount: 100,
-      title: 'Tech Gadget',
-      categoryId: 'cat-tech',
-    })).rejects.toThrow('Insufficient balance');
+    await expect(
+      service.withdraw({
+        amount: 100,
+        title: 'Tech Gadget',
+        categoryId: 'cat-tech',
+      }),
+    ).rejects.toThrow('Insufficient balance');
   });
 
   it('should reject withdrawal when user record is not found in database', async () => {
     dbMock.users.get.mockResolvedValueOnce(undefined);
 
-    await expect(service.withdraw({
-      amount: 50,
-      title: 'Snack',
-      categoryId: 'cat-food',
-    })).rejects.toThrow('Insufficient balance');
+    await expect(
+      service.withdraw({
+        amount: 50,
+        title: 'Snack',
+        categoryId: 'cat-food',
+      }),
+    ).rejects.toThrow('Insufficient balance');
   });
 
   it('should revert a withdrawal, refund balance, and delete record', async () => {
@@ -328,11 +343,13 @@ describe('WithdrawalService', () => {
   });
 
   it('should filter withdrawals by date and search query', async () => {
-    const list = await firstValueFrom(service.getWithdrawals({
-      startDate: '2026-09-01',
-      endDate: '2026-09-30',
-      searchQuery: 'protein',
-    }));
+    const list = await firstValueFrom(
+      service.getWithdrawals({
+        startDate: '2026-09-01',
+        endDate: '2026-09-30',
+        searchQuery: 'protein',
+      }),
+    );
     expect(list).toHaveLength(1);
 
     const empty = await firstValueFrom(service.getWithdrawals({ searchQuery: 'nonexistent' }));

@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
@@ -63,9 +63,7 @@ describe('SpendingAnalytics', () => {
 
     await TestBed.configureTestingModule({
       imports: [SpendingAnalytics],
-      providers: [
-        { provide: SpendingAnalyticsService, useValue: mockAnalyticsService },
-      ],
+      providers: [{ provide: SpendingAnalyticsService, useValue: mockAnalyticsService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SpendingAnalytics);
@@ -87,10 +85,12 @@ describe('SpendingAnalytics', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
 
-    expect(compiled.textContent).toContain('1000 ₴');
-    expect(compiled.textContent).toContain('4');
-    expect(compiled.textContent).toContain('Food & Treats');
-    expect(compiled.textContent).toContain('250 ₴');
+    const cards = compiled.querySelectorAll('app-stat-card');
+    expect(cards[0].textContent).toMatch(/1\s000\s*₴/);
+    expect(cards[1].textContent).toContain('4');
+    expect(cards[2].textContent).toContain('Food & Treats');
+    expect(cards[2].textContent).toContain('70%');
+    expect(cards[3].textContent).toMatch(/250\s*₴/);
   });
 
   it('should render charts when spending data is present', () => {
@@ -99,7 +99,7 @@ describe('SpendingAnalytics', () => {
 
     expect(compiled.querySelector('app-spending-donut-chart')).toBeTruthy();
     expect(compiled.querySelector('app-spending-trend-chart')).toBeTruthy();
-    expect(compiled.querySelector('.empty-analytics')).toBeFalsy();
+    expect(compiled.querySelector('app-empty-state')).toBeFalsy();
   });
 
   it('should render empty state when totalSpent is zero', () => {
@@ -107,7 +107,7 @@ describe('SpendingAnalytics', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.empty-analytics')).toBeTruthy();
+    expect(compiled.querySelector('app-empty-state')).toBeTruthy();
     expect(compiled.textContent).toContain('No spending data in this period');
     expect(compiled.querySelector('app-spending-donut-chart')).toBeFalsy();
   });
@@ -127,6 +127,8 @@ describe('SpendingAnalytics', () => {
 
   it('should tear down cleanly when the component is destroyed', () => {
     fixture.detectChanges();
-    expect(() => { fixture.destroy(); }).not.toThrow();
+    expect(() => {
+      fixture.destroy();
+    }).not.toThrow();
   });
 });

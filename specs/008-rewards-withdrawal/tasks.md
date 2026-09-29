@@ -18,9 +18,9 @@
 
 **Purpose**: Feature directory layout and routing prerequisites
 
-- [X] T001 Create feature directory layout under `src/app/features/rewards/` and scaffold route stub in `src/app/features/rewards/rewards.routes.ts`
-- [X] T002 [P] Register lazy-loaded `/rewards` route in `src/app/app.routes.ts`
-- [X] T003 [P] Add Rewards navigation item (`/rewards`, icon: `card_giftcard`) to `NAV_ITEMS` and `ROUTE_TITLE_MAP` in `src/app/shared/components/layout/layout.ts`, and update navigation test assertions in `src/app/shared/components/layout/layout.spec.ts`
+- [x] T001 Create feature directory layout under `src/app/features/rewards/` and scaffold route stub in `src/app/features/rewards/rewards.routes.ts`
+- [x] T002 [P] Register lazy-loaded `/rewards` route in `src/app/app.routes.ts`
+- [x] T003 [P] Add Rewards navigation item (`/rewards`, icon: `card_giftcard`) to `NAV_ITEMS` and `ROUTE_TITLE_MAP` in `src/app/shared/components/layout/layout.ts`, and update navigation test assertions in `src/app/shared/components/layout/layout.spec.ts`
 
 ---
 
@@ -30,13 +30,13 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [X] T004 [P] Create `RewardCategory` model and pre-seeded default categories in `src/app/features/rewards/models/reward-category.model.ts`
-- [X] T005 [P] Create `WithdrawalRecord` model and DTO interfaces in `src/app/features/rewards/models/withdrawal.model.ts`
-- [X] T006 [P] Create `RewardItem` model and type definitions in `src/app/features/rewards/models/reward.model.ts`
-- [X] T007 [P] Create `SpendingAnalyticsSummary` and chart model interfaces in `src/app/features/rewards/models/spending-analytics.model.ts`
-- [X] T008 Update `DbService` schema to `version(8)` in `src/app/core/services/db.service.ts` adding `withdrawals`, `rewards`, and `rewardCategories` tables with initial category seeding, and update table existence assertions in `src/app/core/services/db.service.spec.ts`
-- [X] T009 Implement `CategoryService` in `src/app/features/rewards/services/category.service.ts` managing category CRUD, protected `"General"` category lock, and automatic item reassignment
-- [X] T010 [P] Author unit tests for `CategoryService` in `src/app/features/rewards/services/category.service.spec.ts`
+- [x] T004 [P] Create `RewardCategory` model and pre-seeded default categories in `src/app/features/rewards/models/reward-category.model.ts`
+- [x] T005 [P] Create `WithdrawalRecord` model and DTO interfaces in `src/app/features/rewards/models/withdrawal.model.ts`
+- [x] T006 [P] Create `RewardItem` model and type definitions in `src/app/features/rewards/models/reward.model.ts`
+- [x] T007 [P] Create `SpendingAnalyticsSummary` and chart model interfaces in `src/app/features/rewards/models/spending-analytics.model.ts`
+- [x] T008 Update `DbService` schema to `version(8)` in `src/app/core/services/db.service.ts` adding `withdrawals`, `rewards`, and `rewardCategories` tables with initial category seeding, and update table existence assertions in `src/app/core/services/db.service.spec.ts`
+- [x] T009 Implement `CategoryService` in `src/app/features/rewards/services/category.service.ts` managing category CRUD, protected `"General"` category lock, and automatic item reassignment
+- [x] T010 [P] Author unit tests for `CategoryService` in `src/app/features/rewards/services/category.service.spec.ts`
 
 **Checkpoint**: Core models, Dexie schema, and category management foundation ready. User story implementation can begin.
 
@@ -48,13 +48,13 @@
 
 **Independent Test**: Trigger Quick Spend from Dashboard balance widget, submit 120 ₴ for "Protein Bar" in category "Food & Treats". Verify balance immediately drops and a withdrawal record is saved in IndexedDB. Verify amounts exceeding balance are blocked.
 
-- [X] T011 [US1] Implement `WithdrawalService` in `src/app/features/rewards/services/withdrawal.service.ts` for atomic balance deduction, balance validation, and withdrawal record creation
-- [X] T012 [P] [US1] Author unit tests for `WithdrawalService` in `src/app/features/rewards/services/withdrawal.service.spec.ts` verifying atomic transactions and balance limits
-- [X] T013 [P] [US1] Create `QuickSpendDialogComponent` template and component logic with validation in `src/app/features/rewards/components/quick-spend-dialog/quick-spend-dialog.ts` and `src/app/features/rewards/components/quick-spend-dialog/quick-spend-dialog.html`
-- [X] T014 [P] [US1] Create styling for `QuickSpendDialogComponent` in `src/app/features/rewards/components/quick-spend-dialog/quick-spend-dialog.scss`
-- [X] T015 [P] [US1] Author unit tests for `QuickSpendDialogComponent` in `src/app/features/rewards/components/quick-spend-dialog/quick-spend-dialog.spec.ts`
-- [X] T016 [US1] Integrate Quick Spend trigger button and modal opener into `BalanceWidgetComponent` in `src/app/features/dashboard/components/balance-widget/balance-widget.html` and `src/app/features/dashboard/components/balance-widget/balance-widget.ts`
-- [X] T017 [P] [US1] Update `BalanceWidgetComponent` tests in `src/app/features/dashboard/components/balance-widget/balance-widget.spec.ts` to verify the Quick Spend trigger
+- [x] T011 [US1] Implement `WithdrawalService` in `src/app/features/rewards/services/withdrawal.service.ts` for atomic balance deduction, balance validation, and withdrawal record creation
+- [x] T012 [P] [US1] Author unit tests for `WithdrawalService` in `src/app/features/rewards/services/withdrawal.service.spec.ts` verifying atomic transactions and balance limits
+- [x] T013 [P] [US1] Create `QuickSpendDialogComponent` template and component logic with validation in `src/app/features/rewards/components/quick-spend-dialog/quick-spend-dialog.ts` and `src/app/features/rewards/components/quick-spend-dialog/quick-spend-dialog.html`
+- [x] T014 [P] [US1] Create styling for `QuickSpendDialogComponent` in `src/app/features/rewards/components/quick-spend-dialog/quick-spend-dialog.scss`
+- [x] T015 [P] [US1] Author unit tests for `QuickSpendDialogComponent` in `src/app/features/rewards/components/quick-spend-dialog/quick-spend-dialog.spec.ts`
+- [x] T016 [US1] Integrate Quick Spend trigger button and modal opener into `BalanceWidgetComponent` in `src/app/features/dashboard/components/balance-widget/balance-widget.html` and `src/app/features/dashboard/components/balance-widget/balance-widget.ts`
+- [x] T017 [P] [US1] Update `BalanceWidgetComponent` tests in `src/app/features/dashboard/components/balance-widget/balance-widget.spec.ts` to verify the Quick Spend trigger
 
 **Checkpoint**: At this point, User Story 1 (Quick Spend MVP) is fully functional and testable independently directly from the Dashboard.
 
@@ -66,14 +66,14 @@
 
 **Independent Test**: Create custom rewards in the Store with varying costs. Verify that progress bars visually reflect `currentBalance / rewardCost` (capped at 100%), and filter toggle switches between active and claimed rewards.
 
-- [X] T018 [US2] Implement `RewardsService` CRUD operations and active/claimed query streams in `src/app/features/rewards/services/rewards.service.ts`
-- [X] T019 [P] [US2] Author unit tests for `RewardsService` CRUD methods in `src/app/features/rewards/services/rewards.service.spec.ts`
-- [X] T020 [P] [US2] Create `RewardCardComponent` with progress bar, type badge, and claim button in `src/app/features/rewards/components/reward-card/reward-card.ts`, `src/app/features/rewards/components/reward-card/reward-card.html`, and `src/app/features/rewards/components/reward-card/reward-card.scss`
-- [X] T021 [P] [US2] Author unit tests for `RewardCardComponent` in `src/app/features/rewards/components/reward-card/reward-card.spec.ts`
-- [X] T022 [P] [US2] Create `RewardFormDialogComponent` for adding/editing rewards in `src/app/features/rewards/components/reward-form-dialog/reward-form-dialog.ts`, `src/app/features/rewards/components/reward-form-dialog/reward-form-dialog.html`, and `src/app/features/rewards/components/reward-form-dialog/reward-form-dialog.scss`
-- [X] T023 [P] [US2] Author unit tests for `RewardFormDialogComponent` in `src/app/features/rewards/components/reward-form-dialog/reward-form-dialog.spec.ts`
-- [X] T024 [US2] Create `RewardStoreComponent` grid with active vs. claimed filter/toggle in `src/app/features/rewards/components/reward-store/reward-store.ts`, `src/app/features/rewards/components/reward-store/reward-store.html`, and `src/app/features/rewards/components/reward-store/reward-store.scss`
-- [X] T025 [P] [US2] Author unit tests for `RewardStoreComponent` in `src/app/features/rewards/components/reward-store/reward-store.spec.ts`
+- [x] T018 [US2] Implement `RewardsService` CRUD operations and active/claimed query streams in `src/app/features/rewards/services/rewards.service.ts`
+- [x] T019 [P] [US2] Author unit tests for `RewardsService` CRUD methods in `src/app/features/rewards/services/rewards.service.spec.ts`
+- [x] T020 [P] [US2] Create `RewardCardComponent` with progress bar, type badge, and claim button in `src/app/features/rewards/components/reward-card/reward-card.ts`, `src/app/features/rewards/components/reward-card/reward-card.html`, and `src/app/features/rewards/components/reward-card/reward-card.scss`
+- [x] T021 [P] [US2] Author unit tests for `RewardCardComponent` in `src/app/features/rewards/components/reward-card/reward-card.spec.ts`
+- [x] T022 [P] [US2] Create `RewardFormDialogComponent` for adding/editing rewards in `src/app/features/rewards/components/reward-form-dialog/reward-form-dialog.ts`, `src/app/features/rewards/components/reward-form-dialog/reward-form-dialog.html`, and `src/app/features/rewards/components/reward-form-dialog/reward-form-dialog.scss`
+- [x] T023 [P] [US2] Author unit tests for `RewardFormDialogComponent` in `src/app/features/rewards/components/reward-form-dialog/reward-form-dialog.spec.ts`
+- [x] T024 [US2] Create `RewardStoreComponent` grid with active vs. claimed filter/toggle in `src/app/features/rewards/components/reward-store/reward-store.ts`, `src/app/features/rewards/components/reward-store/reward-store.html`, and `src/app/features/rewards/components/reward-store/reward-store.scss`
+- [x] T025 [P] [US2] Author unit tests for `RewardStoreComponent` in `src/app/features/rewards/components/reward-store/reward-store.spec.ts`
 
 **Checkpoint**: User Story 2 is fully testable. Rewards can be created, edited, and viewed with live savings progress.
 
@@ -85,10 +85,10 @@
 
 **Independent Test**: Click "Claim" on an affordable repeatable reward and one-time milestone reward. Verify balance deduction, creation of withdrawal record with snapshot title, and transition of one-time reward to claimed view with badge and timestamp.
 
-- [X] T026 [US3] Implement `claimReward` atomic transaction method in `src/app/features/rewards/services/rewards.service.ts` (deduct balance, save withdrawal snapshot, mark one-time as claimed or increment repeatable count)
-- [X] T027 [P] [US3] Author unit tests for `claimReward` in `src/app/features/rewards/services/rewards.service.spec.ts` testing balance updates, snapshot preservation, and rollback on error
-- [X] T028 [US3] Connect claim action, disabled states, and feedback snackbar in `src/app/features/rewards/components/reward-card/reward-card.html` and `src/app/features/rewards/components/reward-card/reward-card.ts`
-- [X] T029 [US3] Connect claim handling in `RewardStoreComponent` in `src/app/features/rewards/components/reward-store/reward-store.ts` ensuring immediate grid reactivity
+- [x] T026 [US3] Implement `claimReward` atomic transaction method in `src/app/features/rewards/services/rewards.service.ts` (deduct balance, save withdrawal snapshot, mark one-time as claimed or increment repeatable count)
+- [x] T027 [P] [US3] Author unit tests for `claimReward` in `src/app/features/rewards/services/rewards.service.spec.ts` testing balance updates, snapshot preservation, and rollback on error
+- [x] T028 [US3] Connect claim action, disabled states, and feedback snackbar in `src/app/features/rewards/components/reward-card/reward-card.html` and `src/app/features/rewards/components/reward-card/reward-card.ts`
+- [x] T029 [US3] Connect claim handling in `RewardStoreComponent` in `src/app/features/rewards/components/reward-store/reward-store.ts` ensuring immediate grid reactivity
 
 **Checkpoint**: The complete discipline reward redemption cycle (US1 + US2 + US3) is operational.
 
@@ -100,10 +100,10 @@
 
 **Independent Test**: Navigate to History / Ledger tab, filter by category and search query, click "Revert / Delete" on a transaction. Confirm balance increases by the refunded amount and associated one-time milestone reward resets to active.
 
-- [X] T030 [US4] Implement filtered ledger queries and `revertWithdrawal` atomic refund transaction in `src/app/features/rewards/services/withdrawal.service.ts` (refund balance, delete withdrawal record, safely reset one-time reward to active if still present, and decrement repeatable claimCount)
-- [X] T031 [P] [US4] Author unit tests for `revertWithdrawal` in `src/app/features/rewards/services/withdrawal.service.spec.ts` validating balance restoration, linked reward status recovery, safe handling of previously deleted rewards, and repeatable claimCount decrement
-- [X] T032 [P] [US4] Create `WithdrawalLedgerComponent` in `src/app/features/rewards/components/withdrawal-ledger/withdrawal-ledger.ts`, `src/app/features/rewards/components/withdrawal-ledger/withdrawal-ledger.html`, and `src/app/features/rewards/components/withdrawal-ledger/withdrawal-ledger.scss` with category filter, date picker, search input, and revert confirmation dialog
-- [X] T033 [P] [US4] Author unit tests for `WithdrawalLedgerComponent` in `src/app/features/rewards/components/withdrawal-ledger/withdrawal-ledger.spec.ts`
+- [x] T030 [US4] Implement filtered ledger queries and `revertWithdrawal` atomic refund transaction in `src/app/features/rewards/services/withdrawal.service.ts` (refund balance, delete withdrawal record, safely reset one-time reward to active if still present, and decrement repeatable claimCount)
+- [x] T031 [P] [US4] Author unit tests for `revertWithdrawal` in `src/app/features/rewards/services/withdrawal.service.spec.ts` validating balance restoration, linked reward status recovery, safe handling of previously deleted rewards, and repeatable claimCount decrement
+- [x] T032 [P] [US4] Create `WithdrawalLedgerComponent` in `src/app/features/rewards/components/withdrawal-ledger/withdrawal-ledger.ts`, `src/app/features/rewards/components/withdrawal-ledger/withdrawal-ledger.html`, and `src/app/features/rewards/components/withdrawal-ledger/withdrawal-ledger.scss` with category filter, date picker, search input, and revert confirmation dialog
+- [x] T033 [P] [US4] Author unit tests for `WithdrawalLedgerComponent` in `src/app/features/rewards/components/withdrawal-ledger/withdrawal-ledger.spec.ts`
 
 **Checkpoint**: Financial auditability and mistake recovery are complete and testable.
 
@@ -115,14 +115,14 @@
 
 **Independent Test**: Record withdrawals across distinct categories, navigate to Analytics tab, toggle between "This Month", "Last 30 Days", "This Year", and "All Time". Verify donut slices and timeline bars match ledger totals with 100% accuracy.
 
-- [X] T034 [US5] Implement `SpendingAnalyticsService` in `src/app/features/rewards/services/spending-analytics.service.ts` aggregating totals, category breakdown percentages, and timeline data with daily/monthly auto-granularity
-- [X] T035 [P] [US5] Author unit tests for `SpendingAnalyticsService` in `src/app/features/rewards/services/spending-analytics.service.spec.ts`
-- [X] T036 [P] [US5] Create native SVG `SpendingDonutChartComponent` with category color swatches and tooltips in `src/app/features/rewards/components/spending-donut-chart/spending-donut-chart.ts`, `src/app/features/rewards/components/spending-donut-chart/spending-donut-chart.html`, and `src/app/features/rewards/components/spending-donut-chart/spending-donut-chart.scss`
-- [X] T037 [P] [US5] Author unit tests for `SpendingDonutChartComponent` in `src/app/features/rewards/components/spending-donut-chart/spending-donut-chart.spec.ts`
-- [X] T038 [P] [US5] Create native SVG `SpendingTrendChartComponent` in `src/app/features/rewards/components/spending-trend-chart/spending-trend-chart.ts`, `src/app/features/rewards/components/spending-trend-chart/spending-trend-chart.html`, and `src/app/features/rewards/components/spending-trend-chart/spending-trend-chart.scss`
-- [X] T039 [P] [US5] Author unit tests for `SpendingTrendChartComponent` in `src/app/features/rewards/components/spending-trend-chart/spending-trend-chart.spec.ts`
-- [X] T040 [US5] Create `SpendingAnalyticsComponent` composing summary metric cards and SVG charts in `src/app/features/rewards/components/spending-analytics/spending-analytics.ts`, `src/app/features/rewards/components/spending-analytics/spending-analytics.html`, and `src/app/features/rewards/components/spending-analytics/spending-analytics.scss`
-- [X] T041 [P] [US5] Author unit tests for `SpendingAnalyticsComponent` in `src/app/features/rewards/components/spending-analytics/spending-analytics.spec.ts`
+- [x] T034 [US5] Implement `SpendingAnalyticsService` in `src/app/features/rewards/services/spending-analytics.service.ts` aggregating totals, category breakdown percentages, and timeline data with daily/monthly auto-granularity
+- [x] T035 [P] [US5] Author unit tests for `SpendingAnalyticsService` in `src/app/features/rewards/services/spending-analytics.service.spec.ts`
+- [x] T036 [P] [US5] Create native SVG `SpendingDonutChartComponent` with category color swatches and tooltips in `src/app/features/rewards/components/spending-donut-chart/spending-donut-chart.ts`, `src/app/features/rewards/components/spending-donut-chart/spending-donut-chart.html`, and `src/app/features/rewards/components/spending-donut-chart/spending-donut-chart.scss`
+- [x] T037 [P] [US5] Author unit tests for `SpendingDonutChartComponent` in `src/app/features/rewards/components/spending-donut-chart/spending-donut-chart.spec.ts`
+- [x] T038 [P] [US5] Create native SVG `SpendingTrendChartComponent` in `src/app/features/rewards/components/spending-trend-chart/spending-trend-chart.ts`, `src/app/features/rewards/components/spending-trend-chart/spending-trend-chart.html`, and `src/app/features/rewards/components/spending-trend-chart/spending-trend-chart.scss`
+- [x] T039 [P] [US5] Author unit tests for `SpendingTrendChartComponent` in `src/app/features/rewards/components/spending-trend-chart/spending-trend-chart.spec.ts`
+- [x] T040 [US5] Create `SpendingAnalyticsComponent` composing summary metric cards and SVG charts in `src/app/features/rewards/components/spending-analytics/spending-analytics.ts`, `src/app/features/rewards/components/spending-analytics/spending-analytics.html`, and `src/app/features/rewards/components/spending-analytics/spending-analytics.scss`
+- [x] T041 [P] [US5] Author unit tests for `SpendingAnalyticsComponent` in `src/app/features/rewards/components/spending-analytics/spending-analytics.spec.ts`
 
 **Checkpoint**: Spending analytics and native SVG visualizations are functional and verified.
 
@@ -134,10 +134,10 @@
 
 **Independent Test**: In Settings, create custom category "Hobbies". Verify it appears in Quick Spend and Store. Delete "Hobbies" and verify existing items pointing to it are safely reassigned to "General". Verify "General" delete action is disabled.
 
-- [X] T042 [P] [US6] Create `CategoryManagementComponent` in `src/app/features/rewards/components/category-management/category-management.ts`, `src/app/features/rewards/components/category-management/category-management.html`, and `src/app/features/rewards/components/category-management/category-management.scss` with category list, creation dialog, protected General lock, and reassignment confirmation
-- [X] T043 [P] [US6] Author unit tests for `CategoryManagementComponent` in `src/app/features/rewards/components/category-management/category-management.spec.ts`
-- [X] T044 [US6] Embed `CategoryManagementComponent` in Settings page in `src/app/features/settings/settings.html`, `src/app/features/settings/settings.ts`, and `src/app/features/settings/settings.scss`
-- [X] T045 [P] [US6] Update `SettingsComponent` unit tests in `src/app/features/settings/settings.spec.ts`
+- [x] T042 [P] [US6] Create `CategoryManagementComponent` in `src/app/features/rewards/components/category-management/category-management.ts`, `src/app/features/rewards/components/category-management/category-management.html`, and `src/app/features/rewards/components/category-management/category-management.scss` with category list, creation dialog, protected General lock, and reassignment confirmation
+- [x] T043 [P] [US6] Author unit tests for `CategoryManagementComponent` in `src/app/features/rewards/components/category-management/category-management.spec.ts`
+- [x] T044 [US6] Embed `CategoryManagementComponent` in Settings page in `src/app/features/settings/settings.html`, `src/app/features/settings/settings.ts`, and `src/app/features/settings/settings.scss`
+- [x] T045 [P] [US6] Update `SettingsComponent` unit tests in `src/app/features/settings/settings.spec.ts`
 
 **Checkpoint**: Category customization and referential safety are fully integrated into Settings.
 
@@ -147,13 +147,13 @@
 
 **Purpose**: Assemble the multi-tab Rewards Hub, configure child routing, update documentation, and perform final quality verifications
 
-- [X] T046 Create `RewardsHubComponent` host container page with tabs for Store, Ledger, and Analytics plus top Quick Spend action in `src/app/features/rewards/pages/rewards-hub/rewards-hub.ts`, `src/app/features/rewards/pages/rewards-hub/rewards-hub.html`, and `src/app/features/rewards/pages/rewards-hub/rewards-hub.scss`
-- [X] T047 [P] Author unit tests for `RewardsHubComponent` in `src/app/features/rewards/pages/rewards-hub/rewards-hub.spec.ts`
-- [X] T048 Finalize child routes in `src/app/features/rewards/rewards.routes.ts` connecting `/rewards` to `RewardsHubComponent`
-- [X] T049 [P] Update database schema documentation in `docs/schema.md` documenting Dexie version 8 tables (`withdrawals`, `rewards`, `rewardCategories`)
-- [X] T050 Run end-to-end validation scenarios from `specs/008-rewards-withdrawal/quickstart.md`
-- [X] T051 Run mandatory linting verification (`npm run lint`) and resolve any errors
-- [X] T052 Run complete automated test suite (`npm test`) and ensure all tests pass
+- [x] T046 Create `RewardsHubComponent` host container page with tabs for Store, Ledger, and Analytics plus top Quick Spend action in `src/app/features/rewards/pages/rewards-hub/rewards-hub.ts`, `src/app/features/rewards/pages/rewards-hub/rewards-hub.html`, and `src/app/features/rewards/pages/rewards-hub/rewards-hub.scss`
+- [x] T047 [P] Author unit tests for `RewardsHubComponent` in `src/app/features/rewards/pages/rewards-hub/rewards-hub.spec.ts`
+- [x] T048 Finalize child routes in `src/app/features/rewards/rewards.routes.ts` connecting `/rewards` to `RewardsHubComponent`
+- [x] T049 [P] Update database schema documentation in `docs/schema.md` documenting Dexie version 8 tables (`withdrawals`, `rewards`, `rewardCategories`)
+- [x] T050 Run end-to-end validation scenarios from `specs/008-rewards-withdrawal/quickstart.md`
+- [x] T051 Run mandatory linting verification (`npm run lint`) and resolve any errors
+- [x] T052 Run complete automated test suite (`npm test`) and ensure all tests pass
 
 ---
 

@@ -25,7 +25,7 @@ describe('BottomNav', () => {
     await TestBed.configureTestingModule({
       imports: [BottomNav],
       // Any standalone component without required inputs will do as the routed page.
-      providers: [provideRouter([TASKS, SETTINGS].map(item => ({ path: item.path.slice(1), component: Badge })))],
+      providers: [provideRouter([TASKS, SETTINGS].map((item) => ({ path: item.path.slice(1), component: Badge })))],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BottomNav);

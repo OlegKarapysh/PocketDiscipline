@@ -1,22 +1,23 @@
 ---
-name: "write-unit-tests"
-description: "Author behavior-driven, high-value unit tests in Angular v22 and TypeScript using Vitest, grounded in feature specs, business logic, DOM interactions, and thorough edge case coverage."
+name: 'write-unit-tests'
+description: 'Author behavior-driven, high-value unit tests in Angular v22 and TypeScript using Vitest, grounded in feature specs, business logic, DOM interactions, and thorough edge case coverage.'
 ---
 
 # Write Unit Tests
 
 ## Goal
+
 Create meaningful, maintainable, and behavior-driven unit tests for Angular components, services, directives, pipes, and utility modules using Vitest and Angular Testing Utilities.
 
 ---
 
 ## Foundation: The 5 Principles of Unit Testing (Vladimir Khorikov)
 
-When writing tests, always adhere to the foundational principles from *Unit Testing: Principles, Practices, and Patterns*:
+When writing tests, always adhere to the foundational principles from _Unit Testing: Principles, Practices, and Patterns_:
 
 1. **Aim for Sustainable Project Growth**: The ultimate goal of unit testing is to enable the project to grow sustainably over time. Avoid writing tests just to hit coverage metrics; tests should act as a safety net, not a maintenance burden.
 2. **Maximize Protection Against Regressions**: Tests must effectively catch bugs when code breaks. Target complex business logic and domain code where regressions are most costly.
-3. **Ensure Resistance to Refactoring (Most Critical)**: A test should not fail when you refactor the underlying code as long as the observable behavior remains the same. Avoid "false positives" by testing *observable behavior* (the "what"), never *implementation details* (the "how").
+3. **Ensure Resistance to Refactoring (Most Critical)**: A test should not fail when you refactor the underlying code as long as the observable behavior remains the same. Avoid "false positives" by testing _observable behavior_ (the "what"), never _implementation details_ (the "how").
 4. **Maintain Fast Feedback**: Tests must execute quickly so developers can run them frequently in a tight feedback loop.
 5. **Prioritize Maintainability**: Tests must be easy to read, understand, and modify. A test is a first-class citizen of the codebase and should concisely express business intent.
 
@@ -27,16 +28,19 @@ When writing tests, always adhere to the foundational principles from *Unit Test
 ## Angular Testing Practices
 
 ### 1. Test Intended Behavior via Public Contracts (Never Implementation Details)
+
 - **Public API Only**: Test public methods, observable streams, inputs, outputs, and DOM elements.
 - **Strictly Prohibit `(target as any)`**: Never bypass TypeScript encapsulation to call private methods or inspect private fields. If a private method contains complex logic, test it through the public methods that invoke it, or extract it into a pure utility function.
 - **Avoid Shallow "Smoke" Tests**: A test asserting only `expect(component).toBeTruthy()` provides near-zero value. Always verify business requirements, state transitions, or rendered template output.
 
 ### 2. Strict Test Isolation & Zero Leaky State
+
 - **Fresh Mocks Per Test**: Always instantiate mock objects inside `beforeEach()`. Never declare shared mutable mock instances at the file/module scope.
 - **Clean Browser Globals**: If modifying or spying on `window`, `navigator`, or timers, restore them in `afterEach()` (`vi.restoreAllMocks()`, `vi.useRealTimers()`, or reset mutated properties).
 - **Time-Dependent Logic**: Use Vitest fake timers (`vi.useFakeTimers()`, `vi.advanceTimersByTimeAsync()`) to test timers, countdowns, and schedulers rather than testing private timer internals.
 
 ### 3. Component Testing: DOM & User Interactions First
+
 - **Interact Through the DOM**: Do not call component class methods (`component.submit()`) or mutate class properties when a user action exists. Simulate real interactions:
   - Clicks: `fixture.debugElement.query(By.css('button...')).nativeElement.click()`
   - Inputs: `inputEl.value = 'text'; inputEl.dispatchEvent(new Event('input'))`
@@ -46,12 +50,14 @@ When writing tests, always adhere to the foundational principles from *Unit Test
 - **No Redundant TestBed Boilerplate**: Do NOT use `.overrideComponent()` unless the component explicitly defines local `providers` in its `@Component` decorator.
 
 ### 4. Ground in Business Logic & Reactive Streams
+
 - **Reactive Streams & Dexie Live Queries**: When services expose streams (e.g. `tasks$`, `user$`), test stream emissions using `firstValueFrom` or subscriptions, verifying initial values, fallbacks, and side-effects (e.g. streak resets).
 - **Boundary & Edge Case Coverage**:
   - Empty collections, zero values, negative numbers, maximum limits, off-by-one dates.
   - Failure/rejection handling: verify that database errors or rejected promises fail gracefully without breaking UI state.
 
 ### 5. Adhere to Project Code Style ([docs/code_style.md](docs/code_style.md))
+
 - **No Over-Extraction of Mock Values**: Do NOT extract single-use, self-documenting literals into top-of-file constants (e.g., avoid `SCORE_BTN_INDEX_ZERO = 0`, `TEST_SCORE_TEN = 10`, `ZERO_VALUE = 0`). Use inline literals directly (`buttons[0]`, `score: 10`, `0`).
 - **Extract Obscure Constants Only**: Extract into named constants only when values represent domain meaning and are not immediately obvious (e.g., `86_400_000` -> `ONE_DAY_MS`).
 - **Type-Safe Mocks**: Type mock dependencies accurately with `ReturnType<typeof vi.fn>` or typed partials. Avoid `any`.
@@ -61,6 +67,7 @@ When writing tests, always adhere to the foundational principles from *Unit Test
 ## Reference Patterns
 
 ### Pattern A: Service with Public Contract & Fake Timers
+
 ```typescript
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -80,10 +87,7 @@ describe('ReminderService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        ReminderService,
-        { provide: DailyScoresService, useValue: dailyScoresServiceMock },
-      ],
+      providers: [ReminderService, { provide: DailyScoresService, useValue: dailyScoresServiceMock }],
     });
 
     service = TestBed.inject(ReminderService);
@@ -106,13 +110,14 @@ describe('ReminderService', () => {
 
     expect(notificationSpy).toHaveBeenCalledWith(
       'Pocket Discipline',
-      expect.objectContaining({ body: 'Time to set your daily score!' })
+      expect.objectContaining({ body: 'Time to set your daily score!' }),
     );
   });
 });
 ```
 
 ### Pattern B: Service with Reactive LiveQuery Stream
+
 ```typescript
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -156,7 +161,7 @@ describe('DailyTasksService', () => {
       id: 'task-1',
       title: 'Workout',
       streak: 5,
-      lastCompletedAt: Date.now() - (2 * ONE_DAY_MS),
+      lastCompletedAt: Date.now() - 2 * ONE_DAY_MS,
     };
     dbMock.dailyTasks.toArray.mockResolvedValue([staleTask]);
 
@@ -169,6 +174,7 @@ describe('DailyTasksService', () => {
 ```
 
 ### Pattern C: Component with Signals, DOM Events, and Template Branching
+
 ```typescript
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -192,7 +198,7 @@ describe('TaskFormComponent', () => {
 
   it('should enable submit button and emit output when valid title is typed', async () => {
     let emittedTask: { title: string } | null = null;
-    component.taskCreated.subscribe(data => (emittedTask = data));
+    component.taskCreated.subscribe((data) => (emittedTask = data));
 
     const input = fixture.debugElement.query(By.css('input[name="title"]')).nativeElement;
     input.value = 'Read 30 minutes';

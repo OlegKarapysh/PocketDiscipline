@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
@@ -23,9 +23,7 @@ describe('TimerControls', () => {
 
     await TestBed.configureTestingModule({
       imports: [TimerControls],
-      providers: [
-        { provide: PomodoroTimerService, useValue: timerServiceMock },
-      ],
+      providers: [{ provide: PomodoroTimerService, useValue: timerServiceMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TimerControls);
@@ -91,4 +89,3 @@ describe('TimerControls', () => {
     consoleSpy.mockRestore();
   });
 });
-

@@ -19,7 +19,8 @@ describe('SectionCard', () => {
     return ref;
   };
 
-  const header = (ref: ComponentRef<SectionCard>) => (ref.location.nativeElement as HTMLElement).querySelector('.header')!;
+  const header = (ref: ComponentRef<SectionCard>) =>
+    (ref.location.nativeElement as HTMLElement).querySelector('.header')!;
 
   it('should leave the header empty, and so hidden, without a heading, action or tools', () => {
     const ref = create();

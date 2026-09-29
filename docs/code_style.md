@@ -9,12 +9,10 @@ Every Angular claim below was verified on 2026-09-20 against the installed packa
 server's `get_best_practices`. **Do not change a version-dependent rule from memory** — re-verify
 against `node_modules/@angular/` or the MCP server first.
 
-Each rule below carries a real anti-example from this repository. Those anti-examples are the
-backlog: the convention is settled, the sweeps that make the code match it mostly are not.
-**Rules 1 (naming), 2 (component state), 3 (teardown) and 8 (layering) have been swept**; rule 8
-is additionally enforced as an error. A swept rule carries a "Status: swept" block recording what
-was wrong instead of a live anti-example. Rules 4 (forms), 5 (constants), 6 (SCSS) and 7 (template
-bindings) are still open.
+Each rule below carries a real anti-example from this repository. **All eight rules have been
+swept**: 1–3 and 8 on 2026-09-20, 4–7 on 2026-09-29. Rule 8 is additionally enforced as an error,
+and rule 6 by the `scripts/check-ui.mjs` ratchet. A swept rule carries a "Status: swept" block, and
+its anti-example is kept as the record of what was wrong, so the shape is recognisable if it recurs.
 
 ---
 
@@ -28,8 +26,8 @@ bindings) are still open.
 - **SOLID Principles**: Code must satisfy the Single Responsibility Principle (SRP) and Dependency
   Inversion Principle (DIP).
 - **Angular Components**: All Angular components must have HTML templates and CSS styles in separate
-  files. Do not use inline templates or styles. *(This deliberately overrides Angular's own "prefer
-  inline templates for small components" guidance. The project rule wins — do not "fix" it.)*
+  files. Do not use inline templates or styles. _(This deliberately overrides Angular's own "prefer
+  inline templates for small components" guidance. The project rule wins — do not "fix" it.)_
 - **Angular Services**: Always create Angular services using the Angular CLI (accessed via the
   `angular-cli` MCP server).
 - **One Class/Enum/Interface per File**: All TypeScript files should contain no more than one
@@ -43,12 +41,12 @@ bindings) are still open.
 These are defaults in the installed version. Writing them explicitly is noise, and a reviewer or
 agent that "restores" them is working from a pre-v22 memory:
 
-| Do not write | Why |
-| --- | --- |
+| Do not write                                      | Why                                                                                                                                               |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `changeDetection: ChangeDetectionStrategy.OnPush` | `OnPush` is the default in v22. `@angular-eslint/prefer-on-push-component-change-detection` is obsolete here and is deliberately **not** enabled. |
-| `standalone: true` | Default since v20. |
-| `provideZonelessChangeDetection()` | Zoneless is the default; `zone.js` is not installed. |
-| `@Injectable({ providedIn: 'root' })` | Use `@Service()` for singleton services (v22+). All 20 services do; there are no holdouts left. |
+| `standalone: true`                                | Default since v20.                                                                                                                                |
+| `provideZonelessChangeDetection()`                | Zoneless is the default; `zone.js` is not installed.                                                                                              |
+| `@Injectable({ providedIn: 'root' })`             | Use `@Service()` for singleton services (v22+). All 20 services do; there are no holdouts left.                                                   |
 
 Also standing Angular rules: `inject()` over constructor injection, `input()` / `output()` /
 `model()` over decorators, native control flow (`@if` / `@for` / `@switch`), the `host` object over
@@ -124,7 +122,7 @@ endDate = '';
 
 `daily-task-form.ts` was the worse case, because the array was mutated in place by
 `addDifficulty()` (`.push`) and `removeDifficulty()` (`.splice`), and the template additionally
-bound `[(ngModel)]="diff.name"` straight onto array *elements*:
+bound `[(ngModel)]="diff.name"` straight onto array _elements_:
 
 ```ts
 title = '';
@@ -149,7 +147,7 @@ addDifficulty(): void {
 }
 ```
 
-**Why.** This is the rule with the sharpest teeth, because the current code is only *accidentally*
+**Why.** This is the rule with the sharpest teeth, because the current code is only _accidentally_
 correct. With `OnPush` and zoneless both defaults in v22, a component re-renders when something
 marks it dirty — a signal read in the template changing, or a template event handler firing. Every
 mutation of these fields today happens to originate in a template event handler (`(click)`,
@@ -161,9 +159,8 @@ on where the write came from.
 **Scope note.** `session-config.ts` and `reward-store.ts` were already binding one-way to signals
 (`[ngModel]="duration()"` plus `(ngModelChange)="..."`), which is fine under this rule, and they set
 the pattern the sweep then applied to the other two. Importing `FormsModule` is not itself a rule-2
-violation — binding `[(ngModel)]` to a plain field is. Those four components remain the
-[rule 4](#4-forms) backlog for a separate reason: they are template-driven and the target is signal
-forms.
+violation — binding `[(ngModel)]` to a plain field is. Those four components were then
+moved to signal forms under [rule 4](#4-forms).
 
 ---
 
@@ -192,7 +189,7 @@ and removes a `document` listener, neither of which Angular owns.
 
 The `Subscription` field and the `ngOnDestroy` were both dead weight: `takeUntilDestroyed` already
 tore the stream down on destroy. The only thing the manual `unsubscribe()` actually did was cancel
-the *previous* filter query when filters changed — which is `switchMap`, not teardown.
+the _previous_ filter query when filters changed — which is `switchMap`, not teardown.
 
 Three other files stored a `Subscription`: `daily-scores-page.ts`, `spending-analytics.ts` and
 `quick-spend-event.service.ts`.
@@ -200,18 +197,18 @@ Three other files stored a `Subscription`: `daily-scores-page.ts`, `spending-ana
 **How it was fixed.** Every stored `Subscription` turned out to be one of two things, and each has a
 proper operator:
 
-- *Cancel the previous query when an input changes* — `withdrawal-ledger` (filters),
+- _Cancel the previous query when an input changes_ — `withdrawal-ledger` (filters),
   `spending-analytics` (period) and `daily-scores-page` (reload) all became a source driving
   `switchMap`, which is what cancellation actually means. `spending-analytics` lost `ngOnInit`,
   `loadAnalytics` and `ngOnDestroy` outright and is now one `toSignal` over
   `toObservable(selectedPeriod)`.
-- *Guard against double-subscribing* — `quick-spend-event.service` used
+- _Guard against double-subscribing_ — `quick-spend-event.service` used
   `subscription && !subscription.closed` as an idempotence flag. That is a boolean, not a
   subscription, so it is one now.
 
 Watch for one trap when moving a repeated load onto a single long-lived `switchMap`: an error in the
 inner stream kills the outer one permanently, where the old subscribe-per-call shape happened to
-survive it. The `catchError` belongs *inside* the `switchMap`, on the inner observable.
+survive it. The `catchError` belongs _inside_ the `switchMap`, on the inner observable.
 
 **Do this instead.** Drive the query from the filter signals and let one operator own cancellation:
 
@@ -236,25 +233,26 @@ non-Angular-owned resources described above.
 **Rule.** **Signal forms (`@angular/forms/signals`) are the target for every form in this project.**
 
 - New forms: signal forms, no exceptions.
-- The four template-driven components are the migration backlog and move to signal forms.
-- The five reactive-forms components migrate opportunistically — when you are already editing one
-  for another reason. Do not open a file just to convert it.
-- `ReactiveFormsModule` and `FormsModule` are not to be added to any new component.
+- `ReactiveFormsModule` and `FormsModule` are not to be added to any component.
+
+**Status: swept.** All nine forms use `form()` and `[formField]`; no `FormsModule`,
+`ReactiveFormsModule`, `FormBuilder` or `ngModel` remains in `src/app`. Field errors render from the
+schema's messages (`@for (error of f.title().errors(); track error.kind)`).
 
 `[(ngModel)]` on a plain field is banned outright by [rule 2](#2-component-state-is-signals-only),
 independent of this rule.
 
 **Resolution of the open question.** This was undecided; it is decided now, on three verified facts:
 
-1. `get_best_practices` for this workspace states: *"Prefer Signal Forms (`@angular/forms/signals`)
+1. `get_best_practices` for this workspace states: _"Prefer Signal Forms (`@angular/forms/signals`)
    for new forms. They are stable in Angular v22+ [...] When not using Signal Forms, prefer Reactive
-   forms instead of Template-driven ones."*
+   forms instead of Template-driven ones."_
 2. `node_modules/@angular/forms/types/signals.d.ts` marks the entire surface `@publicApi` — `form`,
    `schema`, `submit`, `apply`, the `[formField]` directive and every validator. The single
    `@experimental` tag in that file is on `provideExperimentalWebMcpForms`, an unrelated WebMCP
-   integration. *(The angular.dev signal-forms **tutorial** still carries a stale "Signal Forms is
+   integration. _(The angular.dev signal-forms **tutorial** still carries a stale "Signal Forms is
    experimental" banner. The typings and the version-specific best-practices guide are
-   authoritative; that banner is out of date.)*
+   authoritative; that banner is out of date.)_
 3. Angular Material 22.1.3 supports signal forms first-class, so `mat-form-field` error state works
    without a compat layer: `_ErrorStateTracker` accepts `NgControl | FormField<unknown>`
    (`node_modules/@angular/material/types/core.d.ts:62`) and `ErrorStateMatcher` gained
@@ -301,42 +299,45 @@ index, a colour); or the value is a genuine domain rule (`MIN_WITHDRAWAL_AMOUNT`
 Do not extract when: the literal is self-evident at the call site (`0`, `2`, `''`, `'granted'`); it
 is used once in one file; or it is mock data in a spec.
 
-**Anti-examples.** All four of these are live:
+**Status: swept.** 262 module-level `SCREAMING_CASE` constants outside specs went down to 68, every one
+shared, opaque or a domain rule. Dexie's `'rw'` and `'granted'` are inlined, `DATE_LOCALE_CA` has one
+home in `core/constants/`, and snackbar durations live only in `SnackBarService`.
+
+**Anti-examples.** All four of these were live before the sweep:
 
 ```ts
-const ZERO_VALUE = 0;     // earnings-chart.ts:19
-const DIVISOR_TWO = 2;    // earnings-chart.ts:24
+const ZERO_VALUE = 0; // earnings-chart.ts:19
+const DIVISOR_TWO = 2; // earnings-chart.ts:24
 ```
 
 `if (recs.length === ZERO_VALUE)` is strictly harder to read than `if (recs.length === 0)`, and
 `(slotWidth - barWidth) / DIVISOR_TWO` hides the fact that it is centring.
 
 ```ts
-const STATUS_FIELD = 'status';   // goal.service.ts:12
+const STATUS_FIELD = 'status'; // goal.service.ts:12
 ```
 
 Names a Dexie index by restating it. `where('status')` was already the clearer form.
 
 ```ts
-const PERMISSION_GRANTED = 'granted';   // notification.service.ts:11
-const PERMISSION_GRANTED = 'granted';   // pomodoro-timer.service.ts:38
+const PERMISSION_GRANTED = 'granted'; // notification.service.ts:11
+const PERMISSION_GRANTED = 'granted'; // pomodoro-timer.service.ts:38
 ```
 
-This one is the real failure. It *is* shared, so it qualified for extraction — and was then
+This one is the real failure. It _is_ shared, so it qualified for extraction — and was then
 copy-pasted into two files instead of being shared. `TRANSACTION_READ_WRITE` appears in 7 files,
 `DATE_LOCALE_CA` in 5, `SNACKBAR_DURATION_MS` in 4, `ONE_DAY_MS` in 4.
 
-`SNACKBAR_DURATION_MS` is the one now part-way fixed: `shared/services/snack-bar.service.ts` owns the
-canonical copy, and `SnackBarService.show()` / `.error(e, fallback?)` replace the
+The fix for `SNACKBAR_DURATION_MS`: `shared/services/snack-bar.service.ts` owns the canonical copy, and
+`SnackBarService.show()` / `.error(e, fallback?)` replace the
 `snackBar.open(msg, 'Close', { duration })` triple plus the
-`e instanceof Error ? e.message : fallback` dance. `goals-page.ts` is converted; the three remaining
-declarations are call sites that have not been swept yet.
+`e instanceof Error ? e.message : fallback` dance.
 
 A fourth shape to watch for: `withdrawal-ledger.ts` declares `SNACKBAR_DURATION_MS = 3000` on line 21
 and then writes `{ duration: 3000 }` inline on line 77 anyway.
 
-**Scale.** 262 module-level `SCREAMING_CASE` constants outside specs; about 150 are referenced once
-or never inside their own file. The sweep deletes names, it does not add them.
+**Scale before the sweep.** 262 module-level `SCREAMING_CASE` constants outside specs; about 150 were
+referenced once or never inside their own file. A sweep deletes names, it does not add them.
 
 ---
 
@@ -353,7 +354,11 @@ or never inside their own file. The sweep deletes names, it does not add them.
 - **Spacing, radius and breakpoints come from a shared layer**, consumed with `@use`. Component
   styles must not invent their own scale or their own breakpoint.
 
-**Anti-example.** 97 hex literals across the 38 component stylesheets (35 distinct), 72 `var()` calls
+**Status: swept.** Every `scripts/ui-baseline.json` entry is cleared: no raw hex, `var()` fallback,
+raw `@media`, raw spacing or radius is left in a component stylesheet; spacing, radius and breakpoints
+all come from the token layer.
+
+**Anti-example (before the sweep).** 97 hex literals across the 38 component stylesheets (35 distinct), 72 `var()` calls
 carrying a fallback, and exactly one `@use` in the whole project — `src/styles.scss:1`, for Material
 itself.
 
@@ -412,6 +417,7 @@ row — lines 73, 74 and 79 — for the colour, the icon and the name:
   <mat-icon>{{ getCategory(withdrawal.categoryId)?.icon || 'category' }}</mat-icon>
   ...
   <span class="item-category">{{ getCategory(withdrawal.categoryId)?.name || 'Uncategorized' }}</span>
+</div>
 ```
 
 (That first line also carries a raw hex, against [rule 6](#6-scss).)
@@ -424,10 +430,10 @@ readonly rows = computed(() =>
 );
 ```
 
-**Scale.** 28 argument-taking calls in bindings across 6 templates. 24 of them are `form.get('x')`
-and `hasError('x', 'required')` in the four reactive dialogs — those disappear as a side effect of
-the [rule 4](#4-forms) migration, so do not hand-fix them. The remaining 4 are `getCategory` in
-`withdrawal-ledger.html` and `reward-store.html`.
+**Status: swept.** No template binding calls a method with arguments. Before the sweep there were 28
+across 6 templates: 24 `form.get('x')` / `hasError('x', 'required')` calls, which went away with the
+[rule 4](#4-forms) migration, and 4 `getCategory` calls in `withdrawal-ledger.html` and
+`reward-store.html`, now precomputed rows.
 
 **Not lint-enforced.** No rule in the current config catches this; it is a review item.
 
@@ -476,11 +482,11 @@ import { DailyScoresService } from '../../features/daily-scores/services/daily-s
    `reward-status.type`), because a model left behind in a feature would have re-created the
    violation from inside `core/models/`. 14 files moved, 116 import specifiers rewritten across 68
    files.
-2. **`NotificationService`.** *Not* via `EventBusService`, which was the obvious-looking answer and
+2. **`NotificationService`.** _Not_ via `EventBusService`, which was the obvious-looking answer and
    the wrong one: the bus is a plain `Subject` with no replay, and the 21:30 check needs to **pull**
    ("is there a score for today?"), which a fire-and-forget event stream cannot answer across an app
    restart. The first pass made core pull the row itself — core injected `DbService` and read
-   `dailyScores` directly. That removed the *import* violation but left the real problem in place:
+   `dailyScores` directly. That removed the _import_ violation but left the real problem in place:
    core still owned a daily-scores **policy**.
 
    The second pass split the service along the seam between mechanism and policy:
@@ -489,7 +495,7 @@ import { DailyScoresService } from '../../features/daily-scores/services/daily-s
      mechanism: permission handling plus `show(title, options)`. Nothing about scores. Core is the
      right home because pomodoro needs the same mechanism.
    - `features/daily-scores/services/daily-score-reminder.service.ts` —
-     `DailyScoreReminderService`, the policy: *remind me at 21:30 if today has no score*. It lives
+     `DailyScoreReminderService`, the policy: _remind me at 21:30 if today has no score_. It lives
      in the slice that owns the concept, injects `BrowserNotificationService` for the mechanism and
      `DailyScoresService` for the data, and is what `App.ngOnInit` now calls.
 
@@ -514,8 +520,8 @@ import { DailyScoresService } from '../../features/daily-scores/services/daily-s
    its own siblings, so the file-level graph is `core/models ← database ← core/services ← features`.
 
 **Generalisation.** Before reaching for an event or a token to invert a core→feature dependency, ask
-what core actually wants. If it wants *data*, it may already own the table — that is a misplaced
-call, not a dependency to invert. If it wants a *decision* ("should I remind the user?"), the
+what core actually wants. If it wants _data_, it may already own the table — that is a misplaced
+call, not a dependency to invert. If it wants a _decision_ ("should I remind the user?"), the
 dependency is real, and the fix is to split mechanism from policy and let the slice own the policy.
 And if a file genuinely must know every slice, move it out of core and say so in writing, rather
 than leaving it in core with an exemption nobody can see.
@@ -533,14 +539,14 @@ without changing the rule here first.
 - **`no-restricted-imports`** (see [rule 8](#8-layering)) — bans `features/**` from
   `src/app/core/**`, including `import type`, at `error`. Currently zero violations.
 - **`@typescript-eslint/unbound-method: ['error', { ignoreStatic: true }]`**, scoped to
-  `src/app/**/*.ts`. `Validators.required` is a *static* method
+  `src/app/**/*.ts`. `Validators.required` is a _static_ method
   (`@angular/forms/types/forms.d.ts:5246`), so the default rule fires when it is passed by
   reference — which is exactly how Angular's validator API is designed to be used. Without this, the
   only way to stay lint-clean is to wrap every validator in an arrow:
 
   ```ts
   // reward-form-dialog.ts:52 — what the rule forced
-  validators: [(control) => Validators.required(control), (control) => Validators.maxLength(100)(control)]
+  validators: [(control) => Validators.required(control), (control) => Validators.maxLength(100)(control)];
   ```
 
   That is 13 wrappers across three dialogs, and the `maxLength` one wraps a function that was already

@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SpendingTrendChart } from './spending-trend-chart';
@@ -59,7 +59,7 @@ describe('SpendingTrendChart', () => {
     expect(component.hoveredPoint()).toEqual(mockPoints[2]);
     expect(bars[2].classList.contains('hovered')).toBe(true);
     expect(compiled.querySelector('.hover-label')?.textContent).toContain('3 Sep:');
-    expect(compiled.querySelector('.hover-amount')?.textContent).toContain('200 ₴');
+    expect(compiled.querySelector('.hover-amount')?.textContent).toMatch(/200\s*₴/);
 
     bars[2].dispatchEvent(new MouseEvent('mouseleave'));
     fixture.detectChanges();

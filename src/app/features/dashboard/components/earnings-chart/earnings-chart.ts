@@ -1,5 +1,8 @@
 import { Component, computed, input, signal } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
+import { SectionCard } from '../../../../shared/components/section-card/section-card';
+import { Amount } from '../../../../shared/components/amount/amount';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
 import type { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
 import type { ChartBar } from '../../models/chart-bar.model';
 import type { ChartBarSegment } from '../../models/chart-bar-segment.model';
@@ -9,49 +12,32 @@ import { EarningsSource } from '../../models/earnings-source.enum';
 
 const VIEWBOX_WIDTH = 600;
 const VIEWBOX_HEIGHT = 260;
-const PADDING_LEFT = 45;
-const PADDING_RIGHT = 15;
-const PADDING_TOP = 20;
-const PADDING_BOTTOM = 35;
-const MIN_MAX_EARNINGS = 500;
-const GRID_STEP_ROUNDING = 500;
+// The y-axis tops out at the next multiple of this, and never below it.
+const Y_SCALE_STEP = 500;
 const GRID_DIVISION_COUNT = 4;
-const ZERO_VALUE = 0;
-const BAR_INNER_GAP_FRACTION = 0.35;
-const MIN_BAR_WIDTH = 4;
-const TOOLTIP_OFFSET_X = 10;
-const TOOLTIP_OFFSET_Y = 15;
-const DIVISOR_TWO = 2;
-const DATE_PARTS_LENGTH = 3;
-const DATE_PART_MONTH_INDEX = 1;
-const DATE_PART_DAY_INDEX = 2;
-const MAX_BARS_FOR_ALL_LABELS = 10;
-const MAX_BARS_FOR_HALF_LABELS = 16;
-const MAX_BARS_FOR_MONTH_LABELS = 31;
-const LABEL_STEP_HALF = 2;
-const LABEL_STEP_MONTH = 5;
-const LABEL_STEP_DIVISOR = 7;
-const AXIS_LABEL_X_OFFSET = 5;
 
-const SOURCE_COLORS: Record<EarningsSource, string> = {
-  [EarningsSource.GOALS]: '#3f51b5',
-  [EarningsSource.DAILY_TASKS]: '#4caf50',
-  [EarningsSource.POMODORO]: '#ff9800',
-  [EarningsSource.DAILY_SCORES]: '#9c27b0',
-};
-
+// Declaration order is stacking order, bottom to top.
 const SOURCE_LABELS: Record<EarningsSource, string> = {
   [EarningsSource.GOALS]: 'Goals',
-  [EarningsSource.DAILY_TASKS]: 'Daily Tasks',
+  [EarningsSource.DAILY_TASKS]: 'Daily tasks',
   [EarningsSource.POMODORO]: 'Pomodoro',
-  [EarningsSource.DAILY_SCORES]: 'Daily Scores',
+  [EarningsSource.DAILY_SCORES]: 'Daily scores',
 };
+
+const SOURCE_AMOUNT: Record<EarningsSource, (record: DailyEarningsRecord) => number> = {
+  [EarningsSource.GOALS]: (record) => record.goalsEarned,
+  [EarningsSource.DAILY_TASKS]: (record) => record.dailyTasksEarned,
+  [EarningsSource.POMODORO]: (record) => record.pomodoroEarned,
+  [EarningsSource.DAILY_SCORES]: (record) => record.dailyScoresEarned,
+};
+
+const SOURCES = Object.values(EarningsSource);
 
 @Component({
   selector: 'app-earnings-chart',
-  imports: [MatCardModule],
+  imports: [SectionCard, Amount, MoneyPipe],
   templateUrl: './earnings-chart.html',
-  styleUrl: './earnings-chart.scss'
+  styleUrl: './earnings-chart.scss',
 })
 export class EarningsChart {
   readonly records = input<DailyEarningsRecord[]>([]);
@@ -59,47 +45,34 @@ export class EarningsChart {
   readonly hoveredRecord = signal<DailyEarningsRecord | null>(null);
   readonly tooltipPosition = signal<TooltipPosition | null>(null);
 
-  readonly viewBox = `${ZERO_VALUE} ${ZERO_VALUE} ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`;
+  readonly viewBox = `0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`;
 
-  readonly chartBaselineY = VIEWBOX_HEIGHT - PADDING_BOTTOM;
-  readonly chartTopY = PADDING_TOP;
-  readonly chartHeight = VIEWBOX_HEIGHT - PADDING_TOP - PADDING_BOTTOM;
-  readonly chartLeftX = PADDING_LEFT;
-  readonly chartRightX = VIEWBOX_WIDTH - PADDING_RIGHT;
-  readonly yAxisTextX = PADDING_LEFT - AXIS_LABEL_X_OFFSET;
+  readonly chartBaselineY = VIEWBOX_HEIGHT - 35;
+  readonly chartTopY = 20;
+  readonly chartHeight = this.chartBaselineY - this.chartTopY;
+  readonly chartLeftX = 45;
+  readonly chartRightX = VIEWBOX_WIDTH - 15;
+  readonly yAxisTextX = this.chartLeftX - 5;
   readonly axisLabelYOffset = 4;
-  readonly axisLabelYPos = 245;
-  readonly zeroBarY = 223;
+  readonly axisLabelYPos = this.chartBaselineY + 20;
   readonly zeroBarHeight = 2;
+  readonly zeroBarY = this.chartBaselineY - this.zeroBarHeight;
 
-  readonly legendItems = [
-    { label: SOURCE_LABELS[EarningsSource.GOALS], color: SOURCE_COLORS[EarningsSource.GOALS] },
-    { label: SOURCE_LABELS[EarningsSource.DAILY_TASKS], color: SOURCE_COLORS[EarningsSource.DAILY_TASKS] },
-    { label: SOURCE_LABELS[EarningsSource.POMODORO], color: SOURCE_COLORS[EarningsSource.POMODORO] },
-    { label: SOURCE_LABELS[EarningsSource.DAILY_SCORES], color: SOURCE_COLORS[EarningsSource.DAILY_SCORES] },
-  ];
+  readonly legendItems = SOURCES.map((source) => ({ source, label: SOURCE_LABELS[source] }));
 
   readonly maxDailyEarned = computed(() => {
-    const recs = this.records();
-    if (recs.length === ZERO_VALUE) {
-      return MIN_MAX_EARNINGS;
-    }
-    const maxVal = recs.reduce((max, r) => Math.max(max, r.totalEarned), ZERO_VALUE);
-    if (maxVal <= MIN_MAX_EARNINGS) {
-      return MIN_MAX_EARNINGS;
-    }
-    return Math.ceil(maxVal / GRID_STEP_ROUNDING) * GRID_STEP_ROUNDING;
+    const maxVal = this.records().reduce((max, r) => Math.max(max, r.totalEarned), 0);
+    return Math.max(Y_SCALE_STEP, Math.ceil(maxVal / Y_SCALE_STEP) * Y_SCALE_STEP);
   });
 
   readonly gridLines = computed<ChartGridLine[]>(() => {
     const max = this.maxDailyEarned();
-    const chartHeight = this.chartHeight;
     const lines: ChartGridLine[] = [];
 
     for (let i = 0; i <= GRID_DIVISION_COUNT; i++) {
       const value = Math.round((max / GRID_DIVISION_COUNT) * i);
-      const y = VIEWBOX_HEIGHT - PADDING_BOTTOM - (chartHeight / GRID_DIVISION_COUNT) * i;
-      lines.push({ y, label: String(value) });
+      const y = this.chartBaselineY - (this.chartHeight / GRID_DIVISION_COUNT) * i;
+      lines.push({ y, label: MONEY_FORMAT.format(value) });
     }
     return lines;
   });
@@ -107,83 +80,71 @@ export class EarningsChart {
   readonly bars = computed<ChartBar[]>(() => {
     const recs = this.records();
     const totalBars = recs.length;
-    if (totalBars === ZERO_VALUE) {
+    if (totalBars === 0) {
       return [];
     }
 
     const max = this.maxDailyEarned();
-    const chartWidth = this.chartRightX - this.chartLeftX;
-    const chartHeight = this.chartHeight;
-    const baselineY = this.chartBaselineY;
+    const slotWidth = (this.chartRightX - this.chartLeftX) / totalBars;
+    const barWidth = Math.max(slotWidth * 0.65, 4);
+    const gap = (slotWidth - barWidth) / 2;
 
-    const slotWidth = chartWidth / totalBars;
-    const barWidth = Math.max(slotWidth * (1 - BAR_INNER_GAP_FRACTION), MIN_BAR_WIDTH);
-    const gap = (slotWidth - barWidth) / DIVISOR_TWO;
-
+    // Thin the x-axis labels as the range grows: every day, every 2nd, every 5th, then about 7 in all.
     let labelInterval = 1;
-    if (totalBars > MAX_BARS_FOR_MONTH_LABELS) {
-      labelInterval = Math.ceil(totalBars / LABEL_STEP_DIVISOR);
-    } else if (totalBars > MAX_BARS_FOR_HALF_LABELS) {
-      labelInterval = LABEL_STEP_MONTH;
-    } else if (totalBars > MAX_BARS_FOR_ALL_LABELS) {
-      labelInterval = LABEL_STEP_HALF;
+    if (totalBars > 31) {
+      labelInterval = Math.ceil(totalBars / 7);
+    } else if (totalBars > 16) {
+      labelInterval = 5;
+    } else if (totalBars > 10) {
+      labelInterval = 2;
     }
 
     return recs.map((record, index) => {
-      const x = PADDING_LEFT + index * slotWidth + gap;
-      const formattedDate = this.formatDateLabel(record.date);
-      const shouldShowLabel = index === ZERO_VALUE || index === totalBars - 1 || index % labelInterval === ZERO_VALUE;
       const segments: ChartBarSegment[] = [];
+      let currentY = this.chartBaselineY;
 
-      let currentY = baselineY;
-
-      const addSegment = (source: EarningsSource, amount: number) => {
-        if (amount > ZERO_VALUE) {
-          const segHeight = (amount / max) * chartHeight;
-          currentY -= segHeight;
-          segments.push({
-            source,
-            sourceLabel: SOURCE_LABELS[source],
-            color: SOURCE_COLORS[source],
-            amount,
-            y: currentY,
-            height: segHeight,
-          });
+      for (const source of SOURCES) {
+        const amount = SOURCE_AMOUNT[source](record);
+        if (amount > 0) {
+          const height = (amount / max) * this.chartHeight;
+          currentY -= height;
+          segments.push({ source, amount, y: currentY, height });
         }
-      };
-
-      addSegment(EarningsSource.GOALS, record.goalsEarned);
-      addSegment(EarningsSource.DAILY_TASKS, record.dailyTasksEarned);
-      addSegment(EarningsSource.POMODORO, record.pomodoroEarned);
-      addSegment(EarningsSource.DAILY_SCORES, record.dailyScoresEarned);
+      }
 
       return {
         date: record.date,
-        formattedDate,
+        formattedDate: this.formatDateLabel(record.date),
         total: record.totalEarned,
-        x,
+        x: this.chartLeftX + index * slotWidth + gap,
         width: barWidth,
         segments,
         record,
-        shouldShowLabel,
+        shouldShowLabel: index === 0 || index === totalBars - 1 || index % labelInterval === 0,
       };
     });
   });
 
+  readonly tooltipBreakdown = computed(() => {
+    const record = this.hoveredRecord();
+    if (!record) {
+      return [];
+    }
+    return SOURCES.map((source) => ({
+      source,
+      label: SOURCE_LABELS[source],
+      amount: SOURCE_AMOUNT[source](record),
+    })).filter((row) => row.amount > 0);
+  });
+
   onBarMouseEnter(record: DailyEarningsRecord, event: MouseEvent): void {
     this.hoveredRecord.set(record);
-    this.tooltipPosition.set({
-      x: event.clientX + TOOLTIP_OFFSET_X,
-      y: event.clientY + TOOLTIP_OFFSET_Y,
-    });
+    this.placeTooltipAtPointer(event);
   }
 
   onBarMouseMove(event: MouseEvent): void {
     if (this.hoveredRecord()) {
-      this.tooltipPosition.set({
-        x: event.clientX + TOOLTIP_OFFSET_X,
-        y: event.clientY + TOOLTIP_OFFSET_Y,
-      });
+      this.placeTooltipAtPointer(event);
     }
   }
 
@@ -201,12 +162,12 @@ export class EarningsChart {
   }
 
   onBarFocus(record: DailyEarningsRecord, event: FocusEvent): void {
-    const target = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+    const target = event.currentTarget instanceof Element ? event.currentTarget : null;
     const rect = target?.getBoundingClientRect();
     this.hoveredRecord.set(record);
     this.tooltipPosition.set({
-      x: (rect?.left ?? ZERO_VALUE) + (rect?.width ?? ZERO_VALUE) / DIVISOR_TWO,
-      y: (rect?.top ?? ZERO_VALUE) - TOOLTIP_OFFSET_Y,
+      x: (rect?.left ?? 0) + (rect?.width ?? 0) / 2,
+      y: (rect?.top ?? 0) - 15,
     });
   }
 
@@ -214,11 +175,12 @@ export class EarningsChart {
     this.onBarMouseLeave();
   }
 
+  private placeTooltipAtPointer(event: MouseEvent): void {
+    this.tooltipPosition.set({ x: event.clientX + 10, y: event.clientY + 15 });
+  }
+
   private formatDateLabel(dateStr: string): string {
     const parts = dateStr.split('-');
-    if (parts.length === DATE_PARTS_LENGTH) {
-      return `${parts[DATE_PART_MONTH_INDEX]}/${parts[DATE_PART_DAY_INDEX]}`;
-    }
-    return dateStr;
+    return parts.length === 3 ? `${parts[1]}/${parts[2]}` : dateStr;
   }
 }

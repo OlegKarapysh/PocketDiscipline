@@ -3,14 +3,31 @@ import type { Routes } from '@angular/router';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
-  { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard').then(m => m.Dashboard) },
-  { path: 'tasks', loadComponent: () => import('./features/tasks/pages/tasks-page/tasks-page').then(m => m.TasksPage) },
-  { path: 'goals', loadComponent: () => import('./features/goals/pages/goals-page/goals-page').then(m => m.GoalsPage) },
-  { path: 'pomodoro', loadChildren: () => import('./features/pomodoro/pomodoro.routes').then(m => m.POMODORO_ROUTES) },
-  { path: 'daily-scores', loadComponent: () => import('./features/daily-scores/pages/daily-scores-page').then(m => m.DailyScoresPage) },
-  { path: 'rewards', loadChildren: () => import('./features/rewards/rewards.routes').then(m => m.REWARDS_ROUTES) },
-  { path: 'settings', loadComponent: () => import('./features/settings/settings').then(m => m.Settings) },
+  { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard) },
+  {
+    path: 'tasks',
+    loadComponent: () => import('./features/tasks/pages/tasks-page/tasks-page').then((m) => m.TasksPage),
+  },
+  {
+    path: 'goals',
+    loadComponent: () => import('./features/goals/pages/goals-page/goals-page').then((m) => m.GoalsPage),
+  },
+  {
+    path: 'pomodoro',
+    loadChildren: () => import('./features/pomodoro/pomodoro.routes').then((m) => m.POMODORO_ROUTES),
+  },
+  {
+    path: 'daily-scores',
+    loadComponent: () => import('./features/daily-scores/pages/daily-scores-page').then((m) => m.DailyScoresPage),
+  },
+  { path: 'rewards', loadChildren: () => import('./features/rewards/rewards.routes').then((m) => m.REWARDS_ROUTES) },
+  { path: 'settings', loadComponent: () => import('./features/settings/settings').then((m) => m.Settings) },
   ...(isDevMode()
-    ? [{ path: 'design-system', loadComponent: () => import('./features/design-system/design-system-page').then(m => m.DesignSystemPage) }]
+    ? [
+        {
+          path: 'design-system',
+          loadComponent: () => import('./features/design-system/design-system-page').then((m) => m.DesignSystemPage),
+        },
+      ]
     : []),
 ];

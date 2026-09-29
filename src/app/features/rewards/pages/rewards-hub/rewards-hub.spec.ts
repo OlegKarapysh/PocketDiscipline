@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -50,14 +50,16 @@ describe('RewardsHub', () => {
     };
 
     const mockSpendingAnalyticsService = {
-      getAnalytics: vi.fn().mockReturnValue(of({
-        period: 'thisMonth',
-        granularity: 'daily',
-        totalSpent: 0,
-        withdrawalCount: 0,
-        categoryBreakdown: [],
-        spendingTrend: [],
-      })),
+      getAnalytics: vi.fn().mockReturnValue(
+        of({
+          period: 'thisMonth',
+          granularity: 'daily',
+          totalSpent: 0,
+          withdrawalCount: 0,
+          categoryBreakdown: [],
+          spendingTrend: [],
+        }),
+      ),
     };
 
     const mockUserService = {
@@ -90,10 +92,18 @@ describe('RewardsHub', () => {
 
     const tabs = compiled.querySelectorAll('.mat-mdc-tab');
     expect(tabs.length).toBe(3);
-    expect(tabs[0].textContent).toContain('Reward Store');
-    expect(tabs[1].textContent).toContain('History / Ledger');
+    expect(tabs[0].textContent).toContain('Reward store');
+    expect(tabs[1].textContent).toContain('History');
     expect(tabs[2].textContent).toContain('Analytics');
     expect(compiled.querySelector('app-reward-store')).toBeTruthy();
+  });
+
+  it('should render a single page header with the Quick spend action', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const headers = compiled.querySelectorAll('app-page-header');
+    expect(headers.length).toBe(1);
+    expect(headers[0].querySelector('h1')?.textContent).toContain('Rewards');
+    expect(headers[0].querySelector('.quick-spend-action-button')).toBeTruthy();
   });
 
   it('should open Quick Spend dialog and show snackbar when submitted via DOM button click', () => {
@@ -104,11 +114,7 @@ describe('RewardsHub', () => {
     expect(mockDialog.open).toHaveBeenCalledWith(QuickSpendDialog, {
       width: '400px',
     });
-    expect(mockSnackBar.open).toHaveBeenCalledWith(
-      'Quick spend "Coffee" recorded',
-      'Close',
-      { duration: 3000 }
-    );
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Quick spend "Coffee" recorded', 'Close', { duration: 3000 });
   });
 
   it('should not display snackbar when Quick Spend dialog is dismissed without submission', () => {

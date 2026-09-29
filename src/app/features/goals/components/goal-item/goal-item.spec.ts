@@ -1,14 +1,11 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { GoalItem } from './goal-item';
-import type { Goal} from '../../../../core/models/goal.model';
+import type { Goal } from '../../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../../core/models/goal.model';
-
-const TEST_GOAL_ID = 'g-1';
-const TEST_GOAL_TITLE = 'do 50 push-ups on fists';
-const TEST_REWARD_VALUE = 2000;
+import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
 
 describe('GoalItem', () => {
   let component: GoalItem;
@@ -25,9 +22,9 @@ describe('GoalItem', () => {
 
   it('should render active goal details and action buttons', async () => {
     const activeGoal: Goal = {
-      id: TEST_GOAL_ID,
-      title: TEST_GOAL_TITLE,
-      rewardValue: TEST_REWARD_VALUE,
+      id: 'g-1',
+      title: 'do 50 push-ups on fists',
+      rewardValue: 2000,
       status: GOAL_STATUS.ACTIVE,
       completedAt: null,
       createdAt: Date.now(),
@@ -39,12 +36,13 @@ describe('GoalItem', () => {
 
     const titleEl = fixture.debugElement.query(By.css('mat-card-title'));
     const subtitleEl = fixture.debugElement.query(By.css('mat-card-subtitle'));
-    expect((titleEl.nativeElement as HTMLElement).textContent.trim()).toBe(TEST_GOAL_TITLE);
-    expect((subtitleEl.nativeElement as HTMLElement).textContent).toContain('2000 ₴');
+    expect((titleEl.nativeElement as HTMLElement).textContent.trim()).toBe('do 50 push-ups on fists');
+    expect((subtitleEl.nativeElement as HTMLElement).textContent).toContain(MONEY_FORMAT.format(2000));
+    expect((subtitleEl.nativeElement as HTMLElement).textContent).toContain('₴');
 
     const editBtn = fixture.debugElement.query(By.css('button[aria-label="Edit"]'));
     const deleteBtn = fixture.debugElement.query(By.css('button[aria-label="Delete"]'));
-    const completeBtn = fixture.debugElement.query(By.css('button[color="primary"]:not([aria-label="Edit"])'));
+    const completeBtn = fixture.debugElement.query(By.css('button.complete'));
 
     expect(editBtn).toBeTruthy();
     expect(deleteBtn).toBeTruthy();
@@ -53,9 +51,9 @@ describe('GoalItem', () => {
 
   it('should emit complete, edit, and delete events for active goal', async () => {
     const activeGoal: Goal = {
-      id: TEST_GOAL_ID,
-      title: TEST_GOAL_TITLE,
-      rewardValue: TEST_REWARD_VALUE,
+      id: 'g-1',
+      title: 'do 50 push-ups on fists',
+      rewardValue: 2000,
       status: GOAL_STATUS.ACTIVE,
       completedAt: null,
       createdAt: Date.now(),
@@ -79,18 +77,18 @@ describe('GoalItem', () => {
 
     const deleteBtn = fixture.debugElement.query(By.css('button[aria-label="Delete"]'));
     (deleteBtn.nativeElement as HTMLButtonElement).click();
-    expect(deletedId).toBe(TEST_GOAL_ID);
+    expect(deletedId).toBe('g-1');
 
-    const completeBtn = fixture.debugElement.query(By.css('button[color="primary"]:not([aria-label="Edit"])'));
+    const completeBtn = fixture.debugElement.query(By.css('button.complete'));
     (completeBtn.nativeElement as HTMLButtonElement).click();
-    expect(completedId).toBe(TEST_GOAL_ID);
+    expect(completedId).toBe('g-1');
   });
 
   it('should render completed goal with undo button and emit undo event on click', async () => {
     const completedGoal: Goal = {
-      id: TEST_GOAL_ID,
-      title: TEST_GOAL_TITLE,
-      rewardValue: TEST_REWARD_VALUE,
+      id: 'g-1',
+      title: 'do 50 push-ups on fists',
+      rewardValue: 2000,
       status: GOAL_STATUS.COMPLETED,
       completedAt: Date.now(),
       createdAt: Date.now(),
@@ -108,6 +106,6 @@ describe('GoalItem', () => {
     expect((undoBtn.nativeElement as HTMLElement).textContent).toContain('Undo');
 
     (undoBtn.nativeElement as HTMLButtonElement).click();
-    expect(undoneId).toBe(TEST_GOAL_ID);
+    expect(undoneId).toBe('g-1');
   });
 });

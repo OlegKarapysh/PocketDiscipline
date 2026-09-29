@@ -10,7 +10,7 @@ describe('SpeedDial', () => {
 
   const host = () => fixture.nativeElement as HTMLElement;
   const fab = () => host().querySelector<HTMLButtonElement>('button[mat-fab]')!;
-  const actionLabels = () => Array.from(host().querySelectorAll('.action span')).map(label => label.textContent);
+  const actionLabels = () => Array.from(host().querySelectorAll('.action span')).map((label) => label.textContent);
 
   const open = async () => {
     fab().click();

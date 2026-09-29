@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { By } from '@angular/platform-browser';
@@ -33,6 +33,9 @@ describe('CategoryFormDialog', () => {
     fixture.detectChanges();
   };
 
+  const submitButton = () =>
+    fixture.debugElement.query(By.css('mat-dialog-actions button:last-child')).nativeElement as HTMLButtonElement;
+
   beforeEach(async () => {
     existingCategory = {
       id: 'cat-1',
@@ -49,32 +52,37 @@ describe('CategoryFormDialog', () => {
 
   it('should initialize with empty form and disabled submit button when creating a new category', () => {
     expect(component.isEdit).toBe(false);
-    expect(component.form.getRawValue().name).toBe('');
-    expect(component.form.valid).toBe(false);
+    expect(component.model().name).toBe('');
+    expect(component.categoryForm().valid()).toBe(false);
 
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
-    expect(submitBtn.disabled).toBe(true);
-    expect(submitBtn.textContent.trim()).toBe('Create Category');
+    expect(submitButton().disabled).toBe(true);
+    expect(submitButton().textContent.trim()).toBe('Create category');
   });
 
   it('should initialize with existing category data and enabled submit button in edit mode', async () => {
     await setupComponent(existingCategory);
 
     expect(component.isEdit).toBe(true);
-    const formVal = component.form.getRawValue();
-    expect(formVal.name).toBe('Hobbies');
-    expect(formVal.color).toBe('#3f51b5');
-    expect(formVal.icon).toBe('palette');
-    expect(component.form.valid).toBe(true);
+    expect(component.model()).toEqual({ name: 'Hobbies', color: '#3f51b5', icon: 'palette' });
+    expect(component.categoryForm().valid()).toBe(true);
 
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
-    expect(submitBtn.disabled).toBe(false);
-    expect(submitBtn.textContent.trim()).toBe('Save Changes');
+    expect(submitButton().disabled).toBe(false);
+    expect(submitButton().textContent.trim()).toBe('Save changes');
+  });
+
+  it('should show the required error once the name field is touched and left empty', async () => {
+    const nameInput = fixture.debugElement.query(By.css('input[matInput]')).nativeElement as HTMLInputElement;
+    nameInput.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const error = fixture.debugElement.query(By.css('mat-error'));
+    expect((error.nativeElement as HTMLElement).textContent.trim()).toBe('Category name is required');
   });
 
   it('should select color and icon via DOM clicks and submit form when clicking submit button', async () => {
-    const nameInput = fixture.debugElement.query(By.css('input[formControlName="name"]')).nativeElement as HTMLInputElement;
-    nameInput.value = 'Gaming';
+    const nameInput = fixture.debugElement.query(By.css('input[matInput]')).nativeElement as HTMLInputElement;
+    nameInput.value = '  Gaming ';
     nameInput.dispatchEvent(new Event('input'));
     fixture.detectChanges();
 
@@ -86,23 +94,22 @@ describe('CategoryFormDialog', () => {
     (iconChips[2].nativeElement as HTMLElement).click();
     fixture.detectChanges();
 
-    expect(component.form.valid).toBe(true);
+    expect(component.categoryForm().valid()).toBe(true);
+    expect(submitButton().disabled).toBe(false);
 
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
-    expect(submitBtn.disabled).toBe(false);
-    submitBtn.click();
+    submitButton().click();
     await fixture.whenStable();
 
-    const submittedVal = component.form.getRawValue();
     expect(mockDialogRef.close).toHaveBeenCalledWith({
       name: 'Gaming',
-      color: submittedVal.color,
-      icon: submittedVal.icon,
+      color: component.presetColors[1],
+      icon: component.presetIcons[2],
     });
   });
 
   it('should close dialog without result when clicking cancel button in DOM', () => {
-    const cancelBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:first-child')).nativeElement as HTMLButtonElement;
+    const cancelBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:first-child'))
+      .nativeElement as HTMLButtonElement;
     cancelBtn.click();
 
     expect(mockDialogRef.close).toHaveBeenCalledWith();

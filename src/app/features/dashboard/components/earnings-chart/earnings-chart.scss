@@ -1,33 +1,50 @@
-.earnings-chart-card {
-  position: relative;
+@use '../../../../../styles/tokens' as t;
+
+// Series colours: goals are earned rewards (amber); tasks and focus share the primary family.
+@each $source,
+  $color
+    in (
+      goals: var(--pd-sys-reward),
+      dailyTasks: var(--mat-sys-primary),
+      pomodoro: var(--mat-sys-inverse-primary),
+      dailyScores: var(--mat-sys-secondary)
+    )
+{
+  .bar-segment[data-source='#{$source}'] {
+    fill: $color;
+  }
+
+  .swatch[data-source='#{$source}'] {
+    background-color: $color;
+  }
 }
 
 .chart-content {
-  padding: 16px;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: t.space(3);
 }
 
 .legend-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: t.space(2) t.space(4);
   justify-content: center;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: t.space(2);
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
 }
 
-.legend-swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  display: inline-block;
+.swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: t.radius(pill);
 }
 
 .svg-container {
@@ -36,6 +53,7 @@
 }
 
 .earnings-svg {
+  display: block;
   width: 100%;
   height: auto;
   min-height: 220px;
@@ -44,7 +62,6 @@
 
 .grid-line {
   stroke: var(--mat-sys-outline-variant);
-  stroke-opacity: 0.5;
   stroke-width: 1;
   stroke-dasharray: 4 4;
 }
@@ -54,11 +71,9 @@
   stroke-width: 1.5;
 }
 
-.axis-label-y,
-.axis-label-x {
-  font-size: 11px;
+.axis-label {
+  font-size: var(--mat-sys-label-small-size);
   fill: var(--mat-sys-on-surface-variant);
-  font-family: inherit;
 }
 
 .chart-bar-group {
@@ -66,10 +81,9 @@
   outline: none;
 
   &:hover,
-  &:focus {
+  &:focus-visible {
     .bar-hitbox {
-      fill: var(--mat-sys-surface-container-highest);
-      fill-opacity: 0.4;
+      fill: var(--mat-sys-surface-container);
     }
   }
 }
@@ -97,62 +111,40 @@
   position: fixed;
   z-index: 1000;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: t.space(1);
+  min-width: 160px;
+  max-width: 240px;
+  padding: t.space(2) t.space(3);
+  border-radius: t.radius(md);
   background-color: var(--mat-sys-inverse-surface);
   color: var(--mat-sys-inverse-on-surface);
-  border-radius: 6px;
-  padding: 8px 12px;
   font: var(--mat-sys-body-small);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  max-width: 220px;
+  box-shadow: var(--pd-sys-elevation-2);
 }
 
 .tooltip-date {
+  padding-bottom: t.space(1);
+  border-bottom: 1px solid var(--mat-sys-outline);
   font-weight: 600;
-  margin-bottom: 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 2px;
+}
+
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: t.space(2);
+
+  app-amount {
+    margin-left: auto;
+  }
 }
 
 .tooltip-total {
-  margin-bottom: 6px;
-}
-
-.tooltip-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.breakdown-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.breakdown-swatch {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-
-  &.goals {
-    background-color: #3f51b5;
-  }
-
-  &.daily-tasks {
-    background-color: #4caf50;
-  }
-
-  &.pomodoro {
-    background-color: #ff9800;
-  }
-
-  &.daily-scores {
-    background-color: #9c27b0;
-  }
+  font-weight: 600;
 }
 
 .no-earnings-text {
-  color: #9e9e9e;
   font-style: italic;
+  opacity: 0.8;
 }

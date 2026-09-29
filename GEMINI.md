@@ -3,7 +3,7 @@
 Code conventions live in **[docs/code_style.md](docs/code_style.md)** — the single source of truth
 for naming, component state, teardown, forms, constants, SCSS, templates and layering. Read it
 before writing code, and change a convention there rather than restating one here. The rules below
-are project *workflow* rules, which is a separate concern.
+are project _workflow_ rules, which is a separate concern.
 
 - Use vertical slice architecture for new features. The layering rule that follows from it
   (`core/` must never import `features/`) is rule 8 in the code style guide.
@@ -16,4 +16,3 @@ are project *workflow* rules, which is a separate concern.
 - **Database Schema**: Always refer to `docs/schema.md` when writing or modifying any data access code, Dexie queries, or adding new features that interact with local storage.
 - **Code Style**: Always adhere to the project's [Code Style Guidelines](docs/code_style.md).
 - **Clarification and Context**: Always ask clarifying questions before proceeding if there is insufficient context, ambiguity, or missing information to understand the user's intention or task requirements.
-

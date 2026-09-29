@@ -30,7 +30,7 @@ Implement a new "Goals" feature that allows users to create, view, edit, delete,
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 - [x] Does the implementation use a Vertical Slice Architecture?
 - [x] Have we minimized external dependencies (i.e., are all new packages strictly necessary)?
@@ -72,6 +72,6 @@ src/app/features/goals/
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
+| Violation            | Why Needed                                                         | Simpler Alternative Rejected Because                           |
+| -------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------- |
 | Centralized DB Table | Need to define the Dexie table schema centrally in `db.service.ts` | Dexie requires tables to be declared at database instantiation |

@@ -25,7 +25,16 @@ const SETTINGS: NavItem = { path: '/settings', label: 'Settings', icon: 'setting
 
 @Component({
   selector: 'app-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, MatSidenavModule, MatIconModule, MatListModule, BottomNav, SpeedDial],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    MatSidenavModule,
+    MatIconModule,
+    MatListModule,
+    BottomNav,
+    SpeedDial,
+  ],
   templateUrl: './layout.html',
   styleUrl: './layout.scss',
 })
@@ -40,7 +49,7 @@ export class Layout {
     { icon: 'add_task', label: 'New task', path: '/tasks', queryParams: { [NEW_ITEM_QUERY_PARAM]: '1' } },
   ];
 
-  readonly isCompact = toSignal(this.breakpointObserver.observe(COMPACT_QUERY).pipe(map(result => result.matches)), {
+  readonly isCompact = toSignal(this.breakpointObserver.observe(COMPACT_QUERY).pipe(map((result) => result.matches)), {
     initialValue: false,
   });
 }

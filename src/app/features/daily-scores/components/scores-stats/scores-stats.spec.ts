@@ -1,11 +1,10 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { ScoresStats } from './scores-stats';
 import type { DailyScore } from '../../../../core/models/daily-score.model';
-
-const DATE_LOCALE_CA = 'en-CA';
+import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
 
 describe('ScoresStats', () => {
   let component: ScoresStats;

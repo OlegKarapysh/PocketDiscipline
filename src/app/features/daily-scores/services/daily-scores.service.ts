@@ -1,26 +1,17 @@
 import { Service, inject } from '@angular/core';
 import { DbService } from '../../../database/db.service';
 import type { DailyScore } from '../../../core/models/daily-score.model';
-import type { Observable} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
 
 const REWARD_PERFECT = 500;
 const REWARD_GOOD = 100;
-const NO_REWARD = 0;
 const SCORE_PERFECT = 10;
 const SCORE_GOOD = 9;
 const MAX_STREAK_BONUS = 1.0;
-const STREAK_BONUS_STEP = 0.10;
-const DAYS_IN_WEEK_OFFSET = 6;
-const YESTERDAY_OFFSET = 1;
-const INITIAL_STREAK = 0;
-const STREAK_INCREMENT = 1;
-const TRANSACTION_READ_WRITE = 'rw';
-const MONTH_START_DAY = '01';
-const MONTH_END_DAY = '31';
-const ERROR_USER_NOT_FOUND = 'User not found when attempting to add reward.';
+const STREAK_BONUS_STEP = 0.1;
 
 @Service()
 export class DailyScoresService {
@@ -33,8 +24,8 @@ export class DailyScoresService {
   getCurrentMonthScores(): Observable<DailyScore[]> {
     const today = new Date();
     const formattedMonth = String(today.getMonth() + 1).padStart(2, '0');
-    const startStr = `${today.getFullYear()}-${formattedMonth}-${MONTH_START_DAY}`;
-    const endStr = `${today.getFullYear()}-${formattedMonth}-${MONTH_END_DAY}`;
+    const startStr = `${today.getFullYear()}-${formattedMonth}-01`;
+    const endStr = `${today.getFullYear()}-${formattedMonth}-31`;
 
     return from(this.db.dailyScores.where('date').between(startStr, endStr, true, true).toArray());
   }
@@ -44,7 +35,7 @@ export class DailyScoresService {
     const endDate = today.toLocaleDateString(DATE_LOCALE_CA);
 
     const start = new Date();
-    start.setDate(today.getDate() - DAYS_IN_WEEK_OFFSET);
+    start.setDate(today.getDate() - 6);
     const startDate = start.toLocaleDateString(DATE_LOCALE_CA);
 
     return from(this.db.dailyScores.where('date').between(startDate, endDate, true, true).toArray());
@@ -55,46 +46,46 @@ export class DailyScoresService {
     return this.getScore(today);
   }
 
-  async saveTodayScore(score: number): Promise<{ reward: number, newStreak: number }> {
+  async saveTodayScore(score: number): Promise<{ reward: number; newStreak: number }> {
     try {
       const today = new Date();
       const todayStr = today.toLocaleDateString(DATE_LOCALE_CA);
 
       const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - YESTERDAY_OFFSET);
+      yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toLocaleDateString(DATE_LOCALE_CA);
 
       const yesterdayScore = await this.db.dailyScores.get(yesterdayStr);
-      const previousStreak = yesterdayScore ? yesterdayScore.streakAtThisDay : INITIAL_STREAK;
+      const previousStreak = yesterdayScore ? yesterdayScore.streakAtThisDay : 0;
 
-      let baseReward = NO_REWARD;
-      let newStreak = INITIAL_STREAK;
+      let baseReward = 0;
+      let newStreak = 0;
 
       if (score >= SCORE_GOOD) {
         baseReward = score === SCORE_PERFECT ? REWARD_PERFECT : REWARD_GOOD;
-        newStreak = previousStreak + STREAK_INCREMENT;
+        newStreak = previousStreak + 1;
       }
 
       const bonusMultiplier = Math.min(previousStreak * STREAK_BONUS_STEP, MAX_STREAK_BONUS);
-      const rewardEarned = baseReward > NO_REWARD ? Math.round(baseReward * (1 + bonusMultiplier)) : NO_REWARD;
+      const rewardEarned = baseReward > 0 ? Math.round(baseReward * (1 + bonusMultiplier)) : 0;
 
       const newScore: DailyScore = {
         date: todayStr,
         score: score,
         rewardEarned: rewardEarned,
         streakAtThisDay: newStreak,
-        createdAt: Date.now()
+        createdAt: Date.now(),
       };
 
-      await this.db.transaction(TRANSACTION_READ_WRITE, this.db.dailyScores, this.db.users, async () => {
+      await this.db.transaction('rw', this.db.dailyScores, this.db.users, async () => {
         await this.db.dailyScores.add(newScore);
 
-        if (rewardEarned > NO_REWARD) {
+        if (rewardEarned > 0) {
           const user = await this.db.users.get(CURRENT_USER_ID);
           if (user) {
             await this.db.users.update(CURRENT_USER_ID, { balance: user.balance + rewardEarned });
           } else {
-            throw new Error(ERROR_USER_NOT_FOUND);
+            throw new Error('User not found when attempting to add reward.');
           }
         }
       });

@@ -37,10 +37,7 @@ describe('ConfirmService', () => {
 
     service.ask(data).subscribe();
 
-    expect(dialogMock.open).toHaveBeenCalledWith(
-      ConfirmDialog,
-      expect.objectContaining({ data, width: '400px' })
-    );
+    expect(dialogMock.open).toHaveBeenCalledWith(ConfirmDialog, expect.objectContaining({ data, width: '400px' }));
   });
 
   it('should emit once when the user confirms', () => {

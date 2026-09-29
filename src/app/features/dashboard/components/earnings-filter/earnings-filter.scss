@@ -1,19 +1,13 @@
+@use '../../../../../styles/tokens' as t;
+
 .earnings-filter-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   align-items: center;
+  gap: t.space(3);
 }
 
-.presets-row {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.custom-range-row {
-  display: flex;
-  justify-content: center;
+.custom-range {
   width: 100%;
   max-width: 320px;
 }

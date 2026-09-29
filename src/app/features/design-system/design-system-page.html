@@ -16,9 +16,15 @@
       <button mat-stroked-button type="button" (click)="askDelete()">Confirm (destructive)</button>
     </div>
     <div class="row">
-      <button mat-stroked-button class="pd-difficulty" type="button">Easy<app-amount [value]="100" size="sm" tone="reward" [showSign]="true" /></button>
-      <button mat-stroked-button class="pd-difficulty" type="button">Medium<app-amount [value]="200" size="sm" tone="reward" [showSign]="true" /></button>
-      <button mat-stroked-button class="pd-difficulty" type="button">Hard<app-amount [value]="300" size="sm" tone="reward" [showSign]="true" /></button>
+      <button mat-stroked-button class="pd-difficulty" type="button">
+        Easy<app-amount [value]="100" size="sm" tone="reward" [showSign]="true" />
+      </button>
+      <button mat-stroked-button class="pd-difficulty" type="button">
+        Medium<app-amount [value]="200" size="sm" tone="reward" [showSign]="true" />
+      </button>
+      <button mat-stroked-button class="pd-difficulty" type="button">
+        Hard<app-amount [value]="300" size="sm" tone="reward" [showSign]="true" />
+      </button>
     </div>
   </app-section-card>
 
@@ -29,7 +35,7 @@
       <app-streak-badge [days]="0" />
     </div>
     <div class="row">
-      <app-badge tone="reward">+200 ₴</app-badge>
+      <app-badge tone="reward"><app-amount [value]="200" size="sm" tone="inherit" [showSign]="true" /></app-badge>
       <app-badge tone="success" icon="check_circle">Completed</app-badge>
       <app-badge tone="primary">Active</app-badge>
       <app-badge>Paused</app-badge>
@@ -72,5 +78,9 @@
     </app-stat-card>
   </div>
 
-  <app-empty-state heading="No habits yet" message="Add one small thing you want to do every day." actionLabel="New habit" />
+  <app-empty-state
+    heading="No habits yet"
+    message="Add one small thing you want to do every day."
+    actionLabel="New habit"
+  />
 </div>

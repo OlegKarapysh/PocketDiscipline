@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { EarningsChart } from './earnings-chart';
@@ -77,7 +77,7 @@ describe('EarningsChart', () => {
 
     const day1Bars = component.bars()[0];
     expect(day1Bars.segments.length).toBe(3); // goals (500), tasks (200), pomodoro (300)
-    expect(day1Bars.segments.map(s => s.source)).toEqual(['goals', 'dailyTasks', 'pomodoro']);
+    expect(day1Bars.segments.map((s) => s.source)).toEqual(['goals', 'dailyTasks', 'pomodoro']);
   });
 
   it('should update hover state on mouse enter and clear on mouse leave', () => {
@@ -119,9 +119,41 @@ describe('EarningsChart', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const tooltip = compiled.querySelector('.chart-tooltip');
     expect(tooltip).toBeTruthy();
-    expect(tooltip?.textContent).toContain('Goals: 500 ₴');
-    expect(tooltip?.textContent).toContain('Daily Tasks: 200 ₴');
-    expect(tooltip?.textContent).toContain('Pomodoro: 300 ₴');
+    // Each row is a label followed by an <app-amount>, which owns number formatting and the ₴ unit.
+    const rows = Array.from(tooltip?.querySelectorAll('.tooltip-row') ?? [], (row) => [
+      row.querySelector('span:not(.swatch)')?.textContent.trim(),
+      row.querySelector('app-amount')?.textContent,
+    ]);
+    const amount = (value: number) => `${value.toLocaleString('uk-UA')}₴`;
+    expect(rows).toHaveLength(4);
+    expect(rows).toEqual(
+      expect.arrayContaining([
+        ['Total', amount(1000)],
+        ['Goals', amount(500)],
+        ['Daily tasks', amount(200)],
+        ['Pomodoro', amount(300)],
+      ]),
+    );
+  });
+
+  it('should label each bar with its date and formatted total for screen readers', () => {
+    fixture.componentRef.setInput('records', mockRecords);
+    fixture.detectChanges();
+
+    const firstBar = (fixture.nativeElement as HTMLElement).querySelector('.chart-bar-group');
+    expect(firstBar?.getAttribute('aria-label')).toBe(`2026-08-27: ${(1000).toLocaleString('uk-UA')} ₴`);
+  });
+
+  it('should round the y-axis scale up to the next 500', () => {
+    fixture.componentRef.setInput('records', mockRecords);
+    fixture.detectChanges();
+
+    expect(component.maxDailyEarned()).toBe(1500);
+    expect(component.gridLines().at(-1)?.label).toBe((1500).toLocaleString('uk-UA'));
+
+    fixture.componentRef.setInput('records', [{ ...mockRecords[0], totalEarned: 1501 }]);
+    fixture.detectChanges();
+    expect(component.maxDailyEarned()).toBe(2000);
   });
 
   it('should toggle tooltip on bar click', () => {
@@ -151,7 +183,7 @@ describe('EarningsChart', () => {
 
     const bars = component.bars();
     expect(bars.length).toBe(30);
-    const visibleLabels = bars.filter(b => b.shouldShowLabel);
+    const visibleLabels = bars.filter((b) => b.shouldShowLabel);
     expect(visibleLabels.length).toBeLessThan(30);
     expect(visibleLabels.length).toBeGreaterThan(0);
     expect(bars[0].shouldShowLabel).toBe(true);

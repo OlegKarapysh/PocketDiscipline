@@ -6,8 +6,6 @@ import { CelebrationDialog } from '../components/celebration-dialog/celebration-
 import type { CelebrationDialogData } from '../components/celebration-dialog/celebration-dialog-data.model';
 import type { CelebrationResult } from '../components/celebration-dialog/celebration-result.type';
 
-const CELEBRATION_DIALOG_WIDTH = '340px';
-
 @Service()
 export class CelebrationService {
   private readonly dialog = inject(MatDialog);
@@ -16,10 +14,10 @@ export class CelebrationService {
     return this.dialog
       .open<CelebrationDialog, CelebrationDialogData, CelebrationResult>(CelebrationDialog, {
         data,
-        width: CELEBRATION_DIALOG_WIDTH,
+        width: '340px',
         maxWidth: 'calc(100vw - 32px)',
       })
       .afterClosed()
-      .pipe(map(result => result ?? 'dismissed'));
+      .pipe(map((result) => result ?? 'dismissed'));
   }
 }

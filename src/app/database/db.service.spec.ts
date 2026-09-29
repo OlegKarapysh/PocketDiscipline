@@ -13,10 +13,7 @@ describe('DbService', () => {
     migrationMock = { migrate: vi.fn().mockResolvedValue(undefined) };
 
     TestBed.configureTestingModule({
-      providers: [
-        DbService,
-        { provide: LegacyPomodoroMigrationService, useValue: migrationMock },
-      ],
+      providers: [DbService, { provide: LegacyPomodoroMigrationService, useValue: migrationMock }],
     });
     service = TestBed.inject(DbService);
   });
@@ -72,7 +69,7 @@ describe('DbService', () => {
           id: CURRENT_USER_ID,
           name: CURRENT_USER_NAME,
           balance: DEFAULT_INITIAL_BALANCE,
-        })
+        }),
       );
     });
 

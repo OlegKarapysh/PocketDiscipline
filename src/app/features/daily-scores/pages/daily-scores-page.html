@@ -1,12 +1,18 @@
-<div class="page-container">
-  @if (loading()) {
-    <div class="loading-container">
-      <mat-spinner diameter="40" />
-    </div>
-  } @else {
-    <app-scores-stats [monthlyScores]="monthlyScores()" [latestScore]="latestScore()" />
+<app-page-header title="Daily scores" />
 
-    <app-scores-chart [scores]="weeklyScores()" />
+@if (loading()) {
+  <div class="loading-container">
+    <mat-spinner diameter="40" />
+  </div>
+} @else {
+  <div class="page-grid">
+    @if (successMessage()) {
+      <div class="success-message" role="status">
+        {{ successMessage() }}
+      </div>
+    }
+
+    <app-scores-stats class="full-row" [monthlyScores]="monthlyScores()" [latestScore]="latestScore()" />
 
     <app-score-input
       [readonly]="hasScoreToday()"
@@ -14,10 +20,6 @@
       (scoreSubmitted)="onScoreSubmit($event)"
     />
 
-    @if (successMessage()) {
-      <div class="success-message">
-        {{ successMessage() }}
-      </div>
-    }
-  }
-</div>
+    <app-scores-chart [scores]="weeklyScores()" />
+  </div>
+}

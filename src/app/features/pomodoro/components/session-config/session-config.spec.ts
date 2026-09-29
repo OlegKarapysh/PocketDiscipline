@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
@@ -17,6 +17,14 @@ describe('SessionConfig', () => {
     setConfig: ReturnType<typeof vi.fn>;
   };
 
+  const typeDuration = async (value: string) => {
+    const input = fixture.debugElement.query(By.css('input[type="number"]')).nativeElement as HTMLInputElement;
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+  };
+
   beforeEach(async () => {
     timerServiceMock = {
       isActive: signal(false),
@@ -27,20 +35,16 @@ describe('SessionConfig', () => {
 
     await TestBed.configureTestingModule({
       imports: [SessionConfig],
-      providers: [
-        { provide: PomodoroTimerService, useValue: timerServiceMock },
-      ],
+      providers: [{ provide: PomodoroTimerService, useValue: timerServiceMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SessionConfig);
     component = fixture.componentInstance;
-  });
-
-  it('should render config container when timer is inactive', async () => {
-    timerServiceMock.isActive.set(false);
     fixture.detectChanges();
     await fixture.whenStable();
+  });
 
+  it('should render config container when timer is inactive', () => {
     const container = fixture.debugElement.query(By.css('.config-container'));
     expect(container).toBeTruthy();
   });
@@ -54,8 +58,17 @@ describe('SessionConfig', () => {
     expect(container).toBeNull();
   });
 
-  it('should update duration when value is within valid range [15, 120]', () => {
-    component.updateDuration(45);
+  it('should show the current duration from the timer service', () => {
+    const input = fixture.debugElement.query(By.css('input[type="number"]')).nativeElement as HTMLInputElement;
+    expect(input.value).toBe('25');
+  });
+
+  it('should not push the unchanged config back to the timer service', () => {
+    expect(timerServiceMock.setConfig).not.toHaveBeenCalled();
+  });
+
+  it('should update duration when value is within valid range [15, 120]', async () => {
+    await typeDuration('45');
 
     expect(timerServiceMock.setConfig).toHaveBeenCalledWith({
       durationMinutes: 45,
@@ -63,20 +76,22 @@ describe('SessionConfig', () => {
     });
   });
 
-  it('should ignore duration update when value is below minimum (< 15)', () => {
-    component.updateDuration(10);
+  it('should ignore duration update when value is below minimum (< 15)', async () => {
+    await typeDuration('10');
 
     expect(timerServiceMock.setConfig).not.toHaveBeenCalled();
   });
 
-  it('should ignore duration update when value is above maximum (> 120)', () => {
-    component.updateDuration(130);
+  it('should ignore duration update when value is above maximum (> 120)', async () => {
+    await typeDuration('130');
 
     expect(timerServiceMock.setConfig).not.toHaveBeenCalled();
   });
 
-  it('should update engagement type', () => {
-    component.updateEngagement(EngagementType.STUDY);
+  it('should update engagement type', async () => {
+    component.configForm.engagementType().value.set(EngagementType.STUDY);
+    fixture.detectChanges();
+    await fixture.whenStable();
 
     expect(timerServiceMock.setConfig).toHaveBeenCalledWith({
       durationMinutes: 25,

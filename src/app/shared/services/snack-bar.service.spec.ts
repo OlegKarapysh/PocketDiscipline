@@ -26,11 +26,9 @@ describe('SnackBarService', () => {
   it('should surface the message of an Error', () => {
     service.error(new Error('A goal with this title already exists.'));
 
-    expect(matSnackBarMock.open).toHaveBeenCalledWith(
-      'A goal with this title already exists.',
-      'Close',
-      { duration: 3000 }
-    );
+    expect(matSnackBarMock.open).toHaveBeenCalledWith('A goal with this title already exists.', 'Close', {
+      duration: 3000,
+    });
   });
 
   it('should fall back to a generic message for a non-Error', () => {

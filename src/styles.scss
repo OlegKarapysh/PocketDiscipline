@@ -33,22 +33,18 @@ html {
       on-primary-container: light-dark(#4448a8, #b7baf7),
       inverse-primary: light-dark(#b7baf7, #5a5ec8),
       surface-tint: light-dark(#5a5ec8, #9da1f2),
-
       secondary: light-dark(#5b5d72, #a3a5bb),
       on-secondary: light-dark(#ffffff, #1a1b28),
       secondary-container: light-dark(#e9e9fb, #2b2d52),
       on-secondary-container: light-dark(#4448a8, #b7baf7),
-
       tertiary: light-dark(#9a5a06, #f4bf6f),
       on-tertiary: light-dark(#ffffff, #2b1d05),
       tertiary-container: light-dark(#fcefd9, #3a2d18),
       on-tertiary-container: light-dark(#9a5a06, #f4bf6f),
-
       error: light-dark(#c94a40, #ee8378),
       on-error: light-dark(#ffffff, #3d0f0b),
       error-container: light-dark(#fbe5e2, #3d1f1c),
       on-error-container: light-dark(#8f2a22, #f7b2aa),
-
       background: light-dark(#f6f6fa, #11121c),
       on-background: light-dark(#1c1d2b, #ececf3),
       surface: light-dark(#f6f6fa, #11121c),
@@ -62,7 +58,6 @@ html {
       surface-container-highest: light-dark(#e2e2eb, #303248),
       inverse-surface: light-dark(#1c1d2b, #ececf3),
       inverse-on-surface: light-dark(#ececf3, #1c1d2b),
-
       outline: light-dark(#8e90a6, #6b6d85),
       outline-variant: light-dark(#e3e3ed, #2e3044),
       shadow: light-dark(#282a5a, #000000),
@@ -80,6 +75,8 @@ html {
   --pd-sys-reward: light-dark(#e39526, #f0ad4e);
   --pd-sys-success: light-dark(#2e8f64, #5ec797);
   --pd-sys-success-container: light-dark(#dff3e9, #1b3629);
+  // Icons and marks drawn on a user-chosen category colour. Category colours are mid-tone in both modes.
+  --pd-sys-on-category: #fff;
   --pd-sys-shadow-color: light-dark(rgb(40 42 90 / 10%), rgb(0 0 0 / 45%));
   --pd-sys-elevation-1: 0 1px 2px var(--pd-sys-shadow-color), 0 2px 8px var(--pd-sys-shadow-color);
   --pd-sys-elevation-2: 0 12px 32px -8px var(--pd-sys-shadow-color), 0 4px 10px var(--pd-sys-shadow-color);

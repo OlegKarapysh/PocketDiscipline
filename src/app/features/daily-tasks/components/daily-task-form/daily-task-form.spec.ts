@@ -1,13 +1,23 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { DailyTaskForm } from './daily-task-form';
-import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
+import type { DailyTaskDraft } from '../../models/daily-task-draft.model';
 
 describe('DailyTaskForm', () => {
   let component: DailyTaskForm;
   let fixture: ComponentFixture<DailyTaskForm>;
+
+  const inputs = (): HTMLInputElement[] =>
+    fixture.debugElement.queryAll(By.css('input')).map((el) => el.nativeElement as HTMLInputElement);
+
+  const type = async (input: HTMLInputElement, value: string): Promise<void> => {
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -20,92 +30,97 @@ describe('DailyTaskForm', () => {
   });
 
   it('should initialize with default 3 difficulties', () => {
-    expect(component.difficulties().length).toBe(3);
-    expect(component.difficulties()[0].name).toBe('Easy');
-    expect(component.difficulties()[1].name).toBe('Medium');
-    expect(component.difficulties()[2].name).toBe('Hard');
+    expect(component.draft().difficulties.map((d) => d.name)).toEqual(['Easy', 'Medium', 'Hard']);
   });
 
   it('should add a new difficulty when addDifficulty is called', () => {
     component.addDifficulty();
-    expect(component.difficulties().length).toBe(4);
+    expect(component.draft().difficulties.length).toBe(4);
   });
 
   it('should remove a difficulty at specified index', () => {
     component.removeDifficulty(1);
-    expect(component.difficulties().length).toBe(2);
-    expect(component.difficulties().some((d) => d.name === 'Medium')).toBe(false);
+    expect(component.draft().difficulties.length).toBe(2);
+    expect(component.draft().difficulties.some((d) => d.name === 'Medium')).toBe(false);
   });
 
   it('should not remove difficulty when only 1 difficulty remains', () => {
-    component.difficulties.set([{ id: '1', name: 'Only', baseReward: 100 }]);
+    component.draft.update((draft) => ({ ...draft, difficulties: [{ id: '1', name: 'Only', baseReward: 100 }] }));
     component.removeDifficulty(0);
-    expect(component.difficulties().length).toBe(1);
+    expect(component.draft().difficulties.length).toBe(1);
   });
 
-  it('should emit taskCreated and reset title upon submitting valid form', () => {
-    let emittedTitle = '';
-    let emittedDifficulties: DailyTaskDifficulty[] = [];
+  it('should write typed values into the draft', async () => {
+    const [title, firstName, firstReward] = inputs();
+    await type(title, 'Stretch');
+    await type(firstName, 'Light');
+    await type(firstReward, '150');
 
-    component.taskCreated.subscribe((data: { title: string; difficulties: DailyTaskDifficulty[] }) => {
-      emittedTitle = data.title;
-      emittedDifficulties = data.difficulties;
-    });
+    expect(component.draft().title).toBe('Stretch');
+    expect(component.draft().difficulties[0]).toEqual(expect.objectContaining({ name: 'Light', baseReward: 150 }));
+  });
 
-    component.title.set('Read 30 mins');
+  it('should emit taskCreated with a trimmed title and reset the form upon submitting', async () => {
+    const emitted: DailyTaskDraft[] = [];
+    component.taskCreated.subscribe((data) => emitted.push(data));
+
+    await type(inputs()[0], '  Read 30 mins  ');
     component.submit();
 
-    expect(emittedTitle).toBe('Read 30 mins');
-    expect(emittedDifficulties.length).toBe(3);
-    expect(component.title()).toBe('');
+    expect(emitted.length).toBe(1);
+    expect(emitted[0].title).toBe('Read 30 mins');
+    expect(emitted[0].difficulties.length).toBe(3);
+    expect(component.draft().title).toBe('');
   });
 
-  it('should not emit taskCreated when title is empty or blank', () => {
-    let emitted = false;
-    component.taskCreated.subscribe(() => {
-      emitted = true;
-    });
+  it('should fall back to default name and reward for blank difficulties', async () => {
+    const emitted: DailyTaskDraft[] = [];
+    component.taskCreated.subscribe((data) => emitted.push(data));
 
-    component.title.set('   ');
+    const [title, firstName, firstReward] = inputs();
+    await type(title, 'Read');
+    await type(firstName, '   ');
+    await type(firstReward, '');
+    component.submit();
+
+    expect(emitted[0].difficulties[0]).toEqual(expect.objectContaining({ name: 'New difficulty', baseReward: 100 }));
+  });
+
+  it('should not emit taskCreated when title is empty or blank', async () => {
+    let emitted = false;
+    component.taskCreated.subscribe(() => (emitted = true));
+
+    await type(inputs()[0], '   ');
     component.submit();
 
     expect(emitted).toBe(false);
+    const saveBtn = fixture.debugElement.query(By.css('.actions .save')).nativeElement as HTMLButtonElement;
+    expect(saveBtn.disabled).toBe(true);
   });
 
   it('should emit cancelForm when Cancel button is clicked in template', () => {
     let cancelled = false;
-    component.cancelForm.subscribe(() => {
-      cancelled = true;
-    });
+    component.cancelForm.subscribe(() => (cancelled = true));
 
-    const cancelBtn = fixture.debugElement.query(By.css('button[mat-button]'));
-    expect((cancelBtn.nativeElement as HTMLElement).textContent.trim()).toBe('Cancel');
+    const cancelBtn = fixture.debugElement.query(By.css('button[mat-button]')).nativeElement as HTMLElement;
+    expect(cancelBtn.textContent.trim()).toBe('Cancel');
 
-    (cancelBtn.nativeElement as HTMLElement).click();
+    cancelBtn.click();
 
     expect(cancelled).toBe(true);
   });
 
-  it('should submit form when Save Task button is clicked with valid title', async () => {
-    let emittedData: { title: string; difficulties: DailyTaskDifficulty[] } | null = null;
-    component.taskCreated.subscribe((data) => {
-      emittedData = data;
-    });
+  it('should submit form when Save task button is clicked with valid title', async () => {
+    const emitted: DailyTaskDraft[] = [];
+    component.taskCreated.subscribe((data) => emitted.push(data));
 
-    component.title.set('Evening Reading');
-    fixture.detectChanges();
-    await fixture.whenStable();
+    await type(inputs()[0], 'Evening Reading');
 
-    const saveBtn = fixture.debugElement.query(By.css('.actions button[color="primary"]'));
-    expect((saveBtn.nativeElement as HTMLButtonElement).disabled).toBe(false);
+    const saveBtn = fixture.debugElement.query(By.css('.actions .save')).nativeElement as HTMLButtonElement;
+    expect(saveBtn.disabled).toBe(false);
 
-    (saveBtn.nativeElement as HTMLButtonElement).click();
+    saveBtn.click();
 
-    expect(emittedData).toEqual(
-      expect.objectContaining({
-        title: 'Evening Reading',
-        difficulties: expect.any(Array) as unknown as DailyTaskDifficulty[],
-      })
-    );
+    expect(emitted.map((d) => d.title)).toEqual(['Evening Reading']);
   });
 });

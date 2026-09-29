@@ -157,12 +157,14 @@ Task: "T009 Create unit test suite for DashboardEarningsService in src/app/featu
 ## Implementation Strategy
 
 ### MVP First (User Story 1 Only)
+
 1. Complete Phase 1 (Models).
 2. Complete Phase 2 (Database upgrade & `DashboardEarningsService`).
 3. Complete Phase 3 (`EarningsChartComponent` with default 7-day view).
 4. **Validate MVP**: Confirm 7-day daily earnings appear on Dashboard tab.
 
 ### Incremental Enhancements
+
 1. Add Phase 4 (Period Presets & Custom Date Picker).
 2. Add Phase 5 (Monthly Average Card & Month Navigation).
 3. Add Phase 6 (Stacked Bar Attribution & Tooltips).

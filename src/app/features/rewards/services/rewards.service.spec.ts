@@ -17,13 +17,17 @@ vi.mock('dexie', () => {
       '@@observable'() {
         return {
           subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
-            Promise.resolve().then(fn).then(
-              (val) => {
-                subscriber.next(val);
-                subscriber.complete();
-              },
-              (err: unknown) => { subscriber.error(err); }
-            );
+            Promise.resolve()
+              .then(fn)
+              .then(
+                (val) => {
+                  subscriber.next(val);
+                  subscriber.complete();
+                },
+                (err: unknown) => {
+                  subscriber.error(err);
+                },
+              );
             return {
               unsubscribe() {
                 // no-op for mock
@@ -115,10 +119,7 @@ describe('RewardsService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        RewardsService,
-        { provide: DbService, useValue: dbMock },
-      ],
+      providers: [RewardsService, { provide: DbService, useValue: dbMock }],
     });
 
     service = TestBed.inject(RewardsService);
@@ -160,28 +161,34 @@ describe('RewardsService', () => {
   });
 
   it('should reject creating reward with non-positive or non-finite cost', async () => {
-    await expect(service.createReward({
-      title: 'Bad Cost',
-      cost: 0,
-      categoryId: 'cat-tech',
-      type: 'one-time',
-    })).rejects.toThrow('Reward cost must be greater than zero');
+    await expect(
+      service.createReward({
+        title: 'Bad Cost',
+        cost: 0,
+        categoryId: 'cat-tech',
+        type: 'one-time',
+      }),
+    ).rejects.toThrow('Reward cost must be greater than zero');
 
-    await expect(service.createReward({
-      title: 'Bad Cost',
-      cost: Number.NaN,
-      categoryId: 'cat-tech',
-      type: 'one-time',
-    })).rejects.toThrow('Reward cost must be greater than zero');
+    await expect(
+      service.createReward({
+        title: 'Bad Cost',
+        cost: Number.NaN,
+        categoryId: 'cat-tech',
+        type: 'one-time',
+      }),
+    ).rejects.toThrow('Reward cost must be greater than zero');
   });
 
   it('should reject creating reward with empty or whitespace title', async () => {
-    await expect(service.createReward({
-      title: '   ',
-      cost: 50,
-      categoryId: 'cat-tech',
-      type: 'repeatable',
-    })).rejects.toThrow('Reward title cannot be empty');
+    await expect(
+      service.createReward({
+        title: '   ',
+        cost: 50,
+        categoryId: 'cat-tech',
+        type: 'repeatable',
+      }),
+    ).rejects.toThrow('Reward title cannot be empty');
   });
 
   it('should update an existing reward item', async () => {
@@ -192,10 +199,13 @@ describe('RewardsService', () => {
 
     expect(updated.title).toBe('Gaming Keyboard');
     expect(updated.cost).toBe(2800);
-    expect(dbMock.rewards.update).toHaveBeenCalledWith('rew-1', expect.objectContaining({
-      title: 'Gaming Keyboard',
-      cost: 2800,
-    }));
+    expect(dbMock.rewards.update).toHaveBeenCalledWith(
+      'rew-1',
+      expect.objectContaining({
+        title: 'Gaming Keyboard',
+        cost: 2800,
+      }),
+    );
   });
 
   it('should partially update categoryId and type without altering title or cost', async () => {
@@ -210,21 +220,17 @@ describe('RewardsService', () => {
   });
 
   it('should reject invalid cost on update', async () => {
-    await expect(service.updateReward('rew-1', { cost: 0 }))
-      .rejects.toThrow('Reward cost must be greater than zero');
+    await expect(service.updateReward('rew-1', { cost: 0 })).rejects.toThrow('Reward cost must be greater than zero');
 
-    await expect(service.updateReward('rew-1', { cost: -10 }))
-      .rejects.toThrow('Reward cost must be greater than zero');
+    await expect(service.updateReward('rew-1', { cost: -10 })).rejects.toThrow('Reward cost must be greater than zero');
   });
 
   it('should reject empty title on update', async () => {
-    await expect(service.updateReward('rew-1', { title: '   ' }))
-      .rejects.toThrow('Reward title cannot be empty');
+    await expect(service.updateReward('rew-1', { title: '   ' })).rejects.toThrow('Reward title cannot be empty');
   });
 
   it('should throw when updating a non-existent reward', async () => {
-    await expect(service.updateReward('non-existent', { title: 'New' }))
-      .rejects.toThrow('Reward not found');
+    await expect(service.updateReward('non-existent', { title: 'New' })).rejects.toThrow('Reward not found');
   });
 
   it('should delete an existing reward item', async () => {
@@ -248,10 +254,13 @@ describe('RewardsService', () => {
       balance: 500,
       updatedAt: expect.any(Number) as number,
     });
-    expect(dbMock.rewards.update).toHaveBeenCalledWith('rew-1', expect.objectContaining({
-      status: 'claimed',
-      claimedAt: expect.any(Number) as number,
-    }));
+    expect(dbMock.rewards.update).toHaveBeenCalledWith(
+      'rew-1',
+      expect.objectContaining({
+        status: 'claimed',
+        claimedAt: expect.any(Number) as number,
+      }),
+    );
     expect(dbMock.withdrawals.add).toHaveBeenCalled();
   });
 
@@ -261,9 +270,12 @@ describe('RewardsService', () => {
     expect(withdrawal.amount).toBe(80);
     expect(withdrawal.title).toBe('Claimed: Specialty Coffee');
 
-    expect(dbMock.rewards.update).toHaveBeenCalledWith('rew-2', expect.objectContaining({
-      claimCount: 2,
-    }));
+    expect(dbMock.rewards.update).toHaveBeenCalledWith(
+      'rew-2',
+      expect.objectContaining({
+        claimCount: 2,
+      }),
+    );
   });
 
   it('should reject claiming reward when user balance is insufficient', async () => {

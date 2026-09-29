@@ -24,9 +24,9 @@ export class BalanceWidget {
       catchError((error: unknown) => {
         console.error('Failed to load user balance:', error);
         return of(undefined);
-      })
+      }),
     ),
-    { initialValue: undefined }
+    { initialValue: undefined },
   );
 
   openQuickSpend(): void {

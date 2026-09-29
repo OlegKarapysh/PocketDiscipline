@@ -13,6 +13,7 @@ This guide describes how to validate the Dashboard Earnings Chart and Statistics
 ## Validation Scenarios
 
 ### Scenario 1: Default 7-Day Stacked Bar Chart on Dashboard Load
+
 1. Open the application in your browser and click on the **Dashboard** tab.
 2. Verify that below the balance widget, an **Earnings Overview** section appears.
 3. Verify that the **Last 7 Days** preset is active by default.
@@ -21,6 +22,7 @@ This guide describes how to validate the Dashboard Earnings Chart and Statistics
 ---
 
 ### Scenario 2: Inspecting Bar Segments and Tooltips
+
 1. On the 7-day chart, hover over or tap a bar that contains earnings.
 2. Verify that a tooltip appears indicating:
    - The specific date (e.g., "Sep 2, 2026").
@@ -35,6 +37,7 @@ This guide describes how to validate the Dashboard Earnings Chart and Statistics
 ---
 
 ### Scenario 3: Switching Presets & Custom Date Range
+
 1. In the period filter controls, click **Last 14 Days**.
 2. Verify that the chart updates immediately to render 14 consecutive daily bars.
 3. Click **Last 30 Days** and verify 30 daily bars appear in chronological sequence.
@@ -44,6 +47,7 @@ This guide describes how to validate the Dashboard Earnings Chart and Statistics
 ---
 
 ### Scenario 4: Current Month Daily Average Calculation
+
 1. Locate the **Monthly Earnings Summary** card on the Dashboard.
 2. Verify that the current month and year are displayed (e.g., "September 2026").
 3. Verify that the subtitle indicates calculation based on elapsed days (e.g., "Based on 2 elapsed days").
@@ -52,6 +56,7 @@ This guide describes how to validate the Dashboard Earnings Chart and Statistics
 ---
 
 ### Scenario 5: Monthly Navigation to Past Months
+
 1. Click the `<` (previous month) button in the monthly statistics card.
 2. Verify that the label changes to the previous month (e.g., "August 2026").
 3. Verify that the calculation uses the total calendar days of August (31 days) as the denominator:
@@ -61,6 +66,7 @@ This guide describes how to validate the Dashboard Earnings Chart and Statistics
 ---
 
 ### Scenario 6: End-to-End Activity Earning Reflection
+
 1. Note the current day's earnings on the Dashboard chart.
 2. Navigate to the **Daily Scores** tab and submit a high score (score 10) to earn points.
 3. Navigate back to the **Dashboard** tab.

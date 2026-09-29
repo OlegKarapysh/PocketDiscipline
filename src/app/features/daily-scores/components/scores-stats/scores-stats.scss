@@ -1,45 +1,26 @@
+@use '../../../../../styles/tokens' as t;
+
 .stats-container {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-}
-
-.stat-card {
-  flex: 1;
-  max-width: 200px;
-}
-
-.stat-card-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px;
-}
-
-.stat-title {
-  font: var(--mat-sys-label-medium);
-  color: var(--mat-sys-on-surface-variant);
-  text-transform: uppercase;
-  font-weight: 500;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: t.space(4);
 }
 
 .stat-value {
-  font-size: 36px;
-  font-weight: bold;
+  font: var(--mat-sys-headline-medium);
+  @include t.numeric;
+  font-weight: 700;
   color: var(--mat-sys-primary);
-  margin: 8px 0;
-  line-height: 1.1;
 
   &.no-data {
-    color: var(--mat-sys-outline);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &.streak {
+    color: var(--mat-sys-on-surface-variant);
   }
 
   &.streak.active {
     color: var(--mat-sys-tertiary);
   }
-}
-
-.stat-subtitle {
-  font: var(--mat-sys-body-small);
-  color: var(--mat-sys-on-surface-variant);
 }

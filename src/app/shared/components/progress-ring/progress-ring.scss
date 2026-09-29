@@ -1,3 +1,5 @@
+@use '../../../../styles/tokens' as t;
+
 .ring {
   position: relative;
   flex-shrink: 0;
@@ -21,6 +23,6 @@ mat-progress-spinner {
   inset: 0;
   display: grid;
   place-items: center;
-  font-size: 18px;
+  font-size: var(--mat-sys-title-medium-size);
   font-weight: 600;
 }

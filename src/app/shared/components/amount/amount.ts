@@ -1,8 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import type { AmountSize } from './amount-size.type';
 import type { AmountTone } from './amount-tone.type';
-
-const CURRENCY_FORMAT = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 2 });
+import { MONEY_FORMAT } from '../../constants/money-format.const';
 
 @Component({
   selector: 'app-amount',
@@ -23,7 +22,7 @@ export class Amount {
     const value = this.value();
     if (value === null || value === undefined) return '--';
     const sign = this.showSign() && value > 0 ? '+' : '';
-    return sign + CURRENCY_FORMAT.format(value);
+    return sign + MONEY_FORMAT.format(value);
   });
 
   readonly hostClass = computed(() => `pd-num size-${this.size()} tone-${this.tone()}`);

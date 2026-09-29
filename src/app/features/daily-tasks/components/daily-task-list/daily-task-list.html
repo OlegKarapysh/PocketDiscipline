@@ -1,8 +1,10 @@
-<div class="daily-tasks-container">
+<section class="daily-tasks">
   <div class="header">
-    <h2 class="mat-h2 title">Daily Tasks</h2>
+    <h2 class="title">Daily tasks</h2>
     @if (!showForm()) {
-      <button mat-fab extended color="primary" (click)="openForm()"><mat-icon>add</mat-icon> Add Daily Task</button>
+      <button matButton="tonal" type="button" class="add" (click)="openForm()">
+        <mat-icon>add</mat-icon> Add daily task
+      </button>
     }
   </div>
 
@@ -10,14 +12,13 @@
     <app-daily-task-form (taskCreated)="onTaskCreated($event)" (cancelForm)="closeForm()" />
   }
 
-  @if (tasks$ | async; as tasks) {
+  @if (tasks(); as tasks) {
     <div class="task-list">
       @for (task of tasks; track task.id) {
         <app-daily-task-item [task]="task" (complete)="onCompleteTask(task, $event)" />
-      }
-      @if (tasks.length === 0) {
-        <div class="empty-state">No daily tasks configured yet.</div>
+      } @empty {
+        <app-empty-state heading="No daily tasks yet" message="Add one small thing you want to do every day." />
       }
     </div>
   }
-</div>
+</section>

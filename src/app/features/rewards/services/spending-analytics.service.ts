@@ -13,7 +13,6 @@ import type { RewardCategory } from '../../../core/models/reward-category.model'
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const ONE_DAY_MS = 86_400_000;
-const LAST_30_DAYS_COUNT = 30;
 
 function formatZeroPadded(num: number): string {
   return String(num).padStart(2, '0');
@@ -42,7 +41,7 @@ export class SpendingAnalyticsService {
         if (period === 'thisMonth') {
           startDate = `${now.getFullYear()}-${formatZeroPadded(now.getMonth() + 1)}-01`;
         } else if (period === 'last30') {
-          const past30 = new Date(now.getTime() - (LAST_30_DAYS_COUNT - 1) * ONE_DAY_MS);
+          const past30 = new Date(now.getTime() - (30 - 1) * ONE_DAY_MS);
           startDate = formatDateString(past30);
         } else if (period === 'thisYear') {
           startDate = `${now.getFullYear()}-01-01`;
@@ -69,10 +68,10 @@ export class SpendingAnalyticsService {
         ]);
 
         const categoryMap = new Map<string, RewardCategory>();
-        allCategories.forEach(cat => categoryMap.set(cat.id, cat));
+        allCategories.forEach((cat) => categoryMap.set(cat.id, cat));
 
         return this.computeAnalytics(period, allWithdrawals, categoryMap, startDate, endDate, now);
-      })
+      }),
     );
   }
 
@@ -82,7 +81,7 @@ export class SpendingAnalyticsService {
     categoryMap: Map<string, RewardCategory>,
     _startDate?: string,
     _endDate?: string,
-    now: Date = new Date()
+    now: Date = new Date(),
   ): SpendingAnalyticsSummary {
     let granularity: TrendGranularity;
 
@@ -98,7 +97,7 @@ export class SpendingAnalyticsService {
     const withdrawalCount = filteredWithdrawals.length;
 
     const categoryTotals = new Map<string, number>();
-    filteredWithdrawals.forEach(w => {
+    filteredWithdrawals.forEach((w) => {
       const current = categoryTotals.get(w.categoryId) ?? 0;
       categoryTotals.set(w.categoryId, current + w.amount);
     });
@@ -134,7 +133,7 @@ export class SpendingAnalyticsService {
     period: AnalyticsPeriod,
     granularity: TrendGranularity,
     withdrawals: WithdrawalRecord[],
-    now: Date
+    now: Date,
   ): SpendingTrendPoint[] {
     if (granularity === 'daily') {
       return this.generateDailyTrend(period, withdrawals, now);
@@ -145,17 +144,17 @@ export class SpendingAnalyticsService {
   private generateDailyTrend(
     period: AnalyticsPeriod,
     withdrawals: WithdrawalRecord[],
-    now: Date
+    now: Date,
   ): SpendingTrendPoint[] {
     const dailyMap = new Map<string, number>();
-    withdrawals.forEach(w => {
+    withdrawals.forEach((w) => {
       dailyMap.set(w.date, (dailyMap.get(w.date) ?? 0) + w.amount);
     });
 
     const points: SpendingTrendPoint[] = [];
 
     if (period === 'last30') {
-      for (let i = LAST_30_DAYS_COUNT - 1; i >= 0; i--) {
+      for (let i = 30 - 1; i >= 0; i--) {
         const d = new Date(now.getTime() - i * ONE_DAY_MS);
         const dateStr = formatDateString(d);
         const label = `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
@@ -186,10 +185,10 @@ export class SpendingAnalyticsService {
   private generateMonthlyTrend(
     period: AnalyticsPeriod,
     withdrawals: WithdrawalRecord[],
-    now: Date
+    now: Date,
   ): SpendingTrendPoint[] {
     const monthlyMap = new Map<string, number>();
-    withdrawals.forEach(w => {
+    withdrawals.forEach((w) => {
       const monthKey = w.date.substring(0, 7);
       monthlyMap.set(monthKey, (monthlyMap.get(monthKey) ?? 0) + w.amount);
     });
@@ -213,11 +212,13 @@ export class SpendingAnalyticsService {
         const year = now.getFullYear();
         const month = now.getMonth();
         const monthKey = `${year}-${formatZeroPadded(month + 1)}`;
-        return [{
-          dateOrMonth: monthKey,
-          label: `${MONTH_NAMES[month]} '${String(year).slice(-2)}`,
-          amount: 0,
-        }];
+        return [
+          {
+            dateOrMonth: monthKey,
+            label: `${MONTH_NAMES[month]} '${String(year).slice(-2)}`,
+            amount: 0,
+          },
+        ];
       }
 
       for (const monthKey of sortedKeys) {

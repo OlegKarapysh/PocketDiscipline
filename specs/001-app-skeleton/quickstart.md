@@ -10,11 +10,13 @@ This guide explains how to validate the app skeleton feature end-to-end once imp
 ## Setup & Run
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Serve the Angular application:
+
    ```bash
    ng serve
    ```
@@ -24,6 +26,7 @@ This guide explains how to validate the app skeleton feature end-to-end once imp
 ## Validation Scenarios
 
 ### Scenario 1: Responsive Core Navigation
+
 1. Open the app on a desktop browser window.
    - **Expected**: A persistent side navigation or top navigation bar is visible, allowing routing between Dashboard, Tasks, and Settings.
 2. Open Developer Tools and switch to a Mobile Device emulator (e.g., iPhone 12).
@@ -32,6 +35,7 @@ This guide explains how to validate the app skeleton feature end-to-end once imp
    - **Expected**: Routing works without layout breakage.
 
 ### Scenario 2: Offline-First Tasks, Dashboard & Rewards
+
 1. Navigate to the Tasks tab.
    - **Expected**: The UI displays a list of dummy/initial tasks.
 2. Complete a task by clicking a checkbox/button.
@@ -42,12 +46,15 @@ This guide explains how to validate the app skeleton feature end-to-end once imp
    - **Expected**: The data persists. The completed task remains completed, and the balance retains its increased value (validating Dexie.js IndexedDB storage).
 
 ### Scenario 3: Lighthouse Performance
+
 1. In Chrome DevTools, go to the **Lighthouse** tab.
 2. Run a standard Navigation report for both Mobile and Desktop.
    - **Expected**: Performance score is 90+.
 
 ## Teardown / Reset
+
 To reset the local data for testing:
+
 1. Open Chrome DevTools -> Application tab -> IndexedDB.
 2. Delete the `pocket-discipline-db` database.
 3. Refresh the page to start from a clean state.

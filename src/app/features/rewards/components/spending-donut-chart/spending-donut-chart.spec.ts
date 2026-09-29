@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { SpendingDonutChart } from './spending-donut-chart';
@@ -42,7 +42,7 @@ describe('SpendingDonutChart', () => {
     expect(component).toBeTruthy();
     expect(component.slices().length).toBe(0);
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.center-value')?.textContent).toContain('0 ₴');
+    expect(compiled.querySelector('.center-value')?.textContent).toMatch(/^\s*0 ₴\s*$/);
   });
 
   it('should compute slices and render segments and legend when data is set', () => {
@@ -60,10 +60,10 @@ describe('SpendingDonutChart', () => {
     expect(legendItems.length).toBe(2);
     expect(legendItems[0].textContent).toContain('Food & Treats');
     expect(legendItems[0].textContent).toContain('30%');
-    expect(legendItems[0].textContent).toContain('300 ₴');
+    expect(legendItems[0].textContent).toMatch(/300\s*₴/);
     expect(legendItems[1].textContent).toContain('Gear & Tech');
     expect(legendItems[1].textContent).toContain('70%');
-    expect(legendItems[1].textContent).toContain('700 ₴');
+    expect(legendItems[1].textContent).toMatch(/700\s*₴/);
   });
 
   it('should update active category and center text when hovering a donut segment via DOM event', () => {
@@ -82,7 +82,7 @@ describe('SpendingDonutChart', () => {
     expect(firstSegment.classList.contains('hovered')).toBe(true);
 
     expect(compiled.querySelector('.center-label')?.textContent).toContain('Food & Treats');
-    expect(compiled.querySelector('.center-value')?.textContent).toContain('300 ₴');
+    expect(compiled.querySelector('.center-value')?.textContent).toMatch(/300\s*₴/);
     expect(compiled.querySelector('.center-sub')?.textContent).toContain('30%');
 
     firstSegment.dispatchEvent(new MouseEvent('mouseleave'));
@@ -90,8 +90,8 @@ describe('SpendingDonutChart', () => {
 
     expect(component.hoveredCategoryId()).toBeNull();
     expect(firstSegment.classList.contains('hovered')).toBe(false);
-    expect(compiled.querySelector('.center-label')?.textContent).toContain('Total Spent');
-    expect(compiled.querySelector('.center-value')?.textContent).toContain('1000 ₴');
+    expect(compiled.querySelector('.center-label')?.textContent).toContain('Total spent');
+    expect(compiled.querySelector('.center-value')?.textContent).toMatch(/1\s000 ₴/);
   });
 
   it('should update active category when hovering a legend item via DOM event', () => {
@@ -108,7 +108,7 @@ describe('SpendingDonutChart', () => {
     expect(component.hoveredCategoryId()).toBe('cat-gear');
     expect(secondLegendItem.classList.contains('highlighted')).toBe(true);
     expect(compiled.querySelector('.center-label')?.textContent).toContain('Gear & Tech');
-    expect(compiled.querySelector('.center-value')?.textContent).toContain('700 ₴');
+    expect(compiled.querySelector('.center-value')?.textContent).toMatch(/700\s*₴/);
 
     secondLegendItem.dispatchEvent(new MouseEvent('mouseleave'));
     fixture.detectChanges();

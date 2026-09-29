@@ -1,9 +1,9 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import type { Observable} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { of } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { QuickSpendDialog } from './quick-spend-dialog';
@@ -29,8 +29,24 @@ describe('QuickSpendDialog', () => {
 
   beforeEach(async () => {
     mockCategories = [
-      { id: 'cat-general', name: 'General', color: '#6b7280', icon: 'category', isDefault: true, isProtected: true, createdAt: 0 },
-      { id: 'cat-food', name: 'Food & Treats', color: '#f59e0b', icon: 'restaurant', isDefault: true, isProtected: false, createdAt: 0 },
+      {
+        id: 'cat-general',
+        name: 'General',
+        color: '#6b7280',
+        icon: 'category',
+        isDefault: true,
+        isProtected: true,
+        createdAt: 0,
+      },
+      {
+        id: 'cat-food',
+        name: 'Food & Treats',
+        color: '#f59e0b',
+        icon: 'restaurant',
+        isDefault: true,
+        isProtected: false,
+        createdAt: 0,
+      },
     ];
 
     mockRecord = {
@@ -68,45 +84,70 @@ describe('QuickSpendDialog', () => {
 
   it('should create and initialize form with defaults, keeping submit button disabled', () => {
     expect(component).toBeTruthy();
-    expect(component.form.controls.categoryId.value).toBe('cat-general');
-    expect(component.form.controls.amount.value).toBeNull();
-    expect(component.form.invalid).toBe(true);
+    expect(component.model().categoryId).toBe('cat-general');
+    expect(component.model().amount).toBeNull();
+    expect(component.spendForm().invalid()).toBe(true);
 
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
+    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:last-child'))
+      .nativeElement as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(true);
   });
 
-  it('should invalidate form when amount exceeds balance', () => {
-    component.form.controls.amount.setValue(600);
-    component.form.controls.title.setValue('Expensive Item');
-    component.form.controls.categoryId.setValue('cat-general');
+  it('should show the current balance in the header', () => {
+    const header = fixture.debugElement.query(By.css('[mat-dialog-title]'));
+    const amount = header.query(By.css('app-amount')).nativeElement as HTMLElement;
+    expect((header.nativeElement as HTMLElement).textContent).toContain('Balance');
+    expect(amount.textContent.replace(/\s+/g, '')).toBe('500₴');
+  });
 
-    expect(component.form.controls.amount.hasError('max')).toBe(true);
-    expect(component.form.invalid).toBe(true);
+  it('should invalidate form when amount exceeds balance', () => {
+    component.spendForm.amount().value.set(600);
+    component.spendForm.title().value.set('Expensive Item');
+    component.spendForm.categoryId().value.set('cat-general');
+
+    expect(
+      component.spendForm
+        .amount()
+        .errors()
+        .some((e) => e.kind === 'max'),
+    ).toBe(true);
+    expect(component.spendForm().invalid()).toBe(true);
 
     fixture.detectChanges();
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
+    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:last-child'))
+      .nativeElement as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(true);
   });
 
   it('should invalidate form when amount is zero or negative', () => {
-    component.form.controls.amount.setValue(0);
-    expect(component.form.controls.amount.hasError('min')).toBe(true);
+    component.spendForm.amount().value.set(0);
+    expect(
+      component.spendForm
+        .amount()
+        .errors()
+        .some((e) => e.kind === 'min'),
+    ).toBe(true);
 
-    component.form.controls.amount.setValue(-10);
-    expect(component.form.controls.amount.hasError('min')).toBe(true);
+    component.spendForm.amount().value.set(-10);
+    expect(
+      component.spendForm
+        .amount()
+        .errors()
+        .some((e) => e.kind === 'min'),
+    ).toBe(true);
   });
 
   it('should enable submit button and submit valid withdrawal when clicking Withdraw button in DOM', async () => {
-    component.form.controls.amount.setValue(120);
-    component.form.controls.title.setValue('Protein Bar');
-    component.form.controls.categoryId.setValue('cat-food');
-    component.form.controls.notes.setValue('After workout');
+    component.spendForm.amount().value.set(120);
+    component.spendForm.title().value.set('Protein Bar');
+    component.spendForm.categoryId().value.set('cat-food');
+    component.spendForm.notes().value.set('After workout');
 
     fixture.detectChanges();
-    expect(component.form.valid).toBe(true);
+    expect(component.spendForm().valid()).toBe(true);
 
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
+    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:last-child'))
+      .nativeElement as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(false);
 
     submitBtn.click();
@@ -125,12 +166,13 @@ describe('QuickSpendDialog', () => {
   it('should handle submission errors with a snackbar message and reset isSubmitting', async () => {
     mockWithdrawalService.withdraw.mockRejectedValueOnce(new Error('Network error'));
 
-    component.form.controls.amount.setValue(50);
-    component.form.controls.title.setValue('Coffee');
-    component.form.controls.categoryId.setValue('cat-food');
+    component.spendForm.amount().value.set(50);
+    component.spendForm.title().value.set('Coffee');
+    component.spendForm.categoryId().value.set('cat-food');
 
     fixture.detectChanges();
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
+    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:last-child'))
+      .nativeElement as HTMLButtonElement;
     submitBtn.click();
     await fixture.whenStable();
 
@@ -140,7 +182,8 @@ describe('QuickSpendDialog', () => {
   });
 
   it('should close dialog without submitting when cancel button is clicked in DOM', () => {
-    const cancelBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:first-child')).nativeElement as HTMLButtonElement;
+    const cancelBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:first-child'))
+      .nativeElement as HTMLButtonElement;
     cancelBtn.click();
 
     expect(mockDialogRef.close).toHaveBeenCalled();

@@ -1,14 +1,7 @@
 <div class="donut-chart-container">
   <div class="chart-visual">
     <svg viewBox="0 0 200 200" class="donut-svg">
-      <circle
-        cx="100"
-        cy="100"
-        r="70"
-        fill="transparent"
-        stroke="var(--mat-sys-outline-variant, #e0e0e0)"
-        stroke-width="20"
-      />
+      <circle cx="100" cy="100" r="70" fill="transparent" stroke-width="20" class="donut-track" />
 
       @for (slice of slices(); track slice.category.categoryId) {
         <circle
@@ -28,15 +21,14 @@
         />
       }
 
-      <!-- Center text -->
       <g class="center-text">
         @if (activeCategory(); as active) {
           <text x="100" y="93" text-anchor="middle" class="center-label">{{ active.categoryName }}</text>
-          <text x="100" y="115" text-anchor="middle" class="center-value">{{ active.totalSpent }} ₴</text>
-          <text x="100" y="130" text-anchor="middle" class="center-sub">{{ active.percentage }}%</text>
+          <text x="100" y="115" text-anchor="middle" class="center-value pd-num">{{ active.totalSpent | money }}</text>
+          <text x="100" y="130" text-anchor="middle" class="center-sub pd-num">{{ active.percentage }}%</text>
         } @else {
-          <text x="100" y="95" text-anchor="middle" class="center-label">Total Spent</text>
-          <text x="100" y="120" text-anchor="middle" class="center-value">{{ totalSpent() }} ₴</text>
+          <text x="100" y="95" text-anchor="middle" class="center-label">Total spent</text>
+          <text x="100" y="120" text-anchor="middle" class="center-value pd-num">{{ totalSpent() | money }}</text>
         }
       </g>
     </svg>
@@ -51,13 +43,13 @@
         (mouseleave)="setHovered(null)"
       >
         <div class="legend-swatch" [style.backgroundColor]="item.color">
-          <mat-icon>{{ item.icon }}</mat-icon>
+          <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
         </div>
         <div class="legend-info">
           <span class="legend-name">{{ item.categoryName }}</span>
-          <span class="legend-percent">{{ item.percentage }}%</span>
+          <span class="legend-percent pd-num">{{ item.percentage }}%</span>
         </div>
-        <span class="legend-amount">{{ item.totalSpent }} ₴</span>
+        <app-amount class="legend-amount" size="sm" [value]="item.totalSpent" />
       </div>
     }
   </div>

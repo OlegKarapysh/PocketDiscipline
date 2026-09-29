@@ -3,32 +3,34 @@
 :host {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.25em;
+  gap: t.space(1);
   font-weight: 600;
   line-height: 1.1;
   white-space: nowrap;
 }
 
 :host(.size-sm) {
-  font-size: 13px;
+  font-size: t.numeric-size(sm);
   letter-spacing: 0;
 }
 
 :host(.size-md) {
-  font-size: 22px;
+  font-size: t.numeric-size(md);
 }
 
 :host(.size-lg) {
-  font-size: 30px;
+  gap: t.space(2);
+  font-size: t.numeric-size(lg);
   letter-spacing: -0.03em;
 }
 
 :host(.size-xl) {
-  font-size: 38px;
+  gap: t.space(2);
+  font-size: t.numeric-size(xl);
   letter-spacing: -0.03em;
 
   @include t.up(expanded) {
-    font-size: 44px;
+    font-size: t.numeric-size(xxl);
   }
 }
 
