@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Observable, of } from 'rxjs';
@@ -46,6 +46,12 @@ describe('Dashboard', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should title the page "Today" with a single page header', () => {
+    const headers = (fixture.nativeElement as HTMLElement).querySelectorAll('app-page-header');
+    expect(headers.length).toBe(1);
+    expect(headers[0].querySelector('h1')?.textContent.trim()).toBe('Today');
   });
 
   it('should contain the balance widget', () => {
@@ -101,7 +107,9 @@ describe('Dashboard', () => {
     });
 
     earningsServiceMock.getDailyEarnings.mockReturnValue(
-      new Observable(subscriber => { subscriber.error(new Error('IndexedDB error')); })
+      new Observable((subscriber) => {
+        subscriber.error(new Error('IndexedDB error'));
+      }),
     );
 
     component.onFilterChange({
@@ -123,7 +131,9 @@ describe('Dashboard', () => {
     });
 
     earningsServiceMock.getMonthlyEarningsSummary.mockReturnValue(
-      new Observable(subscriber => { subscriber.error(new Error('Monthly summary error')); })
+      new Observable((subscriber) => {
+        subscriber.error(new Error('Monthly summary error'));
+      }),
     );
 
     component.onMonthChange({

@@ -1,43 +1,40 @@
-import { Component, inject } from '@angular/core';
-
-import type { AbstractControl, FormGroup} from '@angular/forms';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, signal } from '@angular/core';
+import { FormField, FormRoot, form, max, maxLength, min, minLength, required } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import type { GoalFormDialogData } from '../../models/goal-form-dialog-data.model';
-
-const MIN_TITLE_LENGTH = 3;
-const MAX_TITLE_LENGTH = 100;
-const MIN_REWARD_VALUE = 1;
-const MAX_REWARD_VALUE = 10_000_000;
+import type { GoalFormResult } from '../../models/goal-form-result.model';
 
 @Component({
-  imports: [ReactiveFormsModule, MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [FormField, FormRoot, MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule],
   selector: 'app-goal-form-dialog',
   styleUrl: './goal-form-dialog.scss',
   templateUrl: './goal-form-dialog.html',
 })
 export class GoalFormDialog {
-  private fb = inject(FormBuilder);
-  readonly data: GoalFormDialogData = inject<GoalFormDialogData>(MAT_DIALOG_DATA);
-  private dialogRef = inject(MatDialogRef<GoalFormDialog>);
+  readonly data = inject<GoalFormDialogData>(MAT_DIALOG_DATA);
+  private readonly dialogRef = inject<MatDialogRef<GoalFormDialog, GoalFormResult>>(MatDialogRef);
 
-  form: FormGroup = this.fb.group({
-    title: [
-      this.data.goal?.title ?? '',
-      [(control: AbstractControl) => Validators.required(control), Validators.minLength(MIN_TITLE_LENGTH), Validators.maxLength(MAX_TITLE_LENGTH)],
-    ],
-    rewardValue: [
-      this.data.goal?.rewardValue ?? null,
-      [(control: AbstractControl) => Validators.required(control), Validators.min(MIN_REWARD_VALUE), Validators.max(MAX_REWARD_VALUE)],
-    ],
+  readonly model = signal<{ title: string; rewardValue: number | null }>({
+    title: this.data.goal?.title ?? '',
+    rewardValue: this.data.goal?.rewardValue ?? null,
   });
 
-  onSubmit() {
-    if (this.form.valid) {
-      this.dialogRef.close(this.form.value);
+  readonly goalForm = form(this.model, (path) => {
+    required(path.title, { message: 'Title is required' });
+    minLength(path.title, 3, { message: 'Title must be at least 3 characters' });
+    maxLength(path.title, 100, { message: 'Title cannot exceed 100 characters' });
+    required(path.rewardValue, { message: 'Reward is required' });
+    min(path.rewardValue, 1, { message: 'Reward must be greater than 0' });
+    max(path.rewardValue, 10_000_000, { message: 'Reward is too large' });
+  });
+
+  onSubmit(): void {
+    const { title, rewardValue } = this.model();
+    if (this.goalForm().valid() && rewardValue !== null) {
+      this.dialogRef.close({ title, rewardValue });
     }
   }
 }

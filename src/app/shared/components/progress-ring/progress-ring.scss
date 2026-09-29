@@ -1,0 +1,28 @@
+@use '../../../../styles/tokens' as t;
+
+.ring {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.track {
+  position: absolute;
+  inset: 0;
+  border-style: solid;
+  border-color: var(--mat-sys-surface-container);
+  border-radius: 50%;
+}
+
+mat-progress-spinner {
+  position: absolute;
+  inset: 0;
+}
+
+.label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: var(--mat-sys-title-medium-size);
+  font-weight: 600;
+}

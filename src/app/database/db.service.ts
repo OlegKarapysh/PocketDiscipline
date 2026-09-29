@@ -1,7 +1,7 @@
 import { Service, inject } from '@angular/core';
 import type { Table } from 'dexie';
 import Dexie from 'dexie';
-import type { User} from '../core/models/user.model';
+import type { User } from '../core/models/user.model';
 import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../core/models/user.model';
 import type { DisciplineItem } from '../core/models/discipline-item.model';
 import type { Goal } from '../core/models/goal.model';
@@ -15,7 +15,6 @@ import type { RewardCategory } from '../core/models/reward-category.model';
 import { INITIAL_REWARD_CATEGORIES } from '../core/constants/initial-reward-categories.const';
 import { getInitialGoals } from '../core/constants/initial-goals.const';
 import { LegacyPomodoroMigrationService } from './legacy-pomodoro-migration.service';
-
 
 /**
  * The persistence composition root.
@@ -50,48 +49,52 @@ export class DbService extends Dexie {
 
     this.version(1).stores({
       users: 'id',
-      tasks: 'id, type, isCompleted'
+      tasks: 'id, type, isCompleted',
     });
 
-    this.version(2).stores({
-      goals: 'id, status'
-    }).upgrade(async (tx) => {
-      const goalsCount = await tx.table('goals').count();
-      if (goalsCount === 0) {
-        await tx.table('goals').bulkAdd(getInitialGoals());
-      }
-    });
+    this.version(2)
+      .stores({
+        goals: 'id, status',
+      })
+      .upgrade(async (tx) => {
+        const goalsCount = await tx.table('goals').count();
+        if (goalsCount === 0) {
+          await tx.table('goals').bulkAdd(getInitialGoals());
+        }
+      });
 
     this.version(3).stores({
-      dailyTasks: 'id'
+      dailyTasks: 'id',
     });
 
     this.version(4).stores({
-      dailyScores: 'date'
+      dailyScores: 'date',
     });
 
     this.version(5).stores({
-      pomodoroSessions: 'id, startTime, status'
+      pomodoroSessions: 'id, startTime, status',
     });
 
     this.version(6).stores({
-      dailyTaskCompletions: 'id, date, taskId'
+      dailyTaskCompletions: 'id, date, taskId',
     });
 
     this.version(7).stores({
-      goals: 'id, status, completedAt'
+      goals: 'id, status, completedAt',
     });
 
-    this.version(8).stores({
-      withdrawals: 'id, date, categoryId, timestamp, rewardId',
-      rewards: 'id, categoryId, type, status, createdAt',
-      rewardCategories: 'id, name, isProtected'
-    }).upgrade(async (tx) => {
-      const categoriesCount = await tx.table('rewardCategories').count();
-      if (categoriesCount === 0) {
-        await tx.table<RewardCategory, string>('rewardCategories').bulkAdd([...INITIAL_REWARD_CATEGORIES]);
-      }
-    });
+    this.version(8)
+      .stores({
+        withdrawals: 'id, date, categoryId, timestamp, rewardId',
+        rewards: 'id, categoryId, type, status, createdAt',
+        rewardCategories: 'id, name, isProtected',
+      })
+      .upgrade(async (tx) => {
+        const categoriesCount = await tx.table('rewardCategories').count();
+        if (categoriesCount === 0) {
+          await tx.table<RewardCategory, string>('rewardCategories').bulkAdd([...INITIAL_REWARD_CATEGORIES]);
+        }
+      });
 
     this.on('populate', () => {
       return Promise.all([
@@ -100,10 +103,10 @@ export class DbService extends Dexie {
           name: CURRENT_USER_NAME,
           balance: DEFAULT_INITIAL_BALANCE,
           createdAt: Date.now(),
-          updatedAt: Date.now()
+          updatedAt: Date.now(),
         }),
         this.goals.bulkAdd(getInitialGoals()),
-        this.rewardCategories.bulkAdd(INITIAL_REWARD_CATEGORIES)
+        this.rewardCategories.bulkAdd(INITIAL_REWARD_CATEGORIES),
       ]);
     });
 
@@ -115,7 +118,7 @@ export class DbService extends Dexie {
           name: CURRENT_USER_NAME,
           balance: DEFAULT_INITIAL_BALANCE,
           createdAt: Date.now(),
-          updatedAt: Date.now()
+          updatedAt: Date.now(),
         });
       }
 

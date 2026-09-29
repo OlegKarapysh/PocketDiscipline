@@ -9,9 +9,6 @@ import { FALLBACK_CATEGORY_ID } from '../../../core/constants/initial-reward-cat
 
 const DEFAULT_CATEGORY_COLOR = '#6b7280';
 const DEFAULT_CATEGORY_ICON = 'category';
-const ERROR_CATEGORY_NOT_FOUND = 'Category not found';
-const ERROR_PROTECTED_CATEGORY = 'Cannot delete protected category';
-const TRANSACTION_READ_WRITE = 'rw';
 
 @Service()
 export class CategoryService {
@@ -24,7 +21,7 @@ export class CategoryService {
   async getFallbackCategory(): Promise<RewardCategory> {
     const category = await this.db.rewardCategories.get(FALLBACK_CATEGORY_ID);
     if (!category) {
-      throw new Error(ERROR_CATEGORY_NOT_FOUND);
+      throw new Error('Category not found');
     }
     return category;
   }
@@ -56,7 +53,7 @@ export class CategoryService {
   async updateCategory(id: string, dto: Partial<CreateCategoryDto>): Promise<RewardCategory> {
     const category = await this.db.rewardCategories.get(id);
     if (!category) {
-      throw new Error(ERROR_CATEGORY_NOT_FOUND);
+      throw new Error('Category not found');
     }
 
     const updates: Partial<RewardCategory> = {};
@@ -85,22 +82,16 @@ export class CategoryService {
   async deleteCategory(id: string): Promise<void> {
     const category = await this.db.rewardCategories.get(id);
     if (!category) {
-      throw new Error(ERROR_CATEGORY_NOT_FOUND);
+      throw new Error('Category not found');
     }
     if (category.isProtected) {
-      throw new Error(ERROR_PROTECTED_CATEGORY);
+      throw new Error('Cannot delete protected category');
     }
 
-    await this.db.transaction(
-      TRANSACTION_READ_WRITE,
-      this.db.rewardCategories,
-      this.db.rewards,
-      this.db.withdrawals,
-      async () => {
-        await this.db.rewards.where('categoryId').equals(id).modify({ categoryId: FALLBACK_CATEGORY_ID });
-        await this.db.withdrawals.where('categoryId').equals(id).modify({ categoryId: FALLBACK_CATEGORY_ID });
-        await this.db.rewardCategories.delete(id);
-      }
-    );
+    await this.db.transaction('rw', this.db.rewardCategories, this.db.rewards, this.db.withdrawals, async () => {
+      await this.db.rewards.where('categoryId').equals(id).modify({ categoryId: FALLBACK_CATEGORY_ID });
+      await this.db.withdrawals.where('categoryId').equals(id).modify({ categoryId: FALLBACK_CATEGORY_ID });
+      await this.db.rewardCategories.delete(id);
+    });
   }
 }

@@ -1,7 +1,7 @@
+import type { EarningsSource } from './earnings-source.enum';
+
 export interface ChartBarSegment {
-  source: string;
-  sourceLabel: string;
-  color: string;
+  source: EarningsSource;
   amount: number;
   y: number;
   height: number;

@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { RewardEarnedEvent } from './event-bus.service';
 import { EventBusService, EVENT_TYPE } from './event-bus.service';
 
-
 describe('EventBusService', () => {
   let service: EventBusService;
 

@@ -4,8 +4,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { EventBusService } from '../../../core/services/event-bus.service';
 import { QuickSpendDialog } from '../components/quick-spend-dialog/quick-spend-dialog';
 
-export const QUICK_SPEND_DIALOG_WIDTH = '440px';
-
 @Service()
 export class QuickSpendEventService {
   private readonly eventBus = inject(EventBusService);
@@ -24,7 +22,7 @@ export class QuickSpendEventService {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.dialog.open(QuickSpendDialog, {
-          width: QUICK_SPEND_DIALOG_WIDTH,
+          width: '440px',
         });
       });
   }

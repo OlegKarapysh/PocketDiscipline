@@ -1,122 +1,88 @@
+@use '../../../../../styles/tokens' as t;
+
 .category-management {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: t.space(4);
 }
 
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-
-  .header-text {
-    h2 {
-      margin: 0 0 0.25rem 0;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--mat-sys-on-surface, #212121);
-    }
-
-    p {
-      margin: 0;
-      font-size: 0.875rem;
-      color: var(--mat-sys-on-surface-variant, #616161);
-    }
-  }
+.intro {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .category-list {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: t.space(2);
 }
 
 .category-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.875rem 1.25rem;
-  background: var(--mat-sys-surface, #ffffff);
-  border-radius: 12px;
-  border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+  gap: t.space(3);
+  padding: t.space(3) t.space(4);
+  background: var(--mat-sys-surface-container-lowest);
+  border-radius: t.radius(md);
+  border: 1px solid var(--mat-sys-outline-variant);
   transition: box-shadow 0.15s ease;
 
+  @include t.up(expanded) {
+    padding: t.space(3) t.space(5);
+  }
+
   &:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--pd-sys-elevation-1);
+  }
+}
+
+.category-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.space(3);
+  min-width: 0;
+}
+
+// The fill is the category's own colour (user data, bound in the template).
+.category-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: t.radius(sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pd-sys-on-category);
+  flex-shrink: 0;
+
+  mat-icon {
+    @include t.icon-size(md);
+  }
+}
+
+.category-name {
+  font: var(--mat-sys-body-large);
+  font-weight: 600;
+  color: var(--mat-sys-on-surface);
+}
+
+.category-actions {
+  display: flex;
+  align-items: center;
+  gap: t.space(1);
+  flex-shrink: 0;
+
+  .edit-button {
+    color: var(--mat-sys-on-surface-variant);
   }
 
-  .category-main {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
+  .delete-button {
+    color: var(--mat-sys-error);
 
-    .category-icon-box {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ffffff;
-      flex-shrink: 0;
-
-      mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
-      }
-    }
-
-    .category-name {
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--mat-sys-on-surface, #212121);
-    }
-
-    .badge {
-      font-size: 0.75rem;
-      font-weight: 500;
-      padding: 2px 8px;
-      border-radius: 12px;
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-
-      &.protected-badge {
-        background: rgba(103, 58, 183, 0.12);
-        color: #673ab7;
-
-        .badge-icon {
-          font-size: 12px;
-          width: 12px;
-          height: 12px;
-        }
-      }
-
-      &.default-badge {
-        background: rgba(0, 0, 0, 0.06);
-        color: var(--mat-sys-on-surface-variant, #616161);
-      }
-    }
-  }
-
-  .category-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-
-    .edit-button {
-      color: var(--mat-sys-on-surface-variant, #616161);
-    }
-
-    .delete-button {
-      color: var(--mat-sys-error, #d32f2f);
-
-      &:disabled {
-        color: var(--mat-sys-outline, #bdbdbd);
-      }
+    &:disabled {
+      color: var(--mat-sys-outline);
     }
   }
 }

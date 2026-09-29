@@ -1,12 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
 
-const SECONDS_IN_MINUTE = 60;
-const TIME_PAD_LENGTH = 2;
-const TIME_PAD_CHAR = '0';
-const STATUS_READY = 'Ready to start';
-const STATUS_FOCUSING_PREFIX = 'Focusing on ';
-
 @Component({
   selector: 'app-timer-display',
   imports: [],
@@ -20,15 +14,13 @@ export class TimerDisplay {
   engagementType = this.timerService.engagementType;
 
   statusText = computed(() => {
-    return this.isActive() ? `${STATUS_FOCUSING_PREFIX}${this.engagementType()}` : STATUS_READY;
+    return this.isActive() ? `Focusing on ${this.engagementType()}` : 'Ready to start';
   });
 
   formattedTime = computed(() => {
     const totalSeconds = this.timerService.timeRemaining();
-    const minutes = Math.floor(totalSeconds / SECONDS_IN_MINUTE);
-    const seconds = totalSeconds % SECONDS_IN_MINUTE;
-    const formattedMin = minutes.toString().padStart(TIME_PAD_LENGTH, TIME_PAD_CHAR);
-    const formattedSec = seconds.toString().padStart(TIME_PAD_LENGTH, TIME_PAD_CHAR);
-    return `${formattedMin}:${formattedSec}`;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   });
 }

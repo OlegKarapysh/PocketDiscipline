@@ -18,13 +18,17 @@ vi.mock('dexie', () => {
       '@@observable'() {
         return {
           subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
-            Promise.resolve().then(fn).then(
-              (val) => {
-                subscriber.next(val);
-                subscriber.complete();
-              },
-              (err: unknown) => { subscriber.error(err); }
-            );
+            Promise.resolve()
+              .then(fn)
+              .then(
+                (val) => {
+                  subscriber.next(val);
+                  subscriber.complete();
+                },
+                (err: unknown) => {
+                  subscriber.error(err);
+                },
+              );
             return {
               unsubscribe() {
                 // no-op for test mock
@@ -37,12 +41,9 @@ vi.mock('dexie', () => {
   };
 });
 
-const EASY_DIFFICULTY: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
-const HARD_DIFFICULTY: DailyTaskDifficulty = { id: 'hard', name: 'Hard', baseReward: 300 };
+const easy: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
+const hard: DailyTaskDifficulty = { id: 'hard', name: 'Hard', baseReward: 300 };
 const ONE_DAY_MS = 86_400_000;
-const TWO_DAYS_MS = 172_800_000;
-
-
 
 describe('DailyTasksService', () => {
   let service: DailyTasksService;
@@ -97,7 +98,7 @@ describe('DailyTasksService', () => {
   });
 
   it('should create a new daily task with initial streak 0 and null lastCompletedAt', async () => {
-    const difficulties = [EASY_DIFFICULTY, HARD_DIFFICULTY];
+    const difficulties = [easy, hard];
 
     await service.createTask('Morning Workout', difficulties);
 
@@ -107,7 +108,7 @@ describe('DailyTasksService', () => {
         difficulties,
         streak: 0,
         lastCompletedAt: null,
-      })
+      }),
     );
   });
 
@@ -116,7 +117,7 @@ describe('DailyTasksService', () => {
       const mockTask: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
-        difficulties: [EASY_DIFFICULTY],
+        difficulties: [easy],
         createdAt: Date.now(),
         streak: 0,
         lastCompletedAt: null,
@@ -134,10 +135,10 @@ describe('DailyTasksService', () => {
       const staleTask: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
-        difficulties: [EASY_DIFFICULTY],
-        createdAt: Date.now() - (10 * ONE_DAY_MS),
+        difficulties: [easy],
+        createdAt: Date.now() - 10 * ONE_DAY_MS,
         streak: 5,
-        lastCompletedAt: Date.now() - TWO_DAYS_MS,
+        lastCompletedAt: Date.now() - 2 * ONE_DAY_MS,
       };
       dbMock.dailyTasks.toArray.mockResolvedValue([staleTask]);
 
@@ -151,10 +152,10 @@ describe('DailyTasksService', () => {
       const staleTask: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
-        difficulties: [EASY_DIFFICULTY],
-        createdAt: Date.now() - (10 * ONE_DAY_MS),
+        difficulties: [easy],
+        createdAt: Date.now() - 10 * ONE_DAY_MS,
         streak: 5,
-        lastCompletedAt: Date.now() - TWO_DAYS_MS,
+        lastCompletedAt: Date.now() - 2 * ONE_DAY_MS,
       };
       dbMock.dailyTasks.toArray.mockResolvedValue([staleTask]);
 
@@ -167,8 +168,8 @@ describe('DailyTasksService', () => {
       const yesterdayTask: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
-        difficulties: [EASY_DIFFICULTY],
-        createdAt: Date.now() - (5 * ONE_DAY_MS),
+        difficulties: [easy],
+        createdAt: Date.now() - 5 * ONE_DAY_MS,
         streak: 5,
         lastCompletedAt: Date.now() - ONE_DAY_MS,
       };
@@ -192,21 +193,21 @@ describe('DailyTasksService', () => {
       const task: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
-        difficulties: [EASY_DIFFICULTY],
+        difficulties: [easy],
         createdAt: Date.now() - ONE_DAY_MS,
         streak: 0,
         lastCompletedAt: null,
       };
 
-      await service.completeTask(task, EASY_DIFFICULTY);
+      await service.completeTask(task, easy);
 
       expect(dbMock.dailyTasks.update).toHaveBeenCalledWith(
         'test-daily-task-1',
         expect.objectContaining({
           streak: 1,
-        })
+        }),
       );
-      expect(userMock.addBalance).toHaveBeenCalledWith(EASY_DIFFICULTY.baseReward);
+      expect(userMock.addBalance).toHaveBeenCalledWith(easy.baseReward);
     });
 
     it('should increment streak and apply 50% bonus on 6th consecutive day', async () => {
@@ -220,19 +221,19 @@ describe('DailyTasksService', () => {
       const task: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
-        difficulties: [EASY_DIFFICULTY],
-        createdAt: now - (6 * ONE_DAY_MS),
+        difficulties: [easy],
+        createdAt: now - 6 * ONE_DAY_MS,
         streak: 5,
         lastCompletedAt: yesterday,
       };
 
-      await service.completeTask(task, EASY_DIFFICULTY);
+      await service.completeTask(task, easy);
 
       expect(dbMock.dailyTasks.update).toHaveBeenCalledWith(
         'test-daily-task-1',
         expect.objectContaining({
           streak: 6,
-        })
+        }),
       );
       expect(userMock.addBalance).toHaveBeenCalledWith(150);
     });
@@ -248,66 +249,66 @@ describe('DailyTasksService', () => {
       const task: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
-        difficulties: [HARD_DIFFICULTY],
-        createdAt: now - (16 * ONE_DAY_MS),
+        difficulties: [hard],
+        createdAt: now - 16 * ONE_DAY_MS,
         streak: 15,
         lastCompletedAt: yesterday,
       };
 
-      await service.completeTask(task, HARD_DIFFICULTY);
+      await service.completeTask(task, hard);
 
       expect(dbMock.dailyTasks.update).toHaveBeenCalledWith(
         'test-daily-task-1',
         expect.objectContaining({
           streak: 16,
-        })
+        }),
       );
       expect(userMock.addBalance).toHaveBeenCalledWith(600);
     });
 
     it('should reset streak to 1 if task was missed for more than 1 day', async () => {
       const now = Date.now();
-      const twoDaysAgo = now - TWO_DAYS_MS;
+      const twoDaysAgo = now - 2 * ONE_DAY_MS;
 
       const task: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
-        difficulties: [EASY_DIFFICULTY],
-        createdAt: now - (10 * ONE_DAY_MS),
+        difficulties: [easy],
+        createdAt: now - 10 * ONE_DAY_MS,
         streak: 5,
         lastCompletedAt: twoDaysAgo,
       };
 
-      await service.completeTask(task, EASY_DIFFICULTY);
+      await service.completeTask(task, easy);
 
       expect(dbMock.dailyTasks.update).toHaveBeenCalledWith(
         'test-daily-task-1',
         expect.objectContaining({
           streak: 1,
-        })
+        }),
       );
-      expect(userMock.addBalance).toHaveBeenCalledWith(EASY_DIFFICULTY.baseReward);
+      expect(userMock.addBalance).toHaveBeenCalledWith(easy.baseReward);
     });
 
     it('should record a completion in dailyTaskCompletions table with correct reward and date', async () => {
       const task: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
-        difficulties: [EASY_DIFFICULTY],
+        difficulties: [easy],
         createdAt: Date.now() - ONE_DAY_MS,
         streak: 0,
         lastCompletedAt: null,
       };
 
-      await service.completeTask(task, EASY_DIFFICULTY);
+      await service.completeTask(task, easy);
 
       expect(dbMock.dailyTaskCompletions.add).toHaveBeenCalledWith(
         expect.objectContaining({
           taskId: 'test-daily-task-1',
-          difficultyId: EASY_DIFFICULTY.id,
-          rewardEarned: EASY_DIFFICULTY.baseReward,
+          difficultyId: easy.id,
+          rewardEarned: easy.baseReward,
           date: expect.any(String) as unknown as string,
-        })
+        }),
       );
     });
 
@@ -316,19 +317,19 @@ describe('DailyTasksService', () => {
       const task: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
-        difficulties: [EASY_DIFFICULTY],
+        difficulties: [easy],
         createdAt: now - ONE_DAY_MS,
         streak: 5,
         lastCompletedAt: now - 1000, // completed earlier today
       };
 
-      await service.completeTask(task, EASY_DIFFICULTY);
+      await service.completeTask(task, easy);
 
       expect(dbMock.dailyTasks.update).toHaveBeenCalledWith(
         'test-daily-task-1',
         expect.objectContaining({
           streak: 5,
-        })
+        }),
       );
     });
 
@@ -337,7 +338,7 @@ describe('DailyTasksService', () => {
       const task: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
-        difficulties: [EASY_DIFFICULTY],
+        difficulties: [easy],
         createdAt: now - ONE_DAY_MS,
         streak: 5,
         lastCompletedAt: null,

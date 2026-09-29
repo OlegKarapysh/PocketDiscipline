@@ -3,6 +3,7 @@
 ## 1. Service Contracts
 
 ### `IWithdrawalService`
+
 Responsible for recording withdrawals, balance deductions, ledger queries, and transaction reversions.
 
 ```typescript
@@ -16,8 +17,8 @@ export interface CreateWithdrawalDto {
 
 export interface WithdrawalFilter {
   categoryId?: string;
-  startDate?: string;             // YYYY-MM-DD
-  endDate?: string;               // YYYY-MM-DD
+  startDate?: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD
   searchQuery?: string;
 }
 
@@ -55,6 +56,7 @@ export interface IWithdrawalService {
 ---
 
 ### `IRewardsService`
+
 Responsible for managing reward wishlist items, calculating savings progress, and processing claims.
 
 ```typescript
@@ -107,6 +109,7 @@ export interface IRewardsService {
 ---
 
 ### `ICategoryService`
+
 Responsible for category CRUD and data integrity safeguards.
 
 ```typescript
@@ -149,6 +152,7 @@ export interface ICategoryService {
 ---
 
 ### `ISpendingAnalyticsService`
+
 Responsible for aggregating withdrawal expenditures across timeframes.
 
 ```typescript
@@ -165,6 +169,7 @@ export interface ISpendingAnalyticsService {
 ## 2. Component Contracts
 
 ### `QuickSpendDialogComponent`
+
 Opened from Dashboard balance widget or Rewards hub.
 
 ```typescript
@@ -187,6 +192,7 @@ export interface IQuickSpendDialogComponent {
 ```
 
 ### `RewardCardComponent`
+
 Renders a single reward item in the Store grid.
 
 ```typescript
@@ -197,9 +203,9 @@ export interface IRewardCardComponent {
   category: InputSignal<RewardCategory | undefined>;
 
   // Computed
-  progressPercentage: Signal<number>;     // 0 - 100
-  isAffordable: Signal<boolean>;          // currentBalance >= reward.cost
-  remainingNeeded: Signal<number>;        // Math.max(0, reward.cost - currentBalance)
+  progressPercentage: Signal<number>; // 0 - 100
+  isAffordable: Signal<boolean>; // currentBalance >= reward.cost
+  remainingNeeded: Signal<number>; // Math.max(0, reward.cost - currentBalance)
 
   // Outputs
   claim: OutputEmitterRef<RewardItem>;
@@ -209,6 +215,7 @@ export interface IRewardCardComponent {
 ```
 
 ### `SpendingDonutChartComponent`
+
 Native SVG Donut / Pie chart visualization.
 
 ```typescript
@@ -218,14 +225,16 @@ export interface ISpendingDonutChartComponent {
   totalSpent: InputSignal<number>;
 
   // Computed SVG sectors/segments
-  segments: Signal<Array<{
-    categoryId: string;
-    categoryName: string;
-    color: string;
-    percentage: number;
-    amount: number;
-    strokeDasharray: string;
-    strokeDashoffset: number;
-  }>>;
+  segments: Signal<
+    Array<{
+      categoryId: string;
+      categoryName: string;
+      color: string;
+      percentage: number;
+      amount: number;
+      strokeDasharray: string;
+      strokeDashoffset: number;
+    }>
+  >;
 }
 ```

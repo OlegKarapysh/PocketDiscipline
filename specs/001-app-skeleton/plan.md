@@ -30,7 +30,7 @@ Build the initial Angular application skeleton for PocketDiscipline, focusing on
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 - Project has no specific constitution constraints defined yet. Proceeding with standard web app best practices.
 
@@ -69,4 +69,4 @@ src/
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-*(None)*
+_(None)_

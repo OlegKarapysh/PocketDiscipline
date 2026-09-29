@@ -1,5 +1,5 @@
 ---
-description: "Task list for automated-tests feature implementation"
+description: 'Task list for automated-tests feature implementation'
 ---
 
 # Tasks: automated-tests
@@ -20,7 +20,7 @@ description: "Task list for automated-tests feature implementation"
 
 **Purpose**: Project initialization and basic structure
 
-- [X] T001 Verify standard test runner configuration in `package.json`
+- [x] T001 Verify standard test runner configuration in `package.json`
 
 ---
 
@@ -30,7 +30,7 @@ description: "Task list for automated-tests feature implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-*(No blocking infrastructure is required for these independent testing tasks)*
+_(No blocking infrastructure is required for these independent testing tasks)_
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -44,8 +44,8 @@ description: "Task list for automated-tests feature implementation"
 
 ### Implementation for User Story 1
 
-- [X] T002 [US1] Create/Update sample component unit test in `src/app/app.component.spec.ts`
-- [X] T003 [US1] Ensure `npm run test` executes successfully
+- [x] T002 [US1] Create/Update sample component unit test in `src/app/app.component.spec.ts`
+- [x] T003 [US1] Ensure `npm run test` executes successfully
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -59,9 +59,9 @@ description: "Task list for automated-tests feature implementation"
 
 ### Implementation for User Story 2
 
-- [X] T004 [US2] Install Playwright and initialize configuration in `playwright.config.ts`
-- [X] T005 [US2] Add a sample E2E test validating the homepage in `e2e/src/example.spec.ts`
-- [X] T006 [US2] Add an `e2e` script to `package.json` for running Playwright tests locally
+- [x] T004 [US2] Install Playwright and initialize configuration in `playwright.config.ts`
+- [x] T005 [US2] Add a sample E2E test validating the homepage in `e2e/src/example.spec.ts`
+- [x] T006 [US2] Add an `e2e` script to `package.json` for running Playwright tests locally
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -75,9 +75,9 @@ description: "Task list for automated-tests feature implementation"
 
 ### Implementation for User Story 3
 
-- [X] T007 [P] [US3] Create GitHub Actions workflow file in `.github/workflows/ci.yml`
-- [X] T008 [US3] Configure `.github/workflows/ci.yml` to install dependencies and run unit tests (`npm run test`)
-- [X] T009 [US3] Configure `.github/workflows/ci.yml` to build the app and run Playwright E2E tests
+- [x] T007 [P] [US3] Create GitHub Actions workflow file in `.github/workflows/ci.yml`
+- [x] T008 [US3] Configure `.github/workflows/ci.yml` to install dependencies and run unit tests (`npm run test`)
+- [x] T009 [US3] Configure `.github/workflows/ci.yml` to build the app and run Playwright E2E tests
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -87,7 +87,7 @@ description: "Task list for automated-tests feature implementation"
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [X] T010 [P] Run quickstart.md validation locally
+- [x] T010 [P] Run quickstart.md validation locally
 
 ---
 

@@ -1,7 +1,5 @@
-import type { OnInit} from '@angular/core';
 import { Component, inject, signal } from '@angular/core';
-
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormField, form, maxLength, min, required } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -9,10 +7,10 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
+import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import type { RewardType } from '../../../../core/models/reward-type.type';
@@ -21,10 +19,17 @@ import type { RewardFormDialogData } from './reward-form-dialog-data.model';
 
 export type { RewardFormDialogData };
 
+interface RewardFormModel {
+  title: string;
+  cost: number | null;
+  categoryId: string;
+  type: RewardType;
+}
+
 @Component({
   selector: 'app-reward-form-dialog',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
@@ -36,73 +41,50 @@ export type { RewardFormDialogData };
   templateUrl: './reward-form-dialog.html',
   styleUrl: './reward-form-dialog.scss',
 })
-export class RewardFormDialog implements OnInit {
+export class RewardFormDialog {
   private readonly dialogRef = inject(MatDialogRef<RewardFormDialog>);
   private readonly data = inject<RewardFormDialogData>(MAT_DIALOG_DATA, { optional: true });
   private readonly rewardsService = inject(RewardsService);
   private readonly categoryService = inject(CategoryService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly snackBar = inject(SnackBarService);
 
   readonly isSubmitting = signal(false);
-  readonly isEditing = signal(false);
+  readonly isEditing = signal(!!this.data?.reward);
 
   readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
 
-  readonly form = new FormGroup({
-    title: new FormControl('', { nonNullable: true, validators: [(control) => Validators.required(control), (control) => Validators.maxLength(100)(control)] }),
-    cost: new FormControl<number | null>(null, [
-      (control) => Validators.required(control),
-      (control) => Validators.min(0.01)(control),
-    ]),
-    categoryId: new FormControl(FALLBACK_CATEGORY_ID, { nonNullable: true, validators: [(control) => Validators.required(control)] }),
-    type: new FormControl<RewardType>('repeatable', { nonNullable: true, validators: [(control) => Validators.required(control)] }),
+  readonly model = signal<RewardFormModel>(this.initialModel());
+
+  readonly rewardForm = form(this.model, (path) => {
+    required(path.title, { message: 'Title is required' });
+    maxLength(path.title, 100, { message: 'Title is too long' });
+    required(path.cost, { message: 'Cost is required' });
+    min(path.cost, 0.01, { message: 'Cost must be greater than zero' });
+    required(path.categoryId, { message: 'Category is required' });
   });
 
-  ngOnInit(): void {
-    const existing = this.data?.reward;
-    if (existing) {
-      this.isEditing.set(true);
-      this.form.setValue({
-        title: existing.title,
-        cost: existing.cost,
-        categoryId: existing.categoryId,
-        type: existing.type,
-      });
-    }
-  }
-
   async submit(): Promise<void> {
-    if (this.form.invalid || this.isSubmitting()) {
-      return;
-    }
-
-    const raw = this.form.getRawValue();
-    if (raw.cost === null) {
+    const { title, cost, categoryId, type } = this.model();
+    if (this.rewardForm().invalid() || this.isSubmitting() || cost === null) {
       return;
     }
 
     this.isSubmitting.set(true);
-
-    const payload = {
-      title: raw.title,
-      cost: raw.cost,
-      categoryId: raw.categoryId,
-      type: raw.type,
-    };
+    const payload = { title, cost, categoryId, type };
 
     try {
-      if (this.isEditing() && this.data?.reward) {
-        const updated = await this.rewardsService.updateReward(this.data.reward.id, payload);
-        this.snackBar.open(`Updated reward "${updated.title}"`, 'Close', { duration: 3000 });
+      const existing = this.data?.reward;
+      if (existing) {
+        const updated = await this.rewardsService.updateReward(existing.id, payload);
+        this.snackBar.show(`Updated reward "${updated.title}"`);
         this.dialogRef.close(updated);
       } else {
         const created = await this.rewardsService.createReward(payload);
-        this.snackBar.open(`Created reward "${created.title}"`, 'Close', { duration: 3000 });
+        this.snackBar.show(`Created reward "${created.title}"`);
         this.dialogRef.close(created);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Operation failed';
-      this.snackBar.open(message, 'Close', { duration: 3000 });
+      this.snackBar.error(error, 'Operation failed');
     } finally {
       this.isSubmitting.set(false);
     }
@@ -110,5 +92,13 @@ export class RewardFormDialog implements OnInit {
 
   cancel(): void {
     this.dialogRef.close();
+  }
+
+  private initialModel(): RewardFormModel {
+    const existing = this.data?.reward;
+    if (existing) {
+      return { title: existing.title, cost: existing.cost, categoryId: existing.categoryId, type: existing.type };
+    }
+    return { title: '', cost: null, categoryId: FALLBACK_CATEGORY_ID, type: 'repeatable' };
   }
 }

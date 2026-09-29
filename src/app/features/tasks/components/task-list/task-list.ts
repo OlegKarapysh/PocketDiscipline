@@ -1,49 +1,26 @@
 import { Component, inject } from '@angular/core';
-import { AsyncPipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
+import { from } from 'rxjs';
 import { TaskService } from '../../../../core/services/task.service';
 import type { DisciplineItem } from '../../../../core/models/discipline-item.model';
 import { DisciplineItemType } from '../../../../core/models/discipline-item-type.enum';
-import { from } from 'rxjs';
-
-const DUMMY_TASK_WATER = {
-  title: 'Drink 2L Water',
-  type: DisciplineItemType.HABIT,
-  reward: 10,
-};
-const DUMMY_TASK_READ = {
-  title: 'Read 10 pages',
-  type: DisciplineItemType.HABIT,
-  reward: 20,
-};
-const DUMMY_TASK_BILL = {
-  title: 'Pay internet bill',
-  type: DisciplineItemType.ONEOFF,
-  reward: 5,
-};
+import { Amount } from '../../../../shared/components/amount/amount';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 
 @Component({
   selector: 'app-task-list',
-  imports: [
-    AsyncPipe, 
-    MatCardModule, 
-    MatListModule, 
-    MatCheckboxModule, 
-    MatButtonModule, 
-    MatIconModule,
-    MatChipsModule
-  ],
+  imports: [MatCardModule, MatListModule, MatCheckboxModule, MatButtonModule, MatChipsModule, Amount, EmptyState],
   templateUrl: './task-list.html',
-  styleUrl: './task-list.scss'
+  styleUrl: './task-list.scss',
 })
 export class TaskList {
-  taskService = inject(TaskService);
-  tasks$ = from(this.taskService.tasks$);
+  private readonly taskService = inject(TaskService);
+  readonly tasks = toSignal(from(this.taskService.tasks$));
 
   async completeTask(task: DisciplineItem): Promise<void> {
     if (!task.isCompleted) {
@@ -57,21 +34,9 @@ export class TaskList {
 
   async addDummyTask(): Promise<void> {
     try {
-      await this.taskService.addTask(
-        DUMMY_TASK_WATER.title,
-        DUMMY_TASK_WATER.type,
-        DUMMY_TASK_WATER.reward
-      );
-      await this.taskService.addTask(
-        DUMMY_TASK_READ.title,
-        DUMMY_TASK_READ.type,
-        DUMMY_TASK_READ.reward
-      );
-      await this.taskService.addTask(
-        DUMMY_TASK_BILL.title,
-        DUMMY_TASK_BILL.type,
-        DUMMY_TASK_BILL.reward
-      );
+      await this.taskService.addTask('Drink 2L Water', DisciplineItemType.HABIT, 10);
+      await this.taskService.addTask('Read 10 pages', DisciplineItemType.HABIT, 20);
+      await this.taskService.addTask('Pay internet bill', DisciplineItemType.ONEOFF, 5);
     } catch (error) {
       console.error(error);
     }

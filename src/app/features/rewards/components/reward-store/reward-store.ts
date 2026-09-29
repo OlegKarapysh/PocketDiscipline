@@ -1,16 +1,14 @@
 import { Component, computed, inject, signal } from '@angular/core';
 
-import { FormsModule } from '@angular/forms';
+import { form, FormField } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { toSignal } from '@angular/core/rxjs-interop';
-import type { Observable} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
 import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
@@ -21,17 +19,23 @@ import type { RewardCategory } from '../../../../core/models/reward-category.mod
 import type { RewardStatus } from '../../../../core/models/reward-status.type';
 import { RewardCard } from '../reward-card/reward-card';
 import { RewardFormDialog } from '../reward-form-dialog/reward-form-dialog';
+import { SegmentedControl } from '../../../../shared/components/segmented-control/segmented-control';
+import type { SegmentOption } from '../../../../shared/components/segmented-control/segment-option.model';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
+import { SnackBarService } from '../../../../shared/services/snack-bar.service';
+import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
 
 @Component({
   selector: 'app-reward-store',
   imports: [
-    FormsModule,
+    FormField,
     MatButtonModule,
-    MatButtonToggleModule,
     MatIconModule,
     MatInputModule,
     MatFormFieldModule,
     MatSelectModule,
+    SegmentedControl,
+    EmptyState,
     RewardCard,
   ],
   templateUrl: './reward-store.html',
@@ -42,7 +46,7 @@ export class RewardStore {
   private readonly categoryService = inject(CategoryService);
   private readonly userService = inject(UserService);
   private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly snackBar = inject(SnackBarService);
 
   readonly user = toSignal(from(this.userService.user$) as Observable<User | undefined>, {
     initialValue: undefined,
@@ -52,8 +56,10 @@ export class RewardStore {
   readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
 
   readonly statusFilter = signal<RewardStatus>('active');
-  readonly selectedCategoryId = signal<string>('all');
-  readonly searchQuery = signal<string>('');
+  readonly filters = signal({ query: '', categoryId: 'all' });
+  readonly filterForm = form(this.filters);
+
+  readonly balance = computed(() => this.user()?.balance ?? 0);
 
   readonly categoriesMap = computed(() => {
     const map = new Map<string, RewardCategory>();
@@ -71,10 +77,15 @@ export class RewardStore {
     return this.rewards().filter((r) => r.status === 'claimed').length;
   });
 
+  readonly statusOptions = computed<SegmentOption<RewardStatus>[]>(() => [
+    { value: 'active', label: `Active wishlist (${this.activeRewardsCount()})` },
+    { value: 'claimed', label: `Claimed (${this.claimedRewardsCount()})` },
+  ]);
+
   readonly filteredRewards = computed(() => {
     const status = this.statusFilter();
-    const categoryId = this.selectedCategoryId();
-    const query = this.searchQuery().toLowerCase().trim();
+    const { categoryId, query } = this.filters();
+    const needle = query.toLowerCase().trim();
 
     return this.rewards().filter((reward) => {
       if (reward.status !== status) {
@@ -83,16 +94,17 @@ export class RewardStore {
       if (categoryId !== 'all' && reward.categoryId !== categoryId) {
         return false;
       }
-      if (query && !reward.title.toLowerCase().includes(query)) {
+      if (needle && !reward.title.toLowerCase().includes(needle)) {
         return false;
       }
       return true;
     });
   });
 
-  getCategory(categoryId: string): RewardCategory | undefined {
-    return this.categoriesMap().get(categoryId);
-  }
+  readonly rewardRows = computed(() => {
+    const categories = this.categoriesMap();
+    return this.filteredRewards().map((reward) => ({ reward, category: categories.get(reward.categoryId) }));
+  });
 
   openAddReward(): void {
     this.dialog.open(RewardFormDialog, {
@@ -110,20 +122,18 @@ export class RewardStore {
   async onDeleteReward(reward: RewardItem): Promise<void> {
     try {
       await this.rewardsService.deleteReward(reward.id);
-      this.snackBar.open(`Deleted "${reward.title}"`, 'Close', { duration: 3000 });
+      this.snackBar.show(`Deleted "${reward.title}"`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to delete reward';
-      this.snackBar.open(message, 'Close', { duration: 3000 });
+      this.snackBar.error(error, 'Failed to delete reward');
     }
   }
 
   async onClaimReward(reward: RewardItem): Promise<void> {
     try {
       const withdrawal = await this.rewardsService.claimReward(reward);
-      this.snackBar.open(`Redeemed "${reward.title}" for ${withdrawal.amount} ₴!`, 'Close', { duration: 4000 });
+      this.snackBar.show(`Redeemed "${reward.title}" for ${MONEY_FORMAT.format(withdrawal.amount)} ₴`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Claiming failed';
-      this.snackBar.open(message, 'Close', { duration: 3000 });
+      this.snackBar.error(error, 'Claiming failed');
     }
   }
 }

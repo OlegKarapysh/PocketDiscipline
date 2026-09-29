@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
@@ -54,6 +54,9 @@ describe('RewardCard', () => {
 
     const subtitleEl = fixture.debugElement.query(By.css('.card-subtitle')).nativeElement as HTMLElement;
     expect(subtitleEl.textContent.trim()).toBe('Gear & Tech');
+
+    const avatarEl = fixture.debugElement.query(By.css('.category-avatar')).nativeElement as HTMLElement;
+    expect(avatarEl.style.backgroundColor).toBe('rgb(59, 130, 246)');
   });
 
   it('should calculate 50% progress and display disabled "Need X ₴ more" button when unaffordable', () => {
@@ -67,7 +70,7 @@ describe('RewardCard', () => {
     const needMoreBtn = fixture.debugElement.query(By.css('.need-more-btn')).nativeElement as HTMLButtonElement;
     expect(needMoreBtn).toBeTruthy();
     expect(needMoreBtn.disabled).toBe(true);
-    expect(needMoreBtn.textContent).toContain('Need 600 ₴ more');
+    expect(needMoreBtn.textContent).toMatch(/Need\s*600\s*₴\s*more/);
   });
 
   it('should enable claim button and cap progress at 100% when affordable', () => {
@@ -136,6 +139,9 @@ describe('RewardCard', () => {
 
     const subtitleEl = fixture.debugElement.query(By.css('.card-subtitle')).nativeElement as HTMLElement;
     expect(subtitleEl.textContent.trim()).toBe('General');
+
+    const avatarEl = fixture.debugElement.query(By.css('.category-avatar')).nativeElement as HTMLElement;
+    expect(avatarEl.style.backgroundColor).toBe('');
   });
 
   it('should emit edit and delete outputs when menu actions are clicked in the DOM', async () => {
@@ -144,7 +150,8 @@ describe('RewardCard', () => {
     component.edit.subscribe(editSpy);
     component.delete.subscribe(deleteSpy);
 
-    const menuTriggerBtn = fixture.debugElement.query(By.css('button[aria-label="Reward options"]')).nativeElement as HTMLButtonElement;
+    const menuTriggerBtn = fixture.debugElement.query(By.css('button[aria-label="Reward options"]'))
+      .nativeElement as HTMLButtonElement;
     menuTriggerBtn.click();
     fixture.detectChanges();
     await fixture.whenStable();

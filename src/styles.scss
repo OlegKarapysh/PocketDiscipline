@@ -1,24 +1,252 @@
 @use '@angular/material' as mat;
+@use './styles/fonts';
+@use './styles/tokens' as t;
 
 html {
   height: 100%;
+  color-scheme: light dark;
+
   @include mat.theme(
     (
       color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        primary: mat.$violet-palette,
+        tertiary: mat.$orange-palette,
+        theme-type: color-scheme,
       ),
-      typography: Roboto,
+      typography: (
+        plain-family: t.$font-sans,
+        brand-family: t.$font-sans,
+        bold-weight: 700,
+        medium-weight: 600,
+        regular-weight: 400,
+      ),
       density: 0,
+    )
+  );
+
+  // Exact PocketDiscipline palette. The prebuilt palettes above only seed tones we don't pin here.
+  @include mat.theme-overrides(
+    (
+      primary: light-dark(#5a5ec8, #9da1f2),
+      on-primary: light-dark(#ffffff, #15163a),
+      primary-container: light-dark(#e9e9fb, #2b2d52),
+      on-primary-container: light-dark(#4448a8, #b7baf7),
+      inverse-primary: light-dark(#b7baf7, #5a5ec8),
+      surface-tint: light-dark(#5a5ec8, #9da1f2),
+      secondary: light-dark(#5b5d72, #a3a5bb),
+      on-secondary: light-dark(#ffffff, #1a1b28),
+      secondary-container: light-dark(#e9e9fb, #2b2d52),
+      on-secondary-container: light-dark(#4448a8, #b7baf7),
+      tertiary: light-dark(#9a5a06, #f4bf6f),
+      on-tertiary: light-dark(#ffffff, #2b1d05),
+      tertiary-container: light-dark(#fcefd9, #3a2d18),
+      on-tertiary-container: light-dark(#9a5a06, #f4bf6f),
+      error: light-dark(#c94a40, #ee8378),
+      on-error: light-dark(#ffffff, #3d0f0b),
+      error-container: light-dark(#fbe5e2, #3d1f1c),
+      on-error-container: light-dark(#8f2a22, #f7b2aa),
+      background: light-dark(#f6f6fa, #11121c),
+      on-background: light-dark(#1c1d2b, #ececf3),
+      surface: light-dark(#f6f6fa, #11121c),
+      on-surface: light-dark(#1c1d2b, #ececf3),
+      surface-variant: light-dark(#eeeef5, #242536),
+      on-surface-variant: light-dark(#5b5d72, #a3a5bb),
+      surface-container-lowest: light-dark(#ffffff, #1a1b28),
+      surface-container-low: light-dark(#fbfbfd, #1d1e2c),
+      surface-container: light-dark(#eeeef5, #242536),
+      surface-container-high: light-dark(#e8e8f0, #2a2b3e),
+      surface-container-highest: light-dark(#e2e2eb, #303248),
+      inverse-surface: light-dark(#1c1d2b, #ececf3),
+      inverse-on-surface: light-dark(#ececf3, #1c1d2b),
+      outline: light-dark(#8e90a6, #6b6d85),
+      outline-variant: light-dark(#e3e3ed, #2e3044),
+      shadow: light-dark(#282a5a, #000000),
+      scrim: #11121c,
+
+      corner-extra-small: t.radius(xs),
+      corner-small: t.radius(sm),
+      corner-medium: t.radius(md),
+      corner-large: t.radius(lg),
+      corner-extra-large: t.radius(xl),
+    )
+  );
+
+  // App extension tokens: roles Material 3 has no slot for.
+  --pd-sys-reward: light-dark(#e39526, #f0ad4e);
+  --pd-sys-success: light-dark(#2e8f64, #5ec797);
+  --pd-sys-success-container: light-dark(#dff3e9, #1b3629);
+  // Icons and marks drawn on a user-chosen category colour. Category colours are mid-tone in both modes.
+  --pd-sys-on-category: #fff;
+  --pd-sys-shadow-color: light-dark(rgb(40 42 90 / 10%), rgb(0 0 0 / 45%));
+  --pd-sys-elevation-1: 0 1px 2px var(--pd-sys-shadow-color), 0 2px 8px var(--pd-sys-shadow-color);
+  --pd-sys-elevation-2: 0 12px 32px -8px var(--pd-sys-shadow-color), 0 4px 10px var(--pd-sys-shadow-color);
+
+  @include mat.button-overrides(
+    (
+      filled-container-shape: t.radius(md),
+      outlined-container-shape: t.radius(md),
+      protected-container-shape: t.radius(md),
+      text-container-shape: t.radius(md),
+      tonal-container-shape: t.radius(md),
+      filled-container-height: t.$touch-target,
+      outlined-container-height: t.$touch-target,
+      protected-container-height: t.$touch-target,
+      text-container-height: t.$touch-target,
+      tonal-container-height: t.$touch-target,
+      outlined-outline-color: var(--mat-sys-outline-variant),
+    )
+  );
+
+  @include mat.fab-overrides(
+    (
+      container-shape: t.radius(lg),
+      extended-container-shape: t.radius(lg),
+      small-container-shape: t.radius(md),
+      container-color: var(--mat-sys-primary),
+      foreground-color: var(--mat-sys-on-primary),
+    )
+  );
+
+  @include mat.card-overrides(
+    (
+      elevated-container-shape: t.radius(lg),
+      elevated-container-color: var(--mat-sys-surface-container-lowest),
+      elevated-container-elevation: var(--pd-sys-elevation-1),
+      outlined-container-shape: t.radius(lg),
+      outlined-container-color: var(--mat-sys-surface-container-lowest),
+      outlined-outline-color: var(--mat-sys-outline-variant),
+    )
+  );
+
+  @include mat.form-field-overrides(
+    (
+      outlined-container-shape: t.radius(md),
+      outlined-outline-color: var(--mat-sys-outline-variant),
+      outlined-hover-outline-color: var(--mat-sys-outline),
+    )
+  );
+
+  @include mat.dialog-overrides(
+    (
+      container-shape: t.radius(xl),
+      container-color: var(--mat-sys-surface-container-lowest),
+    )
+  );
+
+  @include mat.button-toggle-overrides(
+    (
+      shape: t.radius(md),
+      height: 40px,
+      divider-color: transparent,
+      background-color: var(--mat-sys-surface-container),
+      text-color: var(--mat-sys-on-surface-variant),
+      selected-state-background-color: var(--mat-sys-surface-container-lowest),
+      selected-state-text-color: var(--mat-sys-on-surface),
+    )
+  );
+
+  @include mat.progress-bar-overrides(
+    (
+      track-height: 8px,
+      active-indicator-height: 8px,
+      track-shape: t.radius(pill),
+      track-color: var(--mat-sys-surface-container),
+    )
+  );
+
+  @include mat.list-overrides(
+    (
+      active-indicator-color: var(--mat-sys-primary-container),
+      active-indicator-shape: t.radius(sm),
+    )
+  );
+
+  @include mat.sidenav-overrides(
+    (
+      container-width: t.$rail-width,
+      container-shape: 0,
+      container-background-color: var(--mat-sys-surface-container-lowest),
+      content-background-color: var(--mat-sys-surface),
+    )
+  );
+
+  @include mat.snack-bar-overrides(
+    (
+      container-shape: t.radius(md),
+      container-color: var(--mat-sys-inverse-surface),
+      supporting-text-color: var(--mat-sys-inverse-on-surface),
+      button-color: var(--mat-sys-inverse-primary),
+    )
+  );
+
+  @include mat.menu-overrides(
+    (
+      container-shape: t.radius(md),
+      container-color: var(--mat-sys-surface-container-lowest),
+    )
+  );
+
+  @include mat.chips-overrides(
+    (
+      container-shape-radius: t.radius(pill),
+      outline-color: var(--mat-sys-outline-variant),
     )
   );
 }
 
-body {
+html[data-theme='light'] {
   color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+body {
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
+  font: var(--mat-sys-body-large);
   margin: 0;
   height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+// ---- Global utilities (usable from any template) ----
+
+.pd-num {
+  @include t.numeric;
+}
+
+.pd-icon-filled {
+  font-variation-settings: 'FILL' 1;
+}
+
+// Segmented control: <mat-button-toggle-group class="pd-segmented" hideSingleSelectionIndicator>
+.pd-segmented.mat-button-toggle-group {
+  border: none;
+  padding: t.space(1);
+  gap: 2px;
+  background: var(--mat-sys-surface-container);
+
+  .mat-button-toggle {
+    border-radius: t.radius(sm);
+    border: none;
+  }
+
+  .mat-button-toggle-checked {
+    box-shadow: 0 1px 2px var(--pd-sys-shadow-color);
+  }
+}
+
+// Two-line difficulty button:
+// <button mat-stroked-button class="pd-difficulty">Easy<app-amount [value]="100" size="sm" tone="reward" [showSign]="true" /></button>
+.pd-difficulty.mat-mdc-outlined-button {
+  height: 48px;
+
+  .mdc-button__label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+  }
 }

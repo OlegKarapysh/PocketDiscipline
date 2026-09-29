@@ -29,6 +29,7 @@ export interface IDashboardEarningsService {
 ## 2. Component Interface Contracts
 
 ### `EarningsChartComponent`
+
 Presents the responsive SVG stacked bar chart.
 
 ```typescript
@@ -43,24 +44,27 @@ export interface IEarningsChartComponent {
   // Computed layout properties
   viewBox: Signal<string>;
   maxDailyEarned: Signal<number>;
-  bars: Signal<Array<{
-    date: string;
-    formattedDate: string;
-    total: number;
-    segments: Array<{
-      source: string;
-      color: string;
-      amount: number;
-      y: number;
-      height: number;
-    }>;
-    x: number;
-    width: number;
-  }>>;
+  bars: Signal<
+    Array<{
+      date: string;
+      formattedDate: string;
+      total: number;
+      segments: Array<{
+        source: string;
+        color: string;
+        amount: number;
+        y: number;
+        height: number;
+      }>;
+      x: number;
+      width: number;
+    }>
+  >;
 }
 ```
 
 ### `EarningsFilterComponent`
+
 Allows toggling presets and choosing a custom date range.
 
 ```typescript
@@ -76,6 +80,7 @@ export interface IEarningsFilterComponent {
 ```
 
 ### `EarningsStatsComponent`
+
 Displays the monthly average card with navigation.
 
 ```typescript

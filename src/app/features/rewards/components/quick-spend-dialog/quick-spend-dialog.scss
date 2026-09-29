@@ -1,25 +1,25 @@
+@use '../../../../../styles/tokens' as t;
+
 .dialog-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: t.space(2);
+
+  .header-icon {
+    color: var(--mat-sys-primary);
+  }
 
   .balance-badge {
     margin-left: auto;
-    font-size: 0.85rem;
-    font-weight: 500;
-    padding: 4px 10px;
-    border-radius: 12px;
-    background-color: var(--mat-sys-surface-variant, #e0e2ec);
-    color: var(--mat-sys-on-surface-variant, #44474f);
   }
 }
 
 .dialog-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-width: 320px;
-  padding-top: 12px;
+  gap: t.space(1);
+  min-width: min(320px, 100%);
+  padding-top: t.space(3);
 }
 
 .full-width {
@@ -29,13 +29,11 @@
 mat-option {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: t.space(2);
 
   mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
+    @include t.icon-size(md);
+    margin-right: t.space(2);
     vertical-align: middle;
   }
 }

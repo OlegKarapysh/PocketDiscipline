@@ -1,0 +1,11 @@
+<img class="mascot" src="icons/icon-192x192.png" alt="" width="64" height="64" />
+<h3 class="heading">{{ heading() }}</h3>
+@if (message(); as text) {
+  <p class="message">{{ text }}</p>
+}
+@if (actionLabel(); as label) {
+  <button mat-flat-button type="button" class="action" (click)="action.emit()">
+    <mat-icon>{{ actionIcon() }}</mat-icon>
+    {{ label }}
+  </button>
+}

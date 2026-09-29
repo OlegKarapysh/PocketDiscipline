@@ -1,14 +1,10 @@
-<mat-card class="earnings-chart-card">
-  <mat-card-header>
-    <mat-card-title>Daily Earnings</mat-card-title>
-  </mat-card-header>
-
-  <mat-card-content class="chart-content">
+<app-section-card heading="Daily earnings">
+  <div class="chart-content">
     <div class="legend-container">
-      @for (item of legendItems; track item.label) {
+      @for (item of legendItems; track item.source) {
         <div class="legend-item">
-          <span class="legend-swatch" [style.background-color]="item.color"></span>
-          <span class="legend-label">{{ item.label }}</span>
+          <span class="swatch" [attr.data-source]="item.source"></span>
+          <span>{{ item.label }}</span>
         </div>
       }
     </div>
@@ -30,12 +26,7 @@
             [attr.y2]="line.y"
             class="grid-line"
           />
-          <text
-            [attr.x]="yAxisTextX"
-            [attr.y]="line.y + axisLabelYOffset"
-            class="axis-label-y"
-            text-anchor="end"
-          >
+          <text [attr.x]="yAxisTextX" [attr.y]="line.y + axisLabelYOffset" class="axis-label pd-num" text-anchor="end">
             {{ line.label }}
           </text>
         }
@@ -60,7 +51,7 @@
             (focus)="onBarFocus(bar.record, $event)"
             (blur)="onBarBlur()"
             tabindex="0"
-            [attr.aria-label]="bar.date + ': ' + bar.total + ' ₴'"
+            [attr.aria-label]="bar.date + ': ' + (bar.total | money)"
           >
             <!-- Invisible hit target for smooth hover/touch -->
             <rect
@@ -89,7 +80,7 @@
                 [attr.y]="seg.y"
                 [attr.width]="bar.width"
                 [attr.height]="seg.height"
-                [attr.fill]="seg.color"
+                [attr.data-source]="seg.source"
                 class="bar-segment"
               />
             }
@@ -99,7 +90,7 @@
               <text
                 [attr.x]="bar.x + bar.width / 2"
                 [attr.y]="axisLabelYPos"
-                class="axis-label-x"
+                class="axis-label pd-num"
                 text-anchor="middle"
               >
                 {{ bar.formattedDate }}
@@ -112,45 +103,22 @@
 
     <!-- Floating Tooltip -->
     @if (hoveredRecord(); as record) {
-      <div
-        class="chart-tooltip"
-        [style.left.px]="tooltipPosition()?.x"
-        [style.top.px]="tooltipPosition()?.y"
-      >
-        <div class="tooltip-date">{{ record.date }}</div>
-        <div class="tooltip-total">
-          Total: <strong>{{ record.totalEarned }} ₴</strong>
+      <div class="chart-tooltip" [style.left.px]="tooltipPosition()?.x" [style.top.px]="tooltipPosition()?.y">
+        <div class="tooltip-date pd-num">{{ record.date }}</div>
+        <div class="tooltip-row tooltip-total">
+          <span>Total</span>
+          <app-amount [value]="record.totalEarned" size="sm" tone="inherit" />
         </div>
-        <div class="tooltip-breakdown">
-          @if (record.goalsEarned > 0) {
-            <div class="breakdown-row">
-              <span class="breakdown-swatch goals"></span>
-              <span>Goals: {{ record.goalsEarned }} ₴</span>
-            </div>
-          }
-          @if (record.dailyTasksEarned > 0) {
-            <div class="breakdown-row">
-              <span class="breakdown-swatch daily-tasks"></span>
-              <span>Daily Tasks: {{ record.dailyTasksEarned }} ₴</span>
-            </div>
-          }
-          @if (record.pomodoroEarned > 0) {
-            <div class="breakdown-row">
-              <span class="breakdown-swatch pomodoro"></span>
-              <span>Pomodoro: {{ record.pomodoroEarned }} ₴</span>
-            </div>
-          }
-          @if (record.dailyScoresEarned > 0) {
-            <div class="breakdown-row">
-              <span class="breakdown-swatch daily-scores"></span>
-              <span>Daily Score: {{ record.dailyScoresEarned }} ₴</span>
-            </div>
-          }
-          @if (record.totalEarned === 0) {
-            <div class="no-earnings-text">No earnings recorded</div>
-          }
-        </div>
+        @for (row of tooltipBreakdown(); track row.source) {
+          <div class="tooltip-row">
+            <span class="swatch" [attr.data-source]="row.source"></span>
+            <span class="row-label">{{ row.label }}</span>
+            <app-amount [value]="row.amount" size="sm" tone="inherit" />
+          </div>
+        } @empty {
+          <div class="no-earnings-text">No earnings recorded</div>
+        }
       </div>
     }
-  </mat-card-content>
-</mat-card>
+  </div>
+</app-section-card>

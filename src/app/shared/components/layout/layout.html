@@ -1,32 +1,27 @@
-<mat-sidenav-container class="sidenav-container">
-  <mat-sidenav
-    #drawer
-    class="sidenav"
-    [attr.role]="isHandset() ? 'dialog' : 'navigation'"
-    [mode]="isHandset() ? 'over' : 'side'"
-    [opened]="!isHandset()"
-  >
-    <mat-toolbar>Menu</mat-toolbar>
+<mat-sidenav-container class="shell">
+  <mat-sidenav mode="side" class="rail" [opened]="!isCompact()">
+    <div class="brand">
+      <img src="icons/icon-96x96.png" alt="" width="30" height="30" />
+      <span>PocketDiscipline</span>
+    </div>
     <mat-nav-list>
       @for (item of navItems; track item.path) {
-        <a mat-list-item [routerLink]="item.path" (click)="onNavClick(drawer)">
-          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+        <a mat-list-item [routerLink]="item.path" routerLinkActive #rla="routerLinkActive" [activated]="rla.isActive">
+          <mat-icon matListItemIcon [class.pd-icon-filled]="rla.isActive">{{ item.icon }}</mat-icon>
           <span matListItemTitle>{{ item.label }}</span>
         </a>
       }
     </mat-nav-list>
   </mat-sidenav>
-  <mat-sidenav-content>
-    @if (isHandset()) {
-      <mat-toolbar color="primary">
-        <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawer.toggle()">
-          <mat-icon aria-hidden="true">menu</mat-icon>
-        </button>
-        <span class="tab-title">{{ currentTabTitle() }}</span>
-      </mat-toolbar>
-    }
-    <div class="content-container">
-      <router-outlet />
+  <mat-sidenav-content class="main">
+    <div class="scroller">
+      <main class="content">
+        <router-outlet />
+      </main>
     </div>
+    @if (isCompact()) {
+      <app-speed-dial class="speed-dial" [actions]="quickActions" />
+      <app-bottom-nav [items]="primaryNav" [moreItems]="moreNav" />
+    }
   </mat-sidenav-content>
 </mat-sidenav-container>

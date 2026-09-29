@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { GoalService } from './goal.service';
 import { DbService } from '../../../database/db.service';
 import { UserService } from '../../../core/services/user.service';
-import type { Goal} from '../../../core/models/goal.model';
+import type { Goal } from '../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../core/models/goal.model';
 
 vi.mock('dexie', () => {
@@ -18,13 +18,17 @@ vi.mock('dexie', () => {
       '@@observable'() {
         return {
           subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
-            Promise.resolve().then(fn).then(
-              (val) => {
-                subscriber.next(val);
-                subscriber.complete();
-              },
-              (err: unknown) => { subscriber.error(err); }
-            );
+            Promise.resolve()
+              .then(fn)
+              .then(
+                (val) => {
+                  subscriber.next(val);
+                  subscriber.complete();
+                },
+                (err: unknown) => {
+                  subscriber.error(err);
+                },
+              );
             return {
               unsubscribe() {
                 // no-op for test mock
@@ -36,13 +40,6 @@ vi.mock('dexie', () => {
     }),
   };
 });
-
-const TEST_GOAL_ID = 'goal-123';
-const TEST_GOAL_TITLE = 'do 50 push-ups on fists';
-const TEST_NEW_TITLE = 'do 100 push-ups';
-const TEST_REWARD_VALUE = 2000;
-const TEST_UPDATED_REWARD = 2500;
-const ERROR_DUPLICATE_GOAL_TITLE = 'A goal with this title already exists.';
 
 describe('GoalService', () => {
   let service: GoalService;
@@ -79,9 +76,11 @@ describe('GoalService', () => {
         delete: vi.fn().mockResolvedValue(undefined),
       },
       users: {},
-      transaction: vi.fn().mockImplementation(async (_mode: unknown, _t1: unknown, _t2: unknown, callback: () => Promise<void>) => {
-        await callback();
-      }),
+      transaction: vi
+        .fn()
+        .mockImplementation(async (_mode: unknown, _t1: unknown, _t2: unknown, callback: () => Promise<void>) => {
+          await callback();
+        }),
     };
 
     userMock = {
@@ -89,11 +88,7 @@ describe('GoalService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        GoalService,
-        { provide: DbService, useValue: dbMock },
-        { provide: UserService, useValue: userMock },
-      ],
+      providers: [GoalService, { provide: DbService, useValue: dbMock }, { provide: UserService, useValue: userMock }],
     });
 
     service = TestBed.inject(GoalService);
@@ -103,9 +98,9 @@ describe('GoalService', () => {
     it('should return live query and emit active goals filtered by status', async () => {
       const mockActiveGoals: Goal[] = [
         {
-          id: TEST_GOAL_ID,
-          title: TEST_GOAL_TITLE,
-          rewardValue: TEST_REWARD_VALUE,
+          id: 'goal-123',
+          title: 'do 50 push-ups on fists',
+          rewardValue: 2000,
           status: GOAL_STATUS.ACTIVE,
           completedAt: null,
           createdAt: Date.now(),
@@ -123,9 +118,9 @@ describe('GoalService', () => {
     it('should return live query and emit completed goals sorted by completedAt', async () => {
       const mockCompletedGoals: Goal[] = [
         {
-          id: TEST_GOAL_ID,
-          title: TEST_GOAL_TITLE,
-          rewardValue: TEST_REWARD_VALUE,
+          id: 'goal-123',
+          title: 'do 50 push-ups on fists',
+          rewardValue: 2000,
           status: GOAL_STATUS.COMPLETED,
           completedAt: Date.now(),
           createdAt: Date.now() - 1000,
@@ -147,15 +142,15 @@ describe('GoalService', () => {
     it('should add a new active goal when title is unique', async () => {
       dbMock.goals.toArray.mockResolvedValue([]);
 
-      await service.addGoal(TEST_GOAL_TITLE, TEST_REWARD_VALUE);
+      await service.addGoal('do 50 push-ups on fists', 2000);
 
       expect(dbMock.goals.add).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: TEST_GOAL_TITLE,
-          rewardValue: TEST_REWARD_VALUE,
+          title: 'do 50 push-ups on fists',
+          rewardValue: 2000,
           status: GOAL_STATUS.ACTIVE,
           completedAt: null,
-        })
+        }),
       );
     });
 
@@ -163,7 +158,7 @@ describe('GoalService', () => {
       const existingGoals: Goal[] = [
         {
           id: 'existing-1',
-          title: TEST_GOAL_TITLE.toUpperCase(),
+          title: 'do 50 push-ups on fists'.toUpperCase(),
           rewardValue: 1000,
           status: GOAL_STATUS.ACTIVE,
           completedAt: null,
@@ -172,8 +167,8 @@ describe('GoalService', () => {
       ];
       dbMock.goals.toArray.mockResolvedValue(existingGoals);
 
-      await expect(service.addGoal(TEST_GOAL_TITLE.toLowerCase(), TEST_REWARD_VALUE)).rejects.toThrow(
-        ERROR_DUPLICATE_GOAL_TITLE
+      await expect(service.addGoal('do 50 push-ups on fists'.toLowerCase(), 2000)).rejects.toThrow(
+        'A goal with this title already exists.',
       );
       expect(dbMock.goals.add).not.toHaveBeenCalled();
     });
@@ -182,9 +177,9 @@ describe('GoalService', () => {
   describe('updateGoal', () => {
     it('should update title and reward for an active goal', async () => {
       const activeGoal: Goal = {
-        id: TEST_GOAL_ID,
-        title: TEST_GOAL_TITLE,
-        rewardValue: TEST_REWARD_VALUE,
+        id: 'goal-123',
+        title: 'do 50 push-ups on fists',
+        rewardValue: 2000,
         status: GOAL_STATUS.ACTIVE,
         completedAt: null,
         createdAt: Date.now(),
@@ -192,26 +187,26 @@ describe('GoalService', () => {
       dbMock.goals.get.mockResolvedValue(activeGoal);
       dbMock.goals.toArray.mockResolvedValue([activeGoal]);
 
-      await service.updateGoal(TEST_GOAL_ID, TEST_NEW_TITLE, TEST_UPDATED_REWARD);
+      await service.updateGoal('goal-123', 'do 100 push-ups', 2500);
 
-      expect(dbMock.goals.update).toHaveBeenCalledWith(TEST_GOAL_ID, {
-        title: TEST_NEW_TITLE,
-        rewardValue: TEST_UPDATED_REWARD,
+      expect(dbMock.goals.update).toHaveBeenCalledWith('goal-123', {
+        title: 'do 100 push-ups',
+        rewardValue: 2500,
       });
     });
 
     it('should throw error when updating goal title to an existing another active goal title', async () => {
       const currentGoal: Goal = {
-        id: TEST_GOAL_ID,
-        title: TEST_GOAL_TITLE,
-        rewardValue: TEST_REWARD_VALUE,
+        id: 'goal-123',
+        title: 'do 50 push-ups on fists',
+        rewardValue: 2000,
         status: GOAL_STATUS.ACTIVE,
         completedAt: null,
         createdAt: Date.now(),
       };
       const anotherGoal: Goal = {
         id: 'other-id',
-        title: TEST_NEW_TITLE,
+        title: 'do 100 push-ups',
         rewardValue: 500,
         status: GOAL_STATUS.ACTIVE,
         completedAt: null,
@@ -221,8 +216,8 @@ describe('GoalService', () => {
       dbMock.goals.get.mockResolvedValue(currentGoal);
       dbMock.goals.toArray.mockResolvedValue([currentGoal, anotherGoal]);
 
-      await expect(service.updateGoal(TEST_GOAL_ID, TEST_NEW_TITLE, TEST_UPDATED_REWARD)).rejects.toThrow(
-        ERROR_DUPLICATE_GOAL_TITLE
+      await expect(service.updateGoal('goal-123', 'do 100 push-ups', 2500)).rejects.toThrow(
+        'A goal with this title already exists.',
       );
       expect(dbMock.goals.update).not.toHaveBeenCalled();
     });
@@ -230,7 +225,7 @@ describe('GoalService', () => {
     it('should do nothing if goal is not found or not active', async () => {
       dbMock.goals.get.mockResolvedValue(undefined);
 
-      await service.updateGoal(TEST_GOAL_ID, TEST_NEW_TITLE, TEST_UPDATED_REWARD);
+      await service.updateGoal('goal-123', 'do 100 push-ups', 2500);
 
       expect(dbMock.goals.update).not.toHaveBeenCalled();
     });
@@ -239,38 +234,38 @@ describe('GoalService', () => {
   describe('completeGoal and undoCompleteGoal', () => {
     it('should complete an active goal, set timestamp, and add reward to user balance', async () => {
       const activeGoal: Goal = {
-        id: TEST_GOAL_ID,
-        title: TEST_GOAL_TITLE,
-        rewardValue: TEST_REWARD_VALUE,
+        id: 'goal-123',
+        title: 'do 50 push-ups on fists',
+        rewardValue: 2000,
         status: GOAL_STATUS.ACTIVE,
         completedAt: null,
         createdAt: Date.now(),
       };
       dbMock.goals.get.mockResolvedValue(activeGoal);
 
-      await service.completeGoal(TEST_GOAL_ID);
+      await service.completeGoal('goal-123');
 
       expect(dbMock.goals.update).toHaveBeenCalledWith(
-        TEST_GOAL_ID,
+        'goal-123',
         expect.objectContaining({
           status: GOAL_STATUS.COMPLETED,
-        })
+        }),
       );
-      expect(userMock.addBalance).toHaveBeenCalledWith(TEST_REWARD_VALUE);
+      expect(userMock.addBalance).toHaveBeenCalledWith(2000);
     });
 
     it('should not complete a goal if it is already completed', async () => {
       const completedGoal: Goal = {
-        id: TEST_GOAL_ID,
-        title: TEST_GOAL_TITLE,
-        rewardValue: TEST_REWARD_VALUE,
+        id: 'goal-123',
+        title: 'do 50 push-ups on fists',
+        rewardValue: 2000,
         status: GOAL_STATUS.COMPLETED,
         completedAt: Date.now(),
         createdAt: Date.now(),
       };
       dbMock.goals.get.mockResolvedValue(completedGoal);
 
-      await service.completeGoal(TEST_GOAL_ID);
+      await service.completeGoal('goal-123');
 
       expect(dbMock.goals.update).not.toHaveBeenCalled();
       expect(userMock.addBalance).not.toHaveBeenCalled();
@@ -278,29 +273,29 @@ describe('GoalService', () => {
 
     it('should undo complete a goal, reset status to ACTIVE, and deduct reward from balance', async () => {
       const completedGoal: Goal = {
-        id: TEST_GOAL_ID,
-        title: TEST_GOAL_TITLE,
-        rewardValue: TEST_REWARD_VALUE,
+        id: 'goal-123',
+        title: 'do 50 push-ups on fists',
+        rewardValue: 2000,
         status: GOAL_STATUS.COMPLETED,
         completedAt: Date.now(),
         createdAt: Date.now(),
       };
       dbMock.goals.get.mockResolvedValue(completedGoal);
 
-      await service.undoCompleteGoal(TEST_GOAL_ID);
+      await service.undoCompleteGoal('goal-123');
 
-      expect(dbMock.goals.update).toHaveBeenCalledWith(TEST_GOAL_ID, {
+      expect(dbMock.goals.update).toHaveBeenCalledWith('goal-123', {
         status: GOAL_STATUS.ACTIVE,
         completedAt: null,
       });
-      expect(userMock.addBalance).toHaveBeenCalledWith(-TEST_REWARD_VALUE);
+      expect(userMock.addBalance).toHaveBeenCalledWith(-2000);
     });
   });
 
   describe('deleteGoal', () => {
     it('should delete goal from database', async () => {
-      await service.deleteGoal(TEST_GOAL_ID);
-      expect(dbMock.goals.delete).toHaveBeenCalledWith(TEST_GOAL_ID);
+      await service.deleteGoal('goal-123');
+      expect(dbMock.goals.delete).toHaveBeenCalledWith('goal-123');
     });
   });
 });

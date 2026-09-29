@@ -102,9 +102,6 @@ describe('LegacyPomodoroMigrationService', () => {
 
     await service.migrate(asTarget());
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Failed to migrate legacy Pomodoro database:',
-      expect.any(Error)
-    );
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to migrate legacy Pomodoro database:', expect.any(Error));
   });
 });

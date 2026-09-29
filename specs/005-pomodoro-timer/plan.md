@@ -30,7 +30,7 @@ Implement a Pomodoro Timer feature in a dedicated tab that allows users to confi
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 - [x] Does the implementation use a Vertical Slice Architecture?
 - [x] Have we minimized external dependencies (i.e., are all new packages strictly necessary)? (No new packages needed)

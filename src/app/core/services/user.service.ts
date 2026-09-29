@@ -13,14 +13,17 @@ export class UserService {
   private eventBus = inject(EventBusService);
 
   constructor() {
-    this.eventBus.on<RewardEarnedEvent>(EVENT_TYPE.REWARD_EARNED)
+    this.eventBus
+      .on<RewardEarnedEvent>(EVENT_TYPE.REWARD_EARNED)
       .pipe(
-        filter(event => Boolean(event.payload.points)),
-        concatMap(event => this.addBalance(event.payload.points)),
-        takeUntilDestroyed()
+        filter((event) => Boolean(event.payload.points)),
+        concatMap((event) => this.addBalance(event.payload.points)),
+        takeUntilDestroyed(),
       )
       .subscribe({
-        error: (error: unknown) => { console.error('Failed to update balance from event', error); }
+        error: (error: unknown) => {
+          console.error('Failed to update balance from event', error);
+        },
       });
   }
 
@@ -31,7 +34,7 @@ export class UserService {
       name: CURRENT_USER_NAME,
       balance: DEFAULT_INITIAL_BALANCE,
       createdAt: Date.now(),
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     };
     return user;
   });
@@ -41,7 +44,7 @@ export class UserService {
     if (user) {
       await this.db.users.update(CURRENT_USER_ID, {
         balance: user.balance + amount,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       });
     } else {
       await this.db.users.add({
@@ -49,7 +52,7 @@ export class UserService {
         name: CURRENT_USER_NAME,
         balance: amount,
         createdAt: Date.now(),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       });
     }
   }

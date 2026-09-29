@@ -1,20 +1,11 @@
 <div class="stats-container">
-  <mat-card appearance="outlined" class="stat-card">
-    <mat-card-content class="stat-card-content">
-      <div class="stat-title">Monthly Average</div>
-      <div class="stat-value" [class.no-data]="monthlyAverage() === 0">
-        {{ monthlyAverage() > 0 ? monthlyAverage() : '-' }}
-      </div>
-    </mat-card-content>
-  </mat-card>
+  <app-stat-card label="Monthly average">
+    <span class="stat-value" [class.no-data]="monthlyAverage() === 0">
+      {{ monthlyAverage() > 0 ? monthlyAverage() : '-' }}
+    </span>
+  </app-stat-card>
 
-  <mat-card appearance="outlined" class="stat-card">
-    <mat-card-content class="stat-card-content">
-      <div class="stat-title">Current Streak</div>
-      <div class="stat-value streak" [class.active]="currentStreak() > 0">
-        {{ currentStreak() }}
-      </div>
-      <div class="stat-subtitle">High Scores</div>
-    </mat-card-content>
-  </mat-card>
+  <app-stat-card label="Current streak" hint="Days scoring 9 or 10">
+    <span class="stat-value streak" [class.active]="currentStreak() > 0">{{ currentStreak() }}</span>
+  </app-stat-card>
 </div>

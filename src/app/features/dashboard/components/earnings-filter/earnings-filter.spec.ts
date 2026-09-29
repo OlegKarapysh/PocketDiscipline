@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EarningsFilter } from './earnings-filter';
@@ -24,9 +24,7 @@ describe('EarningsFilter', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [EarningsFilter],
-      providers: [
-        { provide: DashboardEarningsService, useValue: earningsServiceMock },
-      ],
+      providers: [{ provide: DashboardEarningsService, useValue: earningsServiceMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EarningsFilter);
@@ -65,8 +63,8 @@ describe('EarningsFilter', () => {
     const spy = vi.fn();
     component.filterChange.subscribe(spy);
 
-    component.rangeForm.controls.start.setValue(new Date(2026, 7, 10));
-    component.rangeForm.controls.end.setValue(null);
+    component.rangeForm.start().value.set(new Date(2026, 7, 10));
+    component.rangeForm.end().value.set(null);
     component.onCustomDateChange();
 
     expect(spy).not.toHaveBeenCalled();
@@ -87,12 +85,12 @@ describe('EarningsFilter', () => {
     });
   });
 
-  it('should emit custom filterChange when both dates are filled via form controls', () => {
+  it('should emit custom filterChange when both dates are filled via the range fields', () => {
     const spy = vi.fn();
     component.filterChange.subscribe(spy);
 
-    component.rangeForm.controls.start.setValue(new Date(2026, 7, 10));
-    component.rangeForm.controls.end.setValue(new Date(2026, 7, 15));
+    component.rangeForm.start().value.set(new Date(2026, 7, 10));
+    component.rangeForm.end().value.set(new Date(2026, 7, 15));
     component.onCustomDateChange();
 
     expect(spy).toHaveBeenCalledWith({
@@ -108,11 +106,28 @@ describe('EarningsFilter', () => {
 
     const start = new Date(2026, 7, 20);
     const end = new Date(2026, 7, 10);
-    component.rangeForm.controls.start.setValue(start);
-    component.rangeForm.controls.end.setValue(end);
+    component.rangeForm.start().value.set(start);
+    component.rangeForm.end().value.set(end);
     component.onCustomDateChange();
 
     expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('should render the period presets as a segmented control and emit on selection', () => {
+    const spy = vi.fn();
+    component.filterChange.subscribe(spy);
+    fixture.detectChanges();
+
+    const toggles = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('app-segmented-control button'),
+    );
+    expect(toggles.map((button) => button.textContent.trim())).toEqual(['7 days', '14 days', '30 days', 'Custom']);
+
+    toggles[2].click();
+    fixture.detectChanges();
+
+    expect(component.activePreset()).toBe('last30');
+    expect(spy).toHaveBeenCalledWith({ preset: 'last30', startDate: '2026-08-04', endDate: '2026-09-02' });
   });
 
   it('should synchronize activePreset when filter input changes', () => {

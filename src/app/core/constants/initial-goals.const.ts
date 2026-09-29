@@ -11,7 +11,7 @@ export function getInitialGoals(): Goal[] {
       rewardValue: 2000,
       status: GOAL_STATUS.ACTIVE,
       completedAt: null,
-      createdAt: Date.now()
+      createdAt: Date.now(),
     },
     {
       id: crypto.randomUUID(),
@@ -19,7 +19,7 @@ export function getInitialGoals(): Goal[] {
       rewardValue: 1500,
       status: GOAL_STATUS.ACTIVE,
       completedAt: null,
-      createdAt: Date.now()
+      createdAt: Date.now(),
     },
     {
       id: crypto.randomUUID(),
@@ -27,7 +27,7 @@ export function getInitialGoals(): Goal[] {
       rewardValue: 1500,
       status: GOAL_STATUS.ACTIVE,
       completedAt: null,
-      createdAt: Date.now()
-    }
+      createdAt: Date.now(),
+    },
   ];
 }

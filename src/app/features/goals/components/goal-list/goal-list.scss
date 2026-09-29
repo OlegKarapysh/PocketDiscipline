@@ -1,7 +1,9 @@
+@use '../../../../../styles/tokens' as t;
+
 .goals-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: t.space(6);
 }
 
 .active-section,
@@ -9,29 +11,17 @@
 .month-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: t.space(3);
 }
 
 h2 {
   margin: 0;
   font: var(--mat-sys-title-large);
+  font-weight: 600;
 }
 
 h3 {
-  margin: 8px 0 0;
+  margin: t.space(2) 0 0;
   font: var(--mat-sys-title-small);
   color: var(--mat-sys-on-surface-variant);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 32px 16px;
-  background-color: var(--mat-sys-surface-container-low);
-  border-radius: 12px;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
-
-  p {
-    margin: 0;
-  }
 }

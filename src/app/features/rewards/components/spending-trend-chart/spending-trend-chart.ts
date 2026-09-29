@@ -2,6 +2,9 @@ import { Component, computed, input, signal } from '@angular/core';
 
 import type { SpendingTrendPoint } from '../../models/spending-trend-point.model';
 import type { TrendGranularity } from '../../models/trend-granularity.type';
+import { Amount } from '../../../../shared/components/amount/amount';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import type { RenderedBar } from './rendered-bar.model';
 
 const SVG_WIDTH = 600;
 const SVG_HEIGHT = 200;
@@ -10,13 +13,11 @@ const MARGIN_RIGHT = 20;
 const MARGIN_BOTTOM = 40;
 const MARGIN_LEFT = 50;
 
-import type { RenderedBar } from './rendered-bar.model';
-
 @Component({
   selector: 'app-spending-trend-chart',
   templateUrl: './spending-trend-chart.html',
   styleUrl: './spending-trend-chart.scss',
-  imports: [],
+  imports: [Amount, MoneyPipe],
 })
 export class SpendingTrendChart {
   readonly data = input<SpendingTrendPoint[]>([]);

@@ -28,17 +28,17 @@ This guide outlines how to manually validate that the Daily Tasks feature is fun
 
 ## Scenario 3: Testing Streak Bonus (Day 2)
 
-1. *Developer Trick*: Open DevTools -> Application -> IndexedDB -> `pocket-discipline-db` -> `dailyTasks` table.
+1. _Developer Trick_: Open DevTools -> Application -> IndexedDB -> `pocket-discipline-db` -> `dailyTasks` table.
 2. Edit the `lastCompletedAt` timestamp for "Morning Workout" to exactly 24 hours ago (yesterday). Refresh the page.
 3. **Expected Outcome**: The task is available to complete again.
 4. Mark it as completed, selecting the "Easy" difficulty.
-5. **Expected Outcome**: 
+5. **Expected Outcome**:
    - The user's balance increases by 110 (100 base + 10% bonus).
    - The streak counter shows "2 Day Streak".
 
 ## Scenario 4: Testing Streak Max Cap (Day 12)
 
-1. *Developer Trick*: Edit the `lastCompletedAt` to yesterday, and set `streak` to `11`. Refresh the page.
+1. _Developer Trick_: Edit the `lastCompletedAt` to yesterday, and set `streak` to `11`. Refresh the page.
 2. Mark it as completed, selecting the "Hard" difficulty.
 3. **Expected Outcome**:
    - The user's balance increases by 600 (300 base + 100% max bonus).
@@ -46,7 +46,7 @@ This guide outlines how to manually validate that the Daily Tasks feature is fun
 
 ## Scenario 5: Testing Streak Reset
 
-1. *Developer Trick*: Edit the `lastCompletedAt` to 48+ hours ago (the day before yesterday), and keep `streak` at `12`. Refresh the page.
+1. _Developer Trick_: Edit the `lastCompletedAt` to 48+ hours ago (the day before yesterday), and keep `streak` at `12`. Refresh the page.
 2. **Expected Outcome**: The streak visually resets to 0 because a calendar day was missed.
 3. Mark it as completed on "Easy" difficulty.
 4. **Expected Outcome**:

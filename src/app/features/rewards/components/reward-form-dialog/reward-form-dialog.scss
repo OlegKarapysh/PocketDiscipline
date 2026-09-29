@@ -1,15 +1,21 @@
+@use '../../../../../styles/tokens' as t;
+
 .dialog-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: t.space(2);
+
+  .header-icon {
+    color: var(--mat-sys-primary);
+  }
 }
 
 .dialog-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 320px;
-  padding-top: 12px;
+  gap: t.space(2);
+  min-width: min(320px, 100%);
+  padding-top: t.space(3);
 }
 
 .full-width {
@@ -19,34 +25,33 @@
 .type-selection {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 4px 0 12px;
+  gap: t.space(2);
+  padding: t.space(1) 0 t.space(3);
 
   .section-label {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--mat-sys-on-surface-variant, #4b5563);
+    font: var(--mat-sys-label-large);
+    color: var(--mat-sys-on-surface-variant);
   }
 
   .radio-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: t.space(2);
   }
 
   .radio-content {
     display: flex;
     flex-direction: column;
-    margin-left: 4px;
+    margin-left: t.space(1);
 
     .radio-title {
-      font-weight: 500;
-      font-size: 0.95rem;
+      font: var(--mat-sys-body-large);
+      font-weight: 600;
     }
 
     .radio-desc {
-      font-size: 0.8rem;
-      color: var(--mat-sys-on-surface-variant, #6b7280);
+      font: var(--mat-sys-body-medium);
+      color: var(--mat-sys-on-surface-variant);
     }
   }
 }
@@ -54,13 +59,11 @@
 mat-option {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: t.space(2);
 
   mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
+    @include t.icon-size(md);
+    margin-right: t.space(2);
     vertical-align: middle;
   }
 }

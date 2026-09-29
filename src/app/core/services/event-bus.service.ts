@@ -19,8 +19,6 @@ export class EventBusService {
   }
 
   on<T extends AppEvent>(eventType: T['type']): Observable<T> {
-    return this.eventSubject.asObservable().pipe(
-      filter((e): e is T => e.type === eventType)
-    );
+    return this.eventSubject.asObservable().pipe(filter((e): e is T => e.type === eventType));
   }
 }

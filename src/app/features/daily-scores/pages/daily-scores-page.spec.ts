@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
@@ -27,9 +27,7 @@ describe('DailyScoresPage', () => {
 
     await TestBed.configureTestingModule({
       imports: [DailyScoresPage],
-      providers: [
-        { provide: DailyScoresService, useValue: dailyScoresServiceMock },
-      ],
+      providers: [{ provide: DailyScoresService, useValue: dailyScoresServiceMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DailyScoresPage);
@@ -104,7 +102,7 @@ describe('DailyScoresPage', () => {
     await fixture.whenStable();
 
     expect(dailyScoresServiceMock.saveTodayScore).toHaveBeenCalledWith(10);
-    expect(component.successMessage()).toContain('Awesome! You earned 500₴. Current high score streak: 1');
+    expect(component.successMessage()).toBe('Score saved. You earned 500 ₴. High-score streak: 1');
   });
 
   it('should show encouragement message when score submitted earns no reward', async () => {
@@ -121,7 +119,7 @@ describe('DailyScoresPage', () => {
     await fixture.whenStable();
 
     expect(dailyScoresServiceMock.saveTodayScore).toHaveBeenCalledWith(7);
-    expect(component.successMessage()).toBe('Score saved! Aim for a 9 or 10 tomorrow to earn rewards!');
+    expect(component.successMessage()).toBe('Score saved. Aim for a 9 or 10 tomorrow to earn rewards.');
   });
 
   it('should handle submission failure gracefully', async () => {

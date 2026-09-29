@@ -1,0 +1,35 @@
+@use '../../../../styles/tokens' as t;
+
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: t.space(1);
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-tertiary);
+}
+
+.mat-icon {
+  @include t.icon-size(sm);
+  color: var(--pd-sys-reward);
+}
+
+:host(.compact) {
+  height: 28px;
+  padding: 0 t.space(3);
+  border-radius: t.radius(pill);
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+
+  .mat-icon {
+    @include t.icon-size(xs);
+    color: inherit;
+  }
+}
+
+:host(.inactive) {
+  color: var(--mat-sys-on-surface-variant);
+
+  .mat-icon {
+    color: var(--mat-sys-outline);
+  }
+}

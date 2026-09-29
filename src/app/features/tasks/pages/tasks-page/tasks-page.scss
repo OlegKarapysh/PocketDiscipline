@@ -1,8 +1,6 @@
-.tasks-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  max-width: 800px;
-  margin: 0 auto;
+@use '../../../../../styles/tokens' as t;
+
+.tasks {
+  display: grid;
+  gap: t.space(6);
 }

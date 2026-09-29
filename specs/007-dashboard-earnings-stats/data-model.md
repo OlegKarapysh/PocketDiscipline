@@ -3,6 +3,7 @@
 ## Entities
 
 ### 1. `DailyEarningsRecord`
+
 Represents the aggregated earnings for a single calendar date across all activity sources.
 
 - **Properties**:
@@ -27,6 +28,7 @@ export interface DailyEarningsRecord {
 ---
 
 ### 2. `MonthlyEarningsSummary`
+
 Represents the calculated statistics for a calendar month.
 
 - **Properties**:
@@ -53,6 +55,7 @@ export interface MonthlyEarningsSummary {
 ---
 
 ### 3. `EarningsPeriodFilter`
+
 Represents the active filter state for the daily earnings chart.
 
 - **Properties**:
@@ -73,6 +76,7 @@ export interface EarningsPeriodFilter {
 ---
 
 ### 4. `DailyTaskCompletion` (Dexie Entity)
+
 Persists individual daily task completions to retain a historical record across dates.
 
 - **Primary Key**: `id` (UUID)
@@ -101,17 +105,19 @@ export interface DailyTaskCompletion {
 ## Database Integration (`pocket-discipline-db`)
 
 ### Schema Upgrade (`version(6)`)
+
 In `src/app/core/services/db.service.ts`:
 
 ```typescript
 const SCHEMA_DAILY_TASK_COMPLETIONS = 'id, date, taskId';
 
 this.version(6).stores({
-  dailyTaskCompletions: SCHEMA_DAILY_TASK_COMPLETIONS
+  dailyTaskCompletions: SCHEMA_DAILY_TASK_COMPLETIONS,
 });
 ```
 
 ### Table Reference
+
 ```typescript
 dailyTaskCompletions!: Table<DailyTaskCompletion, string>;
 ```

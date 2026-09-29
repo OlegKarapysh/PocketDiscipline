@@ -1,0 +1,18 @@
+<mat-dialog-content class="content">
+  <img class="mascot" src="icons/icon-192x192.png" alt="" width="88" height="88" />
+  <h2 class="title">{{ data.title }}</h2>
+  @if (data.subtitle) {
+    <p class="subtitle">{{ data.subtitle }}</p>
+  }
+  @if (data.amount !== undefined) {
+    <app-amount [value]="data.amount" size="xl" tone="reward" [showSign]="true" />
+  }
+</mat-dialog-content>
+<mat-dialog-actions class="actions">
+  @if (data.canUndo) {
+    <button mat-button type="button" [mat-dialog-close]="'undo'">Undo</button>
+  }
+  <button mat-flat-button type="button" [mat-dialog-close]="'dismissed'" cdkFocusInitial>
+    {{ data.confirmText || 'Nice' }}
+  </button>
+</mat-dialog-actions>

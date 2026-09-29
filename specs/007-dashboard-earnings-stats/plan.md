@@ -30,7 +30,7 @@ Implement a daily earnings stacked bar chart and monthly average statistics on t
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 - [x] Does the implementation use a Vertical Slice Architecture?
 - [x] Have we minimized external dependencies (i.e., are all new packages strictly necessary)?
@@ -104,4 +104,4 @@ src/
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-*(No constitution violations. Zero external packages added.)*
+_(No constitution violations. Zero external packages added.)_

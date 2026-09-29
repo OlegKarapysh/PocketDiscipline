@@ -1,13 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormField, form, max, maxLength, min, required } from '@angular/forms/signals';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { toSignal } from '@angular/core/rxjs-interop';
 import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
@@ -17,18 +15,30 @@ import { UserService } from '../../../../core/services/user.service';
 import type { User } from '../../../../core/models/user.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import { FALLBACK_CATEGORY_ID } from '../../../../core/constants/initial-reward-categories.const';
+import { SnackBarService } from '../../../../shared/services/snack-bar.service';
+import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
+import { Amount } from '../../../../shared/components/amount/amount';
+import { Badge } from '../../../../shared/components/badge/badge';
+
+interface QuickSpendModel {
+  amount: number | null;
+  title: string;
+  categoryId: string;
+  notes: string;
+}
 
 @Component({
   selector: 'app-quick-spend-dialog',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
-    DecimalPipe,
+    Amount,
+    Badge,
   ],
   templateUrl: './quick-spend-dialog.html',
   styleUrl: './quick-spend-dialog.scss',
@@ -38,7 +48,7 @@ export class QuickSpendDialog {
   private readonly withdrawalService = inject(WithdrawalService);
   private readonly categoryService = inject(CategoryService);
   private readonly userService = inject(UserService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly snackBar = inject(SnackBarService);
 
   readonly isSubmitting = signal(false);
 
@@ -47,31 +57,21 @@ export class QuickSpendDialog {
   });
   readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
 
-  readonly form = new FormGroup({
-    amount: new FormControl<number | null>(null, [
-      (control) => Validators.required(control),
-      (control) => Validators.min(0.01)(control),
-      (control) => {
-        const val = typeof control.value === 'number' ? control.value : null;
-        const max = this.user()?.balance ?? 0;
-        return (val ?? 0) > max ? { max: { max, actual: val } } : null;
-      },
-    ]),
-    title: new FormControl('', { nonNullable: true, validators: [(control) => Validators.required(control), (control) => Validators.maxLength(100)(control)] }),
-    categoryId: new FormControl(FALLBACK_CATEGORY_ID, { nonNullable: true, validators: [(control) => Validators.required(control)] }),
-    notes: new FormControl('', { nonNullable: true, validators: [(control) => Validators.maxLength(1000)(control)] }),
+  readonly model = signal<QuickSpendModel>({ amount: null, title: '', categoryId: FALLBACK_CATEGORY_ID, notes: '' });
+
+  readonly spendForm = form(this.model, (path) => {
+    required(path.amount, { message: 'Amount is required' });
+    min(path.amount, 0.01, { message: 'Amount must be greater than zero' });
+    max(path.amount, () => this.user()?.balance ?? 0, { message: 'Amount exceeds your available balance' });
+    required(path.title, { message: 'Title is required' });
+    maxLength(path.title, 100, { message: 'Title is too long' });
+    required(path.categoryId, { message: 'Category is required' });
+    maxLength(path.notes, 1000, { message: 'Notes are too long' });
   });
 
   async submit(): Promise<void> {
-    if (this.form.invalid || this.isSubmitting()) {
-      return;
-    }
-
-    const raw = this.form.getRawValue();
-    const balance = this.user()?.balance ?? 0;
-
-    if (!raw.amount || raw.amount > balance) {
-      this.snackBar.open('Amount exceeds current balance', 'Close', { duration: 3000 });
+    const { amount, title, categoryId, notes } = this.model();
+    if (this.spendForm().invalid() || this.isSubmitting() || amount === null) {
       return;
     }
 
@@ -79,17 +79,16 @@ export class QuickSpendDialog {
 
     try {
       const record = await this.withdrawalService.withdraw({
-        amount: raw.amount,
-        title: raw.title,
-        categoryId: raw.categoryId,
-        notes: raw.notes.trim() ? raw.notes.trim() : undefined,
+        amount,
+        title,
+        categoryId,
+        notes: notes.trim() ? notes.trim() : undefined,
       });
 
-      this.snackBar.open(`Withdrawn ${String(record.amount)} ₴ for ${record.title}`, 'Close', { duration: 3000 });
+      this.snackBar.show(`Withdrawn ${MONEY_FORMAT.format(record.amount)} ₴ for ${record.title}`);
       this.dialogRef.close(record);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Withdrawal failed';
-      this.snackBar.open(message, 'Close', { duration: 3000 });
+      this.snackBar.error(error, 'Withdrawal failed');
     } finally {
       this.isSubmitting.set(false);
     }

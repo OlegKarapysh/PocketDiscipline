@@ -1,21 +1,23 @@
-<mat-card appearance="outlined" class="goal-card" [class.completed]="goal().status === 'COMPLETED'">
+<mat-card appearance="outlined" class="goal-card" [class.completed]="isCompleted()">
   <mat-card-header>
-    <mat-card-title>{{ goal().title }}</mat-card-title>
-    <mat-card-subtitle>Reward: {{ goal().rewardValue }} ₴</mat-card-subtitle>
+    <mat-card-title class="title">{{ goal().title }}</mat-card-title>
+    <mat-card-subtitle class="reward">
+      Reward <app-amount [value]="goal().rewardValue" size="sm" tone="reward" [showSign]="true" />
+    </mat-card-subtitle>
   </mat-card-header>
-  <mat-card-actions align="end">
-    @if (goal().status === 'ACTIVE') {
-      <button mat-icon-button color="primary" (click)="edit.emit(goal())" aria-label="Edit">
+  <mat-card-actions align="end" class="actions">
+    @if (isActive()) {
+      <button mat-icon-button type="button" (click)="edit.emit(goal())" aria-label="Edit">
         <mat-icon>edit</mat-icon>
       </button>
-      <button mat-icon-button color="warn" (click)="delete.emit(goal().id)" aria-label="Delete">
+      <button mat-icon-button type="button" class="delete" (click)="delete.emit(goal().id)" aria-label="Delete">
         <mat-icon>delete</mat-icon>
       </button>
-      <button mat-flat-button color="primary" (click)="complete.emit(goal().id)">
+      <button mat-flat-button type="button" class="complete" (click)="complete.emit(goal().id)">
         <mat-icon>check</mat-icon> Complete
       </button>
     } @else {
-      <button mat-stroked-button (click)="undo.emit(goal().id)"><mat-icon>undo</mat-icon> Undo</button>
+      <button mat-stroked-button type="button" (click)="undo.emit(goal().id)"><mat-icon>undo</mat-icon> Undo</button>
     }
   </mat-card-actions>
 </mat-card>

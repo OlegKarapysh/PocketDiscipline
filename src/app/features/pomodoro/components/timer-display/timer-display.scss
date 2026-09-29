@@ -1,22 +1,24 @@
+@use '../../../../../styles/tokens' as t;
+
 .timer-display {
   text-align: center;
-  padding: 32px 16px;
+  padding: t.space(8) t.space(4);
 }
 
 .time {
-  font-size: 5rem;
-  font-family: monospace;
-  font-weight: bold;
+  @include t.numeric;
+  font-size: t.numeric-size(display);
+  font-weight: 700;
   line-height: 1;
 }
 
 .status {
-  margin-top: 16px;
+  margin-top: t.space(4);
   font: var(--mat-sys-title-medium);
   color: var(--mat-sys-on-surface-variant);
 
   &.active {
     color: var(--mat-sys-primary);
-    font-weight: bold;
+    font-weight: 700;
   }
 }

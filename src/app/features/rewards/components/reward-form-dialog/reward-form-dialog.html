@@ -1,46 +1,35 @@
 <h2 mat-dialog-title class="dialog-header">
-  <mat-icon color="primary">{{ isEditing() ? 'edit' : 'add_circle' }}</mat-icon>
-  <span>{{ isEditing() ? 'Edit Reward' : 'Add New Reward' }}</span>
+  <mat-icon class="header-icon">{{ isEditing() ? 'edit' : 'add_circle' }}</mat-icon>
+  <span>{{ isEditing() ? 'Edit reward' : 'Add new reward' }}</span>
 </h2>
 
-<mat-dialog-content [formGroup]="form" class="dialog-content">
+<mat-dialog-content class="dialog-content">
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Title</mat-label>
     <input
       matInput
       type="text"
-      formControlName="title"
-      placeholder="e.g. Mechanical Keyboard, Weekend Trip"
-      maxlength="100"
+      [formField]="rewardForm.title"
+      placeholder="e.g. Mechanical keyboard, weekend trip"
       cdkFocusInitial
     />
-    @if (form.controls.title.hasError('required')) {
-      <mat-error>Title is required</mat-error>
+    @for (error of rewardForm.title().errors(); track error.kind) {
+      <mat-error>{{ error.message }}</mat-error>
     }
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Cost in ₴</mat-label>
-    <input
-      matInput
-      type="number"
-      formControlName="cost"
-      placeholder="0.00"
-      min="0.01"
-      step="any"
-    />
+    <mat-label>Cost</mat-label>
+    <input matInput type="number" class="pd-num" [formField]="rewardForm.cost" placeholder="0.00" step="any" />
     <span matTextSuffix>₴</span>
-    @if (form.controls.cost.hasError('required')) {
-      <mat-error>Cost is required</mat-error>
-    }
-    @if (form.controls.cost.hasError('min')) {
-      <mat-error>Cost must be greater than zero</mat-error>
+    @for (error of rewardForm.cost().errors(); track error.kind) {
+      <mat-error>{{ error.message }}</mat-error>
     }
   </mat-form-field>
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Category</mat-label>
-    <mat-select formControlName="categoryId">
+    <mat-select [formField]="rewardForm.categoryId">
       @for (category of categories(); track category.id) {
         <mat-option [value]="category.id">
           <mat-icon [style.color]="category.color">{{ category.icon }}</mat-icon>
@@ -48,23 +37,23 @@
         </mat-option>
       }
     </mat-select>
-    @if (form.controls.categoryId.hasError('required')) {
-      <mat-error>Category is required</mat-error>
+    @for (error of rewardForm.categoryId().errors(); track error.kind) {
+      <mat-error>{{ error.message }}</mat-error>
     }
   </mat-form-field>
 
   <div class="type-selection">
-    <span id="reward-type-label" class="section-label">Reward Type</span>
-    <mat-radio-group formControlName="type" class="radio-group" aria-labelledby="reward-type-label">
+    <span id="reward-type-label" class="section-label">Reward type</span>
+    <mat-radio-group [formField]="rewardForm.type" class="radio-group" aria-labelledby="reward-type-label">
       <mat-radio-button value="repeatable">
         <div class="radio-content">
-          <span class="radio-title">Repeatable Treat</span>
+          <span class="radio-title">Repeatable treat</span>
           <span class="radio-desc">Everyday rewards you can claim repeatedly (e.g., coffee, takeout).</span>
         </div>
       </mat-radio-button>
       <mat-radio-button value="one-time">
         <div class="radio-content">
-          <span class="radio-title">One-Time Milestone</span>
+          <span class="radio-title">One-time milestone</span>
           <span class="radio-desc">Major achievements completed once (e.g., tech gadget, trip).</span>
         </div>
       </mat-radio-button>
@@ -73,16 +62,14 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button type="button" (click)="cancel()" [disabled]="isSubmitting()">
-    Cancel
-  </button>
+  <button mat-button type="button" (click)="cancel()" [disabled]="isSubmitting()">Cancel</button>
   <button
     mat-flat-button
-    color="primary"
     type="button"
+    class="submit-button"
     (click)="submit()"
-    [disabled]="form.invalid || isSubmitting()"
+    [disabled]="rewardForm().invalid() || isSubmitting()"
   >
-    {{ isEditing() ? 'Save Changes' : 'Create Reward' }}
+    {{ isEditing() ? 'Save changes' : 'Create reward' }}
   </button>
 </mat-dialog-actions>

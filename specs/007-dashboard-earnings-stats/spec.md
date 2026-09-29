@@ -8,7 +8,7 @@
 
 **Input**: User description: "i want to see a chart showing how much money was earned each day (for the last 7 days by default, but the date range or period can be selected) and also statistics about average amount of money earned per day in the current month (or other month). This information should be should displayed on the Dashboard tab"
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - View Daily Earnings Chart for Default Period (Priority: P1)
 
@@ -80,7 +80,7 @@ As an analytical user, I want to see which discipline activities contributed to 
 - **Future dates & months**: If a custom date range extends into the future, future days must display 0 earnings without skewing historical data. Month navigation controls must disable navigating beyond the current calendar month.
 - **First-time / new user with zero records**: Dashboard must render zero states cleanly without NaN, undefined, or broken layout.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Architectural Constraints
 
@@ -101,7 +101,7 @@ As an analytical user, I want to see which discipline activities contributed to 
 - **FR-009**: Daily earnings chart MUST present a stacked bar chart displaying each day's earnings broken down by activity source (Goals, Daily Tasks, Pomodoro Sessions, and Daily Scores) with distinct color coding, alongside the daily aggregate total.
 - **FR-010**: When a month or period with no earnings is selected, the statistics and chart MUST gracefully display zero earnings without errors or NaN values.
 
-### Key Entities *(include if feature involves data)*
+### Key Entities _(include if feature involves data)_
 
 - **DailyEarningsRecord**: Represents aggregated earnings for a single calendar date. Attributes include: `date` (calendar date YYYY-MM-DD), `totalEarned` (number), and breakdown by source:
   - `goalsEarned`: number
@@ -111,7 +111,7 @@ As an analytical user, I want to see which discipline activities contributed to 
 - **MonthlyEarningsSummary**: Represents aggregate metrics for a calendar month. Attributes include: `year` (number), `month` (number 1-12), `monthLabel` (string e.g. "September 2026"), `totalEarned` (number), `daysCount` (number of days evaluated: elapsed days for current month, full month days for past months), `averageEarnedPerDay` (number, rounded to nearest integer), and `isCurrentMonth` (boolean).
 - **EarningsPeriodFilter**: Represents the active time window for chart display. Attributes include: `preset` (`'last7'` | `'last14'` | `'last30'` | `'custom'`), `startDate` (string YYYY-MM-DD), and `endDate` (string YYYY-MM-DD).
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

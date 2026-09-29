@@ -4,7 +4,6 @@ import Dexie from 'dexie';
 import type { PomodoroSession } from '../core/models/pomodoro-session.model';
 
 const LEGACY_DB_NAME = 'PomodoroDatabase';
-const LEGACY_SESSIONS_TABLE = 'sessions';
 
 @Service()
 export class LegacyPomodoroMigrationService {
@@ -22,8 +21,8 @@ export class LegacyPomodoroMigrationService {
 
       try {
         await oldDb.open();
-        if (oldDb.tables.some(t => t.name === LEGACY_SESSIONS_TABLE)) {
-          const rawSessions = await oldDb.table(LEGACY_SESSIONS_TABLE).toArray();
+        if (oldDb.tables.some((t) => t.name === 'sessions')) {
+          const rawSessions = await oldDb.table('sessions').toArray();
           const validSessions = rawSessions.filter((s): s is PomodoroSession => this.isValidSession(s));
           if (validSessions.length > 0) {
             await target.bulkPut(validSessions);

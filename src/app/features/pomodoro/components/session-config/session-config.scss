@@ -1,3 +1,5 @@
+@use '../../../../../styles/tokens' as t;
+
 :host {
   display: block;
   width: 100%;
@@ -7,9 +9,9 @@
 .config-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: t.space(4);
   justify-content: center;
-  margin-top: 2rem;
+  margin-top: t.space(8);
   width: 100%;
   box-sizing: border-box;
 
@@ -17,7 +19,7 @@
     width: 100%;
   }
 
-  @media (min-width: 600px) {
+  @include t.up(medium) {
     flex-direction: row;
 
     mat-form-field {
@@ -26,4 +28,3 @@
     }
   }
 }
-

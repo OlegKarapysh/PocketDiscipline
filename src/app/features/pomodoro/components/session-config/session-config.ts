@@ -1,47 +1,54 @@
-import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, effect, inject, linkedSignal, untracked } from '@angular/core';
+import { FormField, form, max, min, required } from '@angular/forms/signals';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
 import { EngagementType } from '../../../../core/models/engagement-type.enum';
+import type { TimerConfig } from '../../models/timer-config.model';
 
 const MIN_DURATION_MINUTES = 15;
 const MAX_DURATION_MINUTES = 120;
-const DURATION_STEP_MINUTES = 5;
 
 @Component({
   selector: 'app-session-config',
-  imports: [FormsModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [FormField, MatFormFieldModule, MatInputModule, MatSelectModule],
   templateUrl: './session-config.html',
   styleUrl: './session-config.scss',
 })
 export class SessionConfig {
   private timerService = inject(PomodoroTimerService);
 
-  readonly minDuration = MIN_DURATION_MINUTES;
-  readonly maxDuration = MAX_DURATION_MINUTES;
-  readonly stepDuration = DURATION_STEP_MINUTES;
   readonly engagementTypeWork = EngagementType.WORK;
   readonly engagementTypeStudy = EngagementType.STUDY;
+  readonly durationRangeHint = `Choose ${MIN_DURATION_MINUTES}–${MAX_DURATION_MINUTES} minutes`;
 
-  isActive = this.timerService.isActive;
-  duration = this.timerService.durationMinutes;
-  engagementType = this.timerService.engagementType;
+  readonly isActive = this.timerService.isActive;
 
-  updateDuration(val: number) {
-    if (val >= MIN_DURATION_MINUTES && val <= MAX_DURATION_MINUTES) {
-      this.timerService.setConfig({
-        durationMinutes: val,
-        engagementType: this.engagementType(),
+  readonly config = linkedSignal<TimerConfig>(() => ({
+    durationMinutes: this.timerService.durationMinutes(),
+    engagementType: this.timerService.engagementType(),
+  }));
+
+  readonly configForm = form(this.config, (path) => {
+    required(path.durationMinutes);
+    min(path.durationMinutes, MIN_DURATION_MINUTES);
+    max(path.durationMinutes, MAX_DURATION_MINUTES);
+  });
+
+  constructor() {
+    // The timer service owns the config; the form pushes a draft back only once it is valid.
+    effect(() => {
+      const draft = this.config();
+      if (!this.configForm().valid()) return;
+      untracked(() => {
+        if (
+          draft.durationMinutes !== this.timerService.durationMinutes() ||
+          draft.engagementType !== this.timerService.engagementType()
+        ) {
+          this.timerService.setConfig(draft);
+        }
       });
-    }
-  }
-
-  updateEngagement(val: EngagementType) {
-    this.timerService.setConfig({
-      durationMinutes: this.duration(),
-      engagementType: val,
     });
   }
 }

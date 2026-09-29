@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -55,8 +55,24 @@ describe('RewardFormDialog', () => {
 
   beforeEach(async () => {
     mockCategories = [
-      { id: 'cat-general', name: 'General', color: '#6b7280', icon: 'category', isDefault: true, isProtected: true, createdAt: 0 },
-      { id: 'cat-tech', name: 'Gear & Tech', color: '#3b82f6', icon: 'devices', isDefault: true, isProtected: false, createdAt: 0 },
+      {
+        id: 'cat-general',
+        name: 'General',
+        color: '#6b7280',
+        icon: 'category',
+        isDefault: true,
+        isProtected: true,
+        createdAt: 0,
+      },
+      {
+        id: 'cat-tech',
+        name: 'Gear & Tech',
+        color: '#3b82f6',
+        icon: 'devices',
+        isDefault: true,
+        isProtected: false,
+        createdAt: 0,
+      },
     ];
 
     existingReward = {
@@ -76,39 +92,55 @@ describe('RewardFormDialog', () => {
 
   it('should initialize with empty form, repeatable default, and disabled submit button for new reward', () => {
     expect(component.isEditing()).toBe(false);
-    expect(component.form.controls.title.value).toBe('');
-    expect(component.form.controls.cost.value).toBeNull();
-    expect(component.form.controls.type.value).toBe('repeatable');
-    expect(component.form.invalid).toBe(true);
+    expect(component.model().title).toBe('');
+    expect(component.model().cost).toBeNull();
+    expect(component.model().type).toBe('repeatable');
+    expect(component.rewardForm().invalid()).toBe(true);
 
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
+    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:last-child'))
+      .nativeElement as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(true);
-    expect(submitBtn.textContent.trim()).toBe('Create Reward');
+    expect(submitBtn.textContent.trim()).toBe('Create reward');
   });
 
-  it('should prefill form fields when editing an existing reward and show "Save Changes"', async () => {
+  it('should prefill form fields when editing an existing reward and show "Save changes"', async () => {
     await setupComponent({ reward: existingReward });
 
     expect(component.isEditing()).toBe(true);
-    expect(component.form.controls.title.value).toBe('Mechanical Keyboard');
-    expect(component.form.controls.cost.value).toBe(2500);
-    expect(component.form.controls.categoryId.value).toBe('cat-tech');
-    expect(component.form.controls.type.value).toBe('one-time');
-    expect(component.form.valid).toBe(true);
+    expect(component.model().title).toBe('Mechanical Keyboard');
+    expect(component.model().cost).toBe(2500);
+    expect(component.model().categoryId).toBe('cat-tech');
+    expect(component.model().type).toBe('one-time');
+    expect(component.rewardForm().valid()).toBe(true);
 
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
+    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:last-child'))
+      .nativeElement as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(false);
-    expect(submitBtn.textContent.trim()).toBe('Save Changes');
+    expect(submitBtn.textContent.trim()).toBe('Save changes');
+  });
+
+  it('should reject a zero cost with a field error message', () => {
+    component.rewardForm.title().value.set('Book');
+    component.rewardForm.cost().value.set(0);
+
+    expect(component.rewardForm().invalid()).toBe(true);
+    expect(
+      component.rewardForm
+        .cost()
+        .errors()
+        .map((e) => e.message),
+    ).toEqual(['Cost must be greater than zero']);
   });
 
   it('should create new reward and close dialog when clicking submit in DOM', async () => {
-    component.form.controls.title.setValue('New Book');
-    component.form.controls.cost.setValue(450);
-    component.form.controls.categoryId.setValue('cat-general');
-    component.form.controls.type.setValue('repeatable');
+    component.rewardForm.title().value.set('New Book');
+    component.rewardForm.cost().value.set(450);
+    component.rewardForm.categoryId().value.set('cat-general');
+    component.rewardForm.type().value.set('repeatable');
 
     fixture.detectChanges();
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
+    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:last-child'))
+      .nativeElement as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(false);
 
     submitBtn.click();
@@ -127,11 +159,12 @@ describe('RewardFormDialog', () => {
   it('should update existing reward and close dialog when clicking submit in DOM', async () => {
     await setupComponent({ reward: existingReward });
 
-    component.form.controls.title.setValue('Ergonomic Keyboard');
-    component.form.controls.cost.setValue(2700);
+    component.rewardForm.title().value.set('Ergonomic Keyboard');
+    component.rewardForm.cost().value.set(2700);
 
     fixture.detectChanges();
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
+    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:last-child'))
+      .nativeElement as HTMLButtonElement;
     submitBtn.click();
     await fixture.whenStable();
 
@@ -148,12 +181,13 @@ describe('RewardFormDialog', () => {
   it('should display error snackbar when reward creation fails and keep dialog open', async () => {
     mockRewardsService.createReward.mockRejectedValueOnce(new Error('Failed to save to database'));
 
-    component.form.controls.title.setValue('Book');
-    component.form.controls.cost.setValue(100);
-    component.form.controls.categoryId.setValue('cat-general');
+    component.rewardForm.title().value.set('Book');
+    component.rewardForm.cost().value.set(100);
+    component.rewardForm.categoryId().value.set('cat-general');
 
     fixture.detectChanges();
-    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button[color="primary"]')).nativeElement as HTMLButtonElement;
+    const submitBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:last-child'))
+      .nativeElement as HTMLButtonElement;
     submitBtn.click();
     await fixture.whenStable();
 
@@ -163,7 +197,8 @@ describe('RewardFormDialog', () => {
   });
 
   it('should close dialog when cancel button is clicked in DOM', () => {
-    const cancelBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:first-child')).nativeElement as HTMLButtonElement;
+    const cancelBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:first-child'))
+      .nativeElement as HTMLButtonElement;
     cancelBtn.click();
 
     expect(mockDialogRef.close).toHaveBeenCalled();

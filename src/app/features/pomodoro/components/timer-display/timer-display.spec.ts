@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
@@ -24,9 +24,7 @@ describe('TimerDisplay', () => {
 
     await TestBed.configureTestingModule({
       imports: [TimerDisplay],
-      providers: [
-        { provide: PomodoroTimerService, useValue: timerServiceMock },
-      ],
+      providers: [{ provide: PomodoroTimerService, useValue: timerServiceMock }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TimerDisplay);

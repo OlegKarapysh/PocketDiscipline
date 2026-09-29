@@ -11,11 +11,12 @@
 ## Clarifications
 
 ### Session 2026-08-26
+
 - Q: Session History Persistence → A: Persist completed sessions to a history log (database)
 - Q: Background Behavior → A: Use OS local notifications to alert the user when the timer fires if the app is backgrounded/closed, calculating elapsed time upon reopen
 - Q: Timer Limits → A: Minimum 15 minutes, Maximum 120 minutes, Step 5 minutes
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Start and Complete a Pomodoro (Priority: P1)
 
@@ -53,9 +54,10 @@ As a user, I want to select different durations and engagement types before star
 - **App Backgrounding/Closure**: If the app is closed or backgrounded while a timer is active, the system MUST schedule an OS local notification to alert the user when the timer fires. Upon reopening, the app calculates elapsed time to resume the timer state accurately.
 - What happens if a user stops or cancels the timer before it finishes?
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Architectural Constraints
+
 - **AC-001**: Feature MUST be structured as a Vertical Slice, keeping all related concerns together.
 - **AC-002**: Feature MUST NOT introduce unnecessary external dependencies.
 - **AC-003**: Code design MUST adhere to SOLID principles and established developer best practices.
@@ -79,7 +81,7 @@ As a user, I want to select different durations and engagement types before star
 
 - **PomodoroSession**: Represents a focused time block, attributes include duration, engagement type, status (active, completed, cancelled), and calculated reward. Completed sessions are persisted to a history log in the database.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

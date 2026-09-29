@@ -1,29 +1,27 @@
-.daily-tasks-container {
+@use '../../../../../styles/tokens' as t;
+
+.daily-tasks {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: t.space(4);
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: t.space(3);
 }
 
 .title {
   margin: 0;
-  font: var(--mat-sys-headline-small);
+  font: var(--mat-sys-title-large);
+  font-weight: 600;
 }
 
 .task-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 32px 16px;
-  color: var(--mat-sys-on-surface-variant);
-  font: var(--mat-sys-body-medium);
+  gap: t.space(3);
 }

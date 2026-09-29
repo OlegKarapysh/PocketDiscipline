@@ -3,6 +3,7 @@
 ## Entities
 
 ### `DailyScore`
+
 - **Primary Key**: `date` (format: `YYYY-MM-DD`)
 - **Properties**:
   - `date: string` - The calendar date for the score.
@@ -26,5 +27,6 @@ export interface DailyScore {
 ```
 
 ## State Transitions
+
 - **Initial State**: No score set for the current date.
 - **Score Submitted**: User selects a score (1-10). The system determines the reward based on the score and the previous day's streak. The score is saved, the reward is immediately credited to the user's `balance`, and the record becomes read-only for that day.

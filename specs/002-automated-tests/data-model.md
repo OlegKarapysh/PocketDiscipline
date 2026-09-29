@@ -1,6 +1,6 @@
 # Data Model
 
-*Note: This feature focuses on testing infrastructure (CI, E2E, Unit Tests). There are no new application database entities or business models introduced.*
+_Note: This feature focuses on testing infrastructure (CI, E2E, Unit Tests). There are no new application database entities or business models introduced._
 
 ## System Entities (Testing Context)
 

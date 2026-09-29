@@ -8,12 +8,6 @@ import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 import type { CreateWithdrawalDto } from '../models/create-withdrawal.dto';
 import type { WithdrawalFilter } from '../models/withdrawal-filter.model';
 
-const ERROR_INVALID_AMOUNT = 'Amount must be greater than zero';
-const ERROR_EMPTY_TITLE = 'Title cannot be empty';
-const ERROR_INSUFFICIENT_BALANCE = 'Insufficient balance';
-const ERROR_RECORD_NOT_FOUND = 'Withdrawal record not found';
-const TRANSACTION_READ_WRITE = 'rw';
-
 function getTodayDateString(): string {
   const now = new Date();
   const year = String(now.getFullYear());
@@ -28,91 +22,80 @@ export class WithdrawalService {
 
   async withdraw(dto: CreateWithdrawalDto): Promise<WithdrawalRecord> {
     if (dto.amount <= 0 || !Number.isFinite(dto.amount)) {
-      throw new Error(ERROR_INVALID_AMOUNT);
+      throw new Error('Amount must be greater than zero');
     }
 
     const trimmedTitle = dto.title.trim();
     if (!trimmedTitle) {
-      throw new Error(ERROR_EMPTY_TITLE);
+      throw new Error('Title cannot be empty');
     }
-    
+
     if (dto.notes && dto.notes.length > 1000) {
       throw new Error('Notes must not exceed 1000 characters');
     }
 
-    return await this.db.transaction(
-      TRANSACTION_READ_WRITE,
-      this.db.users,
-      this.db.withdrawals,
-      async () => {
-        const user = await this.db.users.get(CURRENT_USER_ID);
-        if (!user || user.balance < dto.amount) {
-          throw new Error(ERROR_INSUFFICIENT_BALANCE);
-        }
-
-        await this.db.users.update(CURRENT_USER_ID, {
-          balance: user.balance - dto.amount,
-          updatedAt: Date.now(),
-        });
-
-        const createdRecord: WithdrawalRecord = {
-          id: crypto.randomUUID(),
-          amount: dto.amount,
-          title: trimmedTitle,
-          categoryId: dto.categoryId,
-          notes: dto.notes?.trim() ? dto.notes.trim() : undefined,
-          date: getTodayDateString(),
-          timestamp: Date.now(),
-          rewardId: dto.rewardId ?? null,
-        };
-
-        await this.db.withdrawals.add(createdRecord);
-        return createdRecord;
+    return await this.db.transaction('rw', this.db.users, this.db.withdrawals, async () => {
+      const user = await this.db.users.get(CURRENT_USER_ID);
+      if (!user || user.balance < dto.amount) {
+        throw new Error('Insufficient balance');
       }
-    );
+
+      await this.db.users.update(CURRENT_USER_ID, {
+        balance: user.balance - dto.amount,
+        updatedAt: Date.now(),
+      });
+
+      const createdRecord: WithdrawalRecord = {
+        id: crypto.randomUUID(),
+        amount: dto.amount,
+        title: trimmedTitle,
+        categoryId: dto.categoryId,
+        notes: dto.notes?.trim() ? dto.notes.trim() : undefined,
+        date: getTodayDateString(),
+        timestamp: Date.now(),
+        rewardId: dto.rewardId ?? null,
+      };
+
+      await this.db.withdrawals.add(createdRecord);
+      return createdRecord;
+    });
   }
 
   async revertWithdrawal(id: string): Promise<void> {
-    await this.db.transaction(
-      TRANSACTION_READ_WRITE,
-      this.db.users,
-      this.db.withdrawals,
-      this.db.rewards,
-      async () => {
-        const withdrawal = await this.db.withdrawals.get(id);
-        if (!withdrawal) {
-          throw new Error(ERROR_RECORD_NOT_FOUND);
-        }
+    await this.db.transaction('rw', this.db.users, this.db.withdrawals, this.db.rewards, async () => {
+      const withdrawal = await this.db.withdrawals.get(id);
+      if (!withdrawal) {
+        throw new Error('Withdrawal record not found');
+      }
 
-        const user = await this.db.users.get(CURRENT_USER_ID);
-        if (user) {
-          await this.db.users.update(CURRENT_USER_ID, {
-            balance: user.balance + withdrawal.amount,
-            updatedAt: Date.now(),
-          });
-        }
+      const user = await this.db.users.get(CURRENT_USER_ID);
+      if (user) {
+        await this.db.users.update(CURRENT_USER_ID, {
+          balance: user.balance + withdrawal.amount,
+          updatedAt: Date.now(),
+        });
+      }
 
-        if (withdrawal.rewardId) {
-          const reward = await this.db.rewards.get(withdrawal.rewardId);
-          if (reward) {
-            if (reward.type === 'one-time') {
-              await this.db.rewards.update(reward.id, {
-                status: 'active',
-                claimedAt: null,
-                updatedAt: Date.now(),
-              });
-            } else {
-              await this.db.rewards.update(reward.id, {
-                claimCount: Math.max(0, (reward.claimCount || 1) - 1),
-                updatedAt: Date.now(),
-              });
-            }
+      if (withdrawal.rewardId) {
+        const reward = await this.db.rewards.get(withdrawal.rewardId);
+        if (reward) {
+          if (reward.type === 'one-time') {
+            await this.db.rewards.update(reward.id, {
+              status: 'active',
+              claimedAt: null,
+              updatedAt: Date.now(),
+            });
+          } else {
+            await this.db.rewards.update(reward.id, {
+              claimCount: Math.max(0, (reward.claimCount || 1) - 1),
+              updatedAt: Date.now(),
+            });
           }
         }
-
-        await this.db.withdrawals.delete(id);
       }
-    );
+
+      await this.db.withdrawals.delete(id);
+    });
   }
 
   getWithdrawals(filter?: WithdrawalFilter): Observable<WithdrawalRecord[]> {
@@ -121,27 +104,25 @@ export class WithdrawalService {
         let records = await this.db.withdrawals.orderBy('timestamp').reverse().toArray();
 
         if (filter?.categoryId) {
-          records = records.filter(r => r.categoryId === filter.categoryId);
+          records = records.filter((r) => r.categoryId === filter.categoryId);
         }
         if (filter?.startDate) {
           const start = filter.startDate;
-          records = records.filter(r => r.date >= start);
+          records = records.filter((r) => r.date >= start);
         }
         if (filter?.endDate) {
           const end = filter.endDate;
-          records = records.filter(r => r.date <= end);
+          records = records.filter((r) => r.date <= end);
         }
         if (filter?.searchQuery) {
           const query = filter.searchQuery.toLowerCase().trim();
           records = records.filter(
-            r =>
-              r.title.toLowerCase().includes(query) ||
-              (r.notes?.toLowerCase().includes(query))
+            (r) => r.title.toLowerCase().includes(query) || r.notes?.toLowerCase().includes(query),
           );
         }
 
         return records;
-      })
+      }),
     );
   }
 

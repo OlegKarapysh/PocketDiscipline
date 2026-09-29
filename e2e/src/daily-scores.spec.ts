@@ -9,12 +9,12 @@ test.describe('Daily Scores Flow', () => {
 
     // Verify stats cards are rendered
     await expect(page.locator('.stats-container')).toBeVisible();
-    await expect(page.getByText('Monthly Average')).toBeVisible();
-    await expect(page.getByText('Current Streak')).toBeVisible();
+    await expect(page.getByText('Monthly average')).toBeVisible();
+    await expect(page.getByText('Current streak')).toBeVisible();
 
     // Verify 7-day chart is rendered
     await expect(page.locator('app-scores-chart')).toBeVisible();
-    await expect(page.getByText('Last 7 Days')).toBeVisible();
+    await expect(page.getByText('Last 7 days')).toBeVisible();
     await expect(page.locator('.bars .bar-wrapper')).toHaveCount(7);
 
     // Verify score input prompt and 10 score buttons
@@ -37,18 +37,18 @@ test.describe('Daily Scores Flow', () => {
     await page.getByRole('button', { name: 'Score 10' }).click();
 
     // Submit button should appear
-    const submitButton = page.getByRole('button', { name: 'Save Score' });
+    const submitButton = page.getByRole('button', { name: 'Save score' });
     await expect(submitButton).toBeVisible();
     await submitButton.click();
 
     // Verify reward success message appears
     await expect(page.locator('.success-message')).toBeVisible();
-    await expect(page.locator('.success-message')).toContainText('Awesome! You earned 500₴. Current high score streak: 1');
+    await expect(page.locator('.success-message')).toContainText('Score saved. You earned 500 ₴. High-score streak: 1');
 
     // Verify readonly state is displayed for today's score
     await expect(page.locator('.readonly-container')).toBeVisible();
     await expect(page.locator('.readonly-score-num')).toHaveText('10');
-    await expect(page.getByText('Score Set for Today')).toBeVisible();
+    await expect(page.getByText('Score set for today')).toBeVisible();
 
     // Verify streak is updated in the stats card
     await expect(page.locator('.stat-value.streak')).toHaveText('1');

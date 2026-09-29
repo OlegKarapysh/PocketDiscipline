@@ -1,58 +1,52 @@
-import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
+import { FormField, form } from '@angular/forms/signals';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
+import { SegmentedControl } from '../../../../shared/components/segmented-control/segmented-control';
+import type { SegmentOption } from '../../../../shared/components/segmented-control/segment-option.model';
+import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
 import { DashboardEarningsService } from '../../services/dashboard-earnings.service';
 import type { EarningsPeriodFilter } from '../../models/earnings-period-filter.model';
 import type { PeriodPreset } from '../../models/period-preset.type';
 
-const DEFAULT_PRESET: PeriodPreset = 'last7';
-const PRESET_CUSTOM: PeriodPreset = 'custom';
-const PAD_LENGTH_TWO = 2;
-const PAD_CHAR_ZERO = '0';
-const MONTH_OFFSET_ONE = 1;
-
 @Component({
   selector: 'app-earnings-filter',
-  imports: [
-    ReactiveFormsModule,
-    MatButtonToggleModule,
-    MatDatepickerModule,
-    MatFormFieldModule,
-    MatNativeDateModule,
-    MatInputModule,
-  ],
+  imports: [FormField, MatDatepickerModule, MatFormFieldModule, MatNativeDateModule, MatInputModule, SegmentedControl],
   templateUrl: './earnings-filter.html',
-  styleUrl: './earnings-filter.scss'
+  styleUrl: './earnings-filter.scss',
 })
 export class EarningsFilter {
   private readonly earningsService = inject(DashboardEarningsService);
 
   readonly filter = input<EarningsPeriodFilter>({
-    preset: DEFAULT_PRESET,
+    preset: 'last7',
     startDate: '',
     endDate: '',
   });
 
   readonly filterChange = output<EarningsPeriodFilter>();
 
+  readonly presetOptions: readonly SegmentOption<PeriodPreset>[] = [
+    { value: 'last7', label: '7 days' },
+    { value: 'last14', label: '14 days' },
+    { value: 'last30', label: '30 days' },
+    { value: 'custom', label: 'Custom' },
+  ];
+
   readonly activePreset = linkedSignal<PeriodPreset>(() => this.filter().preset);
-  readonly showCustomPicker = computed<boolean>(() => this.activePreset() === PRESET_CUSTOM);
+  readonly showCustomPicker = computed<boolean>(() => this.activePreset() === 'custom');
 
   readonly maxDate = new Date();
 
-  readonly rangeForm = new FormGroup({
-    start: new FormControl<Date | null>(null),
-    end: new FormControl<Date | null>(null),
-  });
+  readonly rangeModel = signal<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+  readonly rangeForm = form(this.rangeModel);
 
   selectPreset(preset: PeriodPreset): void {
     this.activePreset.set(preset);
 
-    if (preset === PRESET_CUSTOM) {
+    if (preset === 'custom') {
       return;
     }
 
@@ -65,10 +59,8 @@ export class EarningsFilter {
   }
 
   onCustomDateChange(): void {
-    const start = this.rangeForm.controls.start.value;
-    const end = this.rangeForm.controls.end.value;
-
-    if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime()) && start.getTime() <= end.getTime()) {
+    const { start, end } = this.rangeModel();
+    if (start && end) {
       this.applyCustomRange(start, end);
     }
   }
@@ -78,21 +70,11 @@ export class EarningsFilter {
       return;
     }
 
-    const startDate = this.formatLocalDate(start);
-    const endDate = this.formatLocalDate(end);
-
-    this.activePreset.set(PRESET_CUSTOM);
+    this.activePreset.set('custom');
     this.filterChange.emit({
-      preset: PRESET_CUSTOM,
-      startDate,
-      endDate,
+      preset: 'custom',
+      startDate: start.toLocaleDateString(DATE_LOCALE_CA),
+      endDate: end.toLocaleDateString(DATE_LOCALE_CA),
     });
-  }
-
-  private formatLocalDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + MONTH_OFFSET_ONE).padStart(PAD_LENGTH_TWO, PAD_CHAR_ZERO);
-    const day = String(date.getDate()).padStart(PAD_LENGTH_TWO, PAD_CHAR_ZERO);
-    return `${year}-${month}-${day}`;
   }
 }

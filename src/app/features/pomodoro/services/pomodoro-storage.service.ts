@@ -2,8 +2,6 @@ import { Service, inject } from '@angular/core';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { DbService } from '../../../database/db.service';
 
-const ORDER_BY_FIELD = 'startTime';
-
 @Service()
 export class PomodoroStorageService {
   private db = inject(DbService);
@@ -28,7 +26,7 @@ export class PomodoroStorageService {
 
   async getAllSessions(): Promise<PomodoroSession[]> {
     try {
-      return await this.db.pomodoroSessions.orderBy(ORDER_BY_FIELD).reverse().toArray();
+      return await this.db.pomodoroSessions.orderBy('startTime').reverse().toArray();
     } catch (error) {
       console.error('Failed to get all pomodoro sessions:', error);
       throw error;
@@ -53,4 +51,3 @@ export class PomodoroStorageService {
     }
   }
 }
-

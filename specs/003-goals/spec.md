@@ -11,12 +11,13 @@
 ## Clarifications
 
 ### Session 2026-08-25
+
 - Q: Can users delete a custom goal if they made a mistake while creating it? → A: Yes, they can both edit and delete custom goals.
 - Q: Can a user un-complete a goal if they marked it completed by accident? → A: Yes, they can undo completion, which deducts the reward back.
 - Q: How should Active and Completed goals be displayed on the Goals tab? → A: On the same page, with Active goals at the top and Completed below.
 - Q: Are duplicate goal titles allowed for active goals? → A: No, titles must be unique among active goals.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - View Goals List (Priority: P1)
 
@@ -68,9 +69,10 @@ As a user, I want to create, edit, or delete custom goals with specific rewards 
 - What happens if the money balance exceeds the maximum displayable/storable integer value?
 - What happens if a user tries to add a custom goal with a title that already exists among active goals? (Validation error).
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Architectural Constraints
+
 - **AC-001**: Feature MUST be structured as a Vertical Slice, keeping all related concerns together.
 - **AC-002**: Feature MUST NOT introduce unnecessary external dependencies.
 - **AC-003**: Code design MUST adhere to SOLID principles and established developer best practices.
@@ -96,7 +98,7 @@ As a user, I want to create, edit, or delete custom goals with specific rewards 
 - **Goal**: Represents a difficult non-recurring task. Attributes include title, reward amount, status (active/completed), and completion date.
 - **Money Balance**: The user's total accumulated reward money (₴) across the application.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

@@ -6,14 +6,15 @@
 
 **Status**: Draft
 
-**Input**: User description: "new feature: daily scores. User should be able to set a daily score from 1 to 10 each day. The daily scores information must be displayed on a separate tab. Every day only one daily score can be set. High daily score gives a reward: 9 gives 100₴, 10 gives 500₴. The reward increases by +10%  up to 100% for each high daily score in a row (the same incremental reward as daily tasks have). The new tab also should also display the average score for the days in the current month, a chart with scores for the current week and the current streak"
+**Input**: User description: "new feature: daily scores. User should be able to set a daily score from 1 to 10 each day. The daily scores information must be displayed on a separate tab. Every day only one daily score can be set. High daily score gives a reward: 9 gives 100₴, 10 gives 500₴. The reward increases by +10% up to 100% for each high daily score in a row (the same incremental reward as daily tasks have). The new tab also should also display the average score for the days in the current month, a chart with scores for the current week and the current streak"
 
 ## Clarifications
 
 ### Session 2026-08-28
+
 - Q: Should the 21:30 reminder rely entirely on the local device or use a backend push server? → A: Local device scheduling (simpler, no backend needed, aligns with local Dexie DB architecture)
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Set Daily Score (Priority: P1)
 
@@ -83,9 +84,10 @@ As a user, I want to receive a notification at 21:30 if I haven't set my daily s
 - How is the start of the week defined for the chart?
 - If the device is completely powered off or the browser/app is forcefully killed by the OS, the local notification may not fire. This is an accepted tradeoff of using a local-only architecture.
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Architectural Constraints
+
 - **AC-001**: Feature MUST be structured as a Vertical Slice, keeping all related concerns together.
 - **AC-002**: Feature MUST NOT introduce unnecessary external dependencies.
 - **AC-003**: Code design MUST adhere to SOLID principles and established developer best practices.
@@ -110,7 +112,7 @@ As a user, I want to receive a notification at 21:30 if I haven't set my daily s
 - **Daily Score**: Date, Score Value (1-10)
 - **Streak**: Current count of consecutive high score days
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

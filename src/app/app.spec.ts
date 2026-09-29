@@ -17,10 +17,7 @@ describe('App', () => {
 
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [
-        provideRouter([]),
-        { provide: DailyScoreReminderService, useValue: reminderServiceMock },
-      ],
+      providers: [provideRouter([]), { provide: DailyScoreReminderService, useValue: reminderServiceMock }],
     }).compileComponents();
   });
 

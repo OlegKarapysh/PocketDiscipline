@@ -11,10 +11,11 @@
 ## Clarifications
 
 ### Session 2026-08-24
+
 - Q: Which CI/CD provider should we target for the automated pipeline? → A: GitHub Actions
 - Q: How should we handle flaky tests in the CI pipeline? → A: Fail the build immediately on any test failure
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Developer runs unit tests (Priority: P1)
 
@@ -64,7 +65,7 @@ As a team, we want automated tests to run on every code change in our CI pipelin
 - How does the system handle tests that require external network access but are run offline?
 - What happens if the E2E test browser environment is unavailable in CI?
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -75,7 +76,7 @@ As a team, we want automated tests to run on every code change in our CI pipelin
 - **FR-005**: System MUST run both unit and E2E tests automatically on code integration events (e.g., Pull Requests) using GitHub Actions.
 - **FR-006**: System MUST fail the automated build process immediately if any test fails, including flaky tests (no automatic retries).
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

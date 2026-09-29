@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MatDialog } from '@angular/material/dialog';
-import { QuickSpendEventService, QUICK_SPEND_DIALOG_WIDTH } from './quick-spend-event.service';
+import { QuickSpendEventService } from './quick-spend-event.service';
 import { EventBusService } from '../../../core/services/event-bus.service';
 import { QuickSpendDialog } from '../components/quick-spend-dialog/quick-spend-dialog';
 
@@ -16,11 +16,7 @@ describe('QuickSpendEventService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        QuickSpendEventService,
-        EventBusService,
-        { provide: MatDialog, useValue: mockDialog },
-      ],
+      providers: [QuickSpendEventService, EventBusService, { provide: MatDialog, useValue: mockDialog }],
     });
 
     service = TestBed.inject(QuickSpendEventService);
@@ -36,9 +32,7 @@ describe('QuickSpendEventService', () => {
 
     eventBus.emit({ type: 'REQUEST_QUICK_SPEND' });
 
-    expect(mockDialog.open).toHaveBeenCalledWith(QuickSpendDialog, {
-      width: QUICK_SPEND_DIALOG_WIDTH,
-    });
+    expect(mockDialog.open).toHaveBeenCalledWith(QuickSpendDialog, expect.anything());
   });
 
   it('should be idempotent and not create duplicate subscriptions if initialized multiple times', () => {

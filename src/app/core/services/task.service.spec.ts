@@ -18,13 +18,17 @@ vi.mock('dexie', () => {
       '@@observable'() {
         return {
           subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
-            Promise.resolve().then(fn).then(
-              (val) => {
-                subscriber.next(val);
-                subscriber.complete();
-              },
-              (err: unknown) => { subscriber.error(err); }
-            );
+            Promise.resolve()
+              .then(fn)
+              .then(
+                (val) => {
+                  subscriber.next(val);
+                  subscriber.complete();
+                },
+                (err: unknown) => {
+                  subscriber.error(err);
+                },
+              );
             return {
               unsubscribe() {
                 // no-op for test mock
@@ -75,14 +79,17 @@ describe('TaskService', () => {
         toArray: vi.fn().mockResolvedValue([]),
       },
       users: {},
-      transaction: vi.fn().mockImplementation(async (_mode: unknown, _t1: unknown, _t2OrCallback: unknown, maybeCb?: unknown) => {
-        const callback = typeof _t2OrCallback === 'function'
-          ? (_t2OrCallback as () => Promise<void> | void)
-          : (maybeCb as (() => Promise<void> | void) | undefined);
-        if (callback) {
-          await callback();
-        }
-      }),
+      transaction: vi
+        .fn()
+        .mockImplementation(async (_mode: unknown, _t1: unknown, _t2OrCallback: unknown, maybeCb?: unknown) => {
+          const callback =
+            typeof _t2OrCallback === 'function'
+              ? (_t2OrCallback as () => Promise<void> | void)
+              : (maybeCb as (() => Promise<void> | void) | undefined);
+          if (callback) {
+            await callback();
+          }
+        }),
     };
 
     userMock = {
@@ -90,11 +97,7 @@ describe('TaskService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        TaskService,
-        { provide: DbService, useValue: dbMock },
-        { provide: UserService, useValue: userMock },
-      ],
+      providers: [TaskService, { provide: DbService, useValue: dbMock }, { provide: UserService, useValue: userMock }],
     });
 
     service = TestBed.inject(TaskService);
@@ -132,7 +135,7 @@ describe('TaskService', () => {
           rewardValue: 20,
           isCompleted: false,
           lastCompletedAt: null,
-        })
+        }),
       );
     });
   });
@@ -156,7 +159,7 @@ describe('TaskService', () => {
         't-1',
         expect.objectContaining({
           isCompleted: true,
-        })
+        }),
       );
       expect(userMock.addBalance).toHaveBeenCalledWith(20);
     });
@@ -200,7 +203,7 @@ describe('TaskService', () => {
         rewardValue: 20,
         isCompleted: true,
         lastCompletedAt: yesterday,
-        createdAt: Date.now() - (5 * ONE_DAY_MS),
+        createdAt: Date.now() - 5 * ONE_DAY_MS,
       };
 
       whereMock.toArray.mockResolvedValue([completedHabit]);
@@ -220,7 +223,7 @@ describe('TaskService', () => {
         rewardValue: 20,
         isCompleted: true,
         lastCompletedAt: Date.now(),
-        createdAt: Date.now() - (5 * ONE_DAY_MS),
+        createdAt: Date.now() - 5 * ONE_DAY_MS,
       };
 
       whereMock.toArray.mockResolvedValue([completedHabitToday]);

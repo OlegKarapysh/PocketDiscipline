@@ -1,19 +1,12 @@
+<app-page-header title="Categories" eyebrow="Rewards">
+  <button pageActions mat-flat-button type="button" (click)="openAddCategoryDialog()" class="add-category-button">
+    <mat-icon>add</mat-icon>
+    Add category
+  </button>
+</app-page-header>
+
 <div class="category-management">
-  <div class="header-row">
-    <div class="header-text">
-      <h2>Reward & Spending Categories</h2>
-      <p>Organize your rewards and expense withdrawals with custom categories.</p>
-    </div>
-    <button
-      mat-flat-button
-      color="primary"
-      (click)="openAddCategoryDialog()"
-      class="add-category-button"
-    >
-      <mat-icon>add</mat-icon>
-      Add Category
-    </button>
-  </div>
+  <p class="intro">Organize your rewards and expense withdrawals with custom categories.</p>
 
   <div class="category-list">
     @for (category of categories(); track category.id) {
@@ -24,19 +17,18 @@
           </div>
           <span class="category-name">{{ category.name }}</span>
           @if (category.isProtected) {
-            <span class="badge protected-badge">
-              <mat-icon class="badge-icon">lock</mat-icon>
-              Protected
-            </span>
+            <app-badge tone="primary" icon="lock">Protected</app-badge>
           } @else if (category.isDefault) {
-            <span class="badge default-badge">Default</span>
+            <app-badge>Default</app-badge>
           }
         </div>
 
         <div class="category-actions">
           <button
             mat-icon-button
+            type="button"
             matTooltip="Edit category"
+            aria-label="Edit category"
             (click)="openEditCategoryDialog(category)"
             class="edit-button"
           >
@@ -46,8 +38,10 @@
           @if (category.isProtected) {
             <button
               mat-icon-button
+              type="button"
               disabled
               matTooltip="Protected general category cannot be deleted"
+              aria-label="Protected category cannot be deleted"
               class="delete-button"
             >
               <mat-icon>lock</mat-icon>
@@ -55,8 +49,9 @@
           } @else {
             <button
               mat-icon-button
-              color="warn"
+              type="button"
               matTooltip="Delete category and reassign items to General"
+              aria-label="Delete category"
               (click)="confirmDeleteCategory(category)"
               class="delete-button"
             >

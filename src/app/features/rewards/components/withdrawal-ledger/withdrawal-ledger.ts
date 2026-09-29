@@ -1,8 +1,8 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, linkedSignal, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { FormField, form, validate } from '@angular/forms/signals';
 import { EMPTY, catchError, from, switchMap, tap } from 'rxjs';
 
-import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -16,26 +16,28 @@ import type { RewardCategory } from '../../../../core/models/reward-category.mod
 import type { WithdrawalFilter } from '../../models/withdrawal-filter.model';
 import { ConfirmService } from '../../../../shared/services/confirm.service';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
+import { Amount } from '../../../../shared/components/amount/amount';
+import { Badge } from '../../../../shared/components/badge/badge';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
+import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
 
-const NO_FILTERS: WithdrawalFilter = {
-  categoryId: undefined,
-  startDate: undefined,
-  endDate: undefined,
-  searchQuery: undefined,
-};
+const EMPTY_FILTER_FORM = { searchQuery: '', categoryId: '', startDate: '', endDate: '' };
 
 @Component({
   selector: 'app-withdrawal-ledger',
   templateUrl: './withdrawal-ledger.html',
   styleUrl: './withdrawal-ledger.scss',
   imports: [
-    FormsModule,
+    FormField,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
+    Amount,
+    Badge,
+    EmptyState,
   ],
 })
 export class WithdrawalLedger {
@@ -45,14 +47,30 @@ export class WithdrawalLedger {
   private readonly snackBar = inject(SnackBarService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly searchQuery = signal('');
-  readonly selectedCategoryId = signal('');
-  readonly startDate = signal('');
-  readonly endDate = signal('');
+  private readonly filterModel = signal(EMPTY_FILTER_FORM);
 
-  // The committed filter, which is what actually drives the query. It is set from the four inputs
-  // only once the range validates, so an invalid range leaves the current results in place.
-  private readonly filters = signal<WithdrawalFilter>(NO_FILTERS);
+  readonly filterForm = form(this.filterModel, (path) => {
+    validate(path.endDate, (ctx) => {
+      const start = ctx.valueOf(path.startDate);
+      const end = ctx.value();
+      return start && end && start > end ? { kind: 'dateRange', message: 'Start date cannot be after end date' } : null;
+    });
+  });
+
+  // The committed filter, which is what actually drives the query. It follows the form only while
+  // the form is valid, so an inverted date range leaves the current results in place.
+  private readonly filters = linkedSignal<typeof EMPTY_FILTER_FORM | null, WithdrawalFilter>({
+    source: () => (this.filterForm().valid() ? this.filterModel() : null),
+    computation: (value, previous) =>
+      value
+        ? {
+            categoryId: value.categoryId || undefined,
+            startDate: value.startDate || undefined,
+            endDate: value.endDate || undefined,
+            searchQuery: value.searchQuery || undefined,
+          }
+        : (previous?.value ?? {}),
+  });
 
   readonly withdrawals = toSignal(
     toObservable(this.filters).pipe(
@@ -61,11 +79,11 @@ export class WithdrawalLedger {
           catchError((err: unknown) => {
             this.snackBar.error(err, 'Failed to load withdrawals');
             return EMPTY;
-          })
-        )
-      )
+          }),
+        ),
+      ),
     ),
-    { initialValue: [] as WithdrawalRecord[] }
+    { initialValue: [] as WithdrawalRecord[] },
   );
 
   readonly categories = toSignal(
@@ -73,66 +91,59 @@ export class WithdrawalLedger {
       catchError((err: unknown) => {
         this.snackBar.error(err, 'Failed to load categories');
         return EMPTY;
-      })
+      }),
     ),
-    { initialValue: [] as RewardCategory[] }
+    { initialValue: [] as RewardCategory[] },
   );
 
-  readonly categoryMap = computed(
-    () => new Map<string, RewardCategory>(this.categories().map((c) => [c.id, c]))
+  private readonly categoryMap = computed(
+    () => new Map<string, RewardCategory>(this.categories().map((c) => [c.id, c])),
   );
 
-  readonly hasActiveFilters = computed(
-    () => !!(this.searchQuery() || this.selectedCategoryId() || this.startDate() || this.endDate())
-  );
-
-  onFilterChange(): void {
-    if (this.startDate() && this.endDate() && this.startDate() > this.endDate()) {
-      this.snackBar.show('Start date cannot be after end date');
-      return;
-    }
-
-    this.filters.set({
-      categoryId: this.selectedCategoryId() || undefined,
-      startDate: this.startDate() || undefined,
-      endDate: this.endDate() || undefined,
-      searchQuery: this.searchQuery() || undefined,
+  readonly rows = computed(() => {
+    const categories = this.categoryMap();
+    return this.withdrawals().map((withdrawal) => {
+      const category = categories.get(withdrawal.categoryId);
+      return {
+        withdrawal,
+        color: category?.color,
+        icon: category?.icon ?? 'category',
+        categoryName: category?.name ?? 'Uncategorized',
+      };
     });
-  }
+  });
+
+  readonly dateRangeError = computed(() => this.filterForm.endDate().errors()[0]?.message);
+
+  readonly hasActiveFilters = computed(() => Object.values(this.filterModel()).some(Boolean));
 
   clearFilters(): void {
-    this.searchQuery.set('');
-    this.selectedCategoryId.set('');
-    this.startDate.set('');
-    this.endDate.set('');
-    this.onFilterChange();
+    this.filterModel.set(EMPTY_FILTER_FORM);
   }
 
   confirmRevert(withdrawal: WithdrawalRecord): void {
     this.confirmService
       .ask({
-        title: 'Revert Withdrawal',
-        message: `Are you sure you want to revert "${withdrawal.title}" (${withdrawal.amount} ₴)? The amount will be refunded to your balance.`,
-        confirmText: 'Revert & Refund',
+        title: 'Revert withdrawal',
+        message: `Are you sure you want to revert "${withdrawal.title}" (${MONEY_FORMAT.format(withdrawal.amount)} ₴)? The amount will be refunded to your balance.`,
+        confirmText: 'Revert & refund',
         cancelText: 'Cancel',
         isDestructive: true,
       })
       .pipe(
         switchMap(() =>
           from(this.withdrawalService.revertWithdrawal(withdrawal.id)).pipe(
-            tap(() => { this.snackBar.show('Withdrawal reverted and balance refunded'); }),
+            tap(() => {
+              this.snackBar.show('Withdrawal reverted and balance refunded');
+            }),
             catchError(() => {
               this.snackBar.show('Failed to revert withdrawal');
               return EMPTY;
-            })
-          )
+            }),
+          ),
         ),
-        takeUntilDestroyed(this.destroyRef)
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
-  }
-
-  getCategory(categoryId: string): RewardCategory | undefined {
-    return this.categoryMap().get(categoryId);
   }
 }

@@ -116,10 +116,7 @@ describe('DashboardEarningsService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        DashboardEarningsService,
-        { provide: DbService, useValue: dbMock },
-      ],
+      providers: [DashboardEarningsService, { provide: DbService, useValue: dbMock }],
     });
 
     service = TestBed.inject(DashboardEarningsService);
@@ -176,13 +173,13 @@ describe('DashboardEarningsService', () => {
 
       expect(records.length).toBe(2);
 
-      const day1 = records.find(r => r.date === '2026-09-01');
+      const day1 = records.find((r) => r.date === '2026-09-01');
       expect(day1).toBeDefined();
       expect(day1?.pomodoroEarned).toBe(250);
       expect(day1?.goalsEarned).toBe(0);
       expect(day1?.totalEarned).toBe(250);
 
-      const day2 = records.find(r => r.date === '2026-09-02');
+      const day2 = records.find((r) => r.date === '2026-09-02');
       expect(day2).toBeDefined();
       expect(day2?.goalsEarned).toBe(2000);
       expect(day2?.dailyScoresEarned).toBe(500);
@@ -252,7 +249,7 @@ describe('DashboardEarningsService', () => {
       });
 
       const records = await firstValueFrom(service.getDailyEarnings('2026-09-01', '2026-09-02'));
-      const day1 = records.find(r => r.date === '2026-09-01');
+      const day1 = records.find((r) => r.date === '2026-09-01');
       expect(day1?.pomodoroEarned).toBe(0);
       expect(day1?.goalsEarned).toBe(0);
     });

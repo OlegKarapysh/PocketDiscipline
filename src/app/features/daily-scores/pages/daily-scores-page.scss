@@ -1,29 +1,32 @@
-.page-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+@use '../../../../styles/tokens' as t;
+
+.page-grid {
+  display: grid;
+  gap: t.space(4);
+
+  @include t.up(expanded) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
 }
 
-.page-title {
-  margin: 0;
-  font: var(--mat-sys-headline-medium);
+.full-row,
+.success-message {
+  grid-column: 1 / -1;
 }
 
 .loading-container {
   display: flex;
   justify-content: center;
-  padding: 48px 16px;
+  padding: t.space(12) t.space(4);
 }
 
 .success-message {
-  padding: 16px;
+  padding: t.space(4);
   background-color: var(--mat-sys-primary-container);
   color: var(--mat-sys-on-primary-container);
-  border-radius: 12px;
+  border-radius: t.radius(md);
   text-align: center;
   font: var(--mat-sys-body-medium);
-  font-weight: 500;
+  font-weight: 600;
 }

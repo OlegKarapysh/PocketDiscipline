@@ -1,8 +1,5 @@
-import type { OnInit} from '@angular/core';
-import { Component, inject } from '@angular/core';
-
-import type { FormControl, FormGroup} from '@angular/forms';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, signal } from '@angular/core';
+import { FormField, form, maxLength, required } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -10,12 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import type { CategoryFormDialogData } from './category-form-dialog-data.model';
 
-interface CategoryFormGroup {
-  name: FormControl<string>;
-  color: FormControl<string>;
-  icon: FormControl<string>;
-}
-
+// The palette offered to the user. The chosen value is stored per category, so these are data, not theme colours.
 const PRESET_COLORS = [
   '#e91e63',
   '#9c27b0',
@@ -48,44 +40,34 @@ const PRESET_ICONS = [
   selector: 'app-category-form-dialog',
   templateUrl: './category-form-dialog.html',
   styleUrl: './category-form-dialog.scss',
-  imports: [ReactiveFormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
+  imports: [FormField, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
 })
-export class CategoryFormDialog implements OnInit {
-  private readonly fb = inject(FormBuilder);
+export class CategoryFormDialog {
   private readonly dialogRef = inject(MatDialogRef<CategoryFormDialog>);
   readonly data = inject<CategoryFormDialogData>(MAT_DIALOG_DATA, { optional: true });
 
   readonly presetColors = PRESET_COLORS;
   readonly presetIcons = PRESET_ICONS;
 
-  form!: FormGroup<CategoryFormGroup>;
-  isEdit = false;
+  readonly isEdit = !!this.data?.category;
 
-  ngOnInit(): void {
-    this.isEdit = !!this.data?.category;
+  readonly model = signal({
+    name: this.data?.category?.name ?? '',
+    color: this.data?.category?.color ?? PRESET_COLORS[0],
+    icon: this.data?.category?.icon ?? PRESET_ICONS[0],
+  });
 
-    this.form = this.fb.group<CategoryFormGroup>({
-      name: this.fb.control(this.data?.category?.name ?? '', {
-        validators: [(control) => Validators.required(control), (control) => Validators.maxLength(50)(control)],
-        nonNullable: true,
-      }),
-      color: this.fb.control(this.data?.category?.color ?? PRESET_COLORS[0], {
-        validators: [(control) => Validators.required(control)],
-        nonNullable: true,
-      }),
-      icon: this.fb.control(this.data?.category?.icon ?? PRESET_ICONS[0], {
-        validators: [(control) => Validators.required(control)],
-        nonNullable: true,
-      }),
-    });
-  }
+  readonly categoryForm = form(this.model, (path) => {
+    required(path.name, { message: 'Category name is required' });
+    maxLength(path.name, 50, { message: 'Category name is too long' });
+  });
 
   selectColor(color: string): void {
-    this.form.patchValue({ color });
+    this.categoryForm.color().value.set(color);
   }
 
   selectIcon(icon: string): void {
-    this.form.patchValue({ icon });
+    this.categoryForm.icon().value.set(icon);
   }
 
   onCancel(): void {
@@ -93,9 +75,9 @@ export class CategoryFormDialog implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.form.invalid) return;
+    if (this.categoryForm().invalid()) return;
 
-    const values = this.form.getRawValue();
+    const values = this.model();
     this.dialogRef.close({
       name: values.name.trim(),
       color: values.color,

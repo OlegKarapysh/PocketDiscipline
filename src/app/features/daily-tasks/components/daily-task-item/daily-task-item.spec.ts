@@ -1,15 +1,15 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { DailyTaskItem } from './daily-task-item';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
+import { Amount } from '../../../../shared/components/amount/amount';
+import { StreakBadge } from '../../../../shared/components/streak-badge/streak-badge';
 
-const TEST_TASK_TITLE = 'Evening Reading';
-const EASY_DIFFICULTY: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
-const HARD_DIFFICULTY: DailyTaskDifficulty = { id: 'hard', name: 'Hard', baseReward: 300 };
-const STREAK_FOUR = 4;
+const easy: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
+const hard: DailyTaskDifficulty = { id: 'hard', name: 'Hard', baseReward: 300 };
 const ONE_DAY_MS = 86_400_000;
 
 describe('DailyTaskItem', () => {
@@ -28,10 +28,10 @@ describe('DailyTaskItem', () => {
   it('should render task title and streak badge when streak > 0', async () => {
     const mockTask: DailyTask = {
       id: 'task-1',
-      title: TEST_TASK_TITLE,
-      difficulties: [EASY_DIFFICULTY, HARD_DIFFICULTY],
+      title: 'Evening Reading',
+      difficulties: [easy, hard],
       createdAt: Date.now(),
-      streak: STREAK_FOUR,
+      streak: 4,
       lastCompletedAt: null,
     };
 
@@ -39,18 +39,35 @@ describe('DailyTaskItem', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const titleEl = fixture.debugElement.query(By.css('mat-card-title'));
-    const streakEl = fixture.debugElement.query(By.css('.streak-badge'));
+    const titleEl = fixture.debugElement.query(By.css('.title'));
+    const streak = fixture.debugElement.query(By.directive(StreakBadge)).componentInstance as StreakBadge;
 
-    expect((titleEl.nativeElement as HTMLElement).textContent.trim()).toBe(TEST_TASK_TITLE);
-    expect((streakEl.nativeElement as HTMLElement).textContent).toContain('4 Day Streak');
+    expect((titleEl.nativeElement as HTMLElement).textContent.trim()).toBe('Evening Reading');
+    expect(streak.days()).toBe(4);
+  });
+
+  it('should not render a streak badge when streak is 0', async () => {
+    const mockTask: DailyTask = {
+      id: 'task-1',
+      title: 'Evening Reading',
+      difficulties: [easy],
+      createdAt: Date.now(),
+      streak: 0,
+      lastCompletedAt: null,
+    };
+
+    fixture.componentRef.setInput('task', mockTask);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.debugElement.query(By.directive(StreakBadge))).toBeNull();
   });
 
   it('should compute isCompletedToday as false and render difficulty action buttons when uncompleted', async () => {
     const mockTask: DailyTask = {
       id: 'task-1',
-      title: TEST_TASK_TITLE,
-      difficulties: [EASY_DIFFICULTY, HARD_DIFFICULTY],
+      title: 'Evening Reading',
+      difficulties: [easy, hard],
       createdAt: Date.now(),
       streak: 0,
       lastCompletedAt: null,
@@ -64,13 +81,17 @@ describe('DailyTaskItem', () => {
 
     const buttons = fixture.debugElement.queryAll(By.css('.actions button'));
     expect(buttons.length).toBe(2);
+
+    const rewards = fixture.debugElement.queryAll(By.directive(Amount)).map((el) => el.componentInstance as Amount);
+    expect(rewards.map((amount) => amount.value())).toEqual([easy.baseReward, hard.baseReward]);
+    expect(rewards.every((amount) => amount.showSign())).toBe(true);
   });
 
   it('should emit complete event when a difficulty button is clicked', async () => {
     const mockTask: DailyTask = {
       id: 'task-1',
-      title: TEST_TASK_TITLE,
-      difficulties: [EASY_DIFFICULTY, HARD_DIFFICULTY],
+      title: 'Evening Reading',
+      difficulties: [easy, hard],
       createdAt: Date.now(),
       streak: 0,
       lastCompletedAt: null,
@@ -88,14 +109,14 @@ describe('DailyTaskItem', () => {
     const buttons = fixture.debugElement.queryAll(By.css('.actions button'));
     (buttons[1].nativeElement as HTMLElement).click(); // Hard difficulty
 
-    expect(emittedDifficulty).toEqual(HARD_DIFFICULTY);
+    expect(emittedDifficulty).toEqual(hard);
   });
 
-  it('should compute isCompletedToday as true and show completed message when completed today', async () => {
+  it('should compute isCompletedToday as true and mark the task as completed when completed today', async () => {
     const mockTask: DailyTask = {
       id: 'task-1',
-      title: TEST_TASK_TITLE,
-      difficulties: [EASY_DIFFICULTY],
+      title: 'Evening Reading',
+      difficulties: [easy],
       createdAt: Date.now(),
       streak: 1,
       lastCompletedAt: Date.now(),
@@ -107,9 +128,9 @@ describe('DailyTaskItem', () => {
 
     expect(component.isCompletedToday()).toBe(true);
 
-    const completedMsg = fixture.debugElement.query(By.css('.completed-msg'));
-    expect(completedMsg).toBeTruthy();
-    expect((completedMsg.nativeElement as HTMLElement).textContent).toContain('Completed for today!');
+    const doneIcon = fixture.debugElement.query(By.css('[aria-label="Completed today"]'));
+    expect(doneIcon).toBeTruthy();
+    expect((doneIcon.nativeElement as HTMLElement).getAttribute('aria-hidden')).toBe('false');
 
     const actions = fixture.debugElement.query(By.css('.actions'));
     expect(actions).toBeNull();
@@ -119,9 +140,9 @@ describe('DailyTaskItem', () => {
     const yesterday = Date.now() - ONE_DAY_MS;
     const mockTask: DailyTask = {
       id: 'task-1',
-      title: TEST_TASK_TITLE,
-      difficulties: [EASY_DIFFICULTY],
-      createdAt: Date.now() - (5 * ONE_DAY_MS),
+      title: 'Evening Reading',
+      difficulties: [easy],
+      createdAt: Date.now() - 5 * ONE_DAY_MS,
       streak: 1,
       lastCompletedAt: yesterday,
     };

@@ -17,7 +17,7 @@
 - Q: Can users delete or rename the built-in system default categories in Settings, or are they protected? → A: Editable defaults, locked fallback: Users can rename or delete any default category except "General", which is permanently locked from deletion as the system fallback target for reassignment.
 - Q: What time periods and grouping granularity should the Spending Analytics tab offer for category breakdown and spending over time? → A: Flexible timeframe presets ("This Month" [default], "Last 30 Days", "This Year", "All Time") with auto-granularity: daily grouping for 30-day/monthly views, and monthly grouping for yearly/all-time views.
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Quick Balance Withdrawal (Ad-Hoc Spend) (Priority: P1)
 
@@ -127,7 +127,7 @@ As a user with personalized spending habits, I want to manage withdrawal and rew
 - **Empty state handling**: Friendly, descriptive empty states are displayed when no rewards exist in the wishlist, no withdrawals exist in the ledger, or no spending data exists for the selected analytics period.
 - **Large values and decimals**: Currency values display formatted numbers with Ukrainian Hryvnia symbol (₴) consistently. Currency inputs allow positive numbers up to 2 decimal places (kopecks) or integers, displayed uniformly with Angular's `number` pipe (`1.0-2`).
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Architectural Constraints
 
@@ -159,7 +159,7 @@ As a user with personalized spending habits, I want to manage withdrawal and rew
 - **FR-020**: Store / Wishlist view MUST provide a filter/toggle (or distinct section) allowing users to view and distinguish active wishlist rewards and claimed one-time milestone rewards, displaying completion timestamps and badges on claimed items.
 - **FR-021**: Withdrawal records MUST retain an immutable snapshot of the transaction data (title, amount, category, date, timestamp). Deleting or modifying a reward in the Store MUST NOT alter, corrupt, or delete past withdrawal ledger entries.
 
-### Key Entities *(include if feature involves data)*
+### Key Entities _(include if feature involves data)_
 
 - **WithdrawalRecord**: Represents a spending or redemption event. Attributes include:
   - `id`: unique identifier
@@ -194,7 +194,7 @@ As a user with personalized spending habits, I want to manage withdrawal and rew
   - `categoryBreakdown`: list of categories with spent amount and percentage share
   - `spendingTrend`: chronological timeline entries of spending by day or month
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

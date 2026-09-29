@@ -15,5 +15,5 @@
 ## Notification Mechanism
 
 - **Decision**: Use the browser's standard `Notification` API combined with a local scheduling check (e.g., inside an Angular service or Service Worker) that evaluates if it's 21:30 and the score is unset.
-- **Rationale**: The specification explicitly forbids a backend push server (FR-012) and accepts the tradeoff that if the app is entirely closed and has no active service worker, it won't fire. 
+- **Rationale**: The specification explicitly forbids a backend push server (FR-012) and accepts the tradeoff that if the app is entirely closed and has no active service worker, it won't fire.
 - **Alternatives considered**: Backend push server (explicitly rejected by clarification).

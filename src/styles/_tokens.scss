@@ -1,0 +1,107 @@
+@use 'sass:map';
+
+$font-sans: 'Hanken Grotesk', system-ui, sans-serif;
+$font-mono: 'Geist Mono', ui-monospace, monospace;
+
+$space: (
+  1: 4px,
+  2: 8px,
+  3: 12px,
+  4: 16px,
+  5: 20px,
+  6: 24px,
+  8: 32px,
+  12: 48px,
+);
+
+$radius: (
+  xs: 6px,
+  sm: 10px,
+  md: 12px,
+  lg: 20px,
+  xl: 24px,
+  pill: 999px,
+);
+
+$breakpoints: (
+  medium: 600px,
+  expanded: 840px,
+  large: 1200px,
+);
+
+// Glyph sizes for mat-icon. Text sizes come from the Material type roles, not from a scale here.
+$icon-size: (
+  xs: 16px,
+  sm: 18px,
+  md: 20px,
+  lg: 24px,
+);
+
+// Sizes for tabular numbers (app-amount, timers, chart values), which have no Material type role.
+$numeric-size: (
+  sm: 13px,
+  md: 22px,
+  lg: 30px,
+  xl: 38px,
+  xxl: 44px,
+  display: 80px,
+);
+
+$touch-target: 44px;
+$rail-width: 240px;
+$bottom-nav-height: 80px;
+$content-max-width: 1200px;
+
+@function space($step) {
+  @return map.get($space, $step);
+}
+
+@function radius($size) {
+  @return map.get($radius, $size);
+}
+
+@function numeric-size($size) {
+  @return map.get($numeric-size, $size);
+}
+
+// A mat-icon's box does not follow its font-size, so the glyph and the box are sized together.
+@mixin icon-size($size) {
+  $value: map.get($icon-size, $size);
+  font-size: $value;
+  width: $value;
+  height: $value;
+}
+
+// The design's card title: title-medium at 17px. Overriding the role itself would also resize
+// Material's card subtitles and every other title-medium use.
+@mixin card-title {
+  font: var(--mat-sys-title-medium);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+@mixin up($bp) {
+  @media (min-width: map.get($breakpoints, $bp)) {
+    @content;
+  }
+}
+
+@mixin down($bp) {
+  @media (max-width: calc(#{map.get($breakpoints, $bp)} - 0.02px)) {
+    @content;
+  }
+}
+
+@mixin numeric {
+  font-family: $font-mono;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+@mixin card-padding {
+  padding: space(4);
+
+  @include up(expanded) {
+    padding: space(5);
+  }
+}

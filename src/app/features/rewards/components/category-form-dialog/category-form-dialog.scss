@@ -1,9 +1,11 @@
+@use '../../../../../styles/tokens' as t;
+
 .category-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding-top: 0.5rem;
-  min-width: 320px;
+  gap: t.space(5);
+  padding-top: t.space(2);
+  min-width: min(320px, 100%);
 }
 
 .full-width {
@@ -13,30 +15,33 @@
 .selection-section {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: t.space(2);
 
   .section-label {
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--mat-sys-on-surface-variant, #616161);
+    font: var(--mat-sys-label-large);
+    color: var(--mat-sys-on-surface-variant);
   }
 }
 
+// Chip backgrounds are the category's own colour (user data, bound in the template).
+// Marks drawn on top of it use the dialog surface, so they read as a cut-out in both schemes.
 .color-picker-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: t.space(2);
 
   .color-chip {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: t.$touch-target;
+    height: t.$touch-target;
+    border-radius: t.radius(pill);
     border: 2px solid transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    transition:
+      transform 0.15s ease,
+      border-color 0.15s ease;
     padding: 0;
 
     &:hover {
@@ -44,15 +49,13 @@
     }
 
     &.selected {
-      border-color: var(--mat-sys-on-surface, #212121);
-      transform: scale(1.15);
+      border-color: var(--mat-sys-on-surface);
+      transform: scale(1.1);
     }
 
     .check-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: #ffffff;
+      @include t.icon-size(md);
+      color: var(--pd-sys-on-category);
     }
   }
 }
@@ -60,35 +63,36 @@
 .icon-picker-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: t.space(2);
 
   .icon-chip {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    border: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+    width: t.$touch-target;
+    height: t.$touch-target;
+    border-radius: t.radius(md);
+    border: 1px solid var(--mat-sys-outline-variant);
+    background: transparent;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--mat-sys-on-surface, #212121);
-    transition: all 0.15s ease;
+    color: var(--mat-sys-on-surface);
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease,
+      border-color 0.15s ease;
     padding: 0;
 
     &:hover {
-      border-color: var(--mat-sys-primary, #673ab7);
+      border-color: var(--mat-sys-primary);
     }
 
     &.selected {
-      color: #ffffff;
+      color: var(--pd-sys-on-category);
       border-color: transparent;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
     mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
+      @include t.icon-size(md);
     }
   }
 }

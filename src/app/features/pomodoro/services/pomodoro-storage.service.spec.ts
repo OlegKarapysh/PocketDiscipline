@@ -6,13 +6,6 @@ import type { PomodoroSession } from '../../../core/models/pomodoro-session.mode
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
 
-const TEST_SESSION_ID = 'session-123';
-const TEST_DURATION = 25;
-const TEST_START_TIME = 1000000;
-const TEST_END_TIME = 1001500;
-const TEST_REWARD = 25;
-const ORDER_BY_FIELD = 'startTime';
-
 describe('PomodoroStorageService', () => {
   let service: PomodoroStorageService;
   let dbMock: {
@@ -28,7 +21,7 @@ describe('PomodoroStorageService', () => {
   beforeEach(() => {
     dbMock = {
       pomodoroSessions: {
-        put: vi.fn().mockResolvedValue(TEST_SESSION_ID),
+        put: vi.fn().mockResolvedValue('session-123'),
         get: vi.fn().mockResolvedValue(undefined),
         update: vi.fn().mockResolvedValue(1),
         delete: vi.fn().mockResolvedValue(undefined),
@@ -37,10 +30,7 @@ describe('PomodoroStorageService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        PomodoroStorageService,
-        { provide: DbService, useValue: dbMock },
-      ],
+      providers: [PomodoroStorageService, { provide: DbService, useValue: dbMock }],
     });
     service = TestBed.inject(PomodoroStorageService);
   });
@@ -51,47 +41,47 @@ describe('PomodoroStorageService', () => {
 
   it('should save and retrieve a session', async () => {
     const session: PomodoroSession = {
-      id: TEST_SESSION_ID,
-      durationMinutes: TEST_DURATION,
+      id: 'session-123',
+      durationMinutes: 25,
       engagementType: EngagementType.WORK,
-      startTime: TEST_START_TIME,
+      startTime: 1000000,
       status: PomodoroSessionStatus.ACTIVE,
     };
 
-    dbMock.pomodoroSessions.put.mockResolvedValue(TEST_SESSION_ID);
+    dbMock.pomodoroSessions.put.mockResolvedValue('session-123');
     dbMock.pomodoroSessions.get.mockResolvedValue(session);
 
     await service.saveSession(session);
     expect(dbMock.pomodoroSessions.put).toHaveBeenCalledWith(session);
 
-    const retrieved = await service.getSession(TEST_SESSION_ID);
-    expect(dbMock.pomodoroSessions.get).toHaveBeenCalledWith(TEST_SESSION_ID);
+    const retrieved = await service.getSession('session-123');
+    expect(dbMock.pomodoroSessions.get).toHaveBeenCalledWith('session-123');
     expect(retrieved).toEqual(session);
   });
 
   it('should update a session with completion data', async () => {
     const changes: Partial<PomodoroSession> = {
       status: PomodoroSessionStatus.COMPLETED,
-      endTime: TEST_END_TIME,
-      rewardEarned: TEST_REWARD,
+      endTime: 1001500,
+      rewardEarned: 25,
     };
 
-    await service.updateSession(TEST_SESSION_ID, changes);
-    expect(dbMock.pomodoroSessions.update).toHaveBeenCalledWith(TEST_SESSION_ID, changes);
+    await service.updateSession('session-123', changes);
+    expect(dbMock.pomodoroSessions.update).toHaveBeenCalledWith('session-123', changes);
   });
 
   it('should delete a session by id', async () => {
-    await service.deleteSession(TEST_SESSION_ID);
-    expect(dbMock.pomodoroSessions.delete).toHaveBeenCalledWith(TEST_SESSION_ID);
+    await service.deleteSession('session-123');
+    expect(dbMock.pomodoroSessions.delete).toHaveBeenCalledWith('session-123');
   });
 
   it('should retrieve all sessions ordered by startTime descending', async () => {
     const sessionList: PomodoroSession[] = [
       {
-        id: TEST_SESSION_ID,
-        durationMinutes: TEST_DURATION,
+        id: 'session-123',
+        durationMinutes: 25,
         engagementType: EngagementType.WORK,
-        startTime: TEST_START_TIME,
+        startTime: 1000000,
         status: PomodoroSessionStatus.COMPLETED,
       },
     ];
@@ -101,7 +91,7 @@ describe('PomodoroStorageService', () => {
     dbMock.pomodoroSessions.orderBy.mockReturnValue({ reverse: reverseMock });
 
     const result = await service.getAllSessions();
-    expect(dbMock.pomodoroSessions.orderBy).toHaveBeenCalledWith(ORDER_BY_FIELD);
+    expect(dbMock.pomodoroSessions.orderBy).toHaveBeenCalledWith('startTime');
     expect(reverseMock).toHaveBeenCalled();
     expect(result).toEqual(sessionList);
   });
@@ -112,10 +102,10 @@ describe('PomodoroStorageService', () => {
     dbMock.pomodoroSessions.put.mockRejectedValue(testError);
 
     const session: PomodoroSession = {
-      id: TEST_SESSION_ID,
-      durationMinutes: TEST_DURATION,
+      id: 'session-123',
+      durationMinutes: 25,
       engagementType: EngagementType.WORK,
-      startTime: TEST_START_TIME,
+      startTime: 1000000,
       status: PomodoroSessionStatus.ACTIVE,
     };
 
@@ -129,7 +119,7 @@ describe('PomodoroStorageService', () => {
     const testError = new Error('Database get failure');
     dbMock.pomodoroSessions.get.mockRejectedValue(testError);
 
-    await expect(service.getSession(TEST_SESSION_ID)).rejects.toThrow(testError);
+    await expect(service.getSession('session-123')).rejects.toThrow(testError);
     expect(consoleSpy).toHaveBeenCalledWith('Failed to get pomodoro session:', testError);
     consoleSpy.mockRestore();
   });
@@ -151,7 +141,7 @@ describe('PomodoroStorageService', () => {
     const testError = new Error('Database update failure');
     dbMock.pomodoroSessions.update.mockRejectedValue(testError);
 
-    await expect(service.updateSession(TEST_SESSION_ID, {})).rejects.toThrow(testError);
+    await expect(service.updateSession('session-123', {})).rejects.toThrow(testError);
     expect(consoleSpy).toHaveBeenCalledWith('Failed to update pomodoro session:', testError);
     consoleSpy.mockRestore();
   });
@@ -161,9 +151,8 @@ describe('PomodoroStorageService', () => {
     const testError = new Error('Database delete failure');
     dbMock.pomodoroSessions.delete.mockRejectedValue(testError);
 
-    await expect(service.deleteSession(TEST_SESSION_ID)).rejects.toThrow(testError);
+    await expect(service.deleteSession('session-123')).rejects.toThrow(testError);
     expect(consoleSpy).toHaveBeenCalledWith('Failed to delete pomodoro session:', testError);
     consoleSpy.mockRestore();
   });
 });
-

@@ -6,22 +6,11 @@ import type { DailyTaskDifficulty } from '../../../core/models/daily-task-diffic
 import { liveQuery } from 'dexie';
 import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
+import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
 
-const MILLISECONDS_IN_DAY = 86_400_000;
-const INITIAL_STREAK = 0;
-const FIRST_STREAK = 1;
-const STREAK_INCREMENT = 1;
-const DAYS_THRESHOLD_CONSECUTIVE = 1;
+const ONE_DAY_MS = 86_400_000;
 const MAX_STREAK_BONUS_DAYS = 10;
-const STREAK_BONUS_RATE = 0.10;
-const BASE_BONUS_MULTIPLIER = 1;
-const TRANSACTION_READ_WRITE = 'rw';
-const MIDNIGHT_HOUR = 0;
-const MIDNIGHT_MINUTE = 0;
-const MIDNIGHT_SECOND = 0;
-const MIDNIGHT_MILLISECOND = 0;
-const DATE_LOCALE_CA = 'en-CA';
-const MIN_BASE_REWARD = 0;
+const STREAK_BONUS_RATE = 0.1;
 
 @Service()
 export class DailyTasksService {
@@ -30,11 +19,11 @@ export class DailyTasksService {
 
   private getDiffDays(ts1: number, ts2: number): number {
     const d1 = new Date(ts1);
-    d1.setHours(MIDNIGHT_HOUR, MIDNIGHT_MINUTE, MIDNIGHT_SECOND, MIDNIGHT_MILLISECOND);
+    d1.setHours(0, 0, 0, 0);
     const d2 = new Date(ts2);
-    d2.setHours(MIDNIGHT_HOUR, MIDNIGHT_MINUTE, MIDNIGHT_SECOND, MIDNIGHT_MILLISECOND);
+    d2.setHours(0, 0, 0, 0);
     const diffTime = Math.abs(d2.getTime() - d1.getTime());
-    return Math.round(diffTime / MILLISECONDS_IN_DAY);
+    return Math.round(diffTime / ONE_DAY_MS);
   }
 
   private readonly _tasks$: Observable<DailyTask[]> = from(
@@ -46,8 +35,8 @@ export class DailyTasksService {
         let currentStreak = task.streak;
         if (task.lastCompletedAt) {
           const diffDays = this.getDiffDays(now, task.lastCompletedAt);
-          if (diffDays > DAYS_THRESHOLD_CONSECUTIVE && currentStreak > INITIAL_STREAK) {
-            currentStreak = INITIAL_STREAK;
+          if (diffDays > 1 && currentStreak > 0) {
+            currentStreak = 0;
           }
         }
         return {
@@ -55,7 +44,7 @@ export class DailyTasksService {
           streak: currentStreak,
         };
       });
-    })
+    }),
   );
 
   get tasks$(): Observable<DailyTask[]> {
@@ -66,16 +55,13 @@ export class DailyTasksService {
     const tasks = await this.db.dailyTasks.toArray();
     const now = Date.now();
     const staleTasks = tasks.filter(
-      (task) =>
-        task.lastCompletedAt &&
-        this.getDiffDays(now, task.lastCompletedAt) > DAYS_THRESHOLD_CONSECUTIVE &&
-        task.streak > INITIAL_STREAK
+      (task) => task.lastCompletedAt && this.getDiffDays(now, task.lastCompletedAt) > 1 && task.streak > 0,
     );
 
     if (staleTasks.length > 0) {
-      await this.db.transaction(TRANSACTION_READ_WRITE, this.db.dailyTasks, async () => {
+      await this.db.transaction('rw', this.db.dailyTasks, async () => {
         for (const task of staleTasks) {
-          await this.db.dailyTasks.update(task.id, { streak: INITIAL_STREAK });
+          await this.db.dailyTasks.update(task.id, { streak: 0 });
         }
       });
     }
@@ -87,61 +73,55 @@ export class DailyTasksService {
       title,
       difficulties,
       createdAt: Date.now(),
-      streak: INITIAL_STREAK,
+      streak: 0,
       lastCompletedAt: null,
     };
     await this.db.dailyTasks.add(newTask);
   }
 
   async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
-    if (!Number.isFinite(difficulty.baseReward) || difficulty.baseReward <= MIN_BASE_REWARD) {
+    if (!Number.isFinite(difficulty.baseReward) || difficulty.baseReward <= 0) {
       return;
     }
 
     const now = Date.now();
     const todayStr = new Date(now).toLocaleDateString(DATE_LOCALE_CA);
 
-    await this.db.transaction(
-      TRANSACTION_READ_WRITE,
-      this.db.dailyTasks,
-      this.db.users,
-      this.db.dailyTaskCompletions,
-      async () => {
-        const freshTask = (await this.db.dailyTasks.get(task.id)) ?? task;
+    await this.db.transaction('rw', this.db.dailyTasks, this.db.users, this.db.dailyTaskCompletions, async () => {
+      const freshTask = (await this.db.dailyTasks.get(task.id)) ?? task;
 
-        let newStreak = freshTask.streak;
-        if (freshTask.lastCompletedAt) {
-          const diffDays = this.getDiffDays(now, freshTask.lastCompletedAt);
-          if (diffDays === DAYS_THRESHOLD_CONSECUTIVE) {
-            newStreak += STREAK_INCREMENT;
-          } else if (diffDays > DAYS_THRESHOLD_CONSECUTIVE) {
-            newStreak = FIRST_STREAK;
-          }
-        } else {
-          newStreak = FIRST_STREAK;
+      let newStreak = freshTask.streak;
+      if (freshTask.lastCompletedAt) {
+        const diffDays = this.getDiffDays(now, freshTask.lastCompletedAt);
+        if (diffDays === 1) {
+          newStreak += 1;
+        } else if (diffDays > 1) {
+          newStreak = 1;
         }
-
-        const streakCountForBonus = Math.max(newStreak - FIRST_STREAK, INITIAL_STREAK);
-        const cappedStreakBonus = Math.min(streakCountForBonus, MAX_STREAK_BONUS_DAYS);
-        const bonusMultiplier = BASE_BONUS_MULTIPLIER + cappedStreakBonus * STREAK_BONUS_RATE;
-        const finalReward = Math.round(difficulty.baseReward * bonusMultiplier);
-
-        await this.db.dailyTasks.update(freshTask.id, {
-          lastCompletedAt: now,
-          streak: newStreak,
-        });
-
-        await this.db.dailyTaskCompletions.add({
-          id: crypto.randomUUID(),
-          taskId: freshTask.id,
-          date: todayStr,
-          difficultyId: difficulty.id,
-          rewardEarned: finalReward,
-          completedAt: now,
-        });
-
-        await this.userService.addBalance(finalReward);
+      } else {
+        newStreak = 1;
       }
-    );
+
+      const streakCountForBonus = Math.max(newStreak - 1, 0);
+      const cappedStreakBonus = Math.min(streakCountForBonus, MAX_STREAK_BONUS_DAYS);
+      const bonusMultiplier = 1 + cappedStreakBonus * STREAK_BONUS_RATE;
+      const finalReward = Math.round(difficulty.baseReward * bonusMultiplier);
+
+      await this.db.dailyTasks.update(freshTask.id, {
+        lastCompletedAt: now,
+        streak: newStreak,
+      });
+
+      await this.db.dailyTaskCompletions.add({
+        id: crypto.randomUUID(),
+        taskId: freshTask.id,
+        date: todayStr,
+        difficultyId: difficulty.id,
+        rewardEarned: finalReward,
+        completedAt: now,
+      });
+
+      await this.userService.addBalance(finalReward);
+    });
   }
 }

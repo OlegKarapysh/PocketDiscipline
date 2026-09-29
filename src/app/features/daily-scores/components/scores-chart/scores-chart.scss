@@ -1,9 +1,12 @@
+@use '../../../../../styles/tokens' as t;
+
 .bars {
   display: flex;
   height: 150px;
   align-items: flex-end;
   justify-content: space-around;
-  padding-top: 20px;
+  gap: t.space(2);
+  padding-top: t.space(5);
 }
 
 .bar-wrapper {
@@ -18,7 +21,7 @@
 .bar {
   width: 100%;
   background-color: var(--mat-sys-primary);
-  border-radius: 4px 4px 0 0;
+  border-radius: t.radius(xs) t.radius(xs) 0 0;
   min-height: 4px;
   transition: height 0.3s ease;
 
@@ -28,24 +31,26 @@
   }
 
   &.high-score {
-    background-color: var(--mat-sys-tertiary);
+    background-color: var(--pd-sys-reward);
   }
 }
 
 .day-label {
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
-  margin-top: 8px;
+  margin-top: t.space(2);
 }
 
 .score-label {
   font: var(--mat-sys-label-small);
-  font-weight: bold;
-  color: var(--mat-sys-on-surface);
-  margin-bottom: 4px;
+  @include t.numeric;
+  font-weight: 700;
+  color: var(--mat-sys-on-surface-variant);
+  margin-bottom: t.space(1);
 }
 
 .no-data {
+  margin: 0;
   text-align: center;
   color: var(--mat-sys-on-surface-variant);
 }

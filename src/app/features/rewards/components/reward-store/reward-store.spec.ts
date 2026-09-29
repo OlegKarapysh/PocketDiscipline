@@ -1,7 +1,7 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Observable} from 'rxjs';
+import type { Observable } from 'rxjs';
 import { of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -15,6 +15,7 @@ import type { RewardItem } from '../../../../core/models/reward.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import { RewardFormDialog } from '../reward-form-dialog/reward-form-dialog';
 import { RewardCard } from '../reward-card/reward-card';
+import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
 
 describe('RewardStore', () => {
   let component: RewardStore;
@@ -35,8 +36,24 @@ describe('RewardStore', () => {
 
   beforeEach(async () => {
     mockCategories = [
-      { id: 'cat-general', name: 'General', color: '#6b7280', icon: 'category', isDefault: true, isProtected: true, createdAt: 0 },
-      { id: 'cat-tech', name: 'Gear & Tech', color: '#3b82f6', icon: 'devices', isDefault: true, isProtected: false, createdAt: 0 },
+      {
+        id: 'cat-general',
+        name: 'General',
+        color: '#6b7280',
+        icon: 'category',
+        isDefault: true,
+        isProtected: true,
+        createdAt: 0,
+      },
+      {
+        id: 'cat-tech',
+        name: 'Gear & Tech',
+        color: '#3b82f6',
+        icon: 'devices',
+        isDefault: true,
+        isProtected: false,
+        createdAt: 0,
+      },
     ];
 
     mockRewards = [
@@ -99,6 +116,34 @@ describe('RewardStore', () => {
     expect(component.filteredRewards()[0].title).toBe('Mechanical Keyboard');
   });
 
+  it('should filter rewards by category', () => {
+    component.filters.update((f) => ({ ...f, categoryId: 'cat-general' }));
+    fixture.detectChanges();
+    expect(component.filteredRewards()).toHaveLength(0);
+
+    component.filters.update((f) => ({ ...f, categoryId: 'cat-tech' }));
+    fixture.detectChanges();
+    expect(component.filteredRewards()).toHaveLength(1);
+  });
+
+  it('should show reward counts in the status filter and switch status from the DOM', () => {
+    const toggles = fixture.debugElement.queryAll(By.css('.status-toggle button'));
+    expect(toggles).toHaveLength(2);
+    expect((toggles[0].nativeElement as HTMLElement).textContent).toContain('(1)');
+    expect((toggles[1].nativeElement as HTMLElement).textContent).toContain('(1)');
+
+    (toggles[1].nativeElement as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(component.statusFilter()).toBe('claimed');
+    expect(component.filteredRewards()[0].title).toBe('Wireless Mouse');
+  });
+
+  it('should pass each reward its own category', () => {
+    const card = fixture.debugElement.query(By.directive(RewardCard)).componentInstance as RewardCard;
+    expect(card.category()?.id).toBe('cat-tech');
+  });
+
   it('should filter rewards when toggling status to claimed', () => {
     component.statusFilter.set('claimed');
     fixture.detectChanges();
@@ -133,7 +178,7 @@ describe('RewardStore', () => {
   });
 
   it('should open Add Reward dialog when clicking Create First Reward button in empty state', () => {
-    component.searchQuery.set('EmptyMatch');
+    component.filters.update((f) => ({ ...f, query: 'EmptyMatch' }));
     fixture.detectChanges();
 
     const emptyBtn = fixture.debugElement.query(By.css('.empty-state button')).nativeElement as HTMLButtonElement;
@@ -153,9 +198,9 @@ describe('RewardStore', () => {
 
     expect(mockRewardsService.claimReward).toHaveBeenCalledWith(mockRewards[0]);
     expect(mockSnackBar.open).toHaveBeenCalledWith(
-      'Redeemed "Mechanical Keyboard" for 2500 ₴!',
+      `Redeemed "Mechanical Keyboard" for ${MONEY_FORMAT.format(2500)} ₴`,
       'Close',
-      { duration: 4000 }
+      { duration: 3000 },
     );
   });
 
@@ -164,11 +209,7 @@ describe('RewardStore', () => {
 
     await component.onClaimReward(mockRewards[0]);
 
-    expect(mockSnackBar.open).toHaveBeenCalledWith(
-      'Claim failed due to network error',
-      'Close',
-      { duration: 3000 }
-    );
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Claim failed due to network error', 'Close', { duration: 3000 });
   });
 
   it('should handle edit output from child card component', () => {
@@ -191,15 +232,13 @@ describe('RewardStore', () => {
     await fixture.whenStable();
 
     expect(mockRewardsService.deleteReward).toHaveBeenCalledWith('rew-1');
-    expect(mockSnackBar.open).toHaveBeenCalledWith(
-      expect.stringContaining('Deleted "Mechanical Keyboard"'),
-      'Close',
-      { duration: 3000 }
-    );
+    expect(mockSnackBar.open).toHaveBeenCalledWith(expect.stringContaining('Deleted "Mechanical Keyboard"'), 'Close', {
+      duration: 3000,
+    });
   });
 
   it('should display empty state when no rewards match', () => {
-    component.searchQuery.set('Unknown Query');
+    component.filters.update((f) => ({ ...f, query: 'Unknown Query' }));
     fixture.detectChanges();
 
     const emptyEl = fixture.debugElement.query(By.css('.empty-state'));

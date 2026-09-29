@@ -1,0 +1,9 @@
+<mat-card appearance="outlined" class="card">
+  <span class="label">{{ label() }}</span>
+  <div class="value"><ng-content /></div>
+  @if (hint(); as text) {
+    <span class="hint" [class.success]="hintTone() === 'success'" [class.danger]="hintTone() === 'danger'">{{
+      text
+    }}</span>
+  }
+</mat-card>

@@ -1,0 +1,56 @@
+@use '../../../../styles/tokens' as t;
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--mat-sys-scrim) 28%, transparent);
+}
+
+.dial {
+  position: relative;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: t.space(3);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: t.space(2);
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  gap: t.space(3);
+  height: 48px;
+  padding: 0 t.space(4) 0 t.space(3);
+  border-radius: t.radius(md);
+  background: var(--mat-sys-surface-container-lowest);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-label-large);
+  text-decoration: none;
+  box-shadow: var(--pd-sys-elevation-2);
+
+  .mat-icon {
+    color: var(--mat-sys-primary);
+  }
+}
+
+.fab-icon {
+  transition: transform 200ms ease;
+
+  &.open {
+    transform: rotate(45deg);
+  }
+}
+
+.mat-mdc-fab {
+  width: 60px;
+  height: 60px;
+  box-shadow: var(--pd-sys-elevation-2);
+}

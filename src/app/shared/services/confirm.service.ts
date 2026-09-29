@@ -5,8 +5,6 @@ import { filter } from 'rxjs';
 import { ConfirmDialog } from '../components/confirm-dialog/confirm-dialog';
 import type { ConfirmDialogData } from '../components/confirm-dialog/confirm-dialog-data.model';
 
-const CONFIRM_DIALOG_WIDTH = '400px';
-
 @Service()
 export class ConfirmService {
   private dialog = inject(MatDialog);
@@ -17,7 +15,7 @@ export class ConfirmService {
     return this.dialog
       .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, {
         data,
-        width: CONFIRM_DIALOG_WIDTH,
+        width: '400px',
       })
       .afterClosed()
       .pipe(filter((confirmed): confirmed is true => confirmed === true));

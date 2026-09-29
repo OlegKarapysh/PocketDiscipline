@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
@@ -7,11 +7,14 @@ import { BalanceWidget } from './balance-widget';
 import { UserService } from '../../../../core/services/user.service';
 import type { User } from '../../../../core/models/user.model';
 import { EventBusService } from '../../../../core/services/event-bus.service';
+import { Amount } from '../../../../shared/components/amount/amount';
 
 describe('BalanceWidget', () => {
   let fixture: ComponentFixture<BalanceWidget>;
   let userSubject: BehaviorSubject<User | undefined>;
   let eventBusMock: { emit: ReturnType<typeof vi.fn> };
+
+  const renderedBalance = () => (fixture.debugElement.query(By.directive(Amount)).componentInstance as Amount).value();
 
   beforeEach(async () => {
     userSubject = new BehaviorSubject<User | undefined>({
@@ -37,21 +40,19 @@ describe('BalanceWidget', () => {
     fixture = TestBed.createComponent(BalanceWidget);
   });
 
-  it('should render user balance with currency symbol ₴', async () => {
+  it('should render the user balance as an amount', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const amountEl = fixture.debugElement.query(By.css('.amount'));
-    expect((amountEl.nativeElement as HTMLElement).textContent.trim()).toBe('2,500 ₴');
+    expect(renderedBalance()).toBe(2500);
   });
 
-  it('should render placeholder "-- ₴" when user is undefined', async () => {
+  it('should render an empty amount when user is undefined', async () => {
     userSubject.next(undefined);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const amountEl = fixture.debugElement.query(By.css('.amount'));
-    expect((amountEl.nativeElement as HTMLElement).textContent.trim()).toBe('-- ₴');
+    expect(renderedBalance()).toBeUndefined();
   });
 
   it('should emit REQUEST_QUICK_SPEND event when clicking the Quick Spend button in the DOM', async () => {
@@ -65,14 +66,13 @@ describe('BalanceWidget', () => {
     expect(eventBusMock.emit).toHaveBeenCalledWith({ type: 'REQUEST_QUICK_SPEND' });
   });
 
-  it('should handle error gracefully and render placeholder "-- ₴" when user$ errors', async () => {
+  it('should handle error gracefully and render an empty amount when user$ errors', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
     userSubject.error(new Error('User error'));
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const amountEl = fixture.debugElement.query(By.css('.amount'));
-    expect((amountEl.nativeElement as HTMLElement).textContent.trim()).toBe('-- ₴');
+    expect(renderedBalance()).toBeUndefined();
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });

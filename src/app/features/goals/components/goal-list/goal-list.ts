@@ -1,14 +1,12 @@
 import { Component, computed, input, output } from '@angular/core';
 
 import { GoalItem } from '../goal-item/goal-item';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import type { Goal } from '../../../../core/models/goal.model';
 import type { MonthGoalGroup } from '../../models/month-goal-group.model';
 
-const LOCALE_DEFAULT = 'default';
-const DATE_FORMAT_MONTH_YEAR: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' };
-
 @Component({
-  imports: [GoalItem],
+  imports: [GoalItem, EmptyState],
   selector: 'app-goal-list',
   styleUrl: './goal-list.scss',
   templateUrl: './goal-list.html',
@@ -30,7 +28,7 @@ export class GoalList {
     for (const goal of goals) {
       if (!goal.completedAt) continue;
       const date = new Date(goal.completedAt);
-      const monthYear = date.toLocaleString(LOCALE_DEFAULT, DATE_FORMAT_MONTH_YEAR);
+      const monthYear = date.toLocaleString('default', { month: 'long', year: 'numeric' });
       let list = map.get(monthYear);
       if (!list) {
         list = [];

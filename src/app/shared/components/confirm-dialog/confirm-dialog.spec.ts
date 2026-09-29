@@ -1,4 +1,4 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -79,13 +79,13 @@ describe('ConfirmDialog', () => {
     expect(buttons[1].textContent.trim()).toBe('Confirm');
   });
 
-  it('should apply "mat-warn" class when isDestructive is true', () => {
+  it('should style the confirm button as destructive when isDestructive is true', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const confirmButton = compiled.querySelectorAll('button')[1];
-    expect(confirmButton.classList.contains('mat-warn')).toBe(true);
+    expect(confirmButton.classList.contains('destructive')).toBe(true);
   });
 
-  it('should apply "mat-primary" class when isDestructive is false', async () => {
+  it('should not style the confirm button as destructive when isDestructive is false', async () => {
     await setupComponent({
       title: 'Save Changes',
       message: 'Save your profile changes?',
@@ -94,6 +94,6 @@ describe('ConfirmDialog', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     const confirmButton = compiled.querySelectorAll('button')[1];
-    expect(confirmButton.classList.contains('mat-primary')).toBe(true);
+    expect(confirmButton.classList.contains('destructive')).toBe(false);
   });
 });

@@ -1,0 +1,86 @@
+<app-page-header title="Design system" eyebrow="PocketDiscipline">
+  <button pageActions mat-flat-button type="button" (click)="celebrate()">
+    <mat-icon>celebration</mat-icon>
+    Celebrate
+  </button>
+</app-page-header>
+
+<div class="grid">
+  <app-section-card heading="Buttons">
+    <div class="row">
+      <button mat-flat-button type="button"><mat-icon>add</mat-icon>Add goal</button>
+      <button matButton="tonal" type="button">Tonal</button>
+      <button mat-stroked-button type="button">Outline</button>
+      <button mat-button type="button">Text</button>
+      <button mat-flat-button type="button" disabled>Disabled</button>
+      <button mat-stroked-button type="button" (click)="askDelete()">Confirm (destructive)</button>
+    </div>
+    <div class="row">
+      <button mat-stroked-button class="pd-difficulty" type="button">
+        Easy<app-amount [value]="100" size="sm" tone="reward" [showSign]="true" />
+      </button>
+      <button mat-stroked-button class="pd-difficulty" type="button">
+        Medium<app-amount [value]="200" size="sm" tone="reward" [showSign]="true" />
+      </button>
+      <button mat-stroked-button class="pd-difficulty" type="button">
+        Hard<app-amount [value]="300" size="sm" tone="reward" [showSign]="true" />
+      </button>
+    </div>
+  </app-section-card>
+
+  <app-section-card heading="Badges &amp; amounts">
+    <div class="row">
+      <app-streak-badge [days]="12" />
+      <app-streak-badge [days]="12" [compact]="true" />
+      <app-streak-badge [days]="0" />
+    </div>
+    <div class="row">
+      <app-badge tone="reward"><app-amount [value]="200" size="sm" tone="inherit" [showSign]="true" /></app-badge>
+      <app-badge tone="success" icon="check_circle">Completed</app-badge>
+      <app-badge tone="primary">Active</app-badge>
+      <app-badge>Paused</app-badge>
+      <app-badge tone="danger">Overdue</app-badge>
+    </div>
+    <div class="row baseline">
+      <app-amount [value]="4820" size="xl" />
+      <app-amount [value]="166" size="lg" />
+      <app-amount [value]="600" size="md" tone="success" [showSign]="true" />
+      <app-amount [value]="200" size="sm" tone="reward" [showSign]="true" />
+    </div>
+  </app-section-card>
+
+  <app-section-card heading="Filter &amp; fields">
+    <app-segmented-control ariaLabel="Earnings period" [options]="periodOptions" [(value)]="period" />
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Goal title</mat-label>
+      <input matInput value="do 100 squats" />
+    </mat-form-field>
+    <mat-slide-toggle [checked]="true">Daily score reminder</mat-slide-toggle>
+  </app-section-card>
+
+  <app-section-card heading="Progress" actionLabel="All tasks">
+    <div class="row">
+      <app-progress-ring [value]="60">3/5</app-progress-ring>
+      <div class="stack">
+        <span class="strong">Today’s habits</span>
+        <app-streak-badge [days]="21" />
+      </div>
+    </div>
+    <mat-progress-bar mode="determinate" [value]="60" />
+  </app-section-card>
+
+  <div class="stats">
+    <app-stat-card label="Daily average" hint="Based on 29 elapsed days">
+      <app-amount [value]="166" />
+    </app-stat-card>
+    <app-stat-card label="Earned in Sep" hint="+12% vs Aug" hintTone="success">
+      <app-amount [value]="4820" />
+    </app-stat-card>
+  </div>
+
+  <app-empty-state
+    heading="No habits yet"
+    message="Add one small thing you want to do every day."
+    actionLabel="New habit"
+  />
+</div>

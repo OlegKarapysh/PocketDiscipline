@@ -4,7 +4,8 @@ test.describe('Daily Tasks Flow', () => {
   test('should create a new daily task with Save Task and display it in the list', async ({ page }) => {
     await page.goto('/tasks');
 
-    await expect(page.locator('h2').first()).toContainText('Daily Tasks');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tasks');
+    await expect(page.locator('h2').first()).toContainText('Daily tasks');
 
     // Click Add Daily Task button in header
     const addBtn = page.getByRole('button', { name: /Add Daily Task/i });
@@ -20,7 +21,7 @@ test.describe('Daily Tasks Flow', () => {
     await titleInput.fill('Morning Running');
 
     // Click Save Task
-    const saveBtn = page.getByRole('button', { name: /Save Task/i });
+    const saveBtn = page.getByRole('button', { name: /Save task/i });
     await expect(saveBtn).toBeEnabled();
     await saveBtn.click();
 
@@ -29,6 +30,6 @@ test.describe('Daily Tasks Flow', () => {
     await expect(page.getByText('Morning Running')).toBeVisible();
 
     // Verify difficulties are rendered
-    await expect(page.getByRole('button', { name: /Easy \(\+100\)/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Easy\s*\+100/i })).toBeVisible();
   });
 });

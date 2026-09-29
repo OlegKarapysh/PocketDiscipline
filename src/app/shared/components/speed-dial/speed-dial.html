@@ -1,0 +1,18 @@
+@if (isOpen()) {
+  <div class="scrim" (click)="close()" aria-hidden="true"></div>
+}
+<div class="dial">
+  @if (isOpen()) {
+    <div class="actions">
+      @for (action of actions(); track action.path) {
+        <a class="action" matRipple [routerLink]="action.path" [queryParams]="action.queryParams" (click)="close()">
+          <mat-icon>{{ action.icon }}</mat-icon>
+          <span>{{ action.label }}</span>
+        </a>
+      }
+    </div>
+  }
+  <button mat-fab type="button" aria-label="Quick actions" [attr.aria-expanded]="isOpen()" (click)="toggle()">
+    <mat-icon class="fab-icon" [class.open]="isOpen()">add</mat-icon>
+  </button>
+</div>

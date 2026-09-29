@@ -1,21 +1,17 @@
 import { Component, computed, input, output, signal } from '@angular/core';
-import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { Amount } from '../../../../shared/components/amount/amount';
+import { Badge } from '../../../../shared/components/badge/badge';
+import { StatCard } from '../../../../shared/components/stat-card/stat-card';
 import type { MonthlyEarningsSummary } from '../../models/monthly-earnings-summary.model';
 import type { MonthChangeEvent } from '../../models/month-change-event.model';
 
-const MONTH_JANUARY = 1;
-const MONTH_DECEMBER = 12;
-const MONTH_STEP = 1;
-const YEAR_STEP = 1;
-const ZERO_EARNINGS = 0;
-
 @Component({
   selector: 'app-earnings-stats',
-  imports: [MatCardModule, MatButtonModule, MatIconModule],
+  imports: [MatButtonModule, MatIconModule, Amount, Badge, StatCard],
   templateUrl: './earnings-stats.html',
-  styleUrl: './earnings-stats.scss'
+  styleUrl: './earnings-stats.scss',
 })
 export class EarningsStats {
   readonly summary = input<MonthlyEarningsSummary | null>(null);
@@ -23,12 +19,12 @@ export class EarningsStats {
   readonly monthChange = output<MonthChangeEvent>();
 
   readonly currentYear = signal<number>(new Date().getFullYear());
-  readonly currentMonth = signal<number>(new Date().getMonth() + MONTH_STEP);
+  readonly currentMonth = signal<number>(new Date().getMonth() + 1);
 
   readonly isNextDisabled = computed(() => {
     const now = new Date();
     const actualYear = now.getFullYear();
-    const actualMonth = now.getMonth() + MONTH_STEP;
+    const actualMonth = now.getMonth() + 1;
 
     if (this.currentYear() > actualYear) {
       return true;
@@ -41,16 +37,25 @@ export class EarningsStats {
 
   readonly hasNoEarnings = computed(() => {
     const currentSummary = this.summary();
-    return currentSummary !== null && currentSummary.totalEarned === ZERO_EARNINGS;
+    return currentSummary !== null && currentSummary.totalEarned === 0;
+  });
+
+  readonly averageHint = computed(() => {
+    const currentSummary = this.summary();
+    if (!currentSummary) {
+      return '';
+    }
+    const kind = currentSummary.isCurrentMonth ? 'elapsed' : 'calendar';
+    return `Based on ${currentSummary.daysCount} ${kind} days`;
   });
 
   goToPreviousMonth(): void {
     let year = this.currentYear();
-    let month = this.currentMonth() - MONTH_STEP;
+    let month = this.currentMonth() - 1;
 
-    if (month < MONTH_JANUARY) {
-      month = MONTH_DECEMBER;
-      year -= YEAR_STEP;
+    if (month < 1) {
+      month = 12;
+      year -= 1;
     }
 
     this.currentYear.set(year);
@@ -64,11 +69,11 @@ export class EarningsStats {
     }
 
     let year = this.currentYear();
-    let month = this.currentMonth() + MONTH_STEP;
+    let month = this.currentMonth() + 1;
 
-    if (month > MONTH_DECEMBER) {
-      month = MONTH_JANUARY;
-      year += YEAR_STEP;
+    if (month > 12) {
+      month = 1;
+      year += 1;
     }
 
     this.currentYear.set(year);
@@ -76,4 +81,3 @@ export class EarningsStats {
     this.monthChange.emit({ year, month });
   }
 }
-
