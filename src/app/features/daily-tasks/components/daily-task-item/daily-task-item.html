@@ -1,31 +1,26 @@
-<mat-card class="task-card" [class.completed]="isCompletedToday()">
-  <mat-card-header>
-    <mat-card-title>{{ task().title }}</mat-card-title>
-    @if (task().streak > 0) {
-      <mat-card-subtitle>
-        <span class="streak-badge" title="Current streak"> 🔥 {{ task().streak }} Day Streak </span>
-      </mat-card-subtitle>
-    }
-  </mat-card-header>
-  
-  <mat-card-content>
+<mat-card appearance="outlined" class="task-card" [class.completed]="isCompletedToday()">
+  <div class="header">
     @if (isCompletedToday()) {
-      <div class="completed-msg">
-        <mat-icon color="primary">check_circle</mat-icon>
-        <span>Completed for today!</span>
-      </div>
+      <span class="done-icon">
+        <mat-icon class="pd-icon-filled" aria-hidden="false" aria-label="Completed today">check_circle</mat-icon>
+      </span>
     }
-  </mat-card-content>
+    <div class="titles">
+      <span class="title">{{ task().title }}</span>
+      @if (task().streak > 0) {
+        <app-streak-badge [days]="task().streak" />
+      }
+    </div>
+  </div>
 
   @if (!isCompletedToday()) {
-    <mat-card-actions>
-      <div class="actions">
-        @for (diff of task().difficulties; track diff) {
-          <button mat-stroked-button (click)="complete.emit(diff)">
-            {{ diff.name }} (+{{ diff.baseReward }})
-          </button>
-        }
-      </div>
-    </mat-card-actions>
+    <div class="actions">
+      @for (diff of task().difficulties; track diff.id) {
+        <button mat-stroked-button class="pd-difficulty" type="button" (click)="complete.emit(diff)">
+          {{ diff.name }}
+          <app-amount [value]="diff.baseReward" size="sm" tone="reward" [showSign]="true" />
+        </button>
+      }
+    </div>
   }
 </mat-card>

@@ -1,33 +1,53 @@
-.sidenav-container {
+@use '../../../../styles/tokens' as t;
+
+:host {
+  display: block;
   height: 100%;
 }
 
-.sidenav {
-  width: 250px;
-
-  .mat-toolbar {
-    background: inherit;
-  }
+.shell {
+  height: 100%;
 }
 
-mat-sidenav-content {
+.main {
   display: flex;
   flex-direction: column;
-  height: 100%;
-
-  .mat-toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    gap: 8px;
-  }
 }
 
-.content-container {
-  padding: 16px;
+.scroller {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  box-sizing: border-box;
 }
 
+.content {
+  max-width: t.$content-max-width;
+  margin: 0 auto;
+  padding: calc(t.space(4) + env(safe-area-inset-top)) t.space(5) calc(t.space(12) + 60px);
+  box-sizing: border-box;
+
+  @include t.up(expanded) {
+    padding: t.space(8) t.space(8) t.space(12);
+  }
+}
+
+.speed-dial {
+  position: fixed;
+  right: t.space(5);
+  bottom: calc(t.$bottom-nav-height + t.space(3) + env(safe-area-inset-bottom));
+  z-index: 2;
+}
+
+.rail {
+  border-right: 1px solid var(--mat-sys-outline-variant);
+  padding: t.space(5) t.space(3);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: t.space(3);
+  padding: 0 t.space(3) t.space(5);
+  font: var(--mat-sys-title-medium);
+  font-weight: 700;
+}

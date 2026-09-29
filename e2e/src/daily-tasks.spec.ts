@@ -29,6 +29,6 @@ test.describe('Daily Tasks Flow', () => {
     await expect(page.getByText('Morning Running')).toBeVisible();
 
     // Verify difficulties are rendered
-    await expect(page.getByRole('button', { name: /Easy \(\+100\)/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Easy\s*\+100/i })).toBeVisible();
   });
 });

@@ -1,0 +1,44 @@
+@use '../../../../styles/tokens' as t;
+
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: t.space(1);
+  height: 28px;
+  padding: 0 10px;
+  border-radius: t.radius(pill);
+  font: var(--mat-sys-label-large);
+  white-space: nowrap;
+}
+
+.mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+:host(.tone-neutral) {
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+:host(.tone-primary) {
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+:host(.tone-reward) {
+  background: var(--mat-sys-tertiary-container);
+  color: var(--mat-sys-on-tertiary-container);
+  @include t.numeric;
+}
+
+:host(.tone-success) {
+  background: var(--pd-sys-success-container);
+  color: var(--pd-sys-success);
+}
+
+:host(.tone-danger) {
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}

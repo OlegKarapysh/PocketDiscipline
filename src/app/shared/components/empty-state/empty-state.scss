@@ -1,0 +1,31 @@
+@use '../../../../styles/tokens' as t;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: t.space(2);
+  padding: t.space(8) t.space(6);
+  text-align: center;
+  border: 1px dashed var(--mat-sys-outline-variant);
+  border-radius: t.radius(lg);
+  background: var(--mat-sys-surface-container-lowest);
+}
+
+.heading {
+  margin: t.space(1) 0 0;
+  font: var(--mat-sys-title-medium);
+  font-weight: 600;
+}
+
+.message {
+  margin: 0;
+  max-width: 260px;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  text-wrap: pretty;
+}
+
+.action {
+  margin-top: t.space(2);
+}

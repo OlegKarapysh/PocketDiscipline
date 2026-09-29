@@ -21,6 +21,9 @@ jobs:
         
     - name: Install dependencies
       run: npm ci
+
+    - name: Lint (ESLint + design-system check)
+      run: npm run lint
       
     - name: Run Unit Tests
       run: npm run test -- --watch=false

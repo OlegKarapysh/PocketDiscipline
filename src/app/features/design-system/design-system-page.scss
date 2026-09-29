@@ -1,0 +1,37 @@
+@use '../../../styles/tokens' as t;
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: t.space(4);
+  align-items: start;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.space(2);
+
+  &.baseline {
+    align-items: baseline;
+    gap: t.space(4);
+  }
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(1);
+}
+
+.strong {
+  font: var(--mat-sys-title-medium);
+  font-weight: 600;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: t.space(3);
+}

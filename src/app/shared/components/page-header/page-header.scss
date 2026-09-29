@@ -1,0 +1,43 @@
+@use '../../../../styles/tokens' as t;
+
+:host {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: t.space(4);
+  flex-wrap: wrap;
+  margin-bottom: t.space(4);
+
+  @include t.up(expanded) {
+    margin-bottom: t.space(6);
+  }
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.eyebrow {
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.title {
+  margin: 0;
+  font: var(--mat-sys-headline-small);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+
+  @include t.up(expanded) {
+    font: var(--mat-sys-headline-medium);
+    font-weight: 700;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: t.space(2);
+}

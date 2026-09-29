@@ -1,0 +1,54 @@
+@use '../../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.bottom-nav {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  height: calc(t.$bottom-nav-height + env(safe-area-inset-bottom));
+  padding: t.space(2) t.space(1) calc(t.space(3) + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background: var(--mat-sys-surface-container-lowest);
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: t.space(1);
+  min-height: t.$touch-target;
+  border: none;
+  background: none;
+  border-radius: t.radius(md);
+  color: var(--mat-sys-on-surface-variant);
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &.active {
+    color: var(--mat-sys-on-primary-container);
+
+    .indicator {
+      background: var(--mat-sys-primary-container);
+    }
+  }
+}
+
+.indicator {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 30px;
+  border-radius: t.radius(pill);
+  transition: background-color 150ms ease;
+}
+
+.label {
+  font: var(--mat-sys-label-medium);
+  font-weight: 600;
+}

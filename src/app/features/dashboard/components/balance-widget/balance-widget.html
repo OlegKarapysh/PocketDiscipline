@@ -1,25 +1,10 @@
 <mat-card class="balance-card">
-  <mat-card-content class="content">
-    <mat-icon color="primary" class="coin-icon">account_balance_wallet</mat-icon>
-    <div class="balance-info">
-      <span class="label">Current Balance</span>
-      <h2 class="amount">
-        @if (user()) {
-          {{ user()!.balance | number: '1.0-2' }} ₴
-        } @else {
-          -- ₴
-        }
-      </h2>
-    </div>
-    <button
-      mat-flat-button
-      color="primary"
-      class="quick-spend-btn"
-      type="button"
-      (click)="openQuickSpend()"
-    >
-      <mat-icon>shopping_bag</mat-icon>
-      Quick Spend
-    </button>
-  </mat-card-content>
+  <div class="balance-info">
+    <span class="label">Current balance</span>
+    <app-amount [value]="user()?.balance" size="xl" tone="inherit" />
+  </div>
+  <button mat-flat-button class="quick-spend-btn" type="button" (click)="openQuickSpend()">
+    <mat-icon>shopping_bag</mat-icon>
+    Quick spend
+  </button>
 </mat-card>

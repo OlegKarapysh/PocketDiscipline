@@ -1,4 +1,16 @@
-:host {
-  display: block;
-  min-width: 320px;
+@use '@angular/material' as mat;
+
+.message {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+  text-wrap: pretty;
+}
+
+.destructive {
+  @include mat.button-overrides(
+    (
+      filled-container-color: var(--mat-sys-error),
+      filled-label-text-color: var(--mat-sys-on-error),
+    )
+  );
 }

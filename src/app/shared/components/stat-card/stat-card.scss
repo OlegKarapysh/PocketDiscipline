@@ -1,0 +1,39 @@
+@use '../../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(1);
+  height: 100%;
+  box-sizing: border-box;
+  padding: t.space(3) t.space(4);
+
+  @include t.up(expanded) {
+    padding: t.space(5);
+    gap: t.space(2);
+  }
+}
+
+.label {
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.hint {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+
+  &.success {
+    color: var(--pd-sys-success);
+    font-weight: 600;
+  }
+
+  &.danger {
+    color: var(--mat-sys-error);
+    font-weight: 600;
+  }
+}

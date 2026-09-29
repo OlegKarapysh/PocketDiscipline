@@ -1,0 +1,12 @@
+<mat-card appearance="outlined" class="card">
+  <header class="header">
+    @if (heading(); as text) {
+      <h2 class="heading">{{ text }}</h2>
+    }
+    <ng-content select="[sectionTools]" />
+    @if (actionLabel(); as label) {
+      <button mat-button type="button" class="action" (click)="action.emit()">{{ label }}</button>
+    }
+  </header>
+  <ng-content />
+</mat-card>

@@ -8,7 +8,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "e2e": "playwright test",
-    "lint": "ng lint",
+    "lint": "npm run lint:ui && ng lint",
+    "lint:ui": "node scripts/check-ui.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.spec.json"
   },
   "private": true,

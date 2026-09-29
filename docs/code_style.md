@@ -345,7 +345,9 @@ or never inside their own file. The sweep deletes names, it does not add them.
 **Rule.**
 
 - **No raw hex in component styles.** Colour comes from the Material system tokens that
-  `mat.theme()` generates (`var(--mat-sys-primary)`, `var(--mat-sys-on-surface)`, and so on).
+  `mat.theme()` generates (`var(--mat-sys-primary)`, `var(--mat-sys-on-surface)`, and so on), or
+  from the app's `--pd-sys-*` extensions for roles M3 has no slot for. Both are defined in
+  `src/styles.scss`.
 - **No fallback value inside `var()`.** Write `var(--mat-sys-primary)`, never
   `var(--mat-sys-primary, #673ab7)`.
 - **Spacing, radius and breakpoints come from a shared layer**, consumed with `@use`. Component
@@ -362,8 +364,8 @@ The fallbacks are actively wrong, not merely redundant:
 border-color: var(--mat-sys-primary, #673ab7);
 ```
 
-`#673ab7` is Material Design 2 deep purple. This app's theme is `primary: mat.$azure-palette`
-(`src/styles.scss:8`), whose tone-40 primary is `#005cbb` — blue. The fallback was copied from a
+`#673ab7` is Material Design 2 deep purple. This app's primary is periwinkle — `#5a5ec8` in light
+mode, `#9da1f2` in dark (`src/styles.scss`). The fallback was copied from a
 generic template, never matched this theme, and would paint a purple border the moment the token
 failed to resolve. It also silently defeats any future re-theme.
 
@@ -380,12 +382,17 @@ literals already cluster on a 4px scale (16px used 38 times, 8px 37, 12px 19, 6p
 scale exists, it is just not named. `border-radius` has not converged at all: 12px, 8px, 6px, 16px,
 20px, 10px, 4px, 2px.
 
-**Do this instead.** Add `src/styles/_tokens.scss` holding the spacing scale, the radius scale and
-the breakpoint map, and `@use` it from component styles. Colour needs no new layer — the
-`--mat-sys-*` tokens are already there and already correct.
+**Do this instead.** `@use` `src/styles/_tokens.scss`, which holds the spacing scale, the radius
+scale and the breakpoint map. [design_system.md](./design_system.md) builds on this rule with the
+colour roles, the type roles and the shared components; read it before touching UI.
 
-**Out of scope.** Dark mode is explicitly not part of this work (`src/styles.scss:18` pins
-`color-scheme: light`), and neither is the accessibility pass. The responsive pass **is** in scope.
+**Scope.** Dark mode **is** in scope: the theme follows the OS (`color-scheme: light dark`), so a raw
+colour is now a dark-mode bug as well. The responsive pass is in scope too. The accessibility pass is
+not.
+
+**Lint-enforced as a ratchet.** `scripts/check-ui.mjs` runs as part of `npm run lint` and fails any
+file that gains a violation against `scripts/ui-baseline.json`. The baseline may only shrink, and
+`--update-baseline` refuses to write while anything has regressed.
 
 ---
 

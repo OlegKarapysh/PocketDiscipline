@@ -5,6 +5,8 @@ import { By } from '@angular/platform-browser';
 import { DailyTaskItem } from './daily-task-item';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
+import { Amount } from '../../../../shared/components/amount/amount';
+import { StreakBadge } from '../../../../shared/components/streak-badge/streak-badge';
 
 const TEST_TASK_TITLE = 'Evening Reading';
 const EASY_DIFFICULTY: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
@@ -39,11 +41,28 @@ describe('DailyTaskItem', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const titleEl = fixture.debugElement.query(By.css('mat-card-title'));
-    const streakEl = fixture.debugElement.query(By.css('.streak-badge'));
+    const titleEl = fixture.debugElement.query(By.css('.title'));
+    const streak = fixture.debugElement.query(By.directive(StreakBadge)).componentInstance as StreakBadge;
 
     expect((titleEl.nativeElement as HTMLElement).textContent.trim()).toBe(TEST_TASK_TITLE);
-    expect((streakEl.nativeElement as HTMLElement).textContent).toContain('4 Day Streak');
+    expect(streak.days()).toBe(STREAK_FOUR);
+  });
+
+  it('should not render a streak badge when streak is 0', async () => {
+    const mockTask: DailyTask = {
+      id: 'task-1',
+      title: TEST_TASK_TITLE,
+      difficulties: [EASY_DIFFICULTY],
+      createdAt: Date.now(),
+      streak: 0,
+      lastCompletedAt: null,
+    };
+
+    fixture.componentRef.setInput('task', mockTask);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.debugElement.query(By.directive(StreakBadge))).toBeNull();
   });
 
   it('should compute isCompletedToday as false and render difficulty action buttons when uncompleted', async () => {
@@ -64,6 +83,10 @@ describe('DailyTaskItem', () => {
 
     const buttons = fixture.debugElement.queryAll(By.css('.actions button'));
     expect(buttons.length).toBe(2);
+
+    const rewards = fixture.debugElement.queryAll(By.directive(Amount)).map(el => el.componentInstance as Amount);
+    expect(rewards.map(amount => amount.value())).toEqual([EASY_DIFFICULTY.baseReward, HARD_DIFFICULTY.baseReward]);
+    expect(rewards.every(amount => amount.showSign())).toBe(true);
   });
 
   it('should emit complete event when a difficulty button is clicked', async () => {
@@ -91,7 +114,7 @@ describe('DailyTaskItem', () => {
     expect(emittedDifficulty).toEqual(HARD_DIFFICULTY);
   });
 
-  it('should compute isCompletedToday as true and show completed message when completed today', async () => {
+  it('should compute isCompletedToday as true and mark the task as completed when completed today', async () => {
     const mockTask: DailyTask = {
       id: 'task-1',
       title: TEST_TASK_TITLE,
@@ -107,9 +130,9 @@ describe('DailyTaskItem', () => {
 
     expect(component.isCompletedToday()).toBe(true);
 
-    const completedMsg = fixture.debugElement.query(By.css('.completed-msg'));
-    expect(completedMsg).toBeTruthy();
-    expect((completedMsg.nativeElement as HTMLElement).textContent).toContain('Completed for today!');
+    const doneIcon = fixture.debugElement.query(By.css('[aria-label="Completed today"]'));
+    expect(doneIcon).toBeTruthy();
+    expect((doneIcon.nativeElement as HTMLElement).getAttribute('aria-hidden')).toBe('false');
 
     const actions = fixture.debugElement.query(By.css('.actions'));
     expect(actions).toBeNull();

@@ -2,6 +2,8 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
+import { Router, provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import type { Observable } from 'rxjs';
 import { of } from 'rxjs';
 import { DailyTaskList } from './daily-task-list';
@@ -47,6 +49,7 @@ describe('DailyTaskList', () => {
       imports: [DailyTaskList],
       providers: [
         { provide: DailyTasksService, useValue: dailyTasksServiceMock },
+        provideRouter([{ path: 'tasks', component: DailyTaskList }]),
       ],
     }).compileComponents();
 
@@ -138,6 +141,34 @@ describe('DailyTaskList', () => {
     await fixture.whenStable();
 
     expect(dailyTasksServiceMock.completeTask).toHaveBeenCalledWith(mockTasks[0], EASY_DIFFICULTY);
+  });
+
+  it('should open the form when reached with ?new, then drop the param from the URL', async () => {
+    const harness = await RouterTestingHarness.create();
+    const list = await harness.navigateByUrl('/tasks?new=1', DailyTaskList);
+    await harness.fixture.whenStable();
+
+    expect(list.showForm()).toBe(true);
+    expect(TestBed.inject(Router).url).toBe('/tasks');
+  });
+
+  it('should reopen the form when ?new is requested again after closing it', async () => {
+    const harness = await RouterTestingHarness.create();
+    const list = await harness.navigateByUrl('/tasks?new=1', DailyTaskList);
+    await harness.fixture.whenStable();
+    list.closeForm();
+
+    await harness.navigateByUrl('/tasks?new=1');
+    await harness.fixture.whenStable();
+
+    expect(list.showForm()).toBe(true);
+  });
+
+  it('should keep the form closed when reached without ?new', async () => {
+    const harness = await RouterTestingHarness.create();
+    const list = await harness.navigateByUrl('/tasks', DailyTaskList);
+
+    expect(list.showForm()).toBe(false);
   });
 
   it('should handle error gracefully when completeTask fails', async () => {

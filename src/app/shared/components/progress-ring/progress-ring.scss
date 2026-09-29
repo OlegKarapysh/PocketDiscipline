@@ -1,0 +1,26 @@
+.ring {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.track {
+  position: absolute;
+  inset: 0;
+  border-style: solid;
+  border-color: var(--mat-sys-surface-container);
+  border-radius: 50%;
+}
+
+mat-progress-spinner {
+  position: absolute;
+  inset: 0;
+}
+
+.label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 600;
+}

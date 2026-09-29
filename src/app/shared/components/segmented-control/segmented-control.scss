@@ -1,0 +1,13 @@
+:host {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.full-width {
+  display: flex;
+  width: 100%;
+
+  mat-button-toggle {
+    flex: 1;
+  }
+}

@@ -1,150 +1,90 @@
-import type { ComponentFixture} from '@angular/core/testing';
+import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
 import type { BreakpointState } from '@angular/cdk/layout';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import type { MatSidenav } from '@angular/material/sidenav';
+import { MatSidenav } from '@angular/material/sidenav';
 import { BehaviorSubject } from 'rxjs';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { Layout } from './layout';
+import { BottomNav } from '../bottom-nav/bottom-nav';
+import { SpeedDial } from '../speed-dial/speed-dial';
+import { Badge } from '../badge/badge';
+
+const SECTION_PATHS = ['/dashboard', '/tasks', '/goals', '/pomodoro', '/daily-scores', '/rewards', '/settings'];
 
 describe('Layout', () => {
-  let component: Layout;
   let fixture: ComponentFixture<Layout>;
-  let router: Router;
-  let breakpointSubject: BehaviorSubject<BreakpointState>;
+  let compactSubject: BehaviorSubject<BreakpointState>;
+
+  const setCompact = async (matches: boolean) => {
+    compactSubject.next({ matches, breakpoints: {} });
+    fixture.detectChanges();
+    await fixture.whenStable();
+  };
+
+  const isRailOpen = () =>
+    fixture.debugElement.queryAll(By.directive(MatSidenav)).some(rail => (rail.componentInstance as MatSidenav).opened);
 
   beforeEach(async () => {
-    breakpointSubject = new BehaviorSubject<BreakpointState>({ matches: false, breakpoints: {} });
+    compactSubject = new BehaviorSubject<BreakpointState>({ matches: false, breakpoints: {} });
 
     await TestBed.configureTestingModule({
       imports: [Layout],
       providers: [
-        provideRouter([
-          { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
-          { path: 'dashboard', children: [] },
-          { path: 'tasks', children: [] },
-          { path: 'goals', children: [] },
-          { path: 'pomodoro', children: [] },
-          { path: 'daily-scores', children: [] },
-          { path: 'rewards', children: [] },
-          { path: 'settings', children: [] },
-        ]),
-        {
-          provide: BreakpointObserver,
-          useValue: {
-            observe: () => breakpointSubject.asObservable(),
-          },
-        },
+        // Any standalone component without required inputs will do as the routed page.
+        provideRouter(SECTION_PATHS.map(path => ({ path: path.slice(1), component: Badge }))),
+        { provide: BreakpointObserver, useValue: { observe: () => compactSubject.asObservable() } },
       ],
     }).compileComponents();
 
-    router = TestBed.inject(Router);
     fixture = TestBed.createComponent(Layout);
-    component = fixture.componentInstance;
+    await TestBed.inject(Router).navigateByUrl('/dashboard');
+    fixture.detectChanges();
     await fixture.whenStable();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('should link every section from the rail', () => {
+    const links = fixture.debugElement
+      .queryAll(By.css('mat-sidenav a[mat-list-item]'))
+      .map(link => (link.nativeElement as HTMLAnchorElement).getAttribute('href'));
+
+    expect(links).toEqual(expect.arrayContaining(SECTION_PATHS));
   });
 
-  it('should contain navigation links for all features', () => {
-    const compiled = fixture.nativeElement as HTMLElement;
-    const links = Array.from(compiled.querySelectorAll('a[mat-list-item]')).map(
-      a => a.getAttribute('href') ?? a.getAttribute('ng-reflect-router-link') ?? a.getAttribute('routerLink')
-    );
-    expect(links).toContain('/dashboard');
-    expect(links).toContain('/tasks');
-    expect(links).toContain('/goals');
-    expect(links).toContain('/pomodoro');
-    expect(links).toContain('/daily-scores');
-    expect(links).toContain('/rewards');
-    expect(links).toContain('/settings');
+  it('should show the rail without bottom nav or speed dial on wide screens', async () => {
+    await setCompact(false);
+
+    expect(isRailOpen()).toBe(true);
+    expect(fixture.debugElement.query(By.directive(BottomNav))).toBeNull();
+    expect(fixture.debugElement.query(By.directive(SpeedDial))).toBeNull();
   });
 
-  it('should not render top toolbar or static Pocket Discipline text on wide screens (desktop mode)', () => {
-    breakpointSubject.next({ matches: false, breakpoints: {} });
-    fixture.detectChanges();
+  it('should swap the rail for the bottom nav and speed dial on narrow screens', async () => {
+    await setCompact(true);
 
-    const compiled = fixture.nativeElement as HTMLElement;
-    const topToolbar = compiled.querySelector('mat-sidenav-content mat-toolbar');
-    expect(topToolbar).toBeNull();
-    expect(compiled.textContent).not.toContain('Pocket Discipline');
+    expect(isRailOpen()).toBe(false);
+    expect(fixture.debugElement.query(By.directive(BottomNav))).toBeTruthy();
+    expect(fixture.debugElement.query(By.directive(SpeedDial))).toBeTruthy();
   });
 
-  it('should render top toolbar with current tab name on mobile (handset mode)', async () => {
-    breakpointSubject.next({ matches: true, breakpoints: {} });
-    await router.navigateByUrl('/dashboard');
-    fixture.detectChanges();
+  it('should reach every section from the bottom nav or its More menu', async () => {
+    await setCompact(true);
 
-    const compiled = fixture.nativeElement as HTMLElement;
-    const topToolbar = compiled.querySelector('mat-sidenav-content mat-toolbar');
-    expect(topToolbar).not.toBeNull();
-    expect(topToolbar?.querySelector('.tab-title')?.textContent.trim()).toBe('Dashboard');
-    expect(compiled.textContent).not.toContain('Pocket Discipline');
+    const bottomNav = fixture.debugElement.query(By.directive(BottomNav)).componentInstance as BottomNav;
+    const reachable = [...bottomNav.items(), ...bottomNav.moreItems()].map(item => item.path);
+
+    expect(reachable).toEqual(expect.arrayContaining(SECTION_PATHS));
   });
 
-  it('should dynamically update the tab title on mobile when navigating across tabs', async () => {
-    breakpointSubject.next({ matches: true, breakpoints: {} });
-    const compiled = fixture.nativeElement as HTMLElement;
+  it('should keep the routed page alive when the viewport crosses the breakpoint', async () => {
+    const page = fixture.debugElement.query(By.directive(Badge)).componentInstance as Badge;
 
-    await router.navigateByUrl('/tasks');
-    fixture.detectChanges();
-    let titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent.trim()).toBe('Tasks');
+    await setCompact(true);
+    expect(fixture.debugElement.query(By.directive(Badge)).componentInstance).toBe(page);
 
-    await router.navigateByUrl('/goals');
-    fixture.detectChanges();
-    titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent.trim()).toBe('Goals');
-
-    await router.navigateByUrl('/pomodoro');
-    fixture.detectChanges();
-    titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent.trim()).toBe('Pomodoro');
-
-    await router.navigateByUrl('/daily-scores');
-    fixture.detectChanges();
-    titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent.trim()).toBe('Daily Scores');
-
-    await router.navigateByUrl('/rewards');
-    fixture.detectChanges();
-    titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent.trim()).toBe('Rewards');
-
-    await router.navigateByUrl('/settings');
-    fixture.detectChanges();
-    titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent.trim()).toBe('Settings');
-  });
-
-  it('should strip query parameters and hash fragments when determining active tab title', async () => {
-    breakpointSubject.next({ matches: true, breakpoints: {} });
-
-    await router.navigateByUrl('/tasks?filter=active#section');
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    const titleEl = compiled.querySelector('mat-sidenav-content mat-toolbar .tab-title');
-    expect(titleEl?.textContent.trim()).toBe('Tasks');
-  });
-
-  it('should close drawer on mobile when onNavClick is called', () => {
-    breakpointSubject.next({ matches: true, breakpoints: {} });
-    fixture.detectChanges();
-
-    const mockDrawer = { close: vi.fn() } as unknown as MatSidenav;
-    component.onNavClick(mockDrawer);
-    expect(mockDrawer.close).toHaveBeenCalled();
-  });
-
-  it('should not close drawer on desktop when onNavClick is called', () => {
-    breakpointSubject.next({ matches: false, breakpoints: {} });
-    fixture.detectChanges();
-
-    const mockDrawer = { close: vi.fn() } as unknown as MatSidenav;
-    component.onNavClick(mockDrawer);
-    expect(mockDrawer.close).not.toHaveBeenCalled();
+    await setCompact(false);
+    expect(fixture.debugElement.query(By.directive(Badge)).componentInstance).toBe(page);
   });
 });

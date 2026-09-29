@@ -1,110 +1,46 @@
-import { Component, DestroyRef, inject } from '@angular/core';
-import { RouterOutlet, RouterModule, Router, NavigationEnd } from '@angular/router';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { toSignal, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter, map, catchError } from 'rxjs/operators';
-import { from, EMPTY } from 'rxjs';
-import type { MatSidenav} from '@angular/material/sidenav';
+import { Component, inject } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs/operators';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { MatButtonModule } from '@angular/material/button';
+import { BottomNav } from '../bottom-nav/bottom-nav';
+import { SpeedDial } from '../speed-dial/speed-dial';
 import type { NavItem } from '../../models/nav-item.model';
+import type { SpeedDialAction } from '../../models/speed-dial-action.model';
+import { NEW_ITEM_QUERY_PARAM } from '../../constants/new-item-query-param.const';
 
-const ROUTE_DASHBOARD = 'dashboard';
-const ROUTE_TASKS = 'tasks';
-const ROUTE_GOALS = 'goals';
-const ROUTE_POMODORO = 'pomodoro';
-const ROUTE_DAILY_SCORES = 'daily-scores';
-const ROUTE_REWARDS = 'rewards';
-const ROUTE_SETTINGS = 'settings';
+// Must match t.down(expanded) in src/styles/_tokens.scss, which styles the same switch.
+const COMPACT_QUERY = '(max-width: 839.98px)';
 
-const TITLE_DASHBOARD = 'Dashboard';
-const TITLE_TASKS = 'Tasks';
-const TITLE_GOALS = 'Goals';
-const TITLE_POMODORO = 'Pomodoro';
-const TITLE_DAILY_SCORES = 'Daily Scores';
-const TITLE_REWARDS = 'Rewards';
-const TITLE_SETTINGS = 'Settings';
-
-const ROUTE_TITLE_MAP: Record<string, string> = {
-  [ROUTE_DASHBOARD]: TITLE_DASHBOARD,
-  [ROUTE_TASKS]: TITLE_TASKS,
-  [ROUTE_GOALS]: TITLE_GOALS,
-  [ROUTE_POMODORO]: TITLE_POMODORO,
-  [ROUTE_DAILY_SCORES]: TITLE_DAILY_SCORES,
-  [ROUTE_REWARDS]: TITLE_REWARDS,
-  [ROUTE_SETTINGS]: TITLE_SETTINGS,
-};
-
-const NAV_ITEMS: readonly NavItem[] = [
-  { path: '/dashboard', label: TITLE_DASHBOARD, icon: 'dashboard' },
-  { path: '/tasks', label: TITLE_TASKS, icon: 'checklist' },
-  { path: '/goals', label: TITLE_GOALS, icon: 'star' },
-  { path: '/pomodoro', label: TITLE_POMODORO, icon: 'timer' },
-  { path: '/daily-scores', label: TITLE_DAILY_SCORES, icon: 'score' },
-  { path: '/rewards', label: TITLE_REWARDS, icon: 'card_giftcard' },
-  { path: '/settings', label: TITLE_SETTINGS, icon: 'settings' },
-];
+const DASHBOARD: NavItem = { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' };
+const TASKS: NavItem = { path: '/tasks', label: 'Tasks', icon: 'checklist' };
+const GOALS: NavItem = { path: '/goals', label: 'Goals', icon: 'flag' };
+const POMODORO: NavItem = { path: '/pomodoro', label: 'Pomodoro', icon: 'timer' };
+const DAILY_SCORES: NavItem = { path: '/daily-scores', label: 'Daily Scores', icon: 'insights' };
+const REWARDS: NavItem = { path: '/rewards', label: 'Rewards', icon: 'redeem' };
+const SETTINGS: NavItem = { path: '/settings', label: 'Settings', icon: 'settings' };
 
 @Component({
   selector: 'app-layout',
-  imports: [
-    RouterOutlet,
-    RouterModule,
-    MatSidenavModule,
-    MatToolbarModule,
-    MatIconModule,
-    MatListModule,
-    MatButtonModule,
-  ],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, MatSidenavModule, MatIconModule, MatListModule, BottomNav, SpeedDial],
   templateUrl: './layout.html',
   styleUrl: './layout.scss',
 })
 export class Layout {
   private readonly breakpointObserver = inject(BreakpointObserver);
-  private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
 
-  readonly navItems = NAV_ITEMS;
+  readonly navItems: readonly NavItem[] = [DASHBOARD, TASKS, GOALS, POMODORO, DAILY_SCORES, REWARDS, SETTINGS];
+  readonly primaryNav: readonly NavItem[] = [{ ...DASHBOARD, label: 'Today', icon: 'home' }, TASKS, GOALS, REWARDS];
+  readonly moreNav: readonly NavItem[] = [POMODORO, DAILY_SCORES, SETTINGS];
+  readonly quickActions: readonly SpeedDialAction[] = [
+    { icon: 'timer', label: 'Start focus', path: '/pomodoro' },
+    { icon: 'add_task', label: 'New task', path: '/tasks', queryParams: { [NEW_ITEM_QUERY_PARAM]: '1' } },
+  ];
 
-  readonly isHandset = toSignal(
-    this.breakpointObserver.observe(Breakpoints.Handset).pipe(map(result => result.matches)),
-    { initialValue: false }
-  );
-
-  readonly currentTabTitle = toSignal(
-    this.router.events.pipe(
-      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-      map(event => this.getTabTitle(event.urlAfterRedirects || event.url))
-    ),
-    { initialValue: this.getTabTitle(this.router.url) }
-  );
-
-  onNavClick(drawer: MatSidenav): void {
-    if (this.isHandset()) {
-      from(Promise.resolve(drawer.close()))
-        .pipe(
-          takeUntilDestroyed(this.destroyRef),
-          catchError((err: unknown) => {
-            console.error('Failed to close navigation drawer:', err);
-            return EMPTY;
-          })
-        )
-        .subscribe();
-    }
-  }
-
-  private getTabTitle(url: string | null | undefined): string {
-    if (!url) {
-      return TITLE_DASHBOARD;
-    }
-    const cleanUrl = url.split('?')[0].split('#')[0];
-    const segment = cleanUrl.split('/').find(Boolean);
-    if (segment && Object.prototype.hasOwnProperty.call(ROUTE_TITLE_MAP, segment)) {
-      return ROUTE_TITLE_MAP[segment];
-    }
-    return TITLE_DASHBOARD;
-  }
+  readonly isCompact = toSignal(this.breakpointObserver.observe(COMPACT_QUERY).pipe(map(result => result.matches)), {
+    initialValue: false,
+  });
 }

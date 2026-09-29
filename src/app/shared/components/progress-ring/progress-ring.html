@@ -1,0 +1,5 @@
+<div class="ring" [style.width.px]="diameter()" [style.height.px]="diameter()">
+  <span class="track" [style.border-width.px]="strokeWidth()"></span>
+  <mat-progress-spinner mode="determinate" [value]="value()" [diameter]="diameter()" [strokeWidth]="strokeWidth()" />
+  <span class="label pd-num"><ng-content /></span>
+</div>
