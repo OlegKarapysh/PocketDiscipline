@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormField, form, maxLength, min, required } from '@angular/forms/signals';
+import { FormField, form, maxLength, min, required, validate, requiredError } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -65,7 +65,7 @@ export class RewardFormDialog {
   readonly model = signal<RewardFormModel>(this.initialModel());
 
   readonly rewardForm = form(this.model, (path) => {
-    required(path.title, { message: 'Title is required' });
+    validate(path.title, ({ value }) => (value().trim() ? null : requiredError({ message: 'Title is required' })));
     maxLength(path.title, 100, { message: 'Title is too long' });
     required(path.cost, { message: 'Cost is required' });
     min(path.cost, 0.01, { message: 'Cost must be greater than zero' });

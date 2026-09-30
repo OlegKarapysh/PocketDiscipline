@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormField, form, max, maxLength, min, required } from '@angular/forms/signals';
+import { FormField, form, max, maxLength, min, required, validate, requiredError } from '@angular/forms/signals';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -77,7 +77,7 @@ export class QuickSpendDialog {
     required(path.amount, { message: 'Amount is required' });
     min(path.amount, 0.01, { message: 'Amount must be greater than zero' });
     max(path.amount, () => this.user()?.balance ?? 0, { message: 'Amount exceeds your available balance' });
-    required(path.title, { message: 'Title is required' });
+    validate(path.title, ({ value }) => (value().trim() ? null : requiredError({ message: 'Title is required' })));
     maxLength(path.title, 100, { message: 'Title is too long' });
     required(path.categoryId, { message: 'Category is required' });
     maxLength(path.notes, 1000, { message: 'Notes are too long' });

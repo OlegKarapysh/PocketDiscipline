@@ -56,7 +56,8 @@ export class GoalService {
     });
   }
 
-  async addGoal(title: string, rewardValue: number): Promise<void> {
+  async addGoal(rawTitle: string, rewardValue: number): Promise<void> {
+    const title = rawTitle.trim();
     if (await this.isTitleActive(title)) {
       throw new Error(ERROR_DUPLICATE_GOAL_TITLE);
     }
@@ -72,7 +73,8 @@ export class GoalService {
     await this.db.goals.add(goal);
   }
 
-  async updateGoal(id: string, title: string, rewardValue: number): Promise<void> {
+  async updateGoal(id: string, rawTitle: string, rewardValue: number): Promise<void> {
+    const title = rawTitle.trim();
     const goal = await this.db.goals.get(id);
     if (goal?.status !== GOAL_STATUS.ACTIVE) return;
 
@@ -89,6 +91,6 @@ export class GoalService {
 
   private async isTitleActive(title: string, exceptId?: string): Promise<boolean> {
     const active = await this.db.goals.where('status').equals(GOAL_STATUS.ACTIVE).toArray();
-    return active.some((g) => g.id !== exceptId && g.title.toLowerCase() === title.toLowerCase());
+    return active.some((g) => g.id !== exceptId && g.title.trim().toLowerCase() === title.trim().toLowerCase());
   }
 }
