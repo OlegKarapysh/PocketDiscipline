@@ -1,4 +1,6 @@
-import { Component, input, output, computed } from '@angular/core';
+import { Component, input, output, computed, inject } from '@angular/core';
+import { ClockService } from '../../../../core/services/clock.service';
+import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,11 +19,11 @@ export class DailyTaskItem {
   task = input.required<DailyTask>();
   complete = output<DailyTaskDifficulty>();
 
+  private readonly clock = inject(ClockService);
+
   isCompletedToday = computed(() => {
     const lastCompletedAt = this.task().lastCompletedAt;
     if (!lastCompletedAt) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return lastCompletedAt >= today.getTime();
+    return new Date(lastCompletedAt).toLocaleDateString(DATE_LOCALE_CA) === this.clock.today();
   });
 }

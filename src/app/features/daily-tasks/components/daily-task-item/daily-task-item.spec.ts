@@ -1,8 +1,11 @@
+import { signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { DailyTaskItem } from './daily-task-item';
+import { ClockService } from '../../../../core/services/clock.service';
+import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
 import { Amount } from '../../../../shared/components/amount/amount';
@@ -15,10 +18,13 @@ const ONE_DAY_MS = 86_400_000;
 describe('DailyTaskItem', () => {
   let component: DailyTaskItem;
   let fixture: ComponentFixture<DailyTaskItem>;
+  const today = signal('');
 
   beforeEach(async () => {
+    today.set(new Date().toLocaleDateString(DATE_LOCALE_CA));
     await TestBed.configureTestingModule({
       imports: [DailyTaskItem],
+      providers: [{ provide: ClockService, useValue: { today } }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DailyTaskItem);
@@ -152,5 +158,24 @@ describe('DailyTaskItem', () => {
     await fixture.whenStable();
 
     expect(component.isCompletedToday()).toBe(false);
+  });
+
+  it('should offer the difficulties again once the day after the completion begins', () => {
+    today.set('2026-09-30');
+    fixture.componentRef.setInput('task', {
+      id: 'task-1',
+      title: 'Morning Workout',
+      difficulties: [easy, hard],
+      createdAt: new Date(2026, 8, 1).getTime(),
+      streak: 1,
+      lastCompletedAt: new Date(2026, 8, 30, 21, 0).getTime(),
+    } satisfies DailyTask);
+    fixture.detectChanges();
+    expect(fixture.debugElement.queryAll(By.css('.pd-difficulty'))).toHaveLength(0);
+
+    today.set('2026-10-01');
+    fixture.detectChanges();
+
+    expect(fixture.debugElement.queryAll(By.css('.pd-difficulty'))).toHaveLength(2);
   });
 });
