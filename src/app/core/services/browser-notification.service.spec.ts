@@ -84,32 +84,51 @@ describe('BrowserNotificationService', () => {
   });
 
   describe('show', () => {
-    it('should construct a Notification with the given title and options when granted', () => {
+    it('should show through the service worker registration where the constructor is unavailable', async () => {
+      const illegalConstructor = vi.fn(() => {
+        throw new TypeError('Illegal constructor');
+      });
+      Object.assign(illegalConstructor, { permission: 'granted' });
+      vi.stubGlobal('Notification', illegalConstructor);
+      const showNotification = vi.fn().mockResolvedValue(undefined);
+      vi.stubGlobal('navigator', {
+        serviceWorker: { getRegistration: vi.fn().mockResolvedValue({ showNotification }) },
+      });
+
+      await service.show('Pocket Discipline', { body: 'Hello' });
+
+      expect(showNotification).toHaveBeenCalledWith('Pocket Discipline', { body: 'Hello' });
+      expect(illegalConstructor).not.toHaveBeenCalled();
+    });
+
+    it('should construct a Notification when there is no service worker registration', async () => {
       const notificationSpy = vi.fn();
       Object.assign(notificationSpy, { permission: 'granted' });
       vi.stubGlobal('Notification', notificationSpy);
+      vi.stubGlobal('navigator', { serviceWorker: { getRegistration: vi.fn().mockResolvedValue(undefined) } });
 
-      service.show('Pocket Discipline', { body: 'Hello' });
+      await service.show('Pocket Discipline', { body: 'Hello' });
 
       expect(notificationSpy).toHaveBeenCalledWith('Pocket Discipline', { body: 'Hello' });
     });
 
-    it('should not construct a Notification when permission is not granted', () => {
+    it('should not show anything when permission is not granted', async () => {
       const notificationSpy = vi.fn();
       Object.assign(notificationSpy, { permission: 'default' });
       vi.stubGlobal('Notification', notificationSpy);
+      const getRegistration = vi.fn();
+      vi.stubGlobal('navigator', { serviceWorker: { getRegistration } });
 
-      service.show('Pocket Discipline', { body: 'Hello' });
+      await service.show('Pocket Discipline', { body: 'Hello' });
 
       expect(notificationSpy).not.toHaveBeenCalled();
+      expect(getRegistration).not.toHaveBeenCalled();
     });
 
-    it('should do nothing when the Notification API is unsupported', () => {
+    it('should do nothing when the Notification API is unsupported', async () => {
       Reflect.deleteProperty(window, 'Notification');
 
-      expect(() => {
-        service.show('Pocket Discipline');
-      }).not.toThrow();
+      await expect(service.show('Pocket Discipline')).resolves.toBeUndefined();
     });
   });
 

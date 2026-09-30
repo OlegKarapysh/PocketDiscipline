@@ -28,8 +28,16 @@ export class BrowserNotificationService {
     }
   }
 
-  show(title: string, options?: NotificationOptions): void {
+  async show(title: string, options?: NotificationOptions): Promise<void> {
     if (!this.isSupported || Notification.permission !== 'granted') {
+      return;
+    }
+
+    // Chrome on Android has no Notification constructor ("Illegal constructor"): a page there can
+    // only show a notification through its service worker registration.
+    const registration = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : undefined;
+    if (registration) {
+      await registration.showNotification(title, options);
       return;
     }
 
