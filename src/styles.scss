@@ -254,8 +254,11 @@ body {
 
 // Two-line difficulty button:
 // <button mat-stroked-button class="pd-difficulty">Easy<app-amount [value]="100" size="sm" tone="reward" [showSign]="true" /></button>
+// A long difficulty name wraps on a phone, so the button grows rather than clipping it.
 .pd-difficulty.mat-mdc-outlined-button {
-  height: 48px;
+  height: auto;
+  min-height: 48px;
+  padding-block: t.space(1);
 
   .mdc-button__label {
     display: flex;
