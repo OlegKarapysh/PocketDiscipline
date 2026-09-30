@@ -8,8 +8,10 @@
 <mat-tab-group animationDuration="200ms" class="hub-tabs">
   <mat-tab>
     <ng-template mat-tab-label>
-      <mat-icon class="tab-icon">storefront</mat-icon>
-      Reward store
+      <span class="tab-label">
+        <mat-icon class="tab-icon">storefront</mat-icon>
+        Store
+      </span>
     </ng-template>
     <div class="tab-content">
       <app-reward-store />
@@ -18,8 +20,10 @@
 
   <mat-tab>
     <ng-template mat-tab-label>
-      <mat-icon class="tab-icon">receipt_long</mat-icon>
-      History
+      <span class="tab-label">
+        <mat-icon class="tab-icon">receipt_long</mat-icon>
+        History
+      </span>
     </ng-template>
     <div class="tab-content">
       <app-withdrawal-ledger />
@@ -28,8 +32,10 @@
 
   <mat-tab>
     <ng-template mat-tab-label>
-      <mat-icon class="tab-icon">insights</mat-icon>
-      Analytics
+      <span class="tab-label">
+        <mat-icon class="tab-icon">insights</mat-icon>
+        Analytics
+      </span>
     </ng-template>
     <div class="tab-content">
       <app-spending-analytics />

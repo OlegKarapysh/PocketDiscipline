@@ -1,8 +1,28 @@
+@use '@angular/material' as mat;
 @use '../../../../../styles/tokens' as t;
 
 .hub-tabs {
+  // On a phone the icon sits above the label (the M3 icon-and-label tab), so all three tabs fit.
+  @include t.down(medium) {
+    @include mat.tabs-overrides(
+      (
+        container-height: 64px,
+      )
+    );
+  }
+
+  .tab-label {
+    display: flex;
+    align-items: center;
+    gap: t.space(2);
+
+    @include t.down(medium) {
+      flex-direction: column;
+      gap: t.space(1);
+    }
+  }
+
   .tab-icon {
-    margin-right: t.space(2);
     @include t.icon-size(md);
   }
 
