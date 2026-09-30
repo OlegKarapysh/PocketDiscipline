@@ -2,10 +2,12 @@
 
 .dialog-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: t.space(2);
 
   .header-icon {
+    flex-shrink: 0;
     color: var(--mat-sys-primary);
   }
 
