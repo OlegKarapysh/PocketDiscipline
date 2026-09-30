@@ -90,17 +90,10 @@ export class DailyTasksService {
     await this.db.transaction('rw', this.db.dailyTasks, this.db.users, this.db.dailyTaskCompletions, async () => {
       const freshTask = (await this.db.dailyTasks.get(task.id)) ?? task;
 
-      let newStreak = freshTask.streak;
-      if (freshTask.lastCompletedAt) {
-        const diffDays = this.getDiffDays(now, freshTask.lastCompletedAt);
-        if (diffDays === 1) {
-          newStreak += 1;
-        } else if (diffDays > 1) {
-          newStreak = 1;
-        }
-      } else {
-        newStreak = 1;
-      }
+      const diffDays = freshTask.lastCompletedAt === null ? null : this.getDiffDays(now, freshTask.lastCompletedAt);
+      if (diffDays === 0) return;
+
+      const newStreak = diffDays === 1 ? freshTask.streak + 1 : 1;
 
       const streakCountForBonus = Math.max(newStreak - 1, 0);
       const cappedStreakBonus = Math.min(streakCountForBonus, MAX_STREAK_BONUS_DAYS);

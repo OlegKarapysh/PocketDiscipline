@@ -65,6 +65,8 @@ describe('DailyTasksService', () => {
   };
 
   beforeEach(() => {
+    // IndexedDB runs overlapping read-write transactions on the same tables one after another.
+    let queue: Promise<unknown> = Promise.resolve();
     dbMock = {
       dailyTasks: {
         toArray: vi.fn().mockResolvedValue([]),
@@ -76,9 +78,11 @@ describe('DailyTasksService', () => {
         add: vi.fn().mockResolvedValue(undefined),
       },
       users: {},
-      transaction: vi.fn().mockImplementation(async (...args: unknown[]) => {
-        const callback = args[args.length - 1] as () => Promise<void>;
-        await callback();
+      transaction: vi.fn((...args: unknown[]) => {
+        const callback = args[args.length - 1] as () => Promise<unknown>;
+        const run = queue.then(callback);
+        queue = run.catch(() => undefined);
+        return run;
       }),
     };
 
@@ -312,25 +316,42 @@ describe('DailyTasksService', () => {
       );
     });
 
-    it('should keep current streak if completed on the same day', async () => {
-      const now = Date.now();
+    it('should ignore a second completion on the same day', async () => {
       const task: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
         difficulties: [easy],
-        createdAt: now - ONE_DAY_MS,
+        createdAt: Date.now() - ONE_DAY_MS,
         streak: 5,
-        lastCompletedAt: now - 1000, // completed earlier today
+        lastCompletedAt: new Date().setHours(0, 0, 0, 0),
       };
 
       await service.completeTask(task, easy);
 
-      expect(dbMock.dailyTasks.update).toHaveBeenCalledWith(
-        'test-daily-task-1',
-        expect.objectContaining({
-          streak: 5,
-        }),
-      );
+      expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
+      expect(dbMock.dailyTaskCompletions.add).not.toHaveBeenCalled();
+      expect(userMock.addBalance).not.toHaveBeenCalled();
+    });
+
+    it('should record one completion when two difficulties are tapped at the same time', async () => {
+      let stored: DailyTask = {
+        id: 'test-daily-task-1',
+        title: 'Morning Workout',
+        difficulties: [easy, hard],
+        createdAt: Date.now() - ONE_DAY_MS,
+        streak: 0,
+        lastCompletedAt: null,
+      };
+      dbMock.dailyTasks.get.mockImplementation(() => ({ ...stored }));
+      dbMock.dailyTasks.update.mockImplementation((_id: string, changes: Partial<DailyTask>) => {
+        stored = { ...stored, ...changes };
+        return 1;
+      });
+
+      await Promise.all([service.completeTask(stored, easy), service.completeTask(stored, hard)]);
+
+      expect(dbMock.dailyTaskCompletions.add).toHaveBeenCalledTimes(1);
+      expect(userMock.addBalance).toHaveBeenCalledTimes(1);
     });
 
     it('should ignore completion if difficulty baseReward is invalid or not finite', async () => {
