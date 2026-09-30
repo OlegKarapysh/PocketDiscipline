@@ -5,6 +5,7 @@ import type { PomodoroSession } from '../../../core/models/pomodoro-session.mode
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
 import { CelebrationService } from '../../../shared/services/celebration.service';
+import { BrowserNotificationService } from '../../../core/services/browser-notification.service';
 import { MONEY_FORMAT } from '../../../shared/constants/money-format.const';
 import type { TimerConfig } from '../models/timer-config.model';
 
@@ -43,6 +44,7 @@ export class PomodoroTimerService implements OnDestroy {
 
   private storage = inject(PomodoroStorageService);
   private celebration = inject(CelebrationService);
+  private notifications = inject(BrowserNotificationService);
   private destroyRef = inject(DestroyRef);
 
   constructor() {
@@ -184,7 +186,11 @@ export class PomodoroTimerService implements OnDestroy {
       const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
       if (!(await this.storage.completeSession(id, reward))) return;
 
-      void this.showNotification(COMPLETION_TITLE, this.rewardMessage(reward));
+      this.notifications
+        .show(COMPLETION_TITLE, { body: this.rewardMessage(reward), icon: 'icons/icon-192x192.png' })
+        .catch((err: unknown) => {
+          console.error('Failed to show notification:', err);
+        });
 
       this.celebration
         .show({
@@ -265,28 +271,6 @@ export class PomodoroTimerService implements OnDestroy {
       }
     } catch (e) {
       console.error('Failed to request notification permission:', e);
-    }
-  }
-
-  private async showNotification(title: string, body: string): Promise<void> {
-    if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
-      return;
-    }
-
-    try {
-      if ('serviceWorker' in navigator) {
-        const reg = await navigator.serviceWorker.getRegistration();
-        if (reg) {
-          await reg.showNotification(title, {
-            body,
-            icon: 'icons/icon-192x192.png',
-          });
-          return;
-        }
-      }
-      new Notification(title, { body });
-    } catch (err: unknown) {
-      console.error('Failed to show notification:', err);
     }
   }
 
