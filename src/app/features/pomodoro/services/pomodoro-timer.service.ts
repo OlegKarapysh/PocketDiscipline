@@ -31,6 +31,8 @@ export class PomodoroTimerService implements OnDestroy {
   engagementType = signal<EngagementType>(EngagementType.WORK);
 
   isActive = signal<boolean>(false);
+  // True until the session left running before a reload has been restored; Start waits for it.
+  isRestoring = signal<boolean>(true);
   timeRemaining = signal<number>(DEFAULT_DURATION_MINUTES * 60);
   currentSessionId = signal<string | null>(null);
 
@@ -102,7 +104,7 @@ export class PomodoroTimerService implements OnDestroy {
   }
 
   async startTimer(): Promise<void> {
-    if (this.isActive()) return;
+    if (this.isActive() || this.isRestoring()) return;
 
     const id = crypto.randomUUID();
     this.currentSessionId.set(id);
@@ -221,7 +223,9 @@ export class PomodoroTimerService implements OnDestroy {
       if (this.isDestroyed) {
         return;
       }
-      const active = sessions.find((s) => s.status === PomodoroSessionStatus.ACTIVE);
+      const activeSessions = sessions.filter((s) => s.status === PomodoroSessionStatus.ACTIVE);
+      const active = activeSessions.at(0);
+      const orphaned = activeSessions.slice(1);
 
       if (active) {
         const expectedEnd = active.startTime + active.durationMinutes * 60 * 1000;
@@ -241,8 +245,16 @@ export class PomodoroTimerService implements OnDestroy {
           this.startInterval();
         }
       }
+
+      // Only one session runs at a time. An older active row never ran as a timer (it was started
+      // while an earlier restore was still loading), so it is cancelled rather than paid out later.
+      for (const session of orphaned) {
+        await this.storage.cancelSession(session.id);
+      }
     } catch (e) {
       console.error('Failed to restore active session:', e);
+    } finally {
+      this.isRestoring.set(false);
     }
   }
 

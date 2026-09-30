@@ -19,9 +19,9 @@ describe('PomodoroTimerService', () => {
   };
   let celebrationMock: { show: ReturnType<typeof vi.fn> };
 
-  const createService = (sessions: PomodoroSession[] = []) => {
+  const createService = (sessions: PomodoroSession[] | Promise<PomodoroSession[]> = []) => {
     TestBed.resetTestingModule();
-    storageMock.getAllSessions.mockResolvedValue(sessions);
+    storageMock.getAllSessions.mockReturnValue(Promise.resolve(sessions));
     TestBed.configureTestingModule({
       providers: [
         PomodoroTimerService,
@@ -33,7 +33,7 @@ describe('PomodoroTimerService', () => {
     return service;
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.useFakeTimers();
     vi.spyOn(crypto, 'randomUUID').mockReturnValue('12345678-1234-1234-1234-123456789abc');
 
@@ -49,6 +49,8 @@ describe('PomodoroTimerService', () => {
     };
 
     service = createService([]);
+    // Let the startup restore finish; Start is ignored until it has.
+    await vi.advanceTimersByTimeAsync(0);
   });
 
   afterEach(() => {
@@ -159,6 +161,45 @@ describe('PomodoroTimerService', () => {
   });
 
   describe('Session Restoration on Startup', () => {
+    it('should ignore Start until the running session has been restored', async () => {
+      let finishLoading: (sessions: PomodoroSession[]) => void = () => undefined;
+      service = createService(
+        new Promise<PomodoroSession[]>((resolve) => {
+          finishLoading = resolve;
+        }),
+      );
+      expect(service.isRestoring()).toBe(true);
+
+      await service.startTimer();
+      expect(storageMock.saveSession).not.toHaveBeenCalled();
+
+      finishLoading([]);
+      await vi.advanceTimersByTimeAsync(0);
+      await service.startTimer();
+
+      expect(service.isRestoring()).toBe(false);
+      expect(storageMock.saveSession).toHaveBeenCalledTimes(1);
+    });
+
+    it('should cancel older sessions left active next to the one it restores', async () => {
+      const now = Date.now();
+      const newest: PomodoroSession = {
+        id: 'newest',
+        durationMinutes: 25,
+        engagementType: EngagementType.WORK,
+        startTime: now - 60 * 1000,
+        status: PomodoroSessionStatus.ACTIVE,
+      };
+      const orphaned: PomodoroSession = { ...newest, id: 'orphaned', startTime: now - 5 * 60 * 1000 };
+
+      service = createService([newest, orphaned]);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(service.currentSessionId()).toBe('newest');
+      expect(storageMock.cancelSession).toHaveBeenCalledWith('orphaned');
+      expect(storageMock.cancelSession).not.toHaveBeenCalledWith('newest');
+    });
+
     it('should restore active session and resume countdown when remaining time is positive', async () => {
       const now = Date.now();
       const activeSession: PomodoroSession = {

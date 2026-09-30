@@ -13,6 +13,7 @@ export class TimerControls {
   private timerService = inject(PomodoroTimerService);
 
   isActive = this.timerService.isActive;
+  isRestoring = this.timerService.isRestoring;
 
   async start(): Promise<void> {
     try {

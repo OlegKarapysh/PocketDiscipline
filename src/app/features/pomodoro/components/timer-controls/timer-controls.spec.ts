@@ -10,6 +10,7 @@ describe('TimerControls', () => {
   let fixture: ComponentFixture<TimerControls>;
   let timerServiceMock: {
     isActive: ReturnType<typeof signal<boolean>>;
+    isRestoring: ReturnType<typeof signal<boolean>>;
     startTimer: ReturnType<typeof vi.fn>;
     stopTimer: ReturnType<typeof vi.fn>;
   };
@@ -17,6 +18,7 @@ describe('TimerControls', () => {
   beforeEach(async () => {
     timerServiceMock = {
       isActive: signal(false),
+      isRestoring: signal(false),
       startTimer: vi.fn().mockResolvedValue(undefined),
       stopTimer: vi.fn().mockResolvedValue(undefined),
     };
@@ -39,6 +41,22 @@ describe('TimerControls', () => {
 
     (startBtn.nativeElement as HTMLButtonElement).click();
     expect(timerServiceMock.startTimer).toHaveBeenCalled();
+  });
+
+  it('should disable Start while the running session is being restored', async () => {
+    timerServiceMock.isRestoring.set(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const startBtn = fixture.debugElement.query(By.css('button[aria-label="Start Timer"]'))
+      .nativeElement as HTMLButtonElement;
+    expect(startBtn.disabled).toBe(true);
+
+    timerServiceMock.isRestoring.set(false);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(startBtn.disabled).toBe(false);
   });
 
   it('should handle error gracefully when startTimer rejects', async () => {
