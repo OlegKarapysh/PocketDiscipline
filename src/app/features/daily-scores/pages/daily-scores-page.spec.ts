@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -5,11 +6,13 @@ import { By } from '@angular/platform-browser';
 import { Subject, of, throwError } from 'rxjs';
 import { DailyScoresPage } from './daily-scores-page';
 import { DailyScoresService } from '../services/daily-scores.service';
+import { ClockService } from '../../../core/services/clock.service';
 import type { DailyScore } from '../../../core/models/daily-score.model';
 
 describe('DailyScoresPage', () => {
   let component: DailyScoresPage;
   let fixture: ComponentFixture<DailyScoresPage>;
+  const today = signal('2026-09-30');
   let dailyScoresServiceMock: {
     getTodayScore: ReturnType<typeof vi.fn>;
     getCurrentMonthScores: ReturnType<typeof vi.fn>;
@@ -27,9 +30,13 @@ describe('DailyScoresPage', () => {
 
     await TestBed.configureTestingModule({
       imports: [DailyScoresPage],
-      providers: [{ provide: DailyScoresService, useValue: dailyScoresServiceMock }],
+      providers: [
+        { provide: DailyScoresService, useValue: dailyScoresServiceMock },
+        { provide: ClockService, useValue: { today } },
+      ],
     }).compileComponents();
 
+    today.set('2026-09-30');
     fixture = TestBed.createComponent(DailyScoresPage);
     component = fixture.componentInstance;
   });
@@ -179,5 +186,17 @@ describe('DailyScoresPage', () => {
     component.loadData();
     expect(pendingSubject1.observed).toBe(false);
     expect(pendingSubject2.observed).toBe(true);
+  });
+
+  it('should reload the page data when the day changes', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const loads = dailyScoresServiceMock.getTodayScore.mock.calls.length;
+
+    today.set('2026-10-01');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(dailyScoresServiceMock.getTodayScore.mock.calls.length).toBe(loads + 1);
   });
 });

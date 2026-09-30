@@ -1,12 +1,12 @@
-import type { OnInit } from '@angular/core';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { ScoreInput } from '../components/score-input/score-input';
 import { ScoresChart } from '../components/scores-chart/scores-chart';
 import { ScoresStats } from '../components/scores-stats/scores-stats';
 import { DailyScoresService } from '../services/daily-scores.service';
 import type { DailyScore } from '../../../core/models/daily-score.model';
-import { EMPTY, Subject, catchError, forkJoin, switchMap, tap } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { EMPTY, Subject, catchError, forkJoin, merge, switchMap, tap } from 'rxjs';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { ClockService } from '../../../core/services/clock.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { MONEY_FORMAT } from '../../../shared/constants/money-format.const';
@@ -17,8 +17,9 @@ import { MONEY_FORMAT } from '../../../shared/constants/money-format.const';
   templateUrl: './daily-scores-page.html',
   styleUrl: './daily-scores-page.scss',
 })
-export class DailyScoresPage implements OnInit {
+export class DailyScoresPage {
   private dailyScoresService = inject(DailyScoresService);
+  private clock = inject(ClockService);
   private destroyRef = inject(DestroyRef);
   private readonly reload = new Subject<void>();
 
@@ -32,7 +33,8 @@ export class DailyScoresPage implements OnInit {
   latestScore = signal<DailyScore | null>(null);
 
   constructor() {
-    this.reload
+    // Everything on this page is relative to today, so a new day reloads it like an explicit reload.
+    merge(toObservable(this.clock.today), this.reload)
       .pipe(
         tap(() => {
           this.loading.set(true);
@@ -74,10 +76,6 @@ export class DailyScoresPage implements OnInit {
 
         this.loading.set(false);
       });
-  }
-
-  ngOnInit() {
-    this.loadData();
   }
 
   loadData() {
