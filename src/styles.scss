@@ -223,14 +223,28 @@ body {
 
 // Segmented control: <mat-button-toggle-group class="pd-segmented" hideSingleSelectionIndicator>
 .pd-segmented.mat-button-toggle-group {
+  max-width: 100%;
   border: none;
   padding: t.space(1);
   gap: 2px;
   background: var(--mat-sys-surface-container);
 
+  // Toggles shrink and their labels wrap, so four options still fit a phone instead of overflowing it.
   .mat-button-toggle {
+    flex: 1 1 auto;
+    min-width: 0;
     border-radius: t.radius(sm);
     border: none;
+  }
+
+  .mat-button-toggle-label-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--mat-button-toggle-height);
+    line-height: 1.2;
+    white-space: normal;
+    text-wrap: balance;
   }
 
   .mat-button-toggle-checked {
