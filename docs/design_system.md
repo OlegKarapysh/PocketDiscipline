@@ -92,6 +92,8 @@ To refresh or add a font, request its css2 URL from Google Fonts with a current 
 | Icons              | `mat-icon` with Material Symbols Rounded (registered in `app.config.ts`); add `.pd-icon-filled` for active/filled    |
 | Charts             | existing SVG components; bars `--mat-sys-primary` + `--pd-sys-reward`, axes `.pd-num` in `on-surface-variant`        |
 
+An SVG chart draws at its container's measured width, one user unit per pixel, via `(appObserveWidth)` (`shared/directives/observe-width.ts`). A fixed `viewBox` shrinks axis text to about 5px on a phone.
+
 ## Local overrides
 
 To restyle one instance, include the component's overrides mixin inside the component selector:
