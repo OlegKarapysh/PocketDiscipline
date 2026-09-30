@@ -1,6 +1,8 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { of } from 'rxjs';
+import { ClockService } from '../../../../core/services/clock.service';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SpendingAnalytics } from './spending-analytics';
@@ -17,6 +19,7 @@ describe('SpendingAnalytics', () => {
   let mockAnalyticsService: {
     getAnalytics: ReturnType<typeof vi.fn>;
   };
+  const today = signal('2026-09-30');
 
   beforeEach(async () => {
     mockSummaryWithData = {
@@ -57,13 +60,17 @@ describe('SpendingAnalytics', () => {
       spendingTrend: [],
     };
 
+    today.set('2026-09-30');
     mockAnalyticsService = {
       getAnalytics: vi.fn().mockReturnValue(of(mockSummaryWithData)),
     };
 
     await TestBed.configureTestingModule({
       imports: [SpendingAnalytics],
-      providers: [{ provide: SpendingAnalyticsService, useValue: mockAnalyticsService }],
+      providers: [
+        { provide: SpendingAnalyticsService, useValue: mockAnalyticsService },
+        { provide: ClockService, useValue: { today } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SpendingAnalytics);
@@ -130,5 +137,18 @@ describe('SpendingAnalytics', () => {
     expect(() => {
       fixture.destroy();
     }).not.toThrow();
+  });
+
+  it('should re-query the selected period when the day changes', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const queries = mockAnalyticsService.getAnalytics.mock.calls.length;
+
+    today.set('2026-10-01');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(mockAnalyticsService.getAnalytics.mock.calls.length).toBe(queries + 1);
+    expect(mockAnalyticsService.getAnalytics).toHaveBeenLastCalledWith('thisMonth');
   });
 });
