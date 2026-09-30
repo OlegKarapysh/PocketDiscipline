@@ -10,10 +10,7 @@ export class TaskService {
   private db = inject(DbService);
   private userService = inject(UserService);
 
-  readonly tasks$ = liveQuery(async () => {
-    await this.performDailyReset();
-    return await this.db.tasks.toArray();
-  });
+  readonly tasks$ = liveQuery(() => this.db.tasks.toArray());
 
   async addTask(title: string, type: DisciplineItemType, rewardValue: number) {
     const item: DisciplineItem = {

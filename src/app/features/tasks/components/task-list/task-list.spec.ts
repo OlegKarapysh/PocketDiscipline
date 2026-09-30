@@ -1,11 +1,14 @@
+import { signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import type { Observable } from 'rxjs';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { TaskList } from './task-list';
 import { TaskService } from '../../../../core/services/task.service';
+import { ClockService } from '../../../../core/services/clock.service';
 import type { DisciplineItem } from '../../../../core/models/discipline-item.model';
 import { DisciplineItemType } from '../../../../core/models/discipline-item-type.enum';
 import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
@@ -18,7 +21,10 @@ describe('TaskList', () => {
     tasks$: Observable<DisciplineItem[]>;
     completeTask: ReturnType<typeof vi.fn>;
     addTask: ReturnType<typeof vi.fn>;
+    performDailyReset: ReturnType<typeof vi.fn>;
   };
+  let snackBarMock: { open: ReturnType<typeof vi.fn> };
+  const today = signal('2026-09-30');
 
   const mockTasks: DisciplineItem[] = [
     {
@@ -37,11 +43,18 @@ describe('TaskList', () => {
       tasks$: of(mockTasks),
       completeTask: vi.fn().mockResolvedValue(undefined),
       addTask: vi.fn().mockResolvedValue(undefined),
+      performDailyReset: vi.fn().mockResolvedValue(undefined),
     };
+    snackBarMock = { open: vi.fn() };
+    today.set('2026-09-30');
 
     await TestBed.configureTestingModule({
       imports: [TaskList],
-      providers: [{ provide: TaskService, useValue: taskServiceMock }],
+      providers: [
+        { provide: TaskService, useValue: taskServiceMock },
+        { provide: ClockService, useValue: { today } },
+        { provide: MatSnackBar, useValue: snackBarMock },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TaskList);
@@ -58,6 +71,30 @@ describe('TaskList', () => {
     const chipEl = fixture.debugElement.query(By.css('.reward-chip')).nativeElement as HTMLElement;
     expect(chipEl.textContent.replace(/\s+/g, ' ')).toContain(`+${MONEY_FORMAT.format(1500)}`.replace(/\s+/g, ' '));
     expect(chipEl.textContent).toContain('₴');
+  });
+
+  it('should run the daily habit reset on start and again when the day changes', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(taskServiceMock.performDailyReset).toHaveBeenCalledTimes(1);
+
+    today.set('2026-10-01');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(taskServiceMock.performDailyReset).toHaveBeenCalledTimes(2);
+  });
+
+  it('should report a failed task query instead of breaking the view', async () => {
+    taskServiceMock.tasks$ = throwError(() => new Error('Database connection lost'));
+    fixture = TestBed.createComponent(TaskList);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.tasks()).toBeUndefined();
+    expect(snackBarMock.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 
   it('should complete task when completeTask is invoked for uncompleted task', async () => {

@@ -101,23 +101,25 @@ describe('TaskService', () => {
   });
 
   describe('tasks$ stream', () => {
-    it('should trigger performDailyReset and emit tasks from database', async () => {
-      const mockTask: DisciplineItem = {
+    // Dexie rejects a read-write transaction opened inside a liveQuery, which errored this stream.
+    it('should emit tasks without writing, even when a habit is due for its daily reset', async () => {
+      const habitDoneYesterday: DisciplineItem = {
         id: 't-1',
         title: 'Drink Water',
         type: DisciplineItemType.HABIT,
         rewardValue: 20,
-        isCompleted: false,
-        lastCompletedAt: null,
-        createdAt: Date.now(),
+        isCompleted: true,
+        lastCompletedAt: Date.now() - ONE_DAY_MS,
+        createdAt: Date.now() - 2 * ONE_DAY_MS,
       };
-      dbMock.tasks.toArray.mockResolvedValue([mockTask]);
+      dbMock.tasks.toArray.mockResolvedValue([habitDoneYesterday]);
+      whereMock.toArray.mockResolvedValue([habitDoneYesterday]);
 
-      const resetSpy = vi.spyOn(service, 'performDailyReset');
       const tasks = await firstValueFrom(from(service.tasks$));
 
-      expect(resetSpy).toHaveBeenCalled();
-      expect(tasks).toEqual([mockTask]);
+      expect(tasks).toEqual([habitDoneYesterday]);
+      expect(dbMock.transaction).not.toHaveBeenCalled();
+      expect(dbMock.tasks.update).not.toHaveBeenCalled();
     });
   });
 
