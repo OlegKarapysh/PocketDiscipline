@@ -10,11 +10,13 @@ import type { ChartGridLine } from '../../models/chart-grid-line.model';
 import type { TooltipPosition } from '../../models/tooltip-position.model';
 import { EarningsSource } from '../../models/earnings-source.enum';
 import { ObserveWidth } from '../../../../shared/directives/observe-width';
+import { AXIS_CHAR_WIDTH } from '../../../../shared/constants/chart-axis.const';
 
 // The chart is drawn at its container's measured width, one user unit per CSS pixel; this is the
 // width it assumes until that first measurement arrives.
 const INITIAL_WIDTH = 600;
 const VIEWBOX_HEIGHT = 260;
+const Y_AXIS_LABEL_GAP = 5;
 // Room one x-axis date label ("09/24") needs, so labels never collide on a narrow screen.
 const MIN_LABEL_SPACING = 44;
 // The y-axis tops out at the next multiple of this, and never below it.
@@ -56,9 +58,7 @@ export class EarningsChart {
   readonly chartBaselineY = VIEWBOX_HEIGHT - 35;
   readonly chartTopY = 20;
   readonly chartHeight = this.chartBaselineY - this.chartTopY;
-  readonly chartLeftX = 45;
   readonly chartRightX = computed(() => this.width() - 15);
-  readonly yAxisTextX = this.chartLeftX - 5;
   readonly axisLabelYOffset = 4;
   readonly axisLabelYPos = this.chartBaselineY + 20;
   readonly zeroBarHeight = 2;
@@ -83,6 +83,13 @@ export class EarningsChart {
     return lines;
   });
 
+  // The plot starts after the widest y-axis label, so a six-digit day total is never clipped.
+  readonly chartLeftX = computed(() => {
+    const longest = Math.max(...this.gridLines().map((line) => line.label.length));
+    return Math.ceil(longest * AXIS_CHAR_WIDTH) + Y_AXIS_LABEL_GAP;
+  });
+  readonly yAxisTextX = computed(() => this.chartLeftX() - Y_AXIS_LABEL_GAP);
+
   readonly bars = computed<ChartBar[]>(() => {
     const recs = this.records();
     const totalBars = recs.length;
@@ -91,7 +98,8 @@ export class EarningsChart {
     }
 
     const max = this.maxDailyEarned();
-    const slotWidth = (this.chartRightX() - this.chartLeftX) / totalBars;
+    const chartLeftX = this.chartLeftX();
+    const slotWidth = (this.chartRightX() - chartLeftX) / totalBars;
     const barWidth = Math.max(slotWidth * 0.65, 4);
     const gap = (slotWidth - barWidth) / 2;
 
@@ -125,7 +133,7 @@ export class EarningsChart {
         date: record.date,
         formattedDate: this.formatDateLabel(record.date),
         total: record.totalEarned,
-        x: this.chartLeftX + index * slotWidth + gap,
+        x: chartLeftX + index * slotWidth + gap,
         width: barWidth,
         segments,
         record,

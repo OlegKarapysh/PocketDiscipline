@@ -190,6 +190,17 @@ describe('EarningsChart', () => {
     expect(bars[29].shouldShowLabel).toBe(true);
   });
 
+  it('should leave room for the widest y-axis total before the plot starts', () => {
+    fixture.componentRef.setInput('records', [{ ...mockRecords[0], totalEarned: 138_700, goalsEarned: 138_700 }]);
+    fixture.detectChanges();
+
+    // The top label is "139 000": seven 11px Geist Mono glyphs, about 44.7px wide, drawn
+    // right-aligned at yAxisTextX, so it needs that much room to its left.
+    expect(component.gridLines().at(-1)?.label.replace(/\s/g, ' ')).toBe('139 000');
+    expect(component.yAxisTextX()).toBeGreaterThanOrEqual(45);
+    expect(component.bars()[0].x).toBeGreaterThan(component.yAxisTextX());
+  });
+
   describe('date labels by chart width', () => {
     const week: DailyEarningsRecord[] = Array.from({ length: 7 }, (_, i) => ({
       date: `2026-09-${String(i + 1).padStart(2, '0')}`,
