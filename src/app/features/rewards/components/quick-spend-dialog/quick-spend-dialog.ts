@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { toSignal } from '@angular/core/rxjs-interop';
 import type { Observable } from 'rxjs';
-import { from } from 'rxjs';
+import { EMPTY, catchError, from } from 'rxjs';
 import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
 import { UserService } from '../../../../core/services/user.service';
@@ -52,10 +52,24 @@ export class QuickSpendDialog {
 
   readonly isSubmitting = signal(false);
 
-  readonly user = toSignal(from(this.userService.user$) as Observable<User | undefined>, {
-    initialValue: undefined,
-  });
-  readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
+  readonly user = toSignal(
+    (from(this.userService.user$) as Observable<User | undefined>).pipe(
+      catchError((err: unknown) => {
+        this.snackBar.error(err, 'Failed to load balance');
+        return EMPTY;
+      }),
+    ),
+    { initialValue: undefined },
+  );
+  readonly categories = toSignal(
+    this.categoryService.getCategories().pipe(
+      catchError((err: unknown) => {
+        this.snackBar.error(err, 'Failed to load categories');
+        return EMPTY;
+      }),
+    ),
+    { initialValue: [] as RewardCategory[] },
+  );
 
   readonly model = signal<QuickSpendModel>({ amount: null, title: '', categoryId: FALLBACK_CATEGORY_ID, notes: '' });
 

@@ -8,6 +8,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { EMPTY, catchError } from 'rxjs';
 import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
@@ -51,7 +52,15 @@ export class RewardFormDialog {
   readonly isSubmitting = signal(false);
   readonly isEditing = signal(!!this.data?.reward);
 
-  readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
+  readonly categories = toSignal(
+    this.categoryService.getCategories().pipe(
+      catchError((err: unknown) => {
+        this.snackBar.error(err, 'Failed to load categories');
+        return EMPTY;
+      }),
+    ),
+    { initialValue: [] as RewardCategory[] },
+  );
 
   readonly model = signal<RewardFormModel>(this.initialModel());
 

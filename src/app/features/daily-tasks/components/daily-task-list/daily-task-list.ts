@@ -1,7 +1,7 @@
 import { Component, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { filter } from 'rxjs';
+import { EMPTY, catchError, filter } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
@@ -13,6 +13,7 @@ import { EmptyState } from '../../../../shared/components/empty-state/empty-stat
 import type { DailyTaskDraft } from '../../models/daily-task-draft.model';
 import { NEW_ITEM_QUERY_PARAM } from '../../../../shared/constants/new-item-query-param.const';
 import { ClockService } from '../../../../core/services/clock.service';
+import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 
 @Component({
   imports: [MatButtonModule, MatIconModule, DailyTaskItem, DailyTaskForm, EmptyState],
@@ -23,10 +24,18 @@ import { ClockService } from '../../../../core/services/clock.service';
 export class DailyTaskList {
   private readonly dailyTasksService = inject(DailyTasksService);
   private readonly clock = inject(ClockService);
+  private readonly snackBar = inject(SnackBarService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  readonly tasks = toSignal(this.dailyTasksService.tasks$);
+  readonly tasks = toSignal(
+    this.dailyTasksService.tasks$.pipe(
+      catchError((error: unknown) => {
+        this.snackBar.error(error, 'Failed to load daily tasks');
+        return EMPTY;
+      }),
+    ),
+  );
   readonly showForm = signal(false);
 
   constructor() {

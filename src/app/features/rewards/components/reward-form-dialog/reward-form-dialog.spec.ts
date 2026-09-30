@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import type { RewardFormDialogData } from './reward-form-dialog';
 import { RewardFormDialog } from './reward-form-dialog';
@@ -213,5 +213,17 @@ describe('RewardFormDialog', () => {
     cancelBtn.click();
 
     expect(mockDialogRef.close).toHaveBeenCalled();
+  });
+
+  it('should report a failed category query instead of breaking the view', async () => {
+    mockCategoryService.getCategories.mockReturnValue(throwError(() => new Error('Database connection lost')));
+    fixture = TestBed.createComponent(RewardFormDialog);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.categories()).toEqual([]);
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });

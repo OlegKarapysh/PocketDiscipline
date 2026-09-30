@@ -27,8 +27,24 @@ export class GoalsPage {
   private readonly celebration = inject(CelebrationService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly activeGoals = toSignal(this.goalService.getActiveGoals(), { initialValue: [] });
-  readonly completedGoals = toSignal(this.goalService.getCompletedGoals(), { initialValue: [] });
+  readonly activeGoals = toSignal(
+    this.goalService.getActiveGoals().pipe(
+      catchError((e: unknown) => {
+        this.snackBar.error(e, 'Failed to load goals');
+        return EMPTY;
+      }),
+    ),
+    { initialValue: [] },
+  );
+  readonly completedGoals = toSignal(
+    this.goalService.getCompletedGoals().pipe(
+      catchError((e: unknown) => {
+        this.snackBar.error(e, 'Failed to load completed goals');
+        return EMPTY;
+      }),
+    ),
+    { initialValue: [] },
+  );
 
   async completeGoal(id: string): Promise<void> {
     const goal = this.activeGoals().find((g) => g.id === id);

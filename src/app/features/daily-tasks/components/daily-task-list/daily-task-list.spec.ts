@@ -6,7 +6,8 @@ import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import type { Observable } from 'rxjs';
 import { signal } from '@angular/core';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ClockService } from '../../../../core/services/clock.service';
 import { DailyTaskList } from './daily-task-list';
 import { DailyTasksService } from '../../services/daily-tasks.service';
@@ -26,6 +27,7 @@ describe('DailyTaskList', () => {
     completeTask: ReturnType<typeof vi.fn>;
     resetBrokenStreaks: ReturnType<typeof vi.fn>;
   };
+  let snackBarMock: { open: ReturnType<typeof vi.fn> };
   const today = signal('2026-09-30');
 
   const mockTasks: DailyTask[] = [
@@ -46,6 +48,7 @@ describe('DailyTaskList', () => {
       completeTask: vi.fn().mockResolvedValue(undefined),
       resetBrokenStreaks: vi.fn().mockResolvedValue(undefined),
     };
+    snackBarMock = { open: vi.fn() };
     today.set('2026-09-30');
 
     await TestBed.configureTestingModule({
@@ -53,6 +56,7 @@ describe('DailyTaskList', () => {
       providers: [
         { provide: DailyTasksService, useValue: dailyTasksServiceMock },
         { provide: ClockService, useValue: { today } },
+        { provide: MatSnackBar, useValue: snackBarMock },
         provideRouter([{ path: 'tasks', component: DailyTaskList }]),
       ],
     }).compileComponents();
@@ -71,6 +75,18 @@ describe('DailyTaskList', () => {
     await fixture.whenStable();
 
     expect(dailyTasksServiceMock.resetBrokenStreaks).toHaveBeenCalledTimes(2);
+  });
+
+  it('should report a failed daily task query instead of breaking the view', async () => {
+    dailyTasksServiceMock.tasks$ = throwError(() => new Error('Database connection lost'));
+    fixture = TestBed.createComponent(DailyTaskList);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.tasks()).toBeUndefined();
+    expect(snackBarMock.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 
   it('should render daily task items from service stream', async () => {

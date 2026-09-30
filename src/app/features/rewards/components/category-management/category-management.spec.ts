@@ -1,6 +1,6 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { By } from '@angular/platform-browser';
@@ -262,5 +262,17 @@ describe('CategoryManagement', () => {
     component.confirmDeleteCategory(mockCategories[0]);
     expect(mockDialog.open).not.toHaveBeenCalled();
     expect(mockCategoryService.deleteCategory).not.toHaveBeenCalled();
+  });
+
+  it('should report a failed category query instead of breaking the view', async () => {
+    mockCategoryService.getCategories.mockReturnValue(throwError(() => new Error('Database connection lost')));
+    fixture = TestBed.createComponent(CategoryManagement);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.categories()).toEqual([]);
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });

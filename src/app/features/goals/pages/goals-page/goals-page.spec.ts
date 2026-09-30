@@ -142,6 +142,18 @@ describe('GoalsPage', () => {
     expect(snackBarMock.open).not.toHaveBeenCalled();
   });
 
+  it('should report a failed goal query instead of breaking the view', async () => {
+    goalServiceMock.getActiveGoals.mockReturnValue(throwError(() => new Error('Database connection lost')));
+    fixture = TestBed.createComponent(GoalsPage);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.activeGoals()).toEqual([]);
+    expect(snackBarMock.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
+  });
+
   it('should delete goal and display snackbar', async () => {
     await component.deleteGoal('g-1');
 

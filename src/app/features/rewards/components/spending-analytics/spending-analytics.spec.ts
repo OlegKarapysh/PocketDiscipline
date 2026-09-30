@@ -1,7 +1,8 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ClockService } from '../../../../core/services/clock.service';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -19,6 +20,7 @@ describe('SpendingAnalytics', () => {
   let mockAnalyticsService: {
     getAnalytics: ReturnType<typeof vi.fn>;
   };
+  let snackBarMock: { open: ReturnType<typeof vi.fn> };
   const today = signal('2026-09-30');
 
   beforeEach(async () => {
@@ -60,6 +62,7 @@ describe('SpendingAnalytics', () => {
       spendingTrend: [],
     };
 
+    snackBarMock = { open: vi.fn() };
     today.set('2026-09-30');
     mockAnalyticsService = {
       getAnalytics: vi.fn().mockReturnValue(of(mockSummaryWithData)),
@@ -70,6 +73,7 @@ describe('SpendingAnalytics', () => {
       providers: [
         { provide: SpendingAnalyticsService, useValue: mockAnalyticsService },
         { provide: ClockService, useValue: { today } },
+        { provide: MatSnackBar, useValue: snackBarMock },
       ],
     }).compileComponents();
 
@@ -150,5 +154,17 @@ describe('SpendingAnalytics', () => {
 
     expect(mockAnalyticsService.getAnalytics.mock.calls.length).toBe(queries + 1);
     expect(mockAnalyticsService.getAnalytics).toHaveBeenLastCalledWith('thisMonth');
+  });
+
+  it('should report a failed analytics query instead of breaking the view', async () => {
+    mockAnalyticsService.getAnalytics.mockReturnValue(throwError(() => new Error('Database connection lost')));
+    fixture = TestBed.createComponent(SpendingAnalytics);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.analytics().totalSpent).toBe(0);
+    expect(snackBarMock.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import type { Observable } from 'rxjs';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { QuickSpendDialog } from './quick-spend-dialog';
 import { WithdrawalService } from '../../services/withdrawal.service';
@@ -199,5 +199,17 @@ describe('QuickSpendDialog', () => {
 
     expect(mockDialogRef.close).toHaveBeenCalled();
     expect(mockWithdrawalService.withdraw).not.toHaveBeenCalled();
+  });
+
+  it('should report a failed category query instead of breaking the view', async () => {
+    mockCategoryService.getCategories.mockReturnValue(throwError(() => new Error('Database connection lost')));
+    fixture = TestBed.createComponent(QuickSpendDialog);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.categories()).toEqual([]);
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });

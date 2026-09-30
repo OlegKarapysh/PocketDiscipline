@@ -27,7 +27,15 @@ export class CategoryManagement {
   private readonly confirmService = inject(ConfirmService);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
+  readonly categories = toSignal(
+    this.categoryService.getCategories().pipe(
+      catchError((err: unknown) => {
+        this.snackBar.error(err, 'Failed to load categories');
+        return EMPTY;
+      }),
+    ),
+    { initialValue: [] as RewardCategory[] },
+  );
 
   openAddCategoryDialog(): void {
     const dialogRef = this.dialog.open<CategoryFormDialog, unknown, CreateCategoryDto>(CategoryFormDialog, {
