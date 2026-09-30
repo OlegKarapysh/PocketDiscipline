@@ -204,6 +204,33 @@ describe('RewardStore', () => {
     );
   });
 
+  it('should claim once when the claim button is tapped twice before the first claim settles', async () => {
+    await Promise.all([component.onClaimReward(mockRewards[0]), component.onClaimReward(mockRewards[0])]);
+
+    expect(mockRewardsService.claimReward).toHaveBeenCalledTimes(1);
+  });
+
+  it('should disable the claim button of the reward being claimed until the claim settles', async () => {
+    let settleClaim: () => void = () => undefined;
+    mockRewardsService.claimReward.mockReturnValueOnce(
+      new Promise((resolve) => {
+        settleClaim = () => {
+          resolve({ id: 'w-1', amount: 2500, title: 'Claimed: Mechanical Keyboard' });
+        };
+      }),
+    );
+    const claimButton = () => fixture.debugElement.query(By.css('.claim-btn')).nativeElement as HTMLButtonElement;
+
+    const claim = component.onClaimReward(mockRewards[0]);
+    fixture.detectChanges();
+    expect(claimButton().disabled).toBe(true);
+
+    settleClaim();
+    await claim;
+    fixture.detectChanges();
+    expect(claimButton().disabled).toBe(false);
+  });
+
   it('should display error snackbar when claiming reward fails', async () => {
     mockRewardsService.claimReward.mockRejectedValueOnce(new Error('Claim failed due to network error'));
 

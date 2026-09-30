@@ -55,6 +55,7 @@ export class RewardStore {
   readonly rewards = toSignal(this.rewardsService.getRewards(), { initialValue: [] as RewardItem[] });
   readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
 
+  readonly claimingRewardId = signal<string | null>(null);
   readonly statusFilter = signal<RewardStatus>('active');
   readonly filters = signal({ query: '', categoryId: 'all' });
   readonly filterForm = form(this.filters);
@@ -103,7 +104,12 @@ export class RewardStore {
 
   readonly rewardRows = computed(() => {
     const categories = this.categoriesMap();
-    return this.filteredRewards().map((reward) => ({ reward, category: categories.get(reward.categoryId) }));
+    const claimingId = this.claimingRewardId();
+    return this.filteredRewards().map((reward) => ({
+      reward,
+      category: categories.get(reward.categoryId),
+      isClaiming: reward.id === claimingId,
+    }));
   });
 
   openAddReward(): void {
@@ -129,11 +135,16 @@ export class RewardStore {
   }
 
   async onClaimReward(reward: RewardItem): Promise<void> {
+    if (this.claimingRewardId() !== null) return;
+
+    this.claimingRewardId.set(reward.id);
     try {
       const withdrawal = await this.rewardsService.claimReward(reward);
       this.snackBar.show(`Redeemed "${reward.title}" for ${MONEY_FORMAT.format(withdrawal.amount)} ₴`);
     } catch (error) {
       this.snackBar.error(error, 'Claiming failed');
+    } finally {
+      this.claimingRewardId.set(null);
     }
   }
 }

@@ -40,6 +40,7 @@
           [reward]="row.reward"
           [category]="row.category"
           [currentBalance]="balance()"
+          [claiming]="row.isClaiming"
           (claim)="onClaimReward($event)"
           (edit)="onEditReward($event)"
           (delete)="onDeleteReward($event)"
