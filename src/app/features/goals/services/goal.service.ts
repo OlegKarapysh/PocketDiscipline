@@ -24,30 +24,32 @@ export class GoalService {
     );
   }
 
-  async completeGoal(id: string): Promise<void> {
-    const goal = await this.db.goals.get(id);
-    if (goal?.status === GOAL_STATUS.ACTIVE) {
-      await this.db.transaction('rw', this.db.goals, this.db.users, async () => {
-        await this.db.goals.update(id, {
-          status: GOAL_STATUS.COMPLETED,
-          completedAt: Date.now(),
-        });
-        await this.userService.addBalance(goal.rewardValue);
+  async completeGoal(id: string): Promise<boolean> {
+    return this.db.transaction('rw', this.db.goals, this.db.users, async () => {
+      const goal = await this.db.goals.get(id);
+      if (goal?.status !== GOAL_STATUS.ACTIVE) return false;
+
+      await this.db.goals.update(id, {
+        status: GOAL_STATUS.COMPLETED,
+        completedAt: Date.now(),
       });
-    }
+      await this.userService.addBalance(goal.rewardValue);
+      return true;
+    });
   }
 
-  async undoCompleteGoal(id: string): Promise<void> {
-    const goal = await this.db.goals.get(id);
-    if (goal?.status === GOAL_STATUS.COMPLETED) {
-      await this.db.transaction('rw', this.db.goals, this.db.users, async () => {
-        await this.db.goals.update(id, {
-          status: GOAL_STATUS.ACTIVE,
-          completedAt: null,
-        });
-        await this.userService.addBalance(-goal.rewardValue);
+  async undoCompleteGoal(id: string): Promise<boolean> {
+    return this.db.transaction('rw', this.db.goals, this.db.users, async () => {
+      const goal = await this.db.goals.get(id);
+      if (goal?.status !== GOAL_STATUS.COMPLETED) return false;
+
+      await this.db.goals.update(id, {
+        status: GOAL_STATUS.ACTIVE,
+        completedAt: null,
       });
-    }
+      await this.userService.addBalance(-goal.rewardValue);
+      return true;
+    });
   }
 
   async addGoal(title: string, rewardValue: number): Promise<void> {
