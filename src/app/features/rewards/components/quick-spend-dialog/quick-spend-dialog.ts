@@ -89,7 +89,6 @@ export class QuickSpendDialog {
       this.dialogRef.close(record);
     } catch (error) {
       this.snackBar.error(error, 'Withdrawal failed');
-    } finally {
       this.isSubmitting.set(false);
     }
   }

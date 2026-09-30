@@ -156,6 +156,17 @@ describe('RewardFormDialog', () => {
     expect(mockDialogRef.close).toHaveBeenCalledWith(existingReward);
   });
 
+  it('should not create the reward again when submit is tapped while the dialog is closing', async () => {
+    component.rewardForm.title().value.set('New Book');
+    component.rewardForm.cost().value.set(450);
+    component.rewardForm.categoryId().value.set('cat-general');
+
+    await component.submit();
+    await component.submit();
+
+    expect(mockRewardsService.createReward).toHaveBeenCalledTimes(1);
+  });
+
   it('should update existing reward and close dialog when clicking submit in DOM', async () => {
     await setupComponent({ reward: existingReward });
 

@@ -85,7 +85,6 @@ export class RewardFormDialog {
       }
     } catch (error) {
       this.snackBar.error(error, 'Operation failed');
-    } finally {
       this.isSubmitting.set(false);
     }
   }

@@ -163,6 +163,17 @@ describe('QuickSpendDialog', () => {
     expect(mockDialogRef.close).toHaveBeenCalledWith(mockRecord);
   });
 
+  it('should not withdraw again when submit is tapped while the dialog is closing', async () => {
+    component.spendForm.amount().value.set(50);
+    component.spendForm.title().value.set('Coffee');
+    component.spendForm.categoryId().value.set('cat-food');
+
+    await component.submit();
+    await component.submit();
+
+    expect(mockWithdrawalService.withdraw).toHaveBeenCalledTimes(1);
+  });
+
   it('should handle submission errors with a snackbar message and reset isSubmitting', async () => {
     mockWithdrawalService.withdraw.mockRejectedValueOnce(new Error('Network error'));
 
