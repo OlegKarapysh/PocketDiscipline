@@ -190,6 +190,30 @@ describe('GoalService', () => {
       );
       expect(dbMock.goals.add).not.toHaveBeenCalled();
     });
+
+    it('should store the title trimmed', async () => {
+      dbMock.goals.toArray.mockResolvedValue([]);
+
+      await service.addGoal('  Read a book  ', 100);
+
+      expect(dbMock.goals.add).toHaveBeenCalledWith(expect.objectContaining({ title: 'Read a book' }));
+    });
+
+    it('should treat a title that only differs by surrounding spaces as a duplicate', async () => {
+      dbMock.goals.toArray.mockResolvedValue([
+        {
+          id: 'existing-1',
+          title: 'Read a book',
+          rewardValue: 100,
+          status: GOAL_STATUS.ACTIVE,
+          completedAt: null,
+          createdAt: Date.now(),
+        },
+      ]);
+
+      await expect(service.addGoal('read a book ', 100)).rejects.toThrow('A goal with this title already exists.');
+      expect(dbMock.goals.add).not.toHaveBeenCalled();
+    });
   });
 
   describe('updateGoal', () => {

@@ -69,6 +69,20 @@ describe('GoalFormDialog', () => {
     ).toContain('minLength');
   });
 
+  it('should reject a title made only of spaces', async () => {
+    await setup();
+    component.goalForm.title().value.set('     ');
+
+    expect(component.goalForm.title().invalid()).toBe(true);
+  });
+
+  it('should not count surrounding spaces towards the minimum title length', async () => {
+    await setup();
+    component.goalForm.title().value.set('  ab  ');
+
+    expect(component.goalForm.title().invalid()).toBe(true);
+  });
+
   it('should reject a reward below 1', async () => {
     await setup();
     component.goalForm.rewardValue().value.set(0);
