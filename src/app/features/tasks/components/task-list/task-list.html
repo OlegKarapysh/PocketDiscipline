@@ -5,28 +5,19 @@
   <mat-card-content>
     @if (tasks(); as tasks) {
       @if (tasks.length > 0) {
-        <mat-list>
+        <ul class="task-rows">
           @for (task of tasks; track task.id) {
-            <mat-list-item [class.completed]="task.isCompleted">
-              <mat-checkbox
-                [checked]="task.isCompleted"
-                [disabled]="task.isCompleted"
-                (change)="completeTask(task)"
-                matListItemTitle
-              >
+            <li class="task-row" [class.completed]="task.isCompleted">
+              <mat-checkbox [checked]="task.isCompleted" [disabled]="task.isCompleted" (change)="completeTask(task)">
                 <span class="task-title" [class.strike]="task.isCompleted">{{ task.title }}</span>
               </mat-checkbox>
-              <span matListItemLine class="task-meta">
-                <mat-chip-set>
-                  <mat-chip class="reward-chip">
-                    <app-amount [value]="task.rewardValue" size="sm" tone="reward" [showSign]="true" />
-                  </mat-chip>
-                  <mat-chip class="type-chip">{{ task.type }}</mat-chip>
-                </mat-chip-set>
-              </span>
-            </mat-list-item>
+              <div class="task-meta">
+                <app-amount class="reward" [value]="task.rewardValue" size="sm" tone="reward" [showSign]="true" />
+                <app-badge>{{ task.type }}</app-badge>
+              </div>
+            </li>
           }
-        </mat-list>
+        </ul>
       } @else {
         <app-empty-state
           class="empty-state"

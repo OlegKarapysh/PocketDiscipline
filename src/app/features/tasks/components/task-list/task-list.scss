@@ -4,20 +4,37 @@
   @include t.card-title;
 }
 
+.task-rows {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task-row {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(1);
+}
+
 .completed {
   opacity: 0.65;
 }
 
-.task-title.strike {
-  text-decoration: line-through;
+.task-title {
+  overflow-wrap: anywhere;
+
+  &.strike {
+    text-decoration: line-through;
+  }
 }
 
 .task-meta {
-  margin-top: t.space(1);
-}
-
-.reward-chip,
-.type-chip {
-  min-height: 24px;
-  font: var(--mat-sys-label-small);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.space(2);
+  padding-left: t.space(3);
 }

@@ -68,9 +68,9 @@ describe('TaskList', () => {
     const titleEl = fixture.debugElement.query(By.css('.task-title')).nativeElement as HTMLElement;
     expect(titleEl.textContent.trim()).toBe('Drink 2L Water');
 
-    const chipEl = fixture.debugElement.query(By.css('.reward-chip')).nativeElement as HTMLElement;
-    expect(chipEl.textContent.replace(/\s+/g, ' ')).toContain(`+${MONEY_FORMAT.format(1500)}`.replace(/\s+/g, ' '));
-    expect(chipEl.textContent).toContain('₴');
+    const rewardEl = fixture.debugElement.query(By.css('.reward')).nativeElement as HTMLElement;
+    expect(rewardEl.textContent.replace(/\s+/g, ' ')).toContain(`+${MONEY_FORMAT.format(1500)}`.replace(/\s+/g, ' '));
+    expect(rewardEl.textContent).toContain('₴');
   });
 
   it('should run the daily habit reset on start and again when the day changes', async () => {
