@@ -54,6 +54,11 @@
       color: var(--mat-sys-on-surface-variant);
     }
   }
+
+  .locked-hint {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
 }
 
 mat-option {

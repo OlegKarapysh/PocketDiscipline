@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
-import { RewardsService } from './rewards.service';
+import { ERROR_TYPE_LOCKED, RewardsService } from './rewards.service';
 import { DbService } from '../../../database/db.service';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import type { RewardItem } from '../../../core/models/reward.model';
@@ -217,6 +217,21 @@ describe('RewardsService', () => {
     expect(updated.categoryId).toBe('cat-new');
     expect(updated.type).toBe('repeatable');
     expect(updated.title).toBe('Mechanical Keyboard');
+  });
+
+  it('should refuse to change the type of a reward that has been claimed', async () => {
+    mockReward = { ...mockReward, status: 'claimed', claimedAt: 5000 };
+
+    await expect(service.updateReward('rew-1', { type: 'repeatable' })).rejects.toThrow(ERROR_TYPE_LOCKED);
+    await expect(service.updateReward('rew-2', { type: 'one-time' })).rejects.toThrow(ERROR_TYPE_LOCKED);
+    expect(dbMock.rewards.update).not.toHaveBeenCalled();
+  });
+
+  it('should still edit the other fields of a claimed reward', async () => {
+    const updated = await service.updateReward('rew-2', { title: 'Flat White', type: 'repeatable' });
+
+    expect(updated.title).toBe('Flat White');
+    expect(updated.type).toBe('repeatable');
   });
 
   it('should reject invalid cost on update', async () => {

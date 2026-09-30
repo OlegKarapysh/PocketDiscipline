@@ -7,7 +7,7 @@ import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import type { RewardFormDialogData } from './reward-form-dialog';
 import { RewardFormDialog } from './reward-form-dialog';
-import { RewardsService } from '../../services/rewards.service';
+import { ERROR_TYPE_LOCKED, RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 import type { RewardItem } from '../../../../core/models/reward.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
@@ -20,6 +20,7 @@ describe('RewardFormDialog', () => {
   let mockRewardsService: {
     createReward: ReturnType<typeof vi.fn>;
     updateReward: ReturnType<typeof vi.fn>;
+    isTypeLocked: ReturnType<typeof vi.fn>;
   };
   let mockCategoryService: { getCategories: ReturnType<typeof vi.fn> };
   let mockSnackBar: { open: ReturnType<typeof vi.fn> };
@@ -27,12 +28,13 @@ describe('RewardFormDialog', () => {
   let mockCategories: RewardCategory[];
   let existingReward: RewardItem;
 
-  const setupComponent = async (data: RewardFormDialogData = {}) => {
+  const setupComponent = async (data: RewardFormDialogData = {}, typeLocked = false) => {
     TestBed.resetTestingModule();
     mockDialogRef = { close: vi.fn() };
     mockRewardsService = {
       createReward: vi.fn().mockResolvedValue(existingReward),
       updateReward: vi.fn().mockResolvedValue(existingReward),
+      isTypeLocked: vi.fn().mockReturnValue(typeLocked),
     };
     mockCategoryService = { getCategories: vi.fn().mockReturnValue(of(mockCategories)) };
     mockSnackBar = { open: vi.fn() };
@@ -117,6 +119,21 @@ describe('RewardFormDialog', () => {
       .nativeElement as HTMLButtonElement;
     expect(submitBtn.disabled).toBe(false);
     expect(submitBtn.textContent.trim()).toBe('Save changes');
+  });
+
+  it('should lock the type of a claimed reward and say why', async () => {
+    await setupComponent({ reward: existingReward }, true);
+
+    expect(component.rewardForm.type().disabled()).toBe(true);
+    const hint = fixture.debugElement.query(By.css('.locked-hint')).nativeElement as HTMLElement;
+    expect(hint.textContent.trim()).toBe(ERROR_TYPE_LOCKED);
+  });
+
+  it('should keep the type editable for a reward that was never claimed', async () => {
+    await setupComponent({ reward: existingReward });
+
+    expect(component.rewardForm.type().disabled()).toBe(false);
+    expect(fixture.debugElement.query(By.css('.locked-hint'))).toBeNull();
   });
 
   it('should reject a zero cost with a field error message', () => {

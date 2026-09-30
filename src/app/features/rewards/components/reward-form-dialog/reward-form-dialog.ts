@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormField, form, maxLength, min, required, validate, requiredError } from '@angular/forms/signals';
+import { FormField, disabled, form, maxLength, min, required, validate, requiredError } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { EMPTY, catchError } from 'rxjs';
-import { RewardsService } from '../../services/rewards.service';
+import { ERROR_TYPE_LOCKED, RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 
@@ -62,9 +62,12 @@ export class RewardFormDialog {
     { initialValue: [] as RewardCategory[] },
   );
 
+  private readonly isTypeLocked = !!this.data?.reward && this.rewardsService.isTypeLocked(this.data.reward);
+
   readonly model = signal<RewardFormModel>(this.initialModel());
 
   readonly rewardForm = form(this.model, (path) => {
+    disabled(path.type, { when: () => (this.isTypeLocked ? ERROR_TYPE_LOCKED : false) });
     validate(path.title, ({ value }) => (value().trim() ? null : requiredError({ message: 'Title is required' })));
     maxLength(path.title, 100, { message: 'Title is too long' });
     required(path.cost, { message: 'Cost is required' });
