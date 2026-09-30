@@ -9,9 +9,9 @@
       }
     </div>
 
-    <div class="svg-container">
+    <div class="svg-container" (appObserveWidth)="width.set($event)">
       <svg
-        [attr.viewBox]="viewBox"
+        [attr.viewBox]="viewBox()"
         class="earnings-svg"
         preserveAspectRatio="xMidYMid meet"
         role="region"
@@ -22,7 +22,7 @@
           <line
             [attr.x1]="chartLeftX"
             [attr.y1]="line.y"
-            [attr.x2]="chartRightX"
+            [attr.x2]="chartRightX()"
             [attr.y2]="line.y"
             class="grid-line"
           />
@@ -35,7 +35,7 @@
         <line
           [attr.x1]="chartLeftX"
           [attr.y1]="chartBaselineY"
-          [attr.x2]="chartRightX"
+          [attr.x2]="chartRightX()"
           [attr.y2]="chartBaselineY"
           class="baseline"
         />

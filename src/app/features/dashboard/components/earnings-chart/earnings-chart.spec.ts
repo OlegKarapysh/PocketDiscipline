@@ -190,6 +190,42 @@ describe('EarningsChart', () => {
     expect(bars[29].shouldShowLabel).toBe(true);
   });
 
+  describe('date labels by chart width', () => {
+    const week: DailyEarningsRecord[] = Array.from({ length: 7 }, (_, i) => ({
+      date: `2026-09-${String(i + 1).padStart(2, '0')}`,
+      totalEarned: 100,
+      goalsEarned: 100,
+      dailyTasksEarned: 0,
+      pomodoroEarned: 0,
+      dailyScoresEarned: 0,
+    }));
+
+    const labelCentres = () =>
+      component
+        .bars()
+        .filter((bar) => bar.shouldShowLabel)
+        .map((bar) => bar.x + bar.width / 2);
+
+    it('should label every day of a week on a wide chart', () => {
+      component.width.set(600);
+      fixture.componentRef.setInput('records', week);
+      fixture.detectChanges();
+
+      expect(labelCentres()).toHaveLength(7);
+    });
+
+    it('should keep neighbouring labels from overlapping on a phone-width chart', () => {
+      component.width.set(280);
+      fixture.componentRef.setInput('records', week);
+      fixture.detectChanges();
+
+      const centres = labelCentres();
+      const gaps = centres.slice(1).map((centre, i) => centre - centres[i]);
+      // A label such as "09/24" is five 11px Geist Mono glyphs, about 32px wide.
+      expect(Math.min(...gaps)).toBeGreaterThanOrEqual(32);
+    });
+  });
+
   it('should handle empty records gracefully', () => {
     fixture.componentRef.setInput('records', []);
     fixture.detectChanges();

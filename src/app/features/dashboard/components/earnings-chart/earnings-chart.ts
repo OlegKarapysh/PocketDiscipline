@@ -9,9 +9,14 @@ import type { ChartBarSegment } from '../../models/chart-bar-segment.model';
 import type { ChartGridLine } from '../../models/chart-grid-line.model';
 import type { TooltipPosition } from '../../models/tooltip-position.model';
 import { EarningsSource } from '../../models/earnings-source.enum';
+import { ObserveWidth } from '../../../../shared/directives/observe-width';
 
-const VIEWBOX_WIDTH = 600;
+// The chart is drawn at its container's measured width, one user unit per CSS pixel; this is the
+// width it assumes until that first measurement arrives.
+const INITIAL_WIDTH = 600;
 const VIEWBOX_HEIGHT = 260;
+// Room one x-axis date label ("09/24") needs, so labels never collide on a narrow screen.
+const MIN_LABEL_SPACING = 44;
 // The y-axis tops out at the next multiple of this, and never below it.
 const Y_SCALE_STEP = 500;
 const GRID_DIVISION_COUNT = 4;
@@ -35,7 +40,7 @@ const SOURCES = Object.values(EarningsSource);
 
 @Component({
   selector: 'app-earnings-chart',
-  imports: [SectionCard, Amount, MoneyPipe],
+  imports: [SectionCard, Amount, MoneyPipe, ObserveWidth],
   templateUrl: './earnings-chart.html',
   styleUrl: './earnings-chart.scss',
 })
@@ -45,13 +50,14 @@ export class EarningsChart {
   readonly hoveredRecord = signal<DailyEarningsRecord | null>(null);
   readonly tooltipPosition = signal<TooltipPosition | null>(null);
 
-  readonly viewBox = `0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`;
+  readonly width = signal(INITIAL_WIDTH);
+  readonly viewBox = computed(() => `0 0 ${this.width()} ${VIEWBOX_HEIGHT}`);
 
   readonly chartBaselineY = VIEWBOX_HEIGHT - 35;
   readonly chartTopY = 20;
   readonly chartHeight = this.chartBaselineY - this.chartTopY;
   readonly chartLeftX = 45;
-  readonly chartRightX = VIEWBOX_WIDTH - 15;
+  readonly chartRightX = computed(() => this.width() - 15);
   readonly yAxisTextX = this.chartLeftX - 5;
   readonly axisLabelYOffset = 4;
   readonly axisLabelYPos = this.chartBaselineY + 20;
@@ -85,11 +91,12 @@ export class EarningsChart {
     }
 
     const max = this.maxDailyEarned();
-    const slotWidth = (this.chartRightX - this.chartLeftX) / totalBars;
+    const slotWidth = (this.chartRightX() - this.chartLeftX) / totalBars;
     const barWidth = Math.max(slotWidth * 0.65, 4);
     const gap = (slotWidth - barWidth) / 2;
 
     // Thin the x-axis labels as the range grows: every day, every 2nd, every 5th, then about 7 in all.
+    // A narrow chart thins them further, so neighbouring labels never overlap.
     let labelInterval = 1;
     if (totalBars > 31) {
       labelInterval = Math.ceil(totalBars / 7);
@@ -98,6 +105,8 @@ export class EarningsChart {
     } else if (totalBars > 10) {
       labelInterval = 2;
     }
+    labelInterval = Math.max(labelInterval, Math.ceil(MIN_LABEL_SPACING / slotWidth));
+    const lastIndex = totalBars - 1;
 
     return recs.map((record, index) => {
       const segments: ChartBarSegment[] = [];
@@ -120,7 +129,8 @@ export class EarningsChart {
         width: barWidth,
         segments,
         record,
-        shouldShowLabel: index === 0 || index === totalBars - 1 || index % labelInterval === 0,
+        shouldShowLabel:
+          index === 0 || index === lastIndex || (index % labelInterval === 0 && lastIndex - index >= labelInterval),
       };
     });
   });
