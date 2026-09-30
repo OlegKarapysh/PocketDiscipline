@@ -1,13 +1,16 @@
+import { signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EarningsFilter } from './earnings-filter';
+import { ClockService } from '../../../../core/services/clock.service';
 import { DashboardEarningsService } from '../../services/dashboard-earnings.service';
 import type { PeriodPreset } from '../../models/period-preset.type';
 
 describe('EarningsFilter', () => {
   let component: EarningsFilter;
   let fixture: ComponentFixture<EarningsFilter>;
+  const today = signal('2026-09-02');
 
   const earningsServiceMock = {
     getPresetDateRange: vi.fn((preset: PeriodPreset) => {
@@ -24,7 +27,10 @@ describe('EarningsFilter', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [EarningsFilter],
-      providers: [{ provide: DashboardEarningsService, useValue: earningsServiceMock }],
+      providers: [
+        { provide: DashboardEarningsService, useValue: earningsServiceMock },
+        { provide: ClockService, useValue: { today } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EarningsFilter);
@@ -140,5 +146,14 @@ describe('EarningsFilter', () => {
 
     expect(component.activePreset()).toBe('last30');
     expect(component.showCustomPicker()).toBe(false);
+  });
+
+  it('should cap the custom range at today and follow the calendar day', () => {
+    today.set('2026-09-30');
+    expect(component.maxDate()).toEqual(new Date(2026, 8, 30));
+
+    today.set('2026-10-01');
+
+    expect(component.maxDate()).toEqual(new Date(2026, 9, 1));
   });
 });

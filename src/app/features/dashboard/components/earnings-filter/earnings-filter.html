@@ -9,7 +9,7 @@
   @if (showCustomPicker()) {
     <mat-form-field class="custom-range" appearance="outline" subscriptSizing="dynamic">
       <mat-label>Date range</mat-label>
-      <mat-date-range-input [rangePicker]="picker" [max]="maxDate">
+      <mat-date-range-input [rangePicker]="picker" [max]="maxDate()">
         <input
           matStartDate
           [formField]="rangeForm.start"
