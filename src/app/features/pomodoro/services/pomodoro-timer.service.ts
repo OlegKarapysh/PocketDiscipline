@@ -1,6 +1,5 @@
 import type { OnDestroy } from '@angular/core';
 import { Service, signal, inject, DestroyRef } from '@angular/core';
-import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
@@ -40,7 +39,6 @@ export class PomodoroTimerService implements OnDestroy {
   private backgroundTimeStart: number | null = null;
   private isDestroyed = false;
 
-  private eventBus = inject(EventBusService);
   private storage = inject(PomodoroStorageService);
   private celebration = inject(CelebrationService);
   private destroyRef = inject(DestroyRef);
@@ -137,10 +135,7 @@ export class PomodoroTimerService implements OnDestroy {
     const id = this.currentSessionId();
     try {
       if (id) {
-        await this.storage.updateSession(id, {
-          status: PomodoroSessionStatus.CANCELLED,
-          endTime: Date.now(),
-        });
+        await this.storage.cancelSession(id);
       }
     } catch (error) {
       console.error('Failed to stop pomodoro timer session:', error);
@@ -185,14 +180,7 @@ export class PomodoroTimerService implements OnDestroy {
 
     try {
       const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
-
-      await this.storage.updateSession(id, {
-        status: PomodoroSessionStatus.COMPLETED,
-        endTime: Date.now(),
-        rewardEarned: reward,
-      });
-
-      this.completeTimer(reward);
+      if (!(await this.storage.completeSession(id, reward))) return;
 
       void this.showNotification(COMPLETION_TITLE, this.rewardMessage(reward));
 
@@ -208,14 +196,6 @@ export class PomodoroTimerService implements OnDestroy {
     } finally {
       this.resetTimer();
     }
-  }
-
-  completeTimer(rewardPoints: number): void {
-    this.eventBus.emit({
-      type: EVENT_TYPE.REWARD_EARNED,
-      payload: { points: rewardPoints },
-      source: 'pomodoro',
-    });
   }
 
   private resetTimer(): void {

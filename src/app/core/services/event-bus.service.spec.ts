@@ -1,7 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { RewardEarnedEvent } from './event-bus.service';
-import { EventBusService, EVENT_TYPE } from './event-bus.service';
+import type { AppEvent } from './event-bus.service';
+import { EventBusService } from './event-bus.service';
+
+interface PingEvent extends AppEvent {
+  type: 'PING';
+  payload: { count: number };
+}
 
 describe('EventBusService', () => {
   let service: EventBusService;
@@ -14,16 +19,16 @@ describe('EventBusService', () => {
   });
 
   it('should emit and receive events filtered by event type', () => {
-    let receivedEvent: RewardEarnedEvent | null = null;
+    let receivedEvent: PingEvent | null = null;
 
-    service.on<RewardEarnedEvent>(EVENT_TYPE.REWARD_EARNED).subscribe((e) => {
+    service.on<PingEvent>('PING').subscribe((e) => {
       receivedEvent = e;
     });
 
-    const mockEvent: RewardEarnedEvent = {
-      type: EVENT_TYPE.REWARD_EARNED,
-      payload: { points: 50 },
-      source: 'pomodoro',
+    const mockEvent: PingEvent = {
+      type: 'PING',
+      payload: { count: 50 },
+      source: 'test',
     };
 
     service.emit(mockEvent);
@@ -34,7 +39,7 @@ describe('EventBusService', () => {
   it('should filter out events of different types', () => {
     let received = false;
 
-    service.on<RewardEarnedEvent>(EVENT_TYPE.REWARD_EARNED).subscribe(() => {
+    service.on<PingEvent>('PING').subscribe(() => {
       received = true;
     });
 

@@ -4,11 +4,8 @@ import { Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
 import type { AppEvent } from '../models/app-event.model';
-import type { RewardEarnedEvent } from '../models/reward-earned-event.model';
-import { EVENT_TYPE } from '../models/reward-earned-event.model';
 
-export { EVENT_TYPE };
-export type { AppEvent, RewardEarnedEvent };
+export type { AppEvent };
 
 @Service()
 export class EventBusService {

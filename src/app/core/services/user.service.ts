@@ -1,31 +1,11 @@
 import { Service, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { concatMap, filter } from 'rxjs/operators';
 import { DbService } from '../../database/db.service';
 import { liveQuery } from 'dexie';
-import type { RewardEarnedEvent } from './event-bus.service';
-import { EventBusService, EVENT_TYPE } from './event-bus.service';
 import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../models/user.model';
 
 @Service()
 export class UserService {
   private db = inject(DbService);
-  private eventBus = inject(EventBusService);
-
-  constructor() {
-    this.eventBus
-      .on<RewardEarnedEvent>(EVENT_TYPE.REWARD_EARNED)
-      .pipe(
-        filter((event) => Boolean(event.payload.points)),
-        concatMap((event) => this.addBalance(event.payload.points)),
-        takeUntilDestroyed(),
-      )
-      .subscribe({
-        error: (error: unknown) => {
-          console.error('Failed to update balance from event', error);
-        },
-      });
-  }
 
   readonly user$ = liveQuery(async () => {
     let user = await this.db.users.get(CURRENT_USER_ID);
@@ -39,21 +19,25 @@ export class UserService {
     return user;
   });
 
+  // Callers that also write their own source row (a completed goal, a completion record) must open a
+  // transaction over that table and `users`; this one then joins it, so both commit or neither does.
   async addBalance(amount: number) {
-    const user = await this.db.users.get(CURRENT_USER_ID);
-    if (user) {
-      await this.db.users.update(CURRENT_USER_ID, {
-        balance: user.balance + amount,
-        updatedAt: Date.now(),
-      });
-    } else {
-      await this.db.users.add({
-        id: CURRENT_USER_ID,
-        name: CURRENT_USER_NAME,
-        balance: amount,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-    }
+    await this.db.transaction('rw', this.db.users, async () => {
+      const user = await this.db.users.get(CURRENT_USER_ID);
+      if (user) {
+        await this.db.users.update(CURRENT_USER_ID, {
+          balance: user.balance + amount,
+          updatedAt: Date.now(),
+        });
+      } else {
+        await this.db.users.add({
+          id: CURRENT_USER_ID,
+          name: CURRENT_USER_NAME,
+          balance: amount,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      }
+    });
   }
 }

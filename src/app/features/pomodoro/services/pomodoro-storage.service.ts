@@ -1,10 +1,13 @@
 import { Service, inject } from '@angular/core';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
+import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
+import { UserService } from '../../../core/services/user.service';
 import { DbService } from '../../../database/db.service';
 
 @Service()
 export class PomodoroStorageService {
   private db = inject(DbService);
+  private userService = inject(UserService);
 
   async saveSession(session: PomodoroSession): Promise<void> {
     try {
@@ -33,11 +36,39 @@ export class PomodoroStorageService {
     }
   }
 
-  async updateSession(id: string, changes: Partial<PomodoroSession>): Promise<void> {
+  async completeSession(id: string, rewardEarned: number): Promise<boolean> {
     try {
-      await this.db.pomodoroSessions.update(id, changes);
+      return await this.db.transaction('rw', this.db.pomodoroSessions, this.db.users, async () => {
+        const session = await this.db.pomodoroSessions.get(id);
+        if (session?.status !== PomodoroSessionStatus.ACTIVE) return false;
+
+        await this.db.pomodoroSessions.update(id, {
+          status: PomodoroSessionStatus.COMPLETED,
+          endTime: Date.now(),
+          rewardEarned,
+        });
+        await this.userService.addBalance(rewardEarned);
+        return true;
+      });
     } catch (error) {
-      console.error('Failed to update pomodoro session:', error);
+      console.error('Failed to complete pomodoro session:', error);
+      throw error;
+    }
+  }
+
+  async cancelSession(id: string): Promise<void> {
+    try {
+      await this.db.transaction('rw', this.db.pomodoroSessions, async () => {
+        const session = await this.db.pomodoroSessions.get(id);
+        if (session?.status !== PomodoroSessionStatus.ACTIVE) return;
+
+        await this.db.pomodoroSessions.update(id, {
+          status: PomodoroSessionStatus.CANCELLED,
+          endTime: Date.now(),
+        });
+      });
+    } catch (error) {
+      console.error('Failed to cancel pomodoro session:', error);
       throw error;
     }
   }
