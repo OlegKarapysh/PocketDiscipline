@@ -329,6 +329,24 @@ describe('GoalService', () => {
       });
       expect(userMock.addBalance).toHaveBeenCalledWith(-2000);
     });
+
+    it('should refuse to undo when an active goal already has the same title', async () => {
+      useStoredGoal({ status: GOAL_STATUS.COMPLETED, completedAt: Date.now() });
+      dbMock.goals.toArray.mockResolvedValue([
+        {
+          id: 'goal-456',
+          title: 'DO 50 PUSH-UPS ON FISTS',
+          rewardValue: 500,
+          status: GOAL_STATUS.ACTIVE,
+          completedAt: null,
+          createdAt: Date.now(),
+        },
+      ]);
+
+      await expect(service.undoCompleteGoal('goal-123')).rejects.toThrow('an active goal already has this title');
+      expect(dbMock.goals.update).not.toHaveBeenCalled();
+      expect(userMock.addBalance).not.toHaveBeenCalled();
+    });
   });
 
   describe('deleteGoal', () => {

@@ -8,6 +8,7 @@ import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
 
 const ERROR_DUPLICATE_GOAL_TITLE = 'A goal with this title already exists.';
+const ERROR_UNDO_DUPLICATE_GOAL_TITLE = 'Cannot undo: an active goal already has this title.';
 
 @Service()
 export class GoalService {
@@ -42,6 +43,9 @@ export class GoalService {
     return this.db.transaction('rw', this.db.goals, this.db.users, async () => {
       const goal = await this.db.goals.get(id);
       if (goal?.status !== GOAL_STATUS.COMPLETED) return false;
+      if (await this.isTitleActive(goal.title)) {
+        throw new Error(ERROR_UNDO_DUPLICATE_GOAL_TITLE);
+      }
 
       await this.db.goals.update(id, {
         status: GOAL_STATUS.ACTIVE,
@@ -53,8 +57,7 @@ export class GoalService {
   }
 
   async addGoal(title: string, rewardValue: number): Promise<void> {
-    const existing = await this.db.goals.where('status').equals(GOAL_STATUS.ACTIVE).toArray();
-    if (existing.some((g) => g.title.toLowerCase() === title.toLowerCase())) {
+    if (await this.isTitleActive(title)) {
       throw new Error(ERROR_DUPLICATE_GOAL_TITLE);
     }
 
@@ -73,8 +76,7 @@ export class GoalService {
     const goal = await this.db.goals.get(id);
     if (goal?.status !== GOAL_STATUS.ACTIVE) return;
 
-    const existing = await this.db.goals.where('status').equals(GOAL_STATUS.ACTIVE).toArray();
-    if (existing.some((g) => g.id !== id && g.title.toLowerCase() === title.toLowerCase())) {
+    if (await this.isTitleActive(title, id)) {
       throw new Error(ERROR_DUPLICATE_GOAL_TITLE);
     }
 
@@ -83,5 +85,10 @@ export class GoalService {
 
   async deleteGoal(id: string): Promise<void> {
     await this.db.goals.delete(id);
+  }
+
+  private async isTitleActive(title: string, exceptId?: string): Promise<boolean> {
+    const active = await this.db.goals.where('status').equals(GOAL_STATUS.ACTIVE).toArray();
+    return active.some((g) => g.id !== exceptId && g.title.toLowerCase() === title.toLowerCase());
   }
 }
