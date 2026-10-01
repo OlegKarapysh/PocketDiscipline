@@ -257,6 +257,8 @@ body {
 // A long difficulty name wraps on a phone, breaking inside a word if it has to, so the button grows
 // rather than clipping the name or letting it spill over the next button. The side padding is
 // tighter than a normal button's, so an 88px column still fits a word like "difficulty" whole.
+// The reward does not wrap, so the button is never narrower than it: Material's own min-width of
+// 64px would let a flex row squeeze the button and spill a seven-digit reward out of it.
 .pd-difficulty.mat-mdc-outlined-button {
   @include mat.button-overrides(
     (
@@ -264,6 +266,7 @@ body {
     )
   );
   height: auto;
+  min-width: min-content;
   min-height: 48px;
   padding-block: t.space(1);
 
