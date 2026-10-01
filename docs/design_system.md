@@ -150,7 +150,7 @@ One codebase serves a phone held in one hand and a wide desktop window, and both
 
 ### The viewport is not the container
 
-`t.up()` and `t.down()` test the **viewport**. From 840px the side rail takes 240px, so at 840px the content column is about 536px wide, narrower than on a 600px screen. A component that goes two-column "because the screen is wide" breaks exactly there. The dashboard's stat tiles and the ten daily-score buttons do; both are listed as known gaps in the layout audit.
+`t.up()` and `t.down()` test the **viewport**. From 840px the side rail takes 240px, so at 840px the content column is about 536px wide, narrower than on a 600px screen. A component that goes two-column "because the screen is wide" breaks exactly there. The dashboard's stat tiles and the ten daily-score buttons did, until they were made to respond to their own width.
 
 - Inside a page, use layouts that respond to their own width: `grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr))`, or `flex-wrap: wrap` with a `flex-basis`. No breakpoint is involved, so they are right in any container.
 - Keep `t.up()` and `t.down()` for what really depends on the screen: the shell, page padding, type size.

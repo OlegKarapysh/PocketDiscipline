@@ -174,13 +174,7 @@ const SCREENS: Screen[] = [
 // Screens that are known not to fit at a width, each with the reason. This list may only shrink:
 // an entry whose screen fits again fails the audit until the entry is deleted. Never add an entry to
 // make new work pass; fix the layout instead.
-const KNOWN_GAPS: { screen: string; width: number; reason: string }[] = [
-  {
-    screen: 'daily scores',
-    width: 840,
-    reason: 'same cause: ten score buttons share half of a 536px content column',
-  },
-];
+const KNOWN_GAPS: { screen: string; width: number; reason: string }[] = [];
 
 const ROUTE_FILES_ROOT = join(__dirname, '../../src/app');
 

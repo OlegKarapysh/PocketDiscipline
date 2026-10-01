@@ -6,14 +6,18 @@
   gap: t.space(2);
 }
 
+// Two rows of five. They sit side by side, as one row of ten, only where every button keeps its
+// touch target.
 .scale-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 5 * t.$touch-target + 4 * t.space(2)), 1fr));
+  gap: t.space(2);
+}
+
+.scale-row {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: t.space(2);
-
-  @include t.up(medium) {
-    grid-template-columns: repeat(10, minmax(0, 1fr));
-  }
 }
 
 .score-btn {
