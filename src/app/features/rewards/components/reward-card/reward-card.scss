@@ -48,7 +48,6 @@
 
 .card-title {
   @include t.card-title;
-  overflow-wrap: anywhere;
 }
 
 .card-subtitle {

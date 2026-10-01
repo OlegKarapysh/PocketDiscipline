@@ -22,7 +22,6 @@
 
 .title {
   @include t.card-title;
-  overflow-wrap: anywhere;
 }
 
 .done-icon {

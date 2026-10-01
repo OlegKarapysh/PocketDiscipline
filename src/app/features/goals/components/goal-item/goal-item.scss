@@ -11,7 +11,6 @@
 
 .title {
   @include t.card-title;
-  overflow-wrap: anywhere;
 }
 
 .reward {

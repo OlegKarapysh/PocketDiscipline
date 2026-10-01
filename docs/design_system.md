@@ -179,7 +179,7 @@ Each row has happened in this repo.
 
 Titles, names and notes are data. A layout has to survive the longest value a form allows, typed as one unbroken word (a pasted URL).
 
-- An element that shows user-entered text sets `overflow-wrap: anywhere`, and the flex or grid item that holds it sets `min-width: 0`. Without both, one long word widens the card and the page scrolls sideways. That includes text quoted elsewhere: a confirm message, a snackbar, a dialog subtitle.
+- An element that shows user-entered text sets `overflow-wrap: anywhere`, and the flex or grid item that holds it sets `min-width: 0`. Without both, one long word widens the card and the page scrolls sideways. That includes text quoted elsewhere: a confirm message, a snackbar, a dialog subtitle. `t.card-title` already sets the wrap.
 - Wrap by default. Truncate with an ellipsis only where the full text is on the same screen anyway, such as the donut centre above its legend.
 - SVG `<text>` can neither wrap nor truncate, so user text is HTML, laid over the chart if need be.
 - Length limits live in `shared/constants/text-length.const.ts`: titles 100, category names 50, difficulty names 30, notes 1000. Apply one with `maxLength()` in the form schema; `[formField]` copies it to the input's `maxlength`, so the browser cuts a longer paste. Every new text field gets a limit.
