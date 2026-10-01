@@ -84,6 +84,6 @@ Everything must work in both schemes without extra code. If you think you need a
 
 - [ ] `npm run lint` passes. It includes `scripts/check-ui.mjs`; the Enforcement section of `docs/design_system.md` lists what it checks. To check only the files you touched, run `node scripts/check-ui.mjs <file...>`.
 - [ ] Never "fix" the UI check by editing `scripts/ui-baseline.json` by hand. The baseline may only shrink. Run `node scripts/check-ui.mjs --update-baseline` only after _removing_ violations.
-- [ ] `npm run e2e` passes. It includes the layout audit (`e2e/src/layout-audit.spec.ts`), which opens every screen from 360px to 1920px with worst-case content. A new route, tab or dialog has an entry in its `SCREENS`, a new user-data field has its worst case in its seed, and `KNOWN_GAPS` did not grow.
+- [ ] `npm run e2e` passes. It includes the layout audit (`e2e/src/layout-audit.spec.ts`). Whatever you added that has its own layout or shows user data is registered in it, and its `KNOWN_GAPS` did not grow: "Verifying" in `docs/design_system.md` says what goes where.
 - [ ] You looked at the screen at 360px and at 1280px, in light and dark: `LAYOUT_AUDIT_SCREENSHOTS=1 npx playwright test layout-audit` writes the screenshots to `test-results/layout-audit/`. The audit cannot judge touch targets, hover-only behaviour or how well a wide screen is used.
 - [ ] Any new shared component is in the gallery page and in `docs/design_system.md`.
