@@ -73,19 +73,14 @@
   @include t.icon-size(xs);
 }
 
+// The badge sits beside the text where the text keeps 200px, and above it anywhere narrower.
 .feedback-banner {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: t.space(2);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.space(2) t.space(4);
   padding: t.space(3) t.space(4);
   border-radius: t.radius(md);
-
-  @include t.up(medium) {
-    flex-direction: row;
-    align-items: center;
-    gap: t.space(4);
-  }
 }
 
 .tier-low {
@@ -129,7 +124,8 @@
 }
 
 .feedback-text {
-  flex: 1;
+  flex: 1 1 200px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: t.space(1);
@@ -149,6 +145,7 @@
   justify-content: flex-end;
 }
 
+// Full width on a phone, where it is tapped with a thumb: this follows the screen, not the card.
 .submit-button {
   width: 100%;
 
@@ -157,19 +154,12 @@
   }
 }
 
+// The score sits beside its description at every width; the text wraps in the room that is left.
 .readonly-container {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: t.space(4);
-  text-align: center;
-
-  @include t.up(medium) {
-    flex-direction: row;
-    justify-content: center;
-    gap: t.space(6);
-    text-align: start;
-  }
 }
 
 .readonly-score-display {
@@ -200,12 +190,9 @@
 .readonly-details {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: t.space(1);
-
-  @include t.up(medium) {
-    align-items: flex-start;
-  }
+  min-width: 0;
 }
 
 .status-pill {
