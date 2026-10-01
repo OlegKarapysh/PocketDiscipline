@@ -48,11 +48,13 @@
 
 .card-title {
   @include t.card-title;
+  overflow-wrap: anywhere;
 }
 
 .card-subtitle {
   font: var(--mat-sys-label-large);
   color: var(--mat-sys-on-surface-variant);
+  overflow-wrap: anywhere;
 }
 
 .card-content {
