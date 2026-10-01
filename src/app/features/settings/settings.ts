@@ -1,5 +1,6 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { from, switchMap } from 'rxjs';
@@ -18,6 +19,8 @@ export class Settings {
   private confirmService = inject(ConfirmService);
   private purgeService = inject(DatabasePurgeService);
   private snackBar = inject(SnackBarService);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
 
   confirmPurge(): void {
     this.confirmService
@@ -28,10 +31,14 @@ export class Settings {
         cancelText: 'Cancel',
         isDestructive: true,
       })
-      .pipe(switchMap(() => from(this.purgeService.purge())))
+      .pipe(
+        switchMap(() => from(this.purgeService.purge())),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: () => {
           this.snackBar.show('Database purged.');
+          void this.router.navigate(['/']);
         },
         error: (e: unknown) => {
           this.snackBar.error(e, 'Failed to purge database.');

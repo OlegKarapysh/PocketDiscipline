@@ -27,7 +27,7 @@ As a developer or tester, I want to be able to purge all data from the database 
 **Acceptance Scenarios**:
 
 1. **Given** the user is on the Settings tab, **When** they click the "Purge Database" button, **Then** a confirmation prompt should appear warning them about data loss.
-2. **Given** the confirmation prompt is visible, **When** the user confirms the action, **Then** all user data is deleted, active state stores are cleared, and the user is navigated to the home screen.
+2. **Given** the confirmation prompt is visible, **When** the user confirms the action, **Then** all user data is deleted, the defaults a fresh install gets are restored, active state stores are cleared, and the user is navigated to the home screen.
 3. **Given** the confirmation prompt is visible, **When** the user cancels the action, **Then** the database remains unchanged and the prompt is dismissed.
 
 ### Edge Cases
@@ -48,7 +48,7 @@ As a developer or tester, I want to be able to purge all data from the database 
 - **FR-001**: System MUST display a "Purge Database" button within the Settings tab in all environments, including production.
 - **FR-002**: System MUST display a confirmation dialog when the "Purge Database" button is clicked, warning the user that all data will be permanently deleted.
 - **FR-003**: System MUST NOT delete any data if the user cancels the confirmation dialog.
-- **FR-004**: System MUST delete all application data from the local database if the user confirms the action.
+- **FR-004**: System MUST delete all application data from the local database if the user confirms the action, and restore the defaults a fresh install gets.
 - **FR-005**: System MUST programmatically clear active state stores and navigate to the home screen after the data is successfully purged.
 
 ### Key Entities

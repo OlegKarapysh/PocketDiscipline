@@ -19,16 +19,16 @@ This guide documents how to manually validate the Purge Database feature once im
 ### 2. Test Successful Purge
 1. Navigate to the **Settings** tab.
 2. Click the **Purge Database** button.
-3. Click **Confirm/Delete** in the confirmation dialog.
+3. Click **Purge** in the confirmation dialog.
 4. **Expected Outcome**:
    - The dialog closes.
    - The application programmatically navigates you to the home screen (or default view).
    - The screen does not hard-refresh (the browser tab should not reload).
-   - All lists (tasks, goals, etc.) are now empty.
-   - You can verify the data is truly gone by opening Chrome DevTools -> Application -> IndexedDB -> checking that tables are empty.
+   - Everything you added is gone and the app looks like a fresh install: the three starter goals, the default reward categories and the starting balance are back, and every other list is empty.
+   - You can verify the data is truly gone by opening Chrome DevTools -> Application -> IndexedDB -> checking that only `users`, `goals` and `rewardCategories` hold rows, and only the seeded ones.
 
 ### 3. Test Empty Database Purge
-1. Immediately after completing Step 2 (when the database is already empty).
+1. Immediately after completing Step 2 (when the database holds only the defaults).
 2. Navigate to the **Settings** tab.
 3. Click the **Purge Database** button and confirm.
 4. **Expected Outcome**: The operation succeeds transparently, navigating you to the home screen without any errors.

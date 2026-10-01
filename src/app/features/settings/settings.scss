@@ -18,6 +18,12 @@
     (
       outlined-label-text-color: var(--mat-sys-error),
       outlined-outline-color: var(--mat-sys-error),
+      outlined-state-layer-color: var(--mat-sys-error),
+      outlined-ripple-color: color-mix(
+          in srgb,
+          var(--mat-sys-error) calc(var(--mat-sys-pressed-state-layer-opacity) * 100%),
+          transparent
+        ),
     )
   );
 }

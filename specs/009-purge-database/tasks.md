@@ -31,7 +31,7 @@ description: "Task list for Purge Database feature implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T002 Implement `purgeDatabase` method (or similar) in the core Dexie database service (`src/app/core/database/app-database.service.ts` or equivalent) to programmatically clear all user data tables.
+- [x] T002 Implement `purgeDatabase` method (or similar) in the Dexie database service (`src/app/database/db.service.ts`) to programmatically clear all user data tables and re-seed the fresh-install defaults.
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -47,7 +47,7 @@ description: "Task list for Purge Database feature implementation"
 
 - [x] T003 [P] [US1] Confirmation via the shared `ConfirmService` (destructive `ConfirmDialog`); no bespoke dialog needed.
 - [x] T004 [US1] Update `src/app/features/settings/settings.ts` (and its template) to add the "Purge Database" button.
-- [x] T005 [US1] Connect the button in `settings-page.component.ts` to open the confirmation dialog, and upon confirmation, invoke the `purgeDatabase` method.
+- [x] T005 [US1] Connect the button in `src/app/features/settings/settings.ts` to open the confirmation dialog, and upon confirmation, invoke the `purgeDatabase` method.
 - [x] T006 [US1] Implement programmatic state clearing and navigation to the home screen immediately after a successful database purge.
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently.
@@ -59,7 +59,7 @@ description: "Task list for Purge Database feature implementation"
 **Purpose**: Improvements that affect multiple user stories
 
 - [x] T007 Validation steps covered by `e2e/src/purge-database.spec.ts` to ensure feature completeness.
-- [ ] T008 Run UI audit script `npm run lint` to ensure no design system violations.
+- [x] T008 Run UI audit script `npm run lint` to ensure no design system violations.
 
 ---
 

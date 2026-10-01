@@ -1,6 +1,6 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { EMPTY, NEVER, of } from 'rxjs';
 import { Settings } from './settings';
@@ -15,6 +15,7 @@ describe('Settings', () => {
   let askMock: ReturnType<typeof vi.fn>;
   let purgeMock: ReturnType<typeof vi.fn>;
   let snackBarMock: { show: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
+  let navigateSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
     askMock = vi.fn();
@@ -31,6 +32,7 @@ describe('Settings', () => {
       ],
     }).compileComponents();
 
+    navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     fixture = TestBed.createComponent(Settings);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -80,7 +82,7 @@ describe('Settings', () => {
       expect(snackBarMock.show).not.toHaveBeenCalled();
     });
 
-    it('should purge and confirm with a snackbar when the user agrees', async () => {
+    it('should purge, confirm with a snackbar and go home when the user agrees', async () => {
       askMock.mockReturnValue(of(true));
 
       clickPurge();
@@ -88,9 +90,10 @@ describe('Settings', () => {
 
       expect(purgeMock).toHaveBeenCalledTimes(1);
       expect(snackBarMock.show).toHaveBeenCalledTimes(1);
+      expect(navigateSpy).toHaveBeenCalledWith(['/']);
     });
 
-    it('should report a failed purge', async () => {
+    it('should report a failed purge and stay on the page', async () => {
       const failure = new Error('boom');
       askMock.mockReturnValue(of(true));
       purgeMock.mockRejectedValue(failure);
@@ -100,6 +103,7 @@ describe('Settings', () => {
 
       expect(snackBarMock.error).toHaveBeenCalledWith(failure, expect.any(String));
       expect(snackBarMock.show).not.toHaveBeenCalled();
+      expect(navigateSpy).not.toHaveBeenCalled();
     });
   });
 });

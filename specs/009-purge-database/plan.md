@@ -47,19 +47,16 @@ specs/009-purge-database/
 ```text
 src/
 └── app/
-    ├── core/
-    │   └── database/
-    │       └── app-database.service.ts # Core DB access/reset logic
+    ├── database/
+    │   └── db.service.ts # purgeDatabase(): clear every table and re-seed the defaults
     └── features/
         └── settings/
-            ├── components/
-            │   └── settings-page/
-            │       └── settings-page.component.ts # Add Purge Button here
-            └── dialogs/
-                └── confirm-purge-dialog/ # Confirmation dialog component
+            ├── services/
+            │   └── database-purge.service.ts # Purge, then stop the pomodoro timer
+            └── settings.ts # Purge button, confirmation, snackbar and navigation home
 ```
 
-**Structure Decision**: The UI components will be added directly into the existing `settings` feature slice (`src/app/features/settings`). The actual database purging logic will be implemented as a method on the core database service (likely `AppDatabaseService` or similar under `src/app/core/database/` or similar) to ensure all stores are cleared properly.
+**Structure Decision**: The UI components will be added directly into the existing `settings` feature slice (`src/app/features/settings`). The actual database purging logic is a method on the persistence composition root (`DbService` in `src/app/database/db.service.ts`) to ensure all stores are cleared properly. Confirmation uses the shared `ConfirmService`, so no bespoke dialog is needed.
 
 ## Complexity Tracking
 
