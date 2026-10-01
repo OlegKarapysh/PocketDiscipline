@@ -6,25 +6,17 @@
   max-width: 480px;
 }
 
+// The two fields share a row where each gets 200px, and stack anywhere narrower.
 .config-container {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: t.space(4);
-  justify-content: center;
   margin-top: t.space(8);
   width: 100%;
   box-sizing: border-box;
 
   mat-form-field {
-    width: 100%;
-  }
-
-  @include t.up(medium) {
-    flex-direction: row;
-
-    mat-form-field {
-      flex: 1;
-      min-width: 0;
-    }
+    flex: 1 1 200px;
+    min-width: 0;
   }
 }
