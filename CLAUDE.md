@@ -27,6 +27,9 @@ Treat all four as the definition of done:
 npm run lint && npm run typecheck && npm test -- --watch=false && npm run e2e
 ```
 
+The e2e suite is too slow for the pre-commit hook and for CI, which run lint and the unit tests only.
+Run `npm run e2e` locally, always for UI changes (it holds the layout audit).
+
 ## Angular version
 
 This project is on Angular 22. Several long-standing defaults changed in v22 — `OnPush`, zoneless,
