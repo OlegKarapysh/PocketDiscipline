@@ -12,7 +12,9 @@ pointer and deliberately does not repeat what they say.
    access code.
 4. **[docs/design_system.md](docs/design_system.md)** — required reading before any UI change, with the
    `pocketdiscipline-ui` skill. Claude Code does not discover skills under `.agents/skills/`, so read
-   `.agents/skills/pocketdiscipline-ui/SKILL.md` directly.
+   `.agents/skills/pocketdiscipline-ui/SKILL.md` directly. The app is used on phones and on wide
+   desktops alike: its "Responsive layout" section is the contract for every screen, and the layout
+   audit in `npm run e2e` enforces it.
 
 If a convention needs to change, change it in `docs/code_style.md`. Do not restate a rule here or in
 `GEMINI.md` — a rule that lives in two places drifts.
