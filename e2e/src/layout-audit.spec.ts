@@ -28,8 +28,9 @@ const SCREENSHOT_DIR = join(__dirname, '../../test-results/layout-audit');
 const WIDTHS = [360, 390, 600, 840, 1024, 1280, 1920];
 const RAIL_FROM = 840;
 
-// Month end, so "per day" averages have the most digits they will ever have.
-const NOW = new Date('2026-01-31T12:00:00');
+// The first of the month, when the "per day" average is the whole month's total: the most digits it
+// will ever have.
+const NOW = new Date('2026-01-01T12:00:00');
 
 const OVERLAY = '.cdk-overlay-container';
 
@@ -191,6 +192,33 @@ const SCREENS: Screen[] = [
   { name: 'design system gallery', path: '/design-system', ready: 'app-stat-card' },
 ];
 
+// The lists again with nothing in them: an empty state is a layout of its own. Audited before the
+// worst case is seeded.
+const EMPTY_SCREENS: Screen[] = [
+  { name: 'dashboard: no earnings', path: '/dashboard', ready: '.empty-earnings-indicator' },
+  { name: 'tasks: nothing yet', path: '/tasks', ready: 'app-empty-state' },
+  { name: 'goals: nothing yet', path: '/goals', ready: 'app-empty-state' },
+  { name: 'rewards: empty store', path: '/rewards', ready: 'app-reward-store app-empty-state' },
+  {
+    name: 'rewards: empty history',
+    path: '/rewards',
+    ready: 'app-reward-store app-empty-state',
+    open: async (page) => {
+      await page.getByRole('tab', { name: /History/ }).click();
+      await expect(page.locator('app-withdrawal-ledger app-empty-state')).toBeVisible();
+    },
+  },
+  {
+    name: 'rewards: empty analytics',
+    path: '/rewards',
+    ready: 'app-reward-store app-empty-state',
+    open: async (page) => {
+      await page.getByRole('tab', { name: /Analytics/ }).click();
+      await expect(page.locator('app-spending-analytics app-empty-state')).toBeVisible();
+    },
+  },
+];
+
 // Screens that are known not to fit at a width, each with the reason. This list may only shrink:
 // an entry whose screen fits again fails the audit until the entry is deleted. Never add an entry to
 // make new work pass; fix the layout instead.
@@ -198,12 +226,49 @@ const KNOWN_GAPS: { screen: string; width: number; reason: string }[] = [];
 
 const ROUTE_FILES_ROOT = join(__dirname, '../../src/app');
 
+const DATABASE = 'pocket-discipline-db';
+// The tables behind the lists. A new database comes with starter goals, so "empty" has to be made.
+const LIST_STORES = ['goals', 'dailyTasks', 'tasks', 'rewards', 'withdrawals'];
+
+async function emptyTheLists(page: Page): Promise<void> {
+  await page.goto('/dashboard');
+  await expect(page.locator('app-balance-widget')).toBeVisible();
+
+  await page.evaluate(
+    async ({ database, lists }) => {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open(database);
+        request.onsuccess = () => {
+          resolve(request.result);
+        };
+        request.onerror = () => {
+          reject(new Error('could not open the database'));
+        };
+      });
+
+      const tx = db.transaction(lists, 'readwrite');
+      for (const store of lists) tx.objectStore(store).clear();
+
+      await new Promise<void>((resolve, reject) => {
+        tx.oncomplete = () => {
+          resolve();
+        };
+        tx.onerror = () => {
+          reject(new Error('could not empty the database'));
+        };
+      });
+      db.close();
+    },
+    { database: DATABASE, lists: LIST_STORES },
+  );
+}
+
 async function seedWorstCase(page: Page): Promise<void> {
   await page.goto('/dashboard');
   await expect(page.locator('app-balance-widget')).toBeVisible();
 
   await page.evaluate(
-    async ({ title, category, difficulty, notes }) => {
+    async ({ database, lists, title, category, difficulty, notes }) => {
       // One unbroken word of the widest glyph, a URL, and ordinary long words: the three shapes a
       // limit-length value takes.
       const word = (length: number) => 'W'.repeat(length);
@@ -215,7 +280,7 @@ async function seedWorstCase(page: Page): Promise<void> {
       const now = Date.now();
       const today = new Date(now).toLocaleDateString('en-CA');
       const db = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open('pocket-discipline-db');
+        const request = indexedDB.open(database);
         request.onsuccess = () => {
           resolve(request.result);
         };
@@ -224,9 +289,8 @@ async function seedWorstCase(page: Page): Promise<void> {
         };
       });
 
-      const cleared = ['goals', 'dailyTasks', 'tasks', 'rewards', 'withdrawals'];
-      const tx = db.transaction(['users', 'rewardCategories', ...cleared], 'readwrite');
-      for (const store of cleared) tx.objectStore(store).clear();
+      const tx = db.transaction(['users', 'rewardCategories', ...lists], 'readwrite');
+      for (const store of lists) tx.objectStore(store).clear();
       const put = (store: string, row: object) => tx.objectStore(store).put(row);
 
       put('users', { id: 1, name: 'Current', balance: 1_234_567, createdAt: now, updatedAt: now });
@@ -234,7 +298,7 @@ async function seedWorstCase(page: Page): Promise<void> {
       const goal = (id: string, text: string, extra: object = {}) => ({
         id,
         title: text,
-        rewardValue: 150_000,
+        rewardValue: 1_234_567,
         status: 'ACTIVE',
         completedAt: null,
         createdAt: now,
@@ -243,10 +307,11 @@ async function seedWorstCase(page: Page): Promise<void> {
       put('goals', goal('goal-word', word(title)));
       put('goals', goal('goal-url', url(title)));
       put('goals', goal('goal-prose', prose(title)));
-      put('goals', goal('goal-done', word(title), { status: 'COMPLETED', completedAt: now }));
+      // Completed today, so it is also the month's earnings on the dashboard.
+      put('goals', goal('goal-done', word(title), { rewardValue: 9_999_999, status: 'COMPLETED', completedAt: now }));
 
       const difficulties = (name: (length: number) => string) =>
-        [1, 2, 3, 4].map((step) => ({ id: `d${step}`, name: name(difficulty), baseReward: 100_000 * step }));
+        [1, 2, 3, 4].map((step) => ({ id: `d${step}`, name: name(difficulty), baseReward: 1_000_000 * step }));
       const dailyTask = (id: string, text: string, names: (length: number) => string, extra: object = {}) => ({
         id,
         title: text,
@@ -331,6 +396,8 @@ async function seedWorstCase(page: Page): Promise<void> {
       db.close();
     },
     {
+      database: DATABASE,
+      lists: LIST_STORES,
       title: TITLE_MAX_LENGTH,
       category: CATEGORY_NAME_MAX_LENGTH,
       difficulty: DIFFICULTY_NAME_MAX_LENGTH,
@@ -434,17 +501,25 @@ function findOverflow(rootSelector: string): string[] {
 }
 
 // Resolves once the page has stopped changing: no DOM mutation for a moment, finite animations done,
-// fonts loaded. Measuring earlier reads a layout that the data has not filled yet.
+// fonts loaded. Measuring earlier reads a layout that the data has not filled yet. A page that never
+// stops changing fails here, by name, rather than at the test's timeout.
 async function settle(page: Page): Promise<void> {
   await page.evaluate(async () => {
     const QUIET_MS = 300;
-    await new Promise<void>((resolve) => {
+    const LIMIT_MS = 10_000;
+    await new Promise<void>((resolve, reject) => {
       let timer = setTimeout(done, QUIET_MS);
       const observer = new MutationObserver(() => {
         clearTimeout(timer);
         timer = setTimeout(done, QUIET_MS);
       });
+      const limit = setTimeout(() => {
+        clearTimeout(timer);
+        observer.disconnect();
+        reject(new Error(`the page was still changing after ${String(LIMIT_MS)}ms`));
+      }, LIMIT_MS);
       function done(): void {
+        clearTimeout(limit);
         observer.disconnect();
         resolve();
       }
@@ -502,8 +577,13 @@ test.describe('Layout audit', () => {
       test(`every screen fits at ${String(width)}px with worst-case content`, async ({ page }, testInfo) => {
         test.setTimeout(180_000);
         await page.clock.setFixedTime(NOW);
-        await seedWorstCase(page);
 
+        await emptyTheLists(page);
+        for (const screen of EMPTY_SCREENS) {
+          await test.step(screen.name, () => audit(page, screen, width, testInfo));
+        }
+
+        await seedWorstCase(page);
         for (const screen of SCREENS) {
           await test.step(screen.name, () => audit(page, screen, width, testInfo));
         }

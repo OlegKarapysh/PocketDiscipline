@@ -194,9 +194,10 @@ Titles, names and notes are data. A layout has to survive the longest value a fo
 
 ### Verifying
 
-`e2e/src/layout-audit.spec.ts` runs with `npm run e2e`. It seeds the worst content the forms allow, opens every screen (route, tab, dialog) at each reference width, and fails on any text outside its box, any text cut off without an ellipsis, and anything that scrolls sideways.
+`e2e/src/layout-audit.spec.ts` runs with `npm run e2e`. At each reference width it opens every list empty, then seeds the worst content the forms allow and opens every screen (route, tab, dialog), and fails on any text outside its box, any text cut off without an ellipsis, and anything that scrolls sideways.
 
 - **A new route, tab, dialog or other state with its own layout gets an entry in the audit's `SCREENS`.** A route without one fails the audit; a dialog without one is simply not checked, so add it.
+- **A new list gets its empty state in the audit's `EMPTY_SCREENS`.**
 - **A new field that shows user data gets its worst case in the audit's seed.**
 - **`KNOWN_GAPS` may only shrink.** It lists the screens that do not fit yet. Never add an entry to make new work pass; an entry whose screen fits again fails the audit until it is deleted.
 - **To look at the result**, run `LAYOUT_AUDIT_SCREENSHOTS=1 npx playwright test layout-audit` and open `test-results/layout-audit/<width>/<screen>.png`. Add `-g "at 360px"` for one width.
