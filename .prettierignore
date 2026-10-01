@@ -13,3 +13,6 @@ pnpm-lock.yaml
 .specify/templates/
 .specify/extensions.yml
 .specify/integration.json
+
+# Spec documents: spec-kit writes them unformatted, and they are documents, not code.
+specs/
