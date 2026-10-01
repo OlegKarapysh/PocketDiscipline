@@ -2,7 +2,6 @@ import { Component, computed, input, signal } from '@angular/core';
 
 import { MatIconModule } from '@angular/material/icon';
 import { Amount } from '../../../../shared/components/amount/amount';
-import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import type { CategorySpendingBreakdown } from '../../models/category-spending-breakdown.model';
 import type { DonutSlice } from './donut-slice.model';
 
@@ -12,7 +11,7 @@ const CIRCUMFERENCE = 2 * Math.PI * 70;
   selector: 'app-spending-donut-chart',
   templateUrl: './spending-donut-chart.html',
   styleUrl: './spending-donut-chart.scss',
-  imports: [MatIconModule, Amount, MoneyPipe],
+  imports: [MatIconModule, Amount],
 })
 export class SpendingDonutChart {
   readonly data = input<CategorySpendingBreakdown[]>([]);
