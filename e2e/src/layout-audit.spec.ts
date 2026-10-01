@@ -2,6 +2,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page, TestInfo } from '@playwright/test';
 import { expect, test } from '@playwright/test';
+import { FALLBACK_CATEGORY_ID } from '../../src/app/core/constants/initial-reward-categories.const';
+import { CURRENT_USER_ID, CURRENT_USER_NAME } from '../../src/app/core/models/user.model';
 import {
   CATEGORY_NAME_MAX_LENGTH,
   DIFFICULTY_NAME_MAX_LENGTH,
@@ -230,12 +232,13 @@ const DATABASE = 'pocket-discipline-db';
 // The tables behind the lists. A new database comes with starter goals, so "empty" has to be made.
 const LIST_STORES = ['goals', 'dailyTasks', 'tasks', 'rewards', 'withdrawals'];
 
-async function emptyTheLists(page: Page): Promise<void> {
-  await page.goto('/dashboard');
-  await expect(page.locator('app-balance-widget')).toBeVisible();
+type Rows = Record<string, object[]>;
 
+// Empties the lists and writes the given rows in their place, in one transaction. The app must have
+// opened its database already, and reads the result on its next load.
+async function replaceLists(page: Page, rows: Rows = {}): Promise<void> {
   await page.evaluate(
-    async ({ database, lists }) => {
+    async ({ database, lists, rows: written }) => {
       const db = await new Promise<IDBDatabase>((resolve, reject) => {
         const request = indexedDB.open(database);
         request.onsuccess = () => {
@@ -246,164 +249,145 @@ async function emptyTheLists(page: Page): Promise<void> {
         };
       });
 
-      const tx = db.transaction(lists, 'readwrite');
+      const tx = db.transaction([...new Set([...lists, ...Object.keys(written)])], 'readwrite');
       for (const store of lists) tx.objectStore(store).clear();
+      for (const [store, storeRows] of Object.entries(written)) {
+        for (const row of storeRows) tx.objectStore(store).put(row);
+      }
 
       await new Promise<void>((resolve, reject) => {
         tx.oncomplete = () => {
           resolve();
         };
         tx.onerror = () => {
-          reject(new Error('could not empty the database'));
+          reject(new Error('could not write the database'));
         };
       });
       db.close();
     },
-    { database: DATABASE, lists: LIST_STORES },
+    { database: DATABASE, lists: LIST_STORES, rows },
   );
 }
 
-async function seedWorstCase(page: Page): Promise<void> {
-  await page.goto('/dashboard');
-  await expect(page.locator('app-balance-widget')).toBeVisible();
+// One unbroken word of the widest glyph, a URL, and ordinary long words: the three shapes a
+// limit-length value takes.
+const word = (length: number) => 'W'.repeat(length);
+const url = (length: number) => ('https://example.com/a/very/long/path/' + 'segment-'.repeat(200)).slice(0, length);
+const prose = (length: number) =>
+  'Supercalifragilistic expialidocious antidisestablishmentarianism '.repeat(20).slice(0, length);
 
-  await page.evaluate(
-    async ({ database, lists, title, category, difficulty, notes }) => {
-      // One unbroken word of the widest glyph, a URL, and ordinary long words: the three shapes a
-      // limit-length value takes.
-      const word = (length: number) => 'W'.repeat(length);
-      const url = (length: number) =>
-        ('https://example.com/a/very/long/path/' + 'segment-'.repeat(200)).slice(0, length);
-      const prose = (length: number) =>
-        'Supercalifragilistic expialidocious antidisestablishmentarianism '.repeat(20).slice(0, length);
+function worstCaseRows(): Rows {
+  // The page's clock is fixed at NOW, so these are the app's "now" and "today" too.
+  const now = NOW.getTime();
+  const today = NOW.toLocaleDateString('en-CA');
 
-      const now = Date.now();
-      const today = new Date(now).toLocaleDateString('en-CA');
-      const db = await new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(database);
-        request.onsuccess = () => {
-          resolve(request.result);
-        };
-        request.onerror = () => {
-          reject(new Error('could not open the database'));
-        };
-      });
+  const goal = (id: string, text: string, extra: object = {}) => ({
+    id,
+    title: text,
+    rewardValue: 1_234_567,
+    status: 'ACTIVE',
+    completedAt: null,
+    createdAt: now,
+    ...extra,
+  });
 
-      const tx = db.transaction(['users', 'rewardCategories', ...lists], 'readwrite');
-      for (const store of lists) tx.objectStore(store).clear();
-      const put = (store: string, row: object) => tx.objectStore(store).put(row);
+  const difficulties = (name: (length: number) => string) =>
+    [1, 2, 3, 4].map((step) => ({
+      id: `d${String(step)}`,
+      name: name(DIFFICULTY_NAME_MAX_LENGTH),
+      baseReward: 1_000_000 * step,
+    }));
+  const dailyTask = (id: string, text: string, names: (length: number) => string, extra: object = {}) => ({
+    id,
+    title: text,
+    createdAt: now,
+    difficulties: difficulties(names),
+    streak: 0,
+    lastCompletedAt: null,
+    ...extra,
+  });
 
-      put('users', { id: 1, name: 'Current', balance: 1_234_567, createdAt: now, updatedAt: now });
+  const task = (id: string, text: string, isCompleted: boolean) => ({
+    id,
+    title: text,
+    type: isCompleted ? 'ONEOFF' : 'HABIT',
+    rewardValue: 100_000,
+    isCompleted,
+    lastCompletedAt: isCompleted ? now : null,
+    createdAt: now,
+  });
 
-      const goal = (id: string, text: string, extra: object = {}) => ({
-        id,
-        title: text,
-        rewardValue: 1_234_567,
-        status: 'ACTIVE',
-        completedAt: null,
-        createdAt: now,
-        ...extra,
-      });
-      put('goals', goal('goal-word', word(title)));
-      put('goals', goal('goal-url', url(title)));
-      put('goals', goal('goal-prose', prose(title)));
+  const category = (id: string, name: string, color: string) => ({
+    id,
+    name,
+    color,
+    icon: 'flight',
+    isDefault: false,
+    isProtected: false,
+    createdAt: now,
+  });
+
+  const reward = (id: string, text: string, categoryId: string, extra: object = {}) => ({
+    id,
+    title: text,
+    cost: 1000,
+    categoryId,
+    type: 'repeatable',
+    status: 'active',
+    claimCount: 0,
+    claimedAt: null,
+    createdAt: now,
+    updatedAt: now,
+    ...extra,
+  });
+
+  const withdrawal = (id: string, text: string, categoryId: string, notes: string | undefined, amount: number) => ({
+    id,
+    amount,
+    title: text,
+    categoryId,
+    notes,
+    date: today,
+    timestamp: now,
+    rewardId: id === 'spend-claim' ? 'reward-word' : null,
+  });
+
+  return {
+    users: [{ id: CURRENT_USER_ID, name: CURRENT_USER_NAME, balance: 1_234_567, createdAt: now, updatedAt: now }],
+    goals: [
+      goal('goal-word', word(TITLE_MAX_LENGTH)),
+      goal('goal-url', url(TITLE_MAX_LENGTH)),
+      goal('goal-prose', prose(TITLE_MAX_LENGTH)),
       // Completed today, so it is also the month's earnings on the dashboard.
-      put('goals', goal('goal-done', word(title), { rewardValue: 9_999_999, status: 'COMPLETED', completedAt: now }));
-
-      const difficulties = (name: (length: number) => string) =>
-        [1, 2, 3, 4].map((step) => ({ id: `d${step}`, name: name(difficulty), baseReward: 1_000_000 * step }));
-      const dailyTask = (id: string, text: string, names: (length: number) => string, extra: object = {}) => ({
-        id,
-        title: text,
-        createdAt: now,
-        difficulties: difficulties(names),
-        streak: 0,
-        lastCompletedAt: null,
-        ...extra,
-      });
-      put('dailyTasks', dailyTask('daily-word', word(title), word, { streak: 365, lastCompletedAt: now - 86_400_000 }));
-      put('dailyTasks', dailyTask('daily-url', url(title), prose));
-      put('dailyTasks', dailyTask('daily-done', word(title), word, { streak: 365, lastCompletedAt: now }));
-
-      const task = (id: string, text: string, isCompleted: boolean) => ({
-        id,
-        title: text,
-        type: isCompleted ? 'ONEOFF' : 'HABIT',
-        rewardValue: 100_000,
-        isCompleted,
-        lastCompletedAt: isCompleted ? now : null,
-        createdAt: now,
-      });
-      put('tasks', task('task-word', word(title), false));
-      put('tasks', task('task-url', url(title), true));
-
-      const categoryRow = (id: string, name: string, color: string) => ({
-        id,
-        name,
-        color,
-        icon: 'flight',
-        isDefault: false,
-        isProtected: false,
-        createdAt: now,
-      });
-      put('rewardCategories', categoryRow('cat-word', word(category), '#e91e63'));
-      put('rewardCategories', categoryRow('cat-url', url(category), '#009688'));
-
-      const reward = (id: string, text: string, categoryId: string, extra: object = {}) => ({
-        id,
-        title: text,
-        cost: 1000,
-        categoryId,
-        type: 'repeatable',
-        status: 'active',
-        claimCount: 0,
-        claimedAt: null,
-        createdAt: now,
-        updatedAt: now,
-        ...extra,
-      });
-      put('rewards', reward('reward-word', word(title), 'cat-word'));
-      put('rewards', reward('reward-url', url(title), 'cat-url', { claimCount: 999 }));
-      put('rewards', reward('reward-prose', prose(title), 'cat-general', { cost: 9_999_999 }));
-      put(
-        'rewards',
-        reward('reward-claimed', word(title), 'cat-word', { type: 'one-time', status: 'claimed', claimedAt: now }),
-      );
-
-      const withdrawal = (id: string, text: string, categoryId: string, note: string | undefined, amount: number) => ({
-        id,
-        amount,
-        title: text,
-        categoryId,
-        notes: note,
-        date: today,
-        timestamp: now,
-        rewardId: id === 'spend-claim' ? 'reward-word' : null,
-      });
-      put('withdrawals', withdrawal('spend-word', word(title), 'cat-word', word(notes), 1234.5));
-      put('withdrawals', withdrawal('spend-claim', `Claimed: ${word(title)}`, 'cat-word', undefined, 2_000_000));
-      put('withdrawals', withdrawal('spend-url', url(title), 'cat-url', url(notes), 1234.5));
-      put('withdrawals', withdrawal('spend-prose', prose(title), 'cat-general', prose(notes), 1234.5));
-
-      await new Promise<void>((resolve, reject) => {
-        tx.oncomplete = () => {
-          resolve();
-        };
-        tx.onerror = () => {
-          reject(new Error('could not seed the database'));
-        };
-      });
-      db.close();
-    },
-    {
-      database: DATABASE,
-      lists: LIST_STORES,
-      title: TITLE_MAX_LENGTH,
-      category: CATEGORY_NAME_MAX_LENGTH,
-      difficulty: DIFFICULTY_NAME_MAX_LENGTH,
-      notes: NOTES_MAX_LENGTH,
-    },
-  );
+      goal('goal-done', word(TITLE_MAX_LENGTH), { rewardValue: 9_999_999, status: 'COMPLETED', completedAt: now }),
+    ],
+    dailyTasks: [
+      dailyTask('daily-word', word(TITLE_MAX_LENGTH), word, { streak: 365, lastCompletedAt: now - 86_400_000 }),
+      dailyTask('daily-url', url(TITLE_MAX_LENGTH), prose),
+      dailyTask('daily-done', word(TITLE_MAX_LENGTH), word, { streak: 365, lastCompletedAt: now }),
+    ],
+    tasks: [task('task-word', word(TITLE_MAX_LENGTH), false), task('task-url', url(TITLE_MAX_LENGTH), true)],
+    rewardCategories: [
+      category('cat-word', word(CATEGORY_NAME_MAX_LENGTH), '#e91e63'),
+      category('cat-url', url(CATEGORY_NAME_MAX_LENGTH), '#009688'),
+    ],
+    rewards: [
+      reward('reward-word', word(TITLE_MAX_LENGTH), 'cat-word'),
+      reward('reward-url', url(TITLE_MAX_LENGTH), 'cat-url', { claimCount: 999 }),
+      reward('reward-prose', prose(TITLE_MAX_LENGTH), FALLBACK_CATEGORY_ID, { cost: 9_999_999 }),
+      reward('reward-claimed', word(TITLE_MAX_LENGTH), 'cat-word', {
+        type: 'one-time',
+        status: 'claimed',
+        claimedAt: now,
+      }),
+    ],
+    withdrawals: [
+      withdrawal('spend-word', word(TITLE_MAX_LENGTH), 'cat-word', word(NOTES_MAX_LENGTH), 1234.5),
+      withdrawal('spend-claim', `Claimed: ${word(TITLE_MAX_LENGTH)}`, 'cat-word', undefined, 2_000_000),
+      withdrawal('spend-url', url(TITLE_MAX_LENGTH), 'cat-url', url(NOTES_MAX_LENGTH), 1234.5),
+      withdrawal('spend-prose', prose(TITLE_MAX_LENGTH), FALLBACK_CATEGORY_ID, prose(NOTES_MAX_LENGTH), 1234.5),
+    ],
+  };
 }
 
 // Runs in the page. Returns one line per piece of text that does not fit, and per region that scrolls sideways.
@@ -486,11 +470,12 @@ function findOverflow(rootSelector: string): string[] {
     }
   }
 
-  for (const element of [document.documentElement, ...document.querySelectorAll('*')]) {
-    if (isHidden(element)) continue;
+  for (const element of document.querySelectorAll('*')) {
+    // Nearly every element stops here, before any style is read.
+    if (element.scrollWidth <= element.clientWidth + 1) continue;
     const overflowX = getComputedStyle(element).overflowX;
     const scrolls = element === document.documentElement || overflowX === 'auto' || overflowX === 'scroll';
-    if (scrolls && element.scrollWidth > element.clientWidth + 1) {
+    if (scrolls && !isHidden(element)) {
       findings.add(
         `${label(element)} scrolls sideways by ${String(element.scrollWidth - element.clientWidth)}px: ${trail(element)}`,
       );
@@ -574,16 +559,19 @@ test.describe('Layout audit', () => {
         contextOptions: { reducedMotion: 'reduce' },
       });
 
-      test(`every screen fits at ${String(width)}px with worst-case content`, async ({ page }, testInfo) => {
+      test(`every screen fits at ${String(width)}px, empty and with worst-case content`, async ({ page }, testInfo) => {
         test.setTimeout(180_000);
         await page.clock.setFixedTime(NOW);
+        // The app creates its database on its first load.
+        await page.goto('/dashboard');
+        await expect(page.locator('app-balance-widget')).toBeVisible();
 
-        await emptyTheLists(page);
+        await replaceLists(page);
         for (const screen of EMPTY_SCREENS) {
           await test.step(screen.name, () => audit(page, screen, width, testInfo));
         }
 
-        await seedWorstCase(page);
+        await replaceLists(page, worstCaseRows());
         for (const screen of SCREENS) {
           await test.step(screen.name, () => audit(page, screen, width, testInfo));
         }
