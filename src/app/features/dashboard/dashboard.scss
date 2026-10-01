@@ -15,8 +15,9 @@
   min-width: 0;
 }
 
+// Two of its 264px tiles and the gap between them (earnings-stats.scss).
 .month-stats {
-  flex: 1 1 540px;
+  flex: 1 1 (2 * 264px + t.space(3));
   min-width: 0;
 }
 
