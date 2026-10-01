@@ -4,6 +4,9 @@ import { DbService } from './db.service';
 import { LegacyPomodoroMigrationService } from './legacy-pomodoro-migration.service';
 import { CURRENT_USER_ID, CURRENT_USER_NAME, DEFAULT_INITIAL_BALANCE } from '../core/models/user.model';
 import type { User } from '../core/models/user.model';
+import type { Goal } from '../core/models/goal.model';
+import { getInitialGoals } from '../core/constants/initial-goals.const';
+import { INITIAL_REWARD_CATEGORIES } from '../core/constants/initial-reward-categories.const';
 
 describe('DbService', () => {
   let service: DbService;
@@ -80,6 +83,53 @@ describe('DbService', () => {
       await service.on.ready.fire(service);
 
       expect(addSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('purgeDatabase', () => {
+    beforeEach(() => {
+      vi.spyOn(service, 'transaction').mockImplementation(((...args: unknown[]) =>
+        (args[args.length - 1] as () => Promise<unknown>)()) as never);
+    });
+
+    it('should clear every table', async () => {
+      const clearSpies = service.tables.map((table) => vi.spyOn(table, 'clear').mockResolvedValue(undefined));
+      vi.spyOn(service.users, 'add').mockResolvedValue(CURRENT_USER_ID);
+      vi.spyOn(service.goals, 'bulkAdd').mockResolvedValue('');
+      vi.spyOn(service.rewardCategories, 'bulkAdd').mockResolvedValue('');
+
+      await service.purgeDatabase();
+
+      expect(clearSpies.length).toBeGreaterThan(0);
+      clearSpies.forEach((spy) => {
+        expect(spy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('should seed the user, goals and reward categories a fresh install gets', async () => {
+      service.tables.forEach((table) => vi.spyOn(table, 'clear').mockResolvedValue(undefined));
+      const addUser = vi.spyOn(service.users, 'add').mockResolvedValue(CURRENT_USER_ID);
+      const addGoals = vi.spyOn(service.goals, 'bulkAdd').mockResolvedValue('');
+      const addCategories = vi.spyOn(service.rewardCategories, 'bulkAdd').mockResolvedValue('');
+
+      await service.purgeDatabase();
+
+      expect(addUser).toHaveBeenCalledWith(
+        expect.objectContaining({ id: CURRENT_USER_ID, balance: DEFAULT_INITIAL_BALANCE }),
+      );
+      const seededTitles = (addGoals.mock.calls[0][0] as Goal[]).map((goal) => goal.title);
+      expect(seededTitles).toEqual(getInitialGoals().map((goal) => goal.title));
+      expect(addCategories).toHaveBeenCalledWith([...INITIAL_REWARD_CATEGORIES]);
+    });
+
+    it('should clear and seed inside one transaction so a failure keeps the existing data', async () => {
+      const transactionSpy = vi.spyOn(service, 'transaction').mockRejectedValue(new Error('aborted'));
+      const clearSpy = vi.spyOn(service.users, 'clear');
+
+      await expect(service.purgeDatabase()).rejects.toThrow('aborted');
+
+      expect(transactionSpy).toHaveBeenCalledWith('rw', service.tables, expect.any(Function));
+      expect(clearSpy).not.toHaveBeenCalled();
     });
   });
 });

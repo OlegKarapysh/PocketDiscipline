@@ -1,20 +1,38 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { describe, expect, it, beforeEach } from 'vitest';
+import { Router, provideRouter } from '@angular/router';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { EMPTY, NEVER, of } from 'rxjs';
 import { Settings } from './settings';
 import { By } from '@angular/platform-browser';
+import { ConfirmService } from '../../shared/services/confirm.service';
+import { SnackBarService } from '../../shared/services/snack-bar.service';
+import { DatabasePurgeService } from './services/database-purge.service';
 
 describe('Settings', () => {
   let component: Settings;
   let fixture: ComponentFixture<Settings>;
+  let askMock: ReturnType<typeof vi.fn>;
+  let purgeMock: ReturnType<typeof vi.fn>;
+  let snackBarMock: { show: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
+  let navigateSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
+    askMock = vi.fn();
+    purgeMock = vi.fn().mockResolvedValue(undefined);
+    snackBarMock = { show: vi.fn(), error: vi.fn() };
+
     await TestBed.configureTestingModule({
       imports: [Settings],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        { provide: ConfirmService, useValue: { ask: askMock } },
+        { provide: DatabasePurgeService, useValue: { purge: purgeMock } },
+        { provide: SnackBarService, useValue: snackBarMock },
+      ],
     }).compileComponents();
 
+    navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     fixture = TestBed.createComponent(Settings);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -38,5 +56,54 @@ describe('Settings', () => {
     expect(link).toBeTruthy();
     const linkEl = link.nativeElement as HTMLElement;
     expect(linkEl.textContent).toContain('Manage reward categories');
+  });
+
+  describe('purge database', () => {
+    const clickPurge = () => {
+      const button = fixture.debugElement.query(By.css('button.destructive'));
+      (button.nativeElement as HTMLButtonElement).click();
+    };
+
+    it('should ask for confirmation before purging', () => {
+      askMock.mockReturnValue(NEVER);
+
+      clickPurge();
+
+      expect(askMock).toHaveBeenCalledWith(expect.objectContaining({ isDestructive: true }));
+      expect(purgeMock).not.toHaveBeenCalled();
+    });
+
+    it('should not purge when the user cancels', () => {
+      askMock.mockReturnValue(EMPTY);
+
+      clickPurge();
+
+      expect(purgeMock).not.toHaveBeenCalled();
+      expect(snackBarMock.show).not.toHaveBeenCalled();
+    });
+
+    it('should purge, confirm with a snackbar and go home when the user agrees', async () => {
+      askMock.mockReturnValue(of(true));
+
+      clickPurge();
+      await fixture.whenStable();
+
+      expect(purgeMock).toHaveBeenCalledTimes(1);
+      expect(snackBarMock.show).toHaveBeenCalledTimes(1);
+      expect(navigateSpy).toHaveBeenCalledWith(['/']);
+    });
+
+    it('should report a failed purge and stay on the page', async () => {
+      const failure = new Error('boom');
+      askMock.mockReturnValue(of(true));
+      purgeMock.mockRejectedValue(failure);
+
+      clickPurge();
+      await fixture.whenStable();
+
+      expect(snackBarMock.error).toHaveBeenCalledWith(failure, expect.any(String));
+      expect(snackBarMock.show).not.toHaveBeenCalled();
+      expect(navigateSpy).not.toHaveBeenCalled();
+    });
   });
 });

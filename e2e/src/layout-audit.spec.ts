@@ -191,6 +191,16 @@ const SCREENS: Screen[] = [
     },
   },
   { name: 'settings', path: '/settings', ready: '.settings-link' },
+  {
+    name: 'settings: purge confirmation',
+    path: '/settings',
+    ready: '.settings-link',
+    root: OVERLAY,
+    open: async (page) => {
+      await page.getByRole('button', { name: 'Purge database' }).click();
+      await expect(page.locator('app-confirm-dialog')).toBeVisible();
+    },
+  },
   { name: 'design system gallery', path: '/design-system', ready: 'app-stat-card' },
 ];
 

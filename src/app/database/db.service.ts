@@ -96,19 +96,7 @@ export class DbService extends Dexie {
         }
       });
 
-    this.on('populate', () => {
-      return Promise.all([
-        this.users.add({
-          id: CURRENT_USER_ID,
-          name: CURRENT_USER_NAME,
-          balance: DEFAULT_INITIAL_BALANCE,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        }),
-        this.goals.bulkAdd(getInitialGoals()),
-        this.rewardCategories.bulkAdd(INITIAL_REWARD_CATEGORIES),
-      ]);
-    });
+    this.on('populate', () => this.seedDefaults());
 
     this.on('ready', async () => {
       const user = await this.users.get(CURRENT_USER_ID);
@@ -124,5 +112,30 @@ export class DbService extends Dexie {
 
       await this.legacyPomodoroMigration.migrate(this.pomodoroSessions);
     });
+  }
+
+  /**
+   * Clears every table, then seeds the same defaults a fresh install gets. All in one transaction,
+   * so a failure leaves the existing data untouched.
+   */
+  async purgeDatabase(): Promise<void> {
+    await this.transaction('rw', this.tables, async () => {
+      await Promise.all(this.tables.map((table) => table.clear()));
+      await this.seedDefaults();
+    });
+  }
+
+  private seedDefaults(): Promise<unknown> {
+    return Promise.all([
+      this.users.add({
+        id: CURRENT_USER_ID,
+        name: CURRENT_USER_NAME,
+        balance: DEFAULT_INITIAL_BALANCE,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }),
+      this.goals.bulkAdd(getInitialGoals()),
+      this.rewardCategories.bulkAdd([...INITIAL_REWARD_CATEGORIES]),
+    ]);
   }
 }
