@@ -17,10 +17,12 @@
   display: flex;
   flex-direction: column;
   gap: t.space(1);
+  min-width: 0;
 }
 
 .title {
   @include t.card-title;
+  overflow-wrap: anywhere;
 }
 
 .done-icon {
