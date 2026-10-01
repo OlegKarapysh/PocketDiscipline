@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { DailyTaskForm } from './daily-task-form';
 import type { DailyTaskDraft } from '../../models/daily-task-draft.model';
+import { DIFFICULTY_NAME_MAX_LENGTH, TITLE_MAX_LENGTH } from '../../../../shared/constants/text-length.const';
 
 describe('DailyTaskForm', () => {
   let component: DailyTaskForm;
@@ -96,6 +97,57 @@ describe('DailyTaskForm', () => {
     expect(emitted).toBe(false);
     const saveBtn = fixture.debugElement.query(By.css('.actions .save')).nativeElement as HTMLButtonElement;
     expect(saveBtn.disabled).toBe(true);
+  });
+
+  it('should cap the title and every difficulty name so a long paste is cut off', async () => {
+    component.addDifficulty();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const textInputs = inputs().filter((input) => input.type === 'text');
+    const [title, ...names] = textInputs;
+
+    expect(title.maxLength).toBe(TITLE_MAX_LENGTH);
+    expect(names).toHaveLength(4);
+    for (const name of names) {
+      expect(name.maxLength).toBe(DIFFICULTY_NAME_MAX_LENGTH);
+    }
+  });
+
+  it('should not emit taskCreated when the title is longer than the limit', async () => {
+    let emitted = false;
+    component.taskCreated.subscribe(() => (emitted = true));
+
+    await type(inputs()[0], 'a'.repeat(TITLE_MAX_LENGTH + 1));
+    component.submit();
+
+    expect(emitted).toBe(false);
+  });
+
+  it('should not emit taskCreated when a difficulty name is longer than the limit', async () => {
+    let emitted = false;
+    component.taskCreated.subscribe(() => (emitted = true));
+
+    const [title, firstName] = inputs();
+    await type(title, 'Read');
+    await type(firstName, 'a'.repeat(DIFFICULTY_NAME_MAX_LENGTH + 1));
+    component.submit();
+
+    expect(emitted).toBe(false);
+  });
+
+  it('should accept a title and a difficulty name exactly at the limit', async () => {
+    const emitted: DailyTaskDraft[] = [];
+    component.taskCreated.subscribe((data) => emitted.push(data));
+
+    const [title, firstName] = inputs();
+    await type(title, 'a'.repeat(TITLE_MAX_LENGTH));
+    await type(firstName, 'b'.repeat(DIFFICULTY_NAME_MAX_LENGTH));
+    component.submit();
+
+    expect(emitted).toHaveLength(1);
+    expect(emitted[0].title).toHaveLength(TITLE_MAX_LENGTH);
+    expect(emitted[0].difficulties[0].name).toHaveLength(DIFFICULTY_NAME_MAX_LENGTH);
   });
 
   it('should emit cancelForm when Cancel button is clicked in template', () => {

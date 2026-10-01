@@ -1,5 +1,5 @@
 import { Component, computed, output, signal } from '@angular/core';
-import { FormField, form, requiredError, validate } from '@angular/forms/signals';
+import { FormField, applyEach, form, maxLength, requiredError, validate } from '@angular/forms/signals';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
 import type { DailyTaskDraft } from '../../models/daily-task-draft.model';
+import { DIFFICULTY_NAME_MAX_LENGTH, TITLE_MAX_LENGTH } from '../../../../shared/constants/text-length.const';
 
 const DEFAULT_DIFFICULTIES: DailyTaskDifficulty[] = [
   { id: 'easy', name: 'Easy', baseReward: 100 },
@@ -35,6 +36,10 @@ export class DailyTaskForm {
   readonly draft = signal<DailyTaskDraft>(emptyDraft());
   readonly taskForm = form(this.draft, (path) => {
     validate(path.title, ({ value }) => (value().trim() ? null : requiredError()));
+    maxLength(path.title, TITLE_MAX_LENGTH);
+    applyEach(path.difficulties, (difficulty) => {
+      maxLength(difficulty.name, DIFFICULTY_NAME_MAX_LENGTH);
+    });
   });
 
   readonly canSubmit = computed(() => this.taskForm().valid());
