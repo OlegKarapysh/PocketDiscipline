@@ -1,7 +1,8 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
+import { DIFFICULTY_NAME_MAX_LENGTH, TITLE_MAX_LENGTH } from '../../src/app/shared/constants/text-length.const';
 
-const PASTED = 'W'.repeat(300);
+const PASTED = 'W'.repeat(3 * TITLE_MAX_LENGTH);
 
 const sidewaysOverflow = (page: Page): Promise<number> =>
   page.locator('.scroller').evaluate((scroller) => scroller.scrollWidth - scroller.clientWidth);
@@ -15,7 +16,7 @@ test.describe('Long text on a phone', () => {
 
     const title = page.getByPlaceholder('e.g. Read a book');
     await title.fill(PASTED);
-    await expect(title).toHaveValue('W'.repeat(100));
+    await expect(title).toHaveValue('W'.repeat(TITLE_MAX_LENGTH));
 
     await page.locator('input[type="number"]').fill('500');
     await page.getByRole('button', { name: 'Save' }).click();
@@ -30,11 +31,11 @@ test.describe('Long text on a phone', () => {
 
     const title = page.getByPlaceholder('e.g. Morning Workout');
     await title.fill(PASTED);
-    await expect(title).toHaveValue('W'.repeat(100));
+    await expect(title).toHaveValue('W'.repeat(TITLE_MAX_LENGTH));
 
     const difficultyName = page.getByPlaceholder('e.g. Easy').first();
     await difficultyName.fill(PASTED);
-    await expect(difficultyName).toHaveValue('W'.repeat(30));
+    await expect(difficultyName).toHaveValue('W'.repeat(DIFFICULTY_NAME_MAX_LENGTH));
 
     await page.getByRole('button', { name: /Save task/i }).click();
 
