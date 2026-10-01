@@ -167,6 +167,26 @@ const SCREENS: Screen[] = [
   },
   { name: 'pomodoro', path: '/pomodoro', ready: 'app-session-config' },
   { name: 'daily scores', path: '/daily-scores', ready: '.score-btn' },
+  {
+    name: 'daily scores: score selected',
+    path: '/daily-scores',
+    ready: '.score-btn',
+    open: async (page) => {
+      await page.getByRole('button', { name: 'Score 10' }).click();
+      await expect(page.locator('.feedback-banner')).toBeVisible();
+    },
+  },
+  // Saves today's score, which replaces the score input: keep it after the screens that need the input.
+  {
+    name: 'daily scores: score saved',
+    path: '/daily-scores',
+    ready: '.score-btn',
+    open: async (page) => {
+      await page.getByRole('button', { name: 'Score 10' }).click();
+      await page.getByRole('button', { name: 'Save score' }).click();
+      await expect(page.locator('.readonly-container')).toBeVisible();
+    },
+  },
   { name: 'settings', path: '/settings', ready: '.settings-link' },
   { name: 'design system gallery', path: '/design-system', ready: 'app-stat-card' },
 ];
