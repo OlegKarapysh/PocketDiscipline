@@ -56,6 +56,7 @@ If this skill and `docs/design_system.md` disagree, the doc wins. Fix the skill 
 
 - **Page:** `app-page-header`, then a CSS grid of cards with `gap: t.space(4)`. The layout shell already handles page padding, the max width, the bottom nav and the side rail. Never add your own nav or toolbar.
 - **Responsive:** design mobile first (390px wide). From `t.up(expanded)` (840px), move to multi-column with `grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr))` or explicit tracks. Nothing may overflow at 360px.
+- **User-entered text** (titles, names, notes): wrap it with `overflow-wrap: anywhere` inside a `min-width: 0` item, and give its form field a limit. See "User-entered text" in `docs/design_system.md`.
 - **Cards:** 20px corners and outlined style come from the theme. Pad them with `t.card-padding` or `app-section-card`. Don't put a card inside a card.
 - **Hierarchy on a card:** title (`title-medium`, weight 600), then meta (`label-large`, `on-surface-variant`), then actions last and full width on mobile.
 - **Hero:** only the balance card uses the primary-filled treatment. Don't add a second hero on the same screen.

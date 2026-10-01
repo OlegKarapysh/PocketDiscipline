@@ -137,6 +137,16 @@ Rules:
 - Use `CelebrationService` for earning moments, and `SnackBarService` for everything else ("Morning run done · +200 ₴").
 - One `app-page-header` per routed page.
 
+## User-entered text
+
+Titles, names and notes are data. A layout has to survive the longest value a form allows, typed as one unbroken word (a pasted URL).
+
+- An element that shows user-entered text sets `overflow-wrap: anywhere`, and the flex or grid item that holds it sets `min-width: 0`. Without both, one long word widens the card and the page scrolls sideways.
+- Wrap by default. Truncate with an ellipsis only where the full text is on the same screen anyway, such as the donut centre above its legend.
+- SVG `<text>` can neither wrap nor truncate, so user text is HTML, laid over the chart if need be.
+- Length limits live in `shared/constants/text-length.const.ts`: titles 100, category names 50, difficulty names 30, notes 1000. Apply one with `maxLength()` in the form schema; `[formField]` copies it to the input's `maxlength`, so the browser cuts a longer paste.
+- `e2e/src/long-text.spec.ts` pastes oversized text at 360px and fails if the page scrolls sideways.
+
 ## Enforcement
 
 `scripts/check-ui.mjs` runs first in `npm run lint`. It records legacy violations per file and rule in `scripts/ui-baseline.json`, and fails any file that gains one. The baseline may only shrink.
