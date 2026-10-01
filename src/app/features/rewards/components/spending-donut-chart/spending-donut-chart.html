@@ -20,18 +20,18 @@
           (mouseleave)="setHovered(null)"
         />
       }
-
-      <g class="center-text">
-        @if (activeCategory(); as active) {
-          <text x="100" y="93" text-anchor="middle" class="center-label">{{ active.categoryName }}</text>
-          <text x="100" y="115" text-anchor="middle" class="center-value pd-num">{{ active.totalSpent | money }}</text>
-          <text x="100" y="130" text-anchor="middle" class="center-sub pd-num">{{ active.percentage }}%</text>
-        } @else {
-          <text x="100" y="95" text-anchor="middle" class="center-label">Total spent</text>
-          <text x="100" y="120" text-anchor="middle" class="center-value pd-num">{{ totalSpent() | money }}</text>
-        }
-      </g>
     </svg>
+
+    <div class="center-text">
+      @if (activeCategory(); as active) {
+        <span class="center-label">{{ active.categoryName }}</span>
+        <app-amount class="center-value" [value]="active.totalSpent" />
+        <span class="center-sub pd-num">{{ active.percentage }}%</span>
+      } @else {
+        <span class="center-label">Total spent</span>
+        <app-amount class="center-value" [value]="totalSpent()" />
+      }
+    </div>
   </div>
 
   <div class="chart-legend">

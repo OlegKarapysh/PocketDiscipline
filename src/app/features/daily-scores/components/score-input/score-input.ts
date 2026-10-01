@@ -50,7 +50,11 @@ export class ScoreInput {
   readonly selectedScore = input<number | null>(null);
   readonly scoreSubmitted = output<number>();
 
-  readonly availableScores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  // Two rows of five, which the stylesheet puts side by side where ten buttons fit in one row.
+  readonly scoreRows = [
+    [1, 2, 3, 4, 5],
+    [6, 7, 8, 9, 10],
+  ];
   readonly internalSelectedScore = linkedSignal<number | null>(() => this.selectedScore());
 
   readonly activeTier = computed<ScoreTier | null>(() => {

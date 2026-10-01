@@ -52,10 +52,19 @@ If this skill and `docs/design_system.md` disagree, the doc wins. Fix the skill 
 3. **A global utility class:** `.pd-difficulty` for two-line reward buttons, `.pd-num`, `.pd-icon-filled`.
 4. **Only if none of these fit:** build a new component. If it could appear on two or more screens, put it in `shared/components`, add it to the gallery page and to the catalogue in `docs/design_system.md`. Otherwise keep it inside the feature slice.
 
+## Phone and desktop
+
+The app is used on phones and on wide desktop windows alike, and every screen has to fit both. "Responsive layout" in `docs/design_system.md` is the contract, with the list of what has broken here before and the fix for each. Read it before you lay anything out. How to apply it:
+
+- **Build at 360px first**, in one column. Then add columns for wide screens with `grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr))` or `flex-wrap: wrap`. Both respond to the component's own width, so they are right in any container.
+- **Do not use `t.up()` or `t.down()` for a component's own layout.** They test the viewport, and at 840px the side rail has made the content narrower than it is at 600px. Keep them for the shell, page padding and type size.
+- **Fill it with the worst content before you judge it:** the longest text the form allows as one unbroken word, a seven-digit amount, an empty list and a long one. Demo content fits everywhere.
+- **User-entered text** (titles, names, notes) wraps with `overflow-wrap: anywhere` inside a `min-width: 0` item, wherever it is shown or quoted, and its form field has a length limit.
+- **Nothing depends on hover**, and touch targets stay 44px at every width.
+
 ## Layout patterns
 
 - **Page:** `app-page-header`, then a CSS grid of cards with `gap: t.space(4)`. The layout shell already handles page padding, the max width, the bottom nav and the side rail. Never add your own nav or toolbar.
-- **Responsive:** design mobile first (390px wide). From `t.up(expanded)` (840px), move to multi-column with `grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr))` or explicit tracks. Nothing may overflow at 360px.
 - **Cards:** 20px corners and outlined style come from the theme. Pad them with `t.card-padding` or `app-section-card`. Don't put a card inside a card.
 - **Hierarchy on a card:** title (`title-medium`, weight 600), then meta (`label-large`, `on-surface-variant`), then actions last and full width on mobile.
 - **Hero:** only the balance card uses the primary-filled treatment. Don't add a second hero on the same screen.
@@ -75,5 +84,6 @@ Everything must work in both schemes without extra code. If you think you need a
 
 - [ ] `npm run lint` passes. It includes `scripts/check-ui.mjs`; the Enforcement section of `docs/design_system.md` lists what it checks. To check only the files you touched, run `node scripts/check-ui.mjs <file...>`.
 - [ ] Never "fix" the UI check by editing `scripts/ui-baseline.json` by hand. The baseline may only shrink. Run `node scripts/check-ui.mjs --update-baseline` only after _removing_ violations.
-- [ ] The screen was checked at 390px and at 1280px, in light and dark.
+- [ ] `npm run e2e` passes. It includes the layout audit (`e2e/src/layout-audit.spec.ts`). Whatever you added that has its own layout or shows user data is registered in it, and its `KNOWN_GAPS` did not grow: "Verifying" in `docs/design_system.md` says what goes where.
+- [ ] You looked at the screen at 360px and at 1280px, in light and dark: `LAYOUT_AUDIT_SCREENSHOTS=1 npx playwright test layout-audit` writes the screenshots to `test-results/layout-audit/`. The audit cannot judge touch targets, hover-only behaviour or how well a wide screen is used.
 - [ ] Any new shared component is in the gallery page and in `docs/design_system.md`.

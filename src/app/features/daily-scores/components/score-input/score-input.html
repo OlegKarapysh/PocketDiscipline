@@ -2,17 +2,21 @@
   @if (!readonly()) {
     <div class="scale-section">
       <div class="scale-buttons" role="radiogroup" aria-label="Discipline score from 1 to 10">
-        @for (score of availableScores; track score) {
-          <button
-            type="button"
-            class="score-btn"
-            [class.selected]="internalSelectedScore() === score"
-            [attr.aria-pressed]="internalSelectedScore() === score"
-            [attr.aria-label]="'Score ' + score"
-            (click)="selectScore(score)"
-          >
-            <span class="score-number">{{ score }}</span>
-          </button>
+        @for (row of scoreRows; track $index) {
+          <div class="scale-row">
+            @for (score of row; track score) {
+              <button
+                type="button"
+                class="score-btn"
+                [class.selected]="internalSelectedScore() === score"
+                [attr.aria-pressed]="internalSelectedScore() === score"
+                [attr.aria-label]="'Score ' + score"
+                (click)="selectScore(score)"
+              >
+                <span class="score-number">{{ score }}</span>
+              </button>
+            }
+          </div>
         }
       </div>
 

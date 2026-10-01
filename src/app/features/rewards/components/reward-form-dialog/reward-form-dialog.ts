@@ -12,6 +12,7 @@ import { EMPTY, catchError } from 'rxjs';
 import { ERROR_TYPE_LOCKED, RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
+import { TITLE_MAX_LENGTH } from '../../../../shared/constants/text-length.const';
 
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import type { RewardType } from '../../../../core/models/reward-type.type';
@@ -69,7 +70,7 @@ export class RewardFormDialog {
   readonly rewardForm = form(this.model, (path) => {
     disabled(path.type, { when: () => (this.isTypeLocked ? ERROR_TYPE_LOCKED : false) });
     validate(path.title, ({ value }) => (value().trim() ? null : requiredError({ message: 'Title is required' })));
-    maxLength(path.title, 100, { message: 'Title is too long' });
+    maxLength(path.title, TITLE_MAX_LENGTH, { message: 'Title is too long' });
     required(path.cost, { message: 'Cost is required' });
     min(path.cost, 0.01, { message: 'Cost must be greater than zero' });
     required(path.categoryId, { message: 'Category is required' });

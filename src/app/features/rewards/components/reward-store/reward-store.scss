@@ -10,35 +10,25 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: t.space(4);
 }
 
+// The filters share the toolbar's row with the status filter only where the search, the category
+// and the button fit on one line; anywhere narrower they take a row of their own.
 .filter-controls {
   display: flex;
+  flex: 1 1 520px;
   flex-wrap: wrap;
   align-items: center;
   gap: t.space(3);
-  width: 100%;
+  min-width: 0;
 
   .search-field {
-    flex: 1 1 200px;
+    flex: 2 1 200px;
   }
 
   .category-field {
     flex: 1 1 160px;
-  }
-
-  @include t.up(expanded) {
-    width: auto;
-
-    .search-field {
-      flex: 0 0 220px;
-    }
-
-    .category-field {
-      flex: 0 0 180px;
-    }
   }
 }
 

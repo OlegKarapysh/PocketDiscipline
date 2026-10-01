@@ -137,6 +137,72 @@ Rules:
 - Use `CelebrationService` for earning moments, and `SnackBarService` for everything else ("Morning run done · +200 ₴").
 - One `app-page-header` per routed page.
 
+## Responsive layout
+
+One codebase serves a phone held in one hand and a wide desktop window, and both are first-class. A UI change is not done until it fits both. The reference widths are 360px (the floor), 390px (a typical phone), 600px, 840px, 1024px, 1280px and 1920px.
+
+### The contract
+
+- **Nothing overflows.** At every width from 360px up, no text leaves its box, nothing is cut off without an ellipsis, and nothing scrolls sideways: not the page, not a tab, not a dialog.
+- **A component fits the container it is given.** It does not know how wide the screen is and must not assume a width. The same card sits in a 320px phone column and a 900px desktop column.
+- **Design for the worst content, not the demo content.** The longest text the form allows, typed as one unbroken word; a seven-digit amount; a 365-day streak; an empty list and a long one. "Morning run, +100 ₴" fits everywhere and proves nothing.
+- **Phone first, then use the space.** Start from one column at 360px. On a wide screen add columns rather than stretching the phone layout. The shell caps the content at 1200px.
+
+### The viewport is not the container
+
+`t.up()` and `t.down()` test the **viewport**. From 840px the side rail takes 240px, so at 840px the content column is about 536px wide, narrower than on a 600px screen. A component that goes two-column "because the screen is wide" breaks exactly there. The dashboard's stat tiles and the ten daily-score buttons did, until they were made to respond to their own width.
+
+- Inside a page, use layouts that respond to their own width: `grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr))`, or `flex-wrap: wrap` with a `flex-basis`. No breakpoint is involved, so they are right in any container.
+- Take the minimum from the worst content, not from a round number: a stat tile is 264px because that is "9 999 999,99 ₴/day" plus the tile's padding.
+- Where a full-row item sits in the same container, use `flex-wrap`. `auto-fit` only drops a column that nothing crosses, so an item spanning `1 / -1` leaves an empty third column on a wide screen (`dashboard.scss`, `daily-scores-page.scss`).
+- Where the count must step (five or ten buttons, two or four tiles) rather than be whatever fits, group the items and let the groups wrap. Plain `auto-fit` leaves a ragged last row: nine buttons and one (`score-input.scss`, `spending-analytics.scss`).
+- Keep `t.up()` and `t.down()` for what really depends on the screen: the shell, page padding, type size, and a phone's full-width action button.
+
+### What breaks, and the fix
+
+Each row has happened in this repo.
+
+| Symptom                                           | Cause                                                                                  | Fix                                                                         |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| The page scrolls sideways under a plain grid      | A bare `display: grid` has one `auto` column, which grows to its widest child          | `grid-template-columns: minmax(0, 1fr)`                                     |
+| One long word widens a card                       | Flex and grid items default to `min-width: auto`, and a word does not break by default | `min-width: 0` on the item, `overflow-wrap: anywhere` on the text           |
+| A row of controls runs off the edge               | The row cannot wrap, or its buttons cannot shrink                                      | `flex-wrap: wrap`; let buttons shrink and their labels wrap                 |
+| A dialog or panel is wider than a phone           | A fixed `width` or `min-width` in px                                                   | `min(320px, 100%)`, or `max-width`                                          |
+| A money value spills out of a half-width tile     | `app-amount` never wraps                                                               | Size the tile's column from the amount: `minmax(min(100%, 212px), 1fr)`     |
+| A money value spills out of a wrapping button     | Material's `min-width: 64px` replaces the content minimum a flex item has by default   | `min-width: min-content` on the button (`.pd-difficulty`)                   |
+| Chart text shrinks to 5px, or the chart scrolls   | A fixed `viewBox`, or a minimum width                                                  | Draw at the measured width with `(appObserveWidth)`                         |
+| A long name runs across a chart                   | SVG `<text>` can neither wrap nor truncate                                             | HTML laid over the chart                                                    |
+| Text is clipped at the bottom                     | A fixed `height`, such as `mat-list-item`'s line heights                               | `min-height`; plain markup instead of `mat-list`                            |
+| A layout is cramped at 840px although it fits 600 | A viewport breakpoint used for a component's own layout                                | See [The viewport is not the container](#the-viewport-is-not-the-container) |
+
+### User-entered text
+
+Titles, names and notes are data. A layout has to survive the longest value a form allows, typed as one unbroken word (a pasted URL).
+
+- An element that shows user-entered text sets `overflow-wrap: anywhere`, and the flex or grid item that holds it sets `min-width: 0`. Without both, one long word widens the card and the page scrolls sideways. That includes text quoted elsewhere: a confirm message, a snackbar, a dialog subtitle. `t.card-title` already sets the wrap.
+- Wrap by default. Truncate with an ellipsis only where the full text is on the same screen anyway, such as the donut centre above its legend.
+- SVG `<text>` can neither wrap nor truncate, so user text is HTML, laid over the chart if need be.
+- Length limits live in `shared/constants/text-length.const.ts`, one each for titles, category names, difficulty names and notes. Apply one with `maxLength()` in the form schema; `[formField]` copies it to the input's `maxlength`, so the browser cuts a longer paste. Every new text field gets a limit.
+- `e2e/src/long-text.spec.ts` pastes oversized text at 360px and fails if the page scrolls sideways.
+
+### Touch and pointer
+
+- **Touch targets are 44px at every width.** A tablet shows the desktop layout and is still touched with a finger.
+- **Nothing depends on hover.** Whatever a hover reveals (a chart value, a tooltip) is also reachable by tap and by keyboard focus, and the copy does not say "hover". The spending trend chart's "Hover over a bar" hint is the anti-example: there is no hover on a phone.
+- **Text sets the height.** Anything that holds text takes `min-height`, never `height`: a label can wrap to two lines on a phone, and the user can raise the font size.
+- **Fixed elements belong to the shell.** The bottom nav and the speed dial reserve their space with the shell's padding and `env(safe-area-inset-*)`. A page never adds its own fixed or sticky bar.
+
+### Verifying
+
+`e2e/src/layout-audit.spec.ts` runs with `npm run e2e`. At each reference width it opens every list empty, then seeds the worst content the forms allow and opens every screen (route, tab, dialog), and fails on any text outside its box, any text cut off without an ellipsis, and anything that scrolls sideways.
+
+- **A new route, tab, dialog or other state with its own layout gets an entry in the audit's `SCREENS`.** A route without one fails the audit; a dialog without one is simply not checked, so add it.
+- **A new list gets its empty state in the audit's `EMPTY_SCREENS`.**
+- **A new field that shows user data gets its worst case in the audit's seed.**
+- **`KNOWN_GAPS` may only shrink.** It lists the screens that do not fit yet. Never add an entry to make new work pass; an entry whose screen fits again fails the audit until it is deleted.
+- **To look at the result**, run `LAYOUT_AUDIT_SCREENSHOTS=1 npx playwright test layout-audit` and open `test-results/layout-audit/<width>/<screen>.png`. Add `-g "at 360px"` for one width.
+- **The audit measures; it cannot judge.** Touch-target size, hover-only behaviour, vertical clipping, and whether a wide screen is used well are still yours to check in the screenshots at 360px and 1280px.
+
 ## Enforcement
 
 `scripts/check-ui.mjs` runs first in `npm run lint`. It records legacy violations per file and rule in `scripts/ui-baseline.json`, and fails any file that gains one. The baseline may only shrink.
@@ -168,4 +234,5 @@ Rules:
 - **Adding a rule:** add it to `check-ui.mjs` and to this table, confirm that only the new rule regresses, then run `--update-baseline --accept-new-rule=<id>` to record its legacy hits.
 - **CI:** `--baseline-against=<base commit>` fails a pull request whose baseline grew for any rule that already existed on the base branch.
 - **Claude Code:** `.claude/settings.json` runs the check after every edit under `src/app` and again before Claude ends a turn, denies edits to the baseline, and asks before `check-ui.mjs` changes. `.claude/rules/design-system.md` points Claude at the UI skill when it reads a UI file.
-- **Not checked:** layout at 390px and 1280px, dark mode, copy, touch targets, and colour roles such as amber meaning "earned". Those stay with the skill's checklist and review.
+- **Layout** is checked separately, by the layout audit in `npm run e2e`: see [Verifying](#verifying).
+- **Not checked:** dark mode, copy, touch targets, hover-only behaviour, and colour roles such as amber meaning "earned". Those stay with the skill's checklist and review.

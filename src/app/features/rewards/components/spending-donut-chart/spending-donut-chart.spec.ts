@@ -42,7 +42,7 @@ describe('SpendingDonutChart', () => {
     expect(component).toBeTruthy();
     expect(component.slices().length).toBe(0);
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.center-value')?.textContent).toMatch(/^\s*0 ₴\s*$/);
+    expect(compiled.querySelector('.center-value')?.textContent).toMatch(/^\s*0\s*₴\s*$/);
   });
 
   it('should compute slices and render segments and legend when data is set', () => {
@@ -91,7 +91,7 @@ describe('SpendingDonutChart', () => {
     expect(component.hoveredCategoryId()).toBeNull();
     expect(firstSegment.classList.contains('hovered')).toBe(false);
     expect(compiled.querySelector('.center-label')?.textContent).toContain('Total spent');
-    expect(compiled.querySelector('.center-value')?.textContent).toMatch(/1\s000 ₴/);
+    expect(compiled.querySelector('.center-value')?.textContent).toMatch(/1\s000\s*₴/);
   });
 
   it('should update active category when hovering a legend item via DOM event', () => {

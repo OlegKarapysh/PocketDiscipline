@@ -73,11 +73,13 @@ $content-max-width: 1200px;
 }
 
 // The design's card title: title-medium at 17px. Overriding the role itself would also resize
-// Material's card subtitles and every other title-medium use.
+// Material's card subtitles and every other title-medium use. A card's title is usually user-entered,
+// so one long word breaks rather than widening the card.
 @mixin card-title {
   font: var(--mat-sys-title-medium);
   font-size: 17px;
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 @mixin up($bp) {
