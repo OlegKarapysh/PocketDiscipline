@@ -176,16 +176,6 @@ const SCREENS: Screen[] = [
 // make new work pass; fix the layout instead.
 const KNOWN_GAPS: { screen: string; width: number; reason: string }[] = [
   {
-    screen: 'dashboard',
-    width: 840,
-    reason: 'goes two-column on the viewport breakpoint although the rail has left the content 536px wide',
-  },
-  {
-    screen: 'dashboard',
-    width: 1024,
-    reason: 'same cause: the stat tiles are a quarter of a 720px content column, too narrow for "4 854,84 ₴/day"',
-  },
-  {
     screen: 'daily scores',
     width: 840,
     reason: 'same cause: ten score buttons share half of a 536px content column',

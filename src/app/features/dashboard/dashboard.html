@@ -1,9 +1,9 @@
 <app-page-header title="Today" />
 
 <div class="dashboard">
-  <app-balance-widget />
+  <app-balance-widget class="balance" />
 
-  <app-earnings-stats [summary]="monthlySummary()" (monthChange)="onMonthChange($event)" />
+  <app-earnings-stats class="month-stats" [summary]="monthlySummary()" (monthChange)="onMonthChange($event)" />
 
   <div class="earnings">
     <app-earnings-filter [filter]="currentFilter()" (filterChange)="onFilterChange($event)" />
