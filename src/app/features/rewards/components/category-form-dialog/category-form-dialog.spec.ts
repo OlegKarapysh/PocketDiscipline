@@ -80,6 +80,15 @@ describe('CategoryFormDialog', () => {
     expect((error.nativeElement as HTMLElement).textContent.trim()).toBe('Category name is required');
   });
 
+  it('should not submit a name made only of spaces', () => {
+    component.categoryForm.name().value.set('   ');
+
+    component.onSubmit();
+
+    expect(component.categoryForm().valid()).toBe(false);
+    expect(mockDialogRef.close).not.toHaveBeenCalled();
+  });
+
   it('should select color and icon via DOM clicks and submit form when clicking submit button', async () => {
     const nameInput = fixture.debugElement.query(By.css('input[matInput]')).nativeElement as HTMLInputElement;
     nameInput.value = '  Gaming ';

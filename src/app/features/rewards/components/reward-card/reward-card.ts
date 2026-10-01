@@ -29,6 +29,7 @@ export class RewardCard {
   readonly reward = input.required<RewardItem>();
   readonly currentBalance = input<number>(0);
   readonly category = input<RewardCategory | undefined>(undefined);
+  readonly claiming = input(false);
 
   readonly claim = output<RewardItem>();
   readonly edit = output<RewardItem>();
@@ -50,7 +51,7 @@ export class RewardCard {
   });
 
   onClaim(): void {
-    if (this.isAffordable() && this.reward().status === 'active') {
+    if (this.isAffordable() && this.reward().status === 'active' && !this.claiming()) {
       this.claim.emit(this.reward());
     }
   }

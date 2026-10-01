@@ -70,6 +70,8 @@ describe('TaskService', () => {
       toArray: vi.fn().mockResolvedValue([]),
     };
 
+    // IndexedDB runs overlapping read-write transactions on the same tables one after another.
+    let queue: Promise<unknown> = Promise.resolve();
     dbMock = {
       tasks: {
         add: vi.fn().mockResolvedValue(undefined),
@@ -79,17 +81,12 @@ describe('TaskService', () => {
         toArray: vi.fn().mockResolvedValue([]),
       },
       users: {},
-      transaction: vi
-        .fn()
-        .mockImplementation(async (_mode: unknown, _t1: unknown, _t2OrCallback: unknown, maybeCb?: unknown) => {
-          const callback =
-            typeof _t2OrCallback === 'function'
-              ? (_t2OrCallback as () => Promise<void> | void)
-              : (maybeCb as (() => Promise<void> | void) | undefined);
-          if (callback) {
-            await callback();
-          }
-        }),
+      transaction: vi.fn((...args: unknown[]) => {
+        const callback = args[args.length - 1] as () => Promise<unknown>;
+        const run = queue.then(callback);
+        queue = run.catch(() => undefined);
+        return run;
+      }),
     };
 
     userMock = {
@@ -104,23 +101,25 @@ describe('TaskService', () => {
   });
 
   describe('tasks$ stream', () => {
-    it('should trigger performDailyReset and emit tasks from database', async () => {
-      const mockTask: DisciplineItem = {
+    // Dexie rejects a read-write transaction opened inside a liveQuery, which errored this stream.
+    it('should emit tasks without writing, even when a habit is due for its daily reset', async () => {
+      const habitDoneYesterday: DisciplineItem = {
         id: 't-1',
         title: 'Drink Water',
         type: DisciplineItemType.HABIT,
         rewardValue: 20,
-        isCompleted: false,
-        lastCompletedAt: null,
-        createdAt: Date.now(),
+        isCompleted: true,
+        lastCompletedAt: Date.now() - ONE_DAY_MS,
+        createdAt: Date.now() - 2 * ONE_DAY_MS,
       };
-      dbMock.tasks.toArray.mockResolvedValue([mockTask]);
+      dbMock.tasks.toArray.mockResolvedValue([habitDoneYesterday]);
+      whereMock.toArray.mockResolvedValue([habitDoneYesterday]);
 
-      const resetSpy = vi.spyOn(service, 'performDailyReset');
       const tasks = await firstValueFrom(from(service.tasks$));
 
-      expect(resetSpy).toHaveBeenCalled();
-      expect(tasks).toEqual([mockTask]);
+      expect(tasks).toEqual([habitDoneYesterday]);
+      expect(dbMock.transaction).not.toHaveBeenCalled();
+      expect(dbMock.tasks.update).not.toHaveBeenCalled();
     });
   });
 
@@ -189,7 +188,27 @@ describe('TaskService', () => {
 
       expect(dbMock.tasks.update).not.toHaveBeenCalled();
       expect(userMock.addBalance).not.toHaveBeenCalled();
-      expect(dbMock.transaction).not.toHaveBeenCalled();
+    });
+
+    it('should credit the reward once when the task is completed twice at the same time', async () => {
+      let stored: DisciplineItem = {
+        id: 't-1',
+        title: 'Drink Water',
+        type: DisciplineItemType.HABIT,
+        rewardValue: 20,
+        isCompleted: false,
+        lastCompletedAt: null,
+        createdAt: Date.now(),
+      };
+      dbMock.tasks.get.mockImplementation(() => ({ ...stored }));
+      dbMock.tasks.update.mockImplementation((_id: string, changes: Partial<DisciplineItem>) => {
+        stored = { ...stored, ...changes };
+        return 1;
+      });
+
+      await Promise.all([service.completeTask('t-1'), service.completeTask('t-1')]);
+
+      expect(userMock.addBalance).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -58,6 +58,9 @@
         </div>
       </mat-radio-button>
     </mat-radio-group>
+    @for (reason of rewardForm.type().disabledReasons(); track reason.message) {
+      <span class="locked-hint">{{ reason.message }}</span>
+    }
   </div>
 </mat-dialog-content>
 

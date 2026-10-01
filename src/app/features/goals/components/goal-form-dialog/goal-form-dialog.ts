@@ -1,5 +1,16 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormField, FormRoot, form, max, maxLength, min, minLength, required } from '@angular/forms/signals';
+import {
+  FormField,
+  FormRoot,
+  form,
+  max,
+  maxLength,
+  min,
+  required,
+  validate,
+  requiredError,
+  minLengthError,
+} from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -23,8 +34,10 @@ export class GoalFormDialog {
   });
 
   readonly goalForm = form(this.model, (path) => {
-    required(path.title, { message: 'Title is required' });
-    minLength(path.title, 3, { message: 'Title must be at least 3 characters' });
+    validate(path.title, ({ value }) => (value().trim() ? null : requiredError({ message: 'Title is required' })));
+    validate(path.title, ({ value }) =>
+      value().trim().length >= 3 ? null : minLengthError(3, { message: 'Title must be at least 3 characters' }),
+    );
     maxLength(path.title, 100, { message: 'Title cannot exceed 100 characters' });
     required(path.rewardValue, { message: 'Reward is required' });
     min(path.rewardValue, 1, { message: 'Reward must be greater than 0' });

@@ -1,11 +1,11 @@
 import type { OnDestroy } from '@angular/core';
 import { Service, signal, inject, DestroyRef } from '@angular/core';
-import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
 import { CelebrationService } from '../../../shared/services/celebration.service';
+import { BrowserNotificationService } from '../../../core/services/browser-notification.service';
 import { MONEY_FORMAT } from '../../../shared/constants/money-format.const';
 import type { TimerConfig } from '../models/timer-config.model';
 
@@ -32,6 +32,8 @@ export class PomodoroTimerService implements OnDestroy {
   engagementType = signal<EngagementType>(EngagementType.WORK);
 
   isActive = signal<boolean>(false);
+  // True until the session left running before a reload has been restored; Start waits for it.
+  isRestoring = signal<boolean>(true);
   timeRemaining = signal<number>(DEFAULT_DURATION_MINUTES * 60);
   currentSessionId = signal<string | null>(null);
 
@@ -40,9 +42,9 @@ export class PomodoroTimerService implements OnDestroy {
   private backgroundTimeStart: number | null = null;
   private isDestroyed = false;
 
-  private eventBus = inject(EventBusService);
   private storage = inject(PomodoroStorageService);
   private celebration = inject(CelebrationService);
+  private notifications = inject(BrowserNotificationService);
   private destroyRef = inject(DestroyRef);
 
   constructor() {
@@ -104,7 +106,7 @@ export class PomodoroTimerService implements OnDestroy {
   }
 
   async startTimer(): Promise<void> {
-    if (this.isActive()) return;
+    if (this.isActive() || this.isRestoring()) return;
 
     const id = crypto.randomUUID();
     this.currentSessionId.set(id);
@@ -137,10 +139,7 @@ export class PomodoroTimerService implements OnDestroy {
     const id = this.currentSessionId();
     try {
       if (id) {
-        await this.storage.updateSession(id, {
-          status: PomodoroSessionStatus.CANCELLED,
-          endTime: Date.now(),
-        });
+        await this.storage.cancelSession(id);
       }
     } catch (error) {
       console.error('Failed to stop pomodoro timer session:', error);
@@ -185,16 +184,13 @@ export class PomodoroTimerService implements OnDestroy {
 
     try {
       const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
+      if (!(await this.storage.completeSession(id, reward))) return;
 
-      await this.storage.updateSession(id, {
-        status: PomodoroSessionStatus.COMPLETED,
-        endTime: Date.now(),
-        rewardEarned: reward,
-      });
-
-      this.completeTimer(reward);
-
-      void this.showNotification(COMPLETION_TITLE, this.rewardMessage(reward));
+      this.notifications
+        .show(COMPLETION_TITLE, { body: this.rewardMessage(reward), icon: 'icons/icon-192x192.png' })
+        .catch((err: unknown) => {
+          console.error('Failed to show notification:', err);
+        });
 
       this.celebration
         .show({
@@ -208,14 +204,6 @@ export class PomodoroTimerService implements OnDestroy {
     } finally {
       this.resetTimer();
     }
-  }
-
-  completeTimer(rewardPoints: number): void {
-    this.eventBus.emit({
-      type: EVENT_TYPE.REWARD_EARNED,
-      payload: { points: rewardPoints },
-      source: 'pomodoro',
-    });
   }
 
   private resetTimer(): void {
@@ -241,7 +229,9 @@ export class PomodoroTimerService implements OnDestroy {
       if (this.isDestroyed) {
         return;
       }
-      const active = sessions.find((s) => s.status === PomodoroSessionStatus.ACTIVE);
+      const activeSessions = sessions.filter((s) => s.status === PomodoroSessionStatus.ACTIVE);
+      const active = activeSessions.at(0);
+      const orphaned = activeSessions.slice(1);
 
       if (active) {
         const expectedEnd = active.startTime + active.durationMinutes * 60 * 1000;
@@ -261,8 +251,16 @@ export class PomodoroTimerService implements OnDestroy {
           this.startInterval();
         }
       }
+
+      // Only one session runs at a time. An older active row never ran as a timer (it was started
+      // while an earlier restore was still loading), so it is cancelled rather than paid out later.
+      for (const session of orphaned) {
+        await this.storage.cancelSession(session.id);
+      }
     } catch (e) {
       console.error('Failed to restore active session:', e);
+    } finally {
+      this.isRestoring.set(false);
     }
   }
 
@@ -273,28 +271,6 @@ export class PomodoroTimerService implements OnDestroy {
       }
     } catch (e) {
       console.error('Failed to request notification permission:', e);
-    }
-  }
-
-  private async showNotification(title: string, body: string): Promise<void> {
-    if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
-      return;
-    }
-
-    try {
-      if ('serviceWorker' in navigator) {
-        const reg = await navigator.serviceWorker.getRegistration();
-        if (reg) {
-          await reg.showNotification(title, {
-            body,
-            icon: 'icons/icon-192x192.png',
-          });
-          return;
-        }
-      }
-      new Notification(title, { body });
-    } catch (err: unknown) {
-      console.error('Failed to show notification:', err);
     }
   }
 

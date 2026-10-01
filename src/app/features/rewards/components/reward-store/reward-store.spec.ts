@@ -2,7 +2,7 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Observable } from 'rxjs';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { By } from '@angular/platform-browser';
@@ -204,6 +204,33 @@ describe('RewardStore', () => {
     );
   });
 
+  it('should claim once when the claim button is tapped twice before the first claim settles', async () => {
+    await Promise.all([component.onClaimReward(mockRewards[0]), component.onClaimReward(mockRewards[0])]);
+
+    expect(mockRewardsService.claimReward).toHaveBeenCalledTimes(1);
+  });
+
+  it('should disable the claim button of the reward being claimed until the claim settles', async () => {
+    let settleClaim: () => void = () => undefined;
+    mockRewardsService.claimReward.mockReturnValueOnce(
+      new Promise((resolve) => {
+        settleClaim = () => {
+          resolve({ id: 'w-1', amount: 2500, title: 'Claimed: Mechanical Keyboard' });
+        };
+      }),
+    );
+    const claimButton = () => fixture.debugElement.query(By.css('.claim-btn')).nativeElement as HTMLButtonElement;
+
+    const claim = component.onClaimReward(mockRewards[0]);
+    fixture.detectChanges();
+    expect(claimButton().disabled).toBe(true);
+
+    settleClaim();
+    await claim;
+    fixture.detectChanges();
+    expect(claimButton().disabled).toBe(false);
+  });
+
   it('should display error snackbar when claiming reward fails', async () => {
     mockRewardsService.claimReward.mockRejectedValueOnce(new Error('Claim failed due to network error'));
 
@@ -244,5 +271,17 @@ describe('RewardStore', () => {
     const emptyEl = fixture.debugElement.query(By.css('.empty-state'));
     expect(emptyEl).toBeTruthy();
     expect((emptyEl.nativeElement as HTMLElement).textContent).toContain('No rewards found');
+  });
+
+  it('should report a failed reward query instead of breaking the view', async () => {
+    mockRewardsService.getRewards.mockReturnValue(throwError(() => new Error('Database connection lost')));
+    fixture = TestBed.createComponent(RewardStore);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.rewards()).toEqual([]);
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });

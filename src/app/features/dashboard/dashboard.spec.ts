@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -5,6 +6,7 @@ import { Observable, of } from 'rxjs';
 import { Dashboard } from './dashboard';
 import { DashboardEarningsService } from './services/dashboard-earnings.service';
 import { UserService } from '../../core/services/user.service';
+import { ClockService } from '../../core/services/clock.service';
 import type { EarningsPeriodFilter } from './models/earnings-period-filter.model';
 import type { MonthChangeEvent } from './models/month-change-event.model';
 
@@ -19,6 +21,7 @@ describe('Dashboard', () => {
   let userServiceMock: {
     user$: Observable<{ id: number; name: string; balance: number }>;
   };
+  const today = signal('2026-09-02');
 
   beforeEach(async () => {
     earningsServiceMock = {
@@ -30,12 +33,14 @@ describe('Dashboard', () => {
     userServiceMock = {
       user$: of({ id: 1, name: 'User', balance: 1000 }),
     };
+    today.set('2026-09-02');
 
     await TestBed.configureTestingModule({
       imports: [Dashboard],
       providers: [
         { provide: DashboardEarningsService, useValue: earningsServiceMock },
         { provide: UserService, useValue: userServiceMock },
+        { provide: ClockService, useValue: { today } },
       ],
     }).compileComponents();
 
@@ -74,15 +79,39 @@ describe('Dashboard', () => {
     expect(compiled.querySelector('app-earnings-chart')).toBeTruthy();
   });
 
-  it('should update currentFilter when onFilterChange is triggered', () => {
-    const newFilter: EarningsPeriodFilter = {
-      preset: 'last14',
+  it('should keep a custom range exactly as chosen', () => {
+    const customFilter: EarningsPeriodFilter = {
+      preset: 'custom',
       startDate: '2026-08-20',
-      endDate: '2026-09-02',
+      endDate: '2026-08-25',
     };
-    component.onFilterChange(newFilter);
+    component.onFilterChange(customFilter);
 
-    expect(component.currentFilter()).toEqual(newFilter);
+    expect(component.currentFilter()).toEqual(customFilter);
+  });
+
+  it('should derive a preset range from the preset', () => {
+    earningsServiceMock.getPresetDateRange.mockReturnValue({ startDate: '2026-08-20', endDate: '2026-09-02' });
+
+    component.onFilterChange({ preset: 'last14', startDate: '', endDate: '' });
+
+    expect(component.currentFilter()).toEqual({ preset: 'last14', startDate: '2026-08-20', endDate: '2026-09-02' });
+    expect(earningsServiceMock.getPresetDateRange).toHaveBeenCalledWith('last14');
+  });
+
+  it('should move a preset range and re-query the month summary when the day changes', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const summaryQueries = earningsServiceMock.getMonthlyEarningsSummary.mock.calls.length;
+    earningsServiceMock.getPresetDateRange.mockReturnValue({ startDate: '2026-08-28', endDate: '2026-09-03' });
+
+    today.set('2026-09-03');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.currentFilter().endDate).toBe('2026-09-03');
+    expect(earningsServiceMock.getDailyEarnings).toHaveBeenLastCalledWith('2026-08-28', '2026-09-03');
+    expect(earningsServiceMock.getMonthlyEarningsSummary.mock.calls.length).toBeGreaterThan(summaryQueries);
   });
 
   it('should update selectedMonth when onMonthChange is triggered', () => {

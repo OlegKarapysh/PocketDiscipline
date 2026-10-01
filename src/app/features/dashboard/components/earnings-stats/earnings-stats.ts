@@ -1,4 +1,5 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { ClockService } from '../../../../core/services/clock.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { Amount } from '../../../../shared/components/amount/amount';
@@ -14,6 +15,8 @@ import type { MonthChangeEvent } from '../../models/month-change-event.model';
   styleUrl: './earnings-stats.scss',
 })
 export class EarningsStats {
+  private readonly clock = inject(ClockService);
+
   readonly summary = input<MonthlyEarningsSummary | null>(null);
 
   readonly monthChange = output<MonthChangeEvent>();
@@ -22,9 +25,7 @@ export class EarningsStats {
   readonly currentMonth = signal<number>(new Date().getMonth() + 1);
 
   readonly isNextDisabled = computed(() => {
-    const now = new Date();
-    const actualYear = now.getFullYear();
-    const actualMonth = now.getMonth() + 1;
+    const [actualYear, actualMonth] = this.clock.today().split('-').map(Number);
 
     if (this.currentYear() > actualYear) {
       return true;

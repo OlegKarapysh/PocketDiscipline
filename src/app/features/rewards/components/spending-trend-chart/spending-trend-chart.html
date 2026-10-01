@@ -10,18 +10,18 @@
     }
   </div>
 
-  <div class="svg-wrapper">
-    <svg [attr.viewBox]="'0 0 ' + svgWidth + ' ' + svgHeight" preserveAspectRatio="xMidYMid meet" class="trend-svg">
+  <div class="svg-wrapper" (appObserveWidth)="width.set($event)">
+    <svg [attr.viewBox]="viewBox()" preserveAspectRatio="xMidYMid meet" class="trend-svg">
       @for (line of gridLines(); track line.y) {
         <line
-          [attr.x1]="marginLeft"
+          [attr.x1]="marginLeft()"
           [attr.y1]="line.y"
-          [attr.x2]="marginLeft + plotWidth"
+          [attr.x2]="marginLeft() + plotWidth()"
           [attr.y2]="line.y"
           class="grid-line"
         />
-        <text [attr.x]="marginLeft - 8" [attr.y]="line.y + 4" text-anchor="end" class="axis-label pd-num">
-          {{ line.value | money }}
+        <text [attr.x]="yAxisTextX()" [attr.y]="line.y + 4" text-anchor="end" class="axis-label pd-num">
+          {{ line.label }}
         </text>
       }
 

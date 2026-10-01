@@ -7,7 +7,7 @@
   />
 
   <div class="metrics-grid">
-    <app-stat-card label="Total spent">
+    <app-stat-card class="money-metric" label="Total spent">
       <app-amount [value]="analytics().totalSpent" />
     </app-stat-card>
 
@@ -19,7 +19,7 @@
       <span class="metric-text">{{ topCategory()?.categoryName ?? 'None' }}</span>
     </app-stat-card>
 
-    <app-stat-card label="Average per spend">
+    <app-stat-card class="money-metric" label="Average per spend">
       <app-amount [value]="averagePerWithdrawal()" />
     </app-stat-card>
   </div>

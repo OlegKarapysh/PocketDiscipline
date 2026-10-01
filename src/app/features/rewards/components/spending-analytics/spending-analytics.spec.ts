@@ -1,6 +1,9 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { signal } from '@angular/core';
+import { of, throwError } from 'rxjs';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ClockService } from '../../../../core/services/clock.service';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SpendingAnalytics } from './spending-analytics';
@@ -17,6 +20,8 @@ describe('SpendingAnalytics', () => {
   let mockAnalyticsService: {
     getAnalytics: ReturnType<typeof vi.fn>;
   };
+  let snackBarMock: { open: ReturnType<typeof vi.fn> };
+  const today = signal('2026-09-30');
 
   beforeEach(async () => {
     mockSummaryWithData = {
@@ -57,13 +62,19 @@ describe('SpendingAnalytics', () => {
       spendingTrend: [],
     };
 
+    snackBarMock = { open: vi.fn() };
+    today.set('2026-09-30');
     mockAnalyticsService = {
       getAnalytics: vi.fn().mockReturnValue(of(mockSummaryWithData)),
     };
 
     await TestBed.configureTestingModule({
       imports: [SpendingAnalytics],
-      providers: [{ provide: SpendingAnalyticsService, useValue: mockAnalyticsService }],
+      providers: [
+        { provide: SpendingAnalyticsService, useValue: mockAnalyticsService },
+        { provide: ClockService, useValue: { today } },
+        { provide: MatSnackBar, useValue: snackBarMock },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SpendingAnalytics);
@@ -130,5 +141,30 @@ describe('SpendingAnalytics', () => {
     expect(() => {
       fixture.destroy();
     }).not.toThrow();
+  });
+
+  it('should re-query the selected period when the day changes', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const queries = mockAnalyticsService.getAnalytics.mock.calls.length;
+
+    today.set('2026-10-01');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(mockAnalyticsService.getAnalytics.mock.calls.length).toBe(queries + 1);
+    expect(mockAnalyticsService.getAnalytics).toHaveBeenLastCalledWith('thisMonth');
+  });
+
+  it('should report a failed analytics query instead of breaking the view', async () => {
+    mockAnalyticsService.getAnalytics.mockReturnValue(throwError(() => new Error('Database connection lost')));
+    fixture = TestBed.createComponent(SpendingAnalytics);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.analytics().totalSpent).toBe(0);
+    expect(snackBarMock.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });

@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormField, form, max, maxLength, min, required } from '@angular/forms/signals';
+import { FormField, form, max, maxLength, min, required, validate, requiredError } from '@angular/forms/signals';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { toSignal } from '@angular/core/rxjs-interop';
 import type { Observable } from 'rxjs';
-import { from } from 'rxjs';
+import { EMPTY, catchError, from } from 'rxjs';
 import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
 import { UserService } from '../../../../core/services/user.service';
@@ -52,10 +52,24 @@ export class QuickSpendDialog {
 
   readonly isSubmitting = signal(false);
 
-  readonly user = toSignal(from(this.userService.user$) as Observable<User | undefined>, {
-    initialValue: undefined,
-  });
-  readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
+  readonly user = toSignal(
+    (from(this.userService.user$) as Observable<User | undefined>).pipe(
+      catchError((err: unknown) => {
+        this.snackBar.error(err, 'Failed to load balance');
+        return EMPTY;
+      }),
+    ),
+    { initialValue: undefined },
+  );
+  readonly categories = toSignal(
+    this.categoryService.getCategories().pipe(
+      catchError((err: unknown) => {
+        this.snackBar.error(err, 'Failed to load categories');
+        return EMPTY;
+      }),
+    ),
+    { initialValue: [] as RewardCategory[] },
+  );
 
   readonly model = signal<QuickSpendModel>({ amount: null, title: '', categoryId: FALLBACK_CATEGORY_ID, notes: '' });
 
@@ -63,7 +77,7 @@ export class QuickSpendDialog {
     required(path.amount, { message: 'Amount is required' });
     min(path.amount, 0.01, { message: 'Amount must be greater than zero' });
     max(path.amount, () => this.user()?.balance ?? 0, { message: 'Amount exceeds your available balance' });
-    required(path.title, { message: 'Title is required' });
+    validate(path.title, ({ value }) => (value().trim() ? null : requiredError({ message: 'Title is required' })));
     maxLength(path.title, 100, { message: 'Title is too long' });
     required(path.categoryId, { message: 'Category is required' });
     maxLength(path.notes, 1000, { message: 'Notes are too long' });
@@ -89,7 +103,6 @@ export class QuickSpendDialog {
       this.dialogRef.close(record);
     } catch (error) {
       this.snackBar.error(error, 'Withdrawal failed');
-    } finally {
       this.isSubmitting.set(false);
     }
   }

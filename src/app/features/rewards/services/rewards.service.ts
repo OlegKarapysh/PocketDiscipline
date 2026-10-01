@@ -10,6 +10,8 @@ import type { CreateRewardDto } from '../models/create-reward.dto';
 import type { UpdateRewardDto } from '../models/update-reward.dto';
 import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 
+export const ERROR_TYPE_LOCKED = 'The type of a reward cannot change once it has been claimed';
+
 function getTodayDateString(): string {
   const now = new Date();
   const year = String(now.getFullYear());
@@ -66,40 +68,51 @@ export class RewardsService {
   }
 
   async updateReward(id: string, dto: UpdateRewardDto): Promise<RewardItem> {
-    const existing = await this.db.rewards.get(id);
-    if (!existing) {
-      throw new Error('Reward not found');
-    }
-
-    const updates: Partial<RewardItem> = {
-      updatedAt: Date.now(),
-    };
-
-    if (dto.title !== undefined) {
-      const trimmed = dto.title.trim();
-      if (!trimmed) {
-        throw new Error('Reward title cannot be empty');
+    return this.db.transaction('rw', this.db.rewards, async () => {
+      const existing = await this.db.rewards.get(id);
+      if (!existing) {
+        throw new Error('Reward not found');
       }
-      updates.title = trimmed;
-    }
 
-    if (dto.cost !== undefined) {
-      if (dto.cost <= 0 || !Number.isFinite(dto.cost)) {
-        throw new Error('Reward cost must be greater than zero');
+      const updates: Partial<RewardItem> = {
+        updatedAt: Date.now(),
+      };
+
+      if (dto.title !== undefined) {
+        const trimmed = dto.title.trim();
+        if (!trimmed) {
+          throw new Error('Reward title cannot be empty');
+        }
+        updates.title = trimmed;
       }
-      updates.cost = dto.cost;
-    }
 
-    if (dto.categoryId !== undefined) {
-      updates.categoryId = dto.categoryId;
-    }
+      if (dto.cost !== undefined) {
+        if (dto.cost <= 0 || !Number.isFinite(dto.cost)) {
+          throw new Error('Reward cost must be greater than zero');
+        }
+        updates.cost = dto.cost;
+      }
 
-    if (dto.type !== undefined) {
-      updates.type = dto.type;
-    }
+      if (dto.categoryId !== undefined) {
+        updates.categoryId = dto.categoryId;
+      }
 
-    await this.db.rewards.update(id, updates);
-    return { ...existing, ...updates };
+      if (dto.type !== undefined) {
+        if (dto.type !== existing.type && this.isTypeLocked(existing)) {
+          throw new Error(ERROR_TYPE_LOCKED);
+        }
+        updates.type = dto.type;
+      }
+
+      await this.db.rewards.update(id, updates);
+      return { ...existing, ...updates };
+    });
+  }
+
+  // Claims are recorded differently per type (a one-time reward flips its status, a repeatable one
+  // counts), and reverting a claim branches on the type, so a claimed reward must keep its type.
+  isTypeLocked(reward: RewardItem): boolean {
+    return reward.status === 'claimed' || reward.claimCount > 0;
   }
 
   async deleteReward(id: string): Promise<void> {

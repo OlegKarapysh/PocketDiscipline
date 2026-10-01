@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { of } from 'rxjs';
 import type { TimerConfig } from './pomodoro-timer.service';
 import { PomodoroTimerService } from './pomodoro-timer.service';
-import { EventBusService, EVENT_TYPE } from '../../../core/services/event-bus.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
@@ -12,21 +11,20 @@ import { CelebrationService } from '../../../shared/services/celebration.service
 
 describe('PomodoroTimerService', () => {
   let service: PomodoroTimerService;
-  let eventBusMock: { emit: ReturnType<typeof vi.fn> };
   let storageMock: {
     saveSession: ReturnType<typeof vi.fn>;
-    updateSession: ReturnType<typeof vi.fn>;
+    completeSession: ReturnType<typeof vi.fn>;
+    cancelSession: ReturnType<typeof vi.fn>;
     getAllSessions: ReturnType<typeof vi.fn>;
   };
   let celebrationMock: { show: ReturnType<typeof vi.fn> };
 
-  const createService = (sessions: PomodoroSession[] = []) => {
+  const createService = (sessions: PomodoroSession[] | Promise<PomodoroSession[]> = []) => {
     TestBed.resetTestingModule();
-    storageMock.getAllSessions.mockResolvedValue(sessions);
+    storageMock.getAllSessions.mockReturnValue(Promise.resolve(sessions));
     TestBed.configureTestingModule({
       providers: [
         PomodoroTimerService,
-        { provide: EventBusService, useValue: eventBusMock },
         { provide: PomodoroStorageService, useValue: storageMock },
         { provide: CelebrationService, useValue: celebrationMock },
       ],
@@ -35,17 +33,14 @@ describe('PomodoroTimerService', () => {
     return service;
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.useFakeTimers();
     vi.spyOn(crypto, 'randomUUID').mockReturnValue('12345678-1234-1234-1234-123456789abc');
 
-    eventBusMock = {
-      emit: vi.fn(),
-    };
-
     storageMock = {
       saveSession: vi.fn().mockResolvedValue(undefined),
-      updateSession: vi.fn().mockResolvedValue(undefined),
+      completeSession: vi.fn().mockResolvedValue(true),
+      cancelSession: vi.fn().mockResolvedValue(undefined),
       getAllSessions: vi.fn().mockResolvedValue([]),
     };
 
@@ -54,6 +49,8 @@ describe('PomodoroTimerService', () => {
     };
 
     service = createService([]);
+    // Let the startup restore finish; Start is ignored until it has.
+    await vi.advanceTimersByTimeAsync(0);
   });
 
   afterEach(() => {
@@ -133,40 +130,76 @@ describe('PomodoroTimerService', () => {
       expect(service.isActive()).toBe(false);
       expect(service.currentSessionId()).toBeNull();
       expect(service.timeRemaining()).toBe(1500);
-      expect(storageMock.updateSession).toHaveBeenCalledWith(
-        '12345678-1234-1234-1234-123456789abc',
-        expect.objectContaining({
-          status: PomodoroSessionStatus.CANCELLED,
-        }),
-      );
-      expect(eventBusMock.emit).not.toHaveBeenCalled();
+      expect(storageMock.cancelSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc');
+      expect(storageMock.completeSession).not.toHaveBeenCalled();
       expect(celebrationMock.show).not.toHaveBeenCalled();
     });
 
-    it('should complete timer when countdown reaches zero, emit reward and celebrate the reward', async () => {
+    it('should complete timer when countdown reaches zero, credit the reward and celebrate it', async () => {
       await service.startTimer();
 
       // Fast forward full 25 minutes (1500 seconds)
       await vi.advanceTimersByTimeAsync(1500 * 1000);
 
       expect(service.isActive()).toBe(false);
-      expect(storageMock.updateSession).toHaveBeenCalledWith(
-        '12345678-1234-1234-1234-123456789abc',
-        expect.objectContaining({
-          status: PomodoroSessionStatus.COMPLETED,
-          rewardEarned: 25, // 25 min work session = 25 points (1.0x base)
-        }),
-      );
-      expect(eventBusMock.emit).toHaveBeenCalledWith({
-        type: EVENT_TYPE.REWARD_EARNED,
-        payload: { points: 25 },
-        source: 'pomodoro',
-      });
+      // 25 min work session = 25 points (1.0x base)
+      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 25);
       expect(celebrationMock.show).toHaveBeenCalledWith(expect.objectContaining({ amount: 25 }));
     });
   });
 
+  describe('Completion that another path already settled', () => {
+    it('should not celebrate when the session was no longer active', async () => {
+      storageMock.completeSession.mockResolvedValue(false);
+      await service.startTimer();
+
+      await vi.advanceTimersByTimeAsync(1500 * 1000);
+
+      expect(service.isActive()).toBe(false);
+      expect(celebrationMock.show).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Session Restoration on Startup', () => {
+    it('should ignore Start until the running session has been restored', async () => {
+      let finishLoading: (sessions: PomodoroSession[]) => void = () => undefined;
+      service = createService(
+        new Promise<PomodoroSession[]>((resolve) => {
+          finishLoading = resolve;
+        }),
+      );
+      expect(service.isRestoring()).toBe(true);
+
+      await service.startTimer();
+      expect(storageMock.saveSession).not.toHaveBeenCalled();
+
+      finishLoading([]);
+      await vi.advanceTimersByTimeAsync(0);
+      await service.startTimer();
+
+      expect(service.isRestoring()).toBe(false);
+      expect(storageMock.saveSession).toHaveBeenCalledTimes(1);
+    });
+
+    it('should cancel older sessions left active next to the one it restores', async () => {
+      const now = Date.now();
+      const newest: PomodoroSession = {
+        id: 'newest',
+        durationMinutes: 25,
+        engagementType: EngagementType.WORK,
+        startTime: now - 60 * 1000,
+        status: PomodoroSessionStatus.ACTIVE,
+      };
+      const orphaned: PomodoroSession = { ...newest, id: 'orphaned', startTime: now - 5 * 60 * 1000 };
+
+      service = createService([newest, orphaned]);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(service.currentSessionId()).toBe('newest');
+      expect(storageMock.cancelSession).toHaveBeenCalledWith('orphaned');
+      expect(storageMock.cancelSession).not.toHaveBeenCalledWith('newest');
+    });
+
     it('should restore active session and resume countdown when remaining time is positive', async () => {
       const now = Date.now();
       const activeSession: PomodoroSession = {
@@ -203,18 +236,7 @@ describe('PomodoroTimerService', () => {
       await vi.advanceTimersByTimeAsync(0);
 
       expect(service.isActive()).toBe(false);
-      expect(storageMock.updateSession).toHaveBeenCalledWith(
-        'expired-session-1',
-        expect.objectContaining({
-          status: PomodoroSessionStatus.COMPLETED,
-          rewardEarned: 25,
-        }),
-      );
-      expect(eventBusMock.emit).toHaveBeenCalledWith({
-        type: EVENT_TYPE.REWARD_EARNED,
-        payload: { points: 25 },
-        source: 'pomodoro',
-      });
+      expect(storageMock.completeSession).toHaveBeenCalledWith('expired-session-1', 25);
       expect(celebrationMock.show).toHaveBeenCalledWith(expect.objectContaining({ amount: 25 }));
     });
   });
@@ -253,13 +275,7 @@ describe('PomodoroTimerService', () => {
       document.dispatchEvent(new Event('visibilitychange'));
 
       expect(service.isActive()).toBe(false);
-      expect(storageMock.updateSession).toHaveBeenCalledWith(
-        '12345678-1234-1234-1234-123456789abc',
-        expect.objectContaining({
-          status: PomodoroSessionStatus.COMPLETED,
-        }),
-      );
-      expect(eventBusMock.emit).toHaveBeenCalled();
+      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 25);
       expect(celebrationMock.show).toHaveBeenCalledWith(expect.objectContaining({ amount: 25 }));
     });
   });
@@ -273,12 +289,8 @@ describe('PomodoroTimerService', () => {
       await service.startTimer();
       await vi.advanceTimersByTimeAsync(20 * 60 * 1000);
 
-      expect(storageMock.updateSession).toHaveBeenCalledWith(
-        '12345678-1234-1234-1234-123456789abc',
-        expect.objectContaining({
-          rewardEarned: 12, // Math.trunc(25 * 0.5) = 12
-        }),
-      );
+      // Math.trunc(25 * 0.5) = 12
+      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 12);
     });
 
     it('should calculate Tier 1 (15-24 min) study reward: 0.5x base', async () => {
@@ -289,12 +301,8 @@ describe('PomodoroTimerService', () => {
       await service.startTimer();
       await vi.advanceTimersByTimeAsync(20 * 60 * 1000);
 
-      expect(storageMock.updateSession).toHaveBeenCalledWith(
-        '12345678-1234-1234-1234-123456789abc',
-        expect.objectContaining({
-          rewardEarned: 10, // Math.trunc(20 * 0.5) = 10
-        }),
-      );
+      // Math.trunc(20 * 0.5) = 10
+      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 10);
     });
 
     it('should calculate Tier 3 (50-75 min) reward: 2.0x base', async () => {
@@ -305,12 +313,8 @@ describe('PomodoroTimerService', () => {
       await service.startTimer();
       await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
 
-      expect(storageMock.updateSession).toHaveBeenCalledWith(
-        '12345678-1234-1234-1234-123456789abc',
-        expect.objectContaining({
-          rewardEarned: 50, // Math.trunc(25 * 2.0) = 50
-        }),
-      );
+      // Math.trunc(25 * 2.0) = 50
+      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 50);
     });
 
     it('should calculate Tier 4 (80-120 min) reward: 3.0x base', async () => {
@@ -321,12 +325,8 @@ describe('PomodoroTimerService', () => {
       await service.startTimer();
       await vi.advanceTimersByTimeAsync(90 * 60 * 1000);
 
-      expect(storageMock.updateSession).toHaveBeenCalledWith(
-        '12345678-1234-1234-1234-123456789abc',
-        expect.objectContaining({
-          rewardEarned: 60, // Math.trunc(20 * 3.0) = 60
-        }),
-      );
+      // Math.trunc(20 * 3.0) = 60
+      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 60);
     });
   });
 
@@ -364,10 +364,10 @@ describe('PomodoroTimerService', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should reset timer and rethrow error if updating session fails during stopTimer', async () => {
+    it('should reset timer and rethrow error if cancelling the session fails during stopTimer', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
       const testError = new Error('Database update error');
-      storageMock.updateSession.mockRejectedValue(testError);
+      storageMock.cancelSession.mockRejectedValue(testError);
 
       await service.startTimer();
       expect(service.isActive()).toBe(true);
@@ -379,10 +379,10 @@ describe('PomodoroTimerService', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should catch error gracefully if updating session fails during completeSession', async () => {
+    it('should catch error gracefully if completing the session fails', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
       const testError = new Error('Database complete error');
-      storageMock.updateSession.mockRejectedValue(testError);
+      storageMock.completeSession.mockRejectedValue(testError);
 
       await service.startTimer();
       await vi.advanceTimersByTimeAsync(1500 * 1000);
@@ -401,7 +401,6 @@ describe('PomodoroTimerService', () => {
       TestBed.configureTestingModule({
         providers: [
           PomodoroTimerService,
-          { provide: EventBusService, useValue: eventBusMock },
           { provide: PomodoroStorageService, useValue: storageMock },
           { provide: CelebrationService, useValue: celebrationMock },
         ],

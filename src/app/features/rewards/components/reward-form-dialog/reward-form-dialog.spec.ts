@@ -3,11 +3,11 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import type { RewardFormDialogData } from './reward-form-dialog';
 import { RewardFormDialog } from './reward-form-dialog';
-import { RewardsService } from '../../services/rewards.service';
+import { ERROR_TYPE_LOCKED, RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 import type { RewardItem } from '../../../../core/models/reward.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
@@ -20,6 +20,7 @@ describe('RewardFormDialog', () => {
   let mockRewardsService: {
     createReward: ReturnType<typeof vi.fn>;
     updateReward: ReturnType<typeof vi.fn>;
+    isTypeLocked: ReturnType<typeof vi.fn>;
   };
   let mockCategoryService: { getCategories: ReturnType<typeof vi.fn> };
   let mockSnackBar: { open: ReturnType<typeof vi.fn> };
@@ -27,12 +28,13 @@ describe('RewardFormDialog', () => {
   let mockCategories: RewardCategory[];
   let existingReward: RewardItem;
 
-  const setupComponent = async (data: RewardFormDialogData = {}) => {
+  const setupComponent = async (data: RewardFormDialogData = {}, typeLocked = false) => {
     TestBed.resetTestingModule();
     mockDialogRef = { close: vi.fn() };
     mockRewardsService = {
       createReward: vi.fn().mockResolvedValue(existingReward),
       updateReward: vi.fn().mockResolvedValue(existingReward),
+      isTypeLocked: vi.fn().mockReturnValue(typeLocked),
     };
     mockCategoryService = { getCategories: vi.fn().mockReturnValue(of(mockCategories)) };
     mockSnackBar = { open: vi.fn() };
@@ -119,6 +121,21 @@ describe('RewardFormDialog', () => {
     expect(submitBtn.textContent.trim()).toBe('Save changes');
   });
 
+  it('should lock the type of a claimed reward and say why', async () => {
+    await setupComponent({ reward: existingReward }, true);
+
+    expect(component.rewardForm.type().disabled()).toBe(true);
+    const hint = fixture.debugElement.query(By.css('.locked-hint')).nativeElement as HTMLElement;
+    expect(hint.textContent.trim()).toBe(ERROR_TYPE_LOCKED);
+  });
+
+  it('should keep the type editable for a reward that was never claimed', async () => {
+    await setupComponent({ reward: existingReward });
+
+    expect(component.rewardForm.type().disabled()).toBe(false);
+    expect(fixture.debugElement.query(By.css('.locked-hint'))).toBeNull();
+  });
+
   it('should reject a zero cost with a field error message', () => {
     component.rewardForm.title().value.set('Book');
     component.rewardForm.cost().value.set(0);
@@ -154,6 +171,17 @@ describe('RewardFormDialog', () => {
     });
     expect(mockSnackBar.open).toHaveBeenCalledWith('Created reward "Mechanical Keyboard"', 'Close', { duration: 3000 });
     expect(mockDialogRef.close).toHaveBeenCalledWith(existingReward);
+  });
+
+  it('should not create the reward again when submit is tapped while the dialog is closing', async () => {
+    component.rewardForm.title().value.set('New Book');
+    component.rewardForm.cost().value.set(450);
+    component.rewardForm.categoryId().value.set('cat-general');
+
+    await component.submit();
+    await component.submit();
+
+    expect(mockRewardsService.createReward).toHaveBeenCalledTimes(1);
   });
 
   it('should update existing reward and close dialog when clicking submit in DOM', async () => {
@@ -202,5 +230,17 @@ describe('RewardFormDialog', () => {
     cancelBtn.click();
 
     expect(mockDialogRef.close).toHaveBeenCalled();
+  });
+
+  it('should report a failed category query instead of breaking the view', async () => {
+    mockCategoryService.getCategories.mockReturnValue(throwError(() => new Error('Database connection lost')));
+    fixture = TestBed.createComponent(RewardFormDialog);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.categories()).toEqual([]);
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });

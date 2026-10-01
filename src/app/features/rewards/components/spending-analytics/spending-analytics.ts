@@ -1,6 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { switchMap } from 'rxjs';
+import { EMPTY, catchError, switchMap } from 'rxjs';
+
+import { ClockService } from '../../../../core/services/clock.service';
+import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 
 import { SpendingAnalyticsService } from '../../services/spending-analytics.service';
 import type { AnalyticsPeriod } from '../../models/analytics-period.type';
@@ -22,6 +25,8 @@ import { StatCard } from '../../../../shared/components/stat-card/stat-card';
 })
 export class SpendingAnalytics {
   private readonly analyticsService = inject(SpendingAnalyticsService);
+  private readonly clock = inject(ClockService);
+  private readonly snackBar = inject(SnackBarService);
 
   readonly periodOptions: readonly SegmentOption<AnalyticsPeriod>[] = [
     { value: 'thisMonth', label: 'This month' },
@@ -32,8 +37,20 @@ export class SpendingAnalytics {
 
   readonly selectedPeriod = signal<AnalyticsPeriod>('thisMonth');
 
+  // Every period is measured back from today, so a new day re-queries it.
+  private readonly query = computed(() => ({ period: this.selectedPeriod(), today: this.clock.today() }));
+
   readonly analytics = toSignal(
-    toObservable(this.selectedPeriod).pipe(switchMap((period) => this.analyticsService.getAnalytics(period))),
+    toObservable(this.query).pipe(
+      switchMap(({ period }) =>
+        this.analyticsService.getAnalytics(period).pipe(
+          catchError((error: unknown) => {
+            this.snackBar.error(error, 'Failed to load spending analytics');
+            return EMPTY;
+          }),
+        ),
+      ),
+    ),
     {
       initialValue: {
         period: 'thisMonth',

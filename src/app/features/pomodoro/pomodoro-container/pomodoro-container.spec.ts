@@ -14,6 +14,7 @@ describe('PomodoroContainer', () => {
   let fixture: ComponentFixture<PomodoroContainer>;
   let timerServiceMock: {
     isActive: ReturnType<typeof signal<boolean>>;
+    isRestoring: ReturnType<typeof signal<boolean>>;
     durationMinutes: ReturnType<typeof signal<number>>;
     engagementType: ReturnType<typeof signal<string>>;
     timeRemaining: ReturnType<typeof signal<number>>;
@@ -25,6 +26,7 @@ describe('PomodoroContainer', () => {
   beforeEach(async () => {
     timerServiceMock = {
       isActive: signal(false),
+      isRestoring: signal(false),
       durationMinutes: signal(25),
       engagementType: signal(EngagementType.WORK),
       timeRemaining: signal(1500),

@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormField, form, maxLength, required } from '@angular/forms/signals';
+import { FormField, form, maxLength, validate, requiredError } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -58,7 +58,9 @@ export class CategoryFormDialog {
   });
 
   readonly categoryForm = form(this.model, (path) => {
-    required(path.name, { message: 'Category name is required' });
+    validate(path.name, ({ value }) =>
+      value().trim() ? null : requiredError({ message: 'Category name is required' }),
+    );
     maxLength(path.name, 50, { message: 'Category name is too long' });
   });
 

@@ -50,7 +50,7 @@ export class DailyScoreReminderService {
     try {
       const score = await firstValueFrom(this.dailyScoresService.getTodayScore());
       if (!score) {
-        this.notifications.show('Pocket Discipline', {
+        await this.notifications.show('Pocket Discipline', {
           body: 'Time to set your daily score!',
           icon: 'icons/icon-192x192.png',
         });

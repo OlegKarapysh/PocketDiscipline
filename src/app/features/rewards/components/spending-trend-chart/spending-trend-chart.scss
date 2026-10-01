@@ -35,11 +35,10 @@
 
 .svg-wrapper {
   width: 100%;
-  overflow-x: auto;
 
   .trend-svg {
+    display: block;
     width: 100%;
-    min-width: 400px;
     height: auto;
   }
 }

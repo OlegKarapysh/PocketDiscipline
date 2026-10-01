@@ -9,9 +9,9 @@
       }
     </div>
 
-    <div class="svg-container">
+    <div class="svg-container" (appObserveWidth)="width.set($event)">
       <svg
-        [attr.viewBox]="viewBox"
+        [attr.viewBox]="viewBox()"
         class="earnings-svg"
         preserveAspectRatio="xMidYMid meet"
         role="region"
@@ -20,22 +20,27 @@
         <!-- Horizontal Grid Lines and Labels -->
         @for (line of gridLines(); track line.y) {
           <line
-            [attr.x1]="chartLeftX"
+            [attr.x1]="chartLeftX()"
             [attr.y1]="line.y"
-            [attr.x2]="chartRightX"
+            [attr.x2]="chartRightX()"
             [attr.y2]="line.y"
             class="grid-line"
           />
-          <text [attr.x]="yAxisTextX" [attr.y]="line.y + axisLabelYOffset" class="axis-label pd-num" text-anchor="end">
+          <text
+            [attr.x]="yAxisTextX()"
+            [attr.y]="line.y + axisLabelYOffset"
+            class="axis-label pd-num"
+            text-anchor="end"
+          >
             {{ line.label }}
           </text>
         }
 
         <!-- Baseline -->
         <line
-          [attr.x1]="chartLeftX"
+          [attr.x1]="chartLeftX()"
           [attr.y1]="chartBaselineY"
-          [attr.x2]="chartRightX"
+          [attr.x2]="chartRightX()"
           [attr.y2]="chartBaselineY"
           class="baseline"
         />

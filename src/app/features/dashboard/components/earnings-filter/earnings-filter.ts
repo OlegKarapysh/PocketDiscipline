@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { SegmentedControl } from '../../../../shared/components/segmented-control/segmented-control';
 import type { SegmentOption } from '../../../../shared/components/segmented-control/segment-option.model';
 import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
+import { ClockService } from '../../../../core/services/clock.service';
 import { DashboardEarningsService } from '../../services/dashboard-earnings.service';
 import type { EarningsPeriodFilter } from '../../models/earnings-period-filter.model';
 import type { PeriodPreset } from '../../models/period-preset.type';
@@ -19,6 +20,7 @@ import type { PeriodPreset } from '../../models/period-preset.type';
 })
 export class EarningsFilter {
   private readonly earningsService = inject(DashboardEarningsService);
+  private readonly clock = inject(ClockService);
 
   readonly filter = input<EarningsPeriodFilter>({
     preset: 'last7',
@@ -38,7 +40,7 @@ export class EarningsFilter {
   readonly activePreset = linkedSignal<PeriodPreset>(() => this.filter().preset);
   readonly showCustomPicker = computed<boolean>(() => this.activePreset() === 'custom');
 
-  readonly maxDate = new Date();
+  readonly maxDate = computed(() => new Date(`${this.clock.today()}T00:00`));
 
   readonly rangeModel = signal<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   readonly rangeForm = form(this.rangeModel);

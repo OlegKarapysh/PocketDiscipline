@@ -22,8 +22,18 @@
   gap: t.space(3);
 
   @include t.up(expanded) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: t.space(4);
+  }
+
+  @include t.up(large) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+// A money value does not fit half a phone's width, so it takes the whole row there.
+.money-metric {
+  @include t.down(medium) {
+    grid-column: 1 / -1;
   }
 }
 

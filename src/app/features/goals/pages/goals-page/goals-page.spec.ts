@@ -39,8 +39,8 @@ describe('GoalsPage', () => {
     goalServiceMock = {
       getActiveGoals: vi.fn().mockReturnValue(of([mockGoal])),
       getCompletedGoals: vi.fn().mockReturnValue(of([])),
-      completeGoal: vi.fn().mockResolvedValue(undefined),
-      undoCompleteGoal: vi.fn().mockResolvedValue(undefined),
+      completeGoal: vi.fn().mockResolvedValue(true),
+      undoCompleteGoal: vi.fn().mockResolvedValue(true),
       deleteGoal: vi.fn().mockResolvedValue(undefined),
       addGoal: vi.fn().mockResolvedValue(undefined),
       updateGoal: vi.fn().mockResolvedValue(undefined),
@@ -109,6 +109,15 @@ describe('GoalsPage', () => {
     expect(goalServiceMock.undoCompleteGoal).not.toHaveBeenCalled();
   });
 
+  it('should not celebrate when the goal was no longer active', async () => {
+    goalServiceMock.completeGoal.mockResolvedValue(false);
+    fixture.detectChanges();
+
+    await component.completeGoal('g-1');
+
+    expect(celebrationMock.show).not.toHaveBeenCalled();
+  });
+
   it('should undo the completion when the celebration is closed with undo', async () => {
     celebrationMock.show.mockReturnValue(of('undo'));
     fixture.detectChanges();
@@ -123,6 +132,26 @@ describe('GoalsPage', () => {
 
     expect(goalServiceMock.undoCompleteGoal).toHaveBeenCalledWith('g-1');
     expect(snackBarMock.open).toHaveBeenCalledWith('Completion undone', 'Close', expect.any(Object));
+  });
+
+  it('should not report an undo when the goal was no longer completed', async () => {
+    goalServiceMock.undoCompleteGoal.mockResolvedValue(false);
+
+    await component.undoCompleteGoal('g-1');
+
+    expect(snackBarMock.open).not.toHaveBeenCalled();
+  });
+
+  it('should report a failed goal query instead of breaking the view', async () => {
+    goalServiceMock.getActiveGoals.mockReturnValue(throwError(() => new Error('Database connection lost')));
+    fixture = TestBed.createComponent(GoalsPage);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.activeGoals()).toEqual([]);
+    expect(snackBarMock.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 
   it('should delete goal and display snackbar', async () => {

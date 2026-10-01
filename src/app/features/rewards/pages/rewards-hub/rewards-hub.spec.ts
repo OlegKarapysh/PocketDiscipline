@@ -92,7 +92,7 @@ describe('RewardsHub', () => {
 
     const tabs = compiled.querySelectorAll('.mat-mdc-tab');
     expect(tabs.length).toBe(3);
-    expect(tabs[0].textContent).toContain('Reward store');
+    expect(tabs[0].textContent).toContain('Store');
     expect(tabs[1].textContent).toContain('History');
     expect(tabs[2].textContent).toContain('Analytics');
     expect(compiled.querySelector('app-reward-store')).toBeTruthy();

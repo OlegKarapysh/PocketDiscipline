@@ -1,12 +1,15 @@
+import { signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EarningsStats } from './earnings-stats';
+import { ClockService } from '../../../../core/services/clock.service';
 import type { MonthlyEarningsSummary } from '../../models/monthly-earnings-summary.model';
 
 describe('EarningsStats', () => {
   let component: EarningsStats;
   let fixture: ComponentFixture<EarningsStats>;
+  const today = signal('');
 
   const mockSummary: MonthlyEarningsSummary = {
     year: 2026,
@@ -19,8 +22,10 @@ describe('EarningsStats', () => {
   };
 
   beforeEach(async () => {
+    today.set(new Date().toLocaleDateString('en-CA'));
     await TestBed.configureTestingModule({
       imports: [EarningsStats],
+      providers: [{ provide: ClockService, useValue: { today } }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EarningsStats);
@@ -141,5 +146,16 @@ describe('EarningsStats', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('app-stat-card')).toBeNull();
     expect(compiled.querySelector('.empty-earnings-indicator')).toBeNull();
+  });
+
+  it('should allow moving to the next month once the calendar reaches it', () => {
+    component.currentYear.set(2026);
+    component.currentMonth.set(9);
+    today.set('2026-09-30');
+    expect(component.isNextDisabled()).toBe(true);
+
+    today.set('2026-10-01');
+
+    expect(component.isNextDisabled()).toBe(false);
   });
 });

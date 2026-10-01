@@ -9,7 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDialog } from '@angular/material/dialog';
 import { toSignal } from '@angular/core/rxjs-interop';
 import type { Observable } from 'rxjs';
-import { from } from 'rxjs';
+import { EMPTY, catchError, from } from 'rxjs';
 import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 import { UserService } from '../../../../core/services/user.service';
@@ -48,13 +48,36 @@ export class RewardStore {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(SnackBarService);
 
-  readonly user = toSignal(from(this.userService.user$) as Observable<User | undefined>, {
-    initialValue: undefined,
-  });
+  readonly user = toSignal(
+    (from(this.userService.user$) as Observable<User | undefined>).pipe(
+      catchError((error: unknown) => {
+        this.snackBar.error(error, 'Failed to load balance');
+        return EMPTY;
+      }),
+    ),
+    { initialValue: undefined },
+  );
 
-  readonly rewards = toSignal(this.rewardsService.getRewards(), { initialValue: [] as RewardItem[] });
-  readonly categories = toSignal(this.categoryService.getCategories(), { initialValue: [] as RewardCategory[] });
+  readonly rewards = toSignal(
+    this.rewardsService.getRewards().pipe(
+      catchError((error: unknown) => {
+        this.snackBar.error(error, 'Failed to load rewards');
+        return EMPTY;
+      }),
+    ),
+    { initialValue: [] as RewardItem[] },
+  );
+  readonly categories = toSignal(
+    this.categoryService.getCategories().pipe(
+      catchError((error: unknown) => {
+        this.snackBar.error(error, 'Failed to load categories');
+        return EMPTY;
+      }),
+    ),
+    { initialValue: [] as RewardCategory[] },
+  );
 
+  readonly claimingRewardId = signal<string | null>(null);
   readonly statusFilter = signal<RewardStatus>('active');
   readonly filters = signal({ query: '', categoryId: 'all' });
   readonly filterForm = form(this.filters);
@@ -103,7 +126,12 @@ export class RewardStore {
 
   readonly rewardRows = computed(() => {
     const categories = this.categoriesMap();
-    return this.filteredRewards().map((reward) => ({ reward, category: categories.get(reward.categoryId) }));
+    const claimingId = this.claimingRewardId();
+    return this.filteredRewards().map((reward) => ({
+      reward,
+      category: categories.get(reward.categoryId),
+      isClaiming: reward.id === claimingId,
+    }));
   });
 
   openAddReward(): void {
@@ -129,11 +157,16 @@ export class RewardStore {
   }
 
   async onClaimReward(reward: RewardItem): Promise<void> {
+    if (this.claimingRewardId() !== null) return;
+
+    this.claimingRewardId.set(reward.id);
     try {
       const withdrawal = await this.rewardsService.claimReward(reward);
       this.snackBar.show(`Redeemed "${reward.title}" for ${MONEY_FORMAT.format(withdrawal.amount)} ₴`);
     } catch (error) {
       this.snackBar.error(error, 'Claiming failed');
+    } finally {
+      this.claimingRewardId.set(null);
     }
   }
 }

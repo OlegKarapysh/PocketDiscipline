@@ -2,6 +2,7 @@
 
 .page-grid {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: t.space(4);
 
   @include t.up(expanded) {

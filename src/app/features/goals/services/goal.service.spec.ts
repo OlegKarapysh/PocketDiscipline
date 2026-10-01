@@ -63,6 +63,8 @@ describe('GoalService', () => {
   };
 
   beforeEach(() => {
+    // IndexedDB runs overlapping read-write transactions on the same tables one after another.
+    let queue: Promise<unknown> = Promise.resolve();
     dbMock = {
       goals: {
         where: vi.fn().mockReturnThis(),
@@ -76,11 +78,12 @@ describe('GoalService', () => {
         delete: vi.fn().mockResolvedValue(undefined),
       },
       users: {},
-      transaction: vi
-        .fn()
-        .mockImplementation(async (_mode: unknown, _t1: unknown, _t2: unknown, callback: () => Promise<void>) => {
-          await callback();
-        }),
+      transaction: vi.fn((...args: unknown[]) => {
+        const callback = args[args.length - 1] as () => Promise<unknown>;
+        const run = queue.then(callback);
+        queue = run.catch(() => undefined);
+        return run;
+      }),
     };
 
     userMock = {
@@ -93,6 +96,21 @@ describe('GoalService', () => {
 
     service = TestBed.inject(GoalService);
   });
+
+  function useStoredGoal(state: Pick<Goal, 'status' | 'completedAt'>): void {
+    let stored: Goal = {
+      id: 'goal-123',
+      title: 'do 50 push-ups on fists',
+      rewardValue: 2000,
+      createdAt: Date.now(),
+      ...state,
+    };
+    dbMock.goals.get.mockImplementation(() => ({ ...stored }));
+    dbMock.goals.update.mockImplementation((_id: string, changes: Partial<Goal>) => {
+      stored = { ...stored, ...changes };
+      return 1;
+    });
+  }
 
   describe('Live Queries', () => {
     it('should return live query and emit active goals filtered by status', async () => {
@@ -170,6 +188,30 @@ describe('GoalService', () => {
       await expect(service.addGoal('do 50 push-ups on fists'.toLowerCase(), 2000)).rejects.toThrow(
         'A goal with this title already exists.',
       );
+      expect(dbMock.goals.add).not.toHaveBeenCalled();
+    });
+
+    it('should store the title trimmed', async () => {
+      dbMock.goals.toArray.mockResolvedValue([]);
+
+      await service.addGoal('  Read a book  ', 100);
+
+      expect(dbMock.goals.add).toHaveBeenCalledWith(expect.objectContaining({ title: 'Read a book' }));
+    });
+
+    it('should treat a title that only differs by surrounding spaces as a duplicate', async () => {
+      dbMock.goals.toArray.mockResolvedValue([
+        {
+          id: 'existing-1',
+          title: 'Read a book',
+          rewardValue: 100,
+          status: GOAL_STATUS.ACTIVE,
+          completedAt: null,
+          createdAt: Date.now(),
+        },
+      ]);
+
+      await expect(service.addGoal('read a book ', 100)).rejects.toThrow('A goal with this title already exists.');
       expect(dbMock.goals.add).not.toHaveBeenCalled();
     });
   });
@@ -265,10 +307,31 @@ describe('GoalService', () => {
       };
       dbMock.goals.get.mockResolvedValue(completedGoal);
 
-      await service.completeGoal('goal-123');
+      const completed = await service.completeGoal('goal-123');
 
+      expect(completed).toBe(false);
       expect(dbMock.goals.update).not.toHaveBeenCalled();
       expect(userMock.addBalance).not.toHaveBeenCalled();
+    });
+
+    it('should credit the reward once when the goal is completed twice at the same time', async () => {
+      useStoredGoal({ status: GOAL_STATUS.ACTIVE, completedAt: null });
+
+      const results = await Promise.all([service.completeGoal('goal-123'), service.completeGoal('goal-123')]);
+
+      expect(results.filter(Boolean)).toHaveLength(1);
+      expect(userMock.addBalance).toHaveBeenCalledTimes(1);
+      expect(userMock.addBalance).toHaveBeenCalledWith(2000);
+    });
+
+    it('should deduct the reward once when the completion is undone twice at the same time', async () => {
+      useStoredGoal({ status: GOAL_STATUS.COMPLETED, completedAt: Date.now() });
+
+      const results = await Promise.all([service.undoCompleteGoal('goal-123'), service.undoCompleteGoal('goal-123')]);
+
+      expect(results.filter(Boolean)).toHaveLength(1);
+      expect(userMock.addBalance).toHaveBeenCalledTimes(1);
+      expect(userMock.addBalance).toHaveBeenCalledWith(-2000);
     });
 
     it('should undo complete a goal, reset status to ACTIVE, and deduct reward from balance', async () => {
@@ -289,6 +352,24 @@ describe('GoalService', () => {
         completedAt: null,
       });
       expect(userMock.addBalance).toHaveBeenCalledWith(-2000);
+    });
+
+    it('should refuse to undo when an active goal already has the same title', async () => {
+      useStoredGoal({ status: GOAL_STATUS.COMPLETED, completedAt: Date.now() });
+      dbMock.goals.toArray.mockResolvedValue([
+        {
+          id: 'goal-456',
+          title: 'DO 50 PUSH-UPS ON FISTS',
+          rewardValue: 500,
+          status: GOAL_STATUS.ACTIVE,
+          completedAt: null,
+          createdAt: Date.now(),
+        },
+      ]);
+
+      await expect(service.undoCompleteGoal('goal-123')).rejects.toThrow('an active goal already has this title');
+      expect(dbMock.goals.update).not.toHaveBeenCalled();
+      expect(userMock.addBalance).not.toHaveBeenCalled();
     });
   });
 

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import type { Observable } from 'rxjs';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { QuickSpendDialog } from './quick-spend-dialog';
 import { WithdrawalService } from '../../services/withdrawal.service';
@@ -163,6 +163,17 @@ describe('QuickSpendDialog', () => {
     expect(mockDialogRef.close).toHaveBeenCalledWith(mockRecord);
   });
 
+  it('should not withdraw again when submit is tapped while the dialog is closing', async () => {
+    component.spendForm.amount().value.set(50);
+    component.spendForm.title().value.set('Coffee');
+    component.spendForm.categoryId().value.set('cat-food');
+
+    await component.submit();
+    await component.submit();
+
+    expect(mockWithdrawalService.withdraw).toHaveBeenCalledTimes(1);
+  });
+
   it('should handle submission errors with a snackbar message and reset isSubmitting', async () => {
     mockWithdrawalService.withdraw.mockRejectedValueOnce(new Error('Network error'));
 
@@ -188,5 +199,17 @@ describe('QuickSpendDialog', () => {
 
     expect(mockDialogRef.close).toHaveBeenCalled();
     expect(mockWithdrawalService.withdraw).not.toHaveBeenCalled();
+  });
+
+  it('should report a failed category query instead of breaking the view', async () => {
+    mockCategoryService.getCategories.mockReturnValue(throwError(() => new Error('Database connection lost')));
+    fixture = TestBed.createComponent(QuickSpendDialog);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.categories()).toEqual([]);
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });

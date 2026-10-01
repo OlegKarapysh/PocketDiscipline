@@ -1,6 +1,6 @@
 <div class="controls">
   @if (!isActive()) {
-    <button mat-fab type="button" (click)="start()" aria-label="Start Timer">
+    <button mat-fab type="button" [disabled]="isRestoring()" (click)="start()" aria-label="Start Timer">
       <mat-icon>play_arrow</mat-icon>
     </button>
   } @else {

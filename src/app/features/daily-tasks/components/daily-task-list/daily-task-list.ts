@@ -1,8 +1,7 @@
-import type { OnInit } from '@angular/core';
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { filter } from 'rxjs';
+import { EMPTY, catchError, filter } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
@@ -13,6 +12,8 @@ import { DailyTaskForm } from '../daily-task-form/daily-task-form';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import type { DailyTaskDraft } from '../../models/daily-task-draft.model';
 import { NEW_ITEM_QUERY_PARAM } from '../../../../shared/constants/new-item-query-param.const';
+import { ClockService } from '../../../../core/services/clock.service';
+import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 
 @Component({
   imports: [MatButtonModule, MatIconModule, DailyTaskItem, DailyTaskForm, EmptyState],
@@ -20,15 +21,31 @@ import { NEW_ITEM_QUERY_PARAM } from '../../../../shared/constants/new-item-quer
   styleUrl: './daily-task-list.scss',
   templateUrl: './daily-task-list.html',
 })
-export class DailyTaskList implements OnInit {
+export class DailyTaskList {
   private readonly dailyTasksService = inject(DailyTasksService);
+  private readonly clock = inject(ClockService);
+  private readonly snackBar = inject(SnackBarService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  readonly tasks = toSignal(this.dailyTasksService.tasks$);
+  readonly tasks = toSignal(
+    this.dailyTasksService.tasks$.pipe(
+      catchError((error: unknown) => {
+        this.snackBar.error(error, 'Failed to load daily tasks');
+        return EMPTY;
+      }),
+    ),
+  );
   readonly showForm = signal(false);
 
   constructor() {
+    effect(() => {
+      this.clock.today();
+      void this.dailyTasksService.resetBrokenStreaks().catch((e: unknown) => {
+        console.error(e);
+      });
+    });
+
     // The shell's "New task" quick action links here with ?new. Dropping the param afterwards keeps a
     // reload from reopening the form and makes the next tap a real navigation again.
     this.route.queryParamMap
@@ -45,12 +62,6 @@ export class DailyTaskList implements OnInit {
           replaceUrl: true,
         });
       });
-  }
-
-  ngOnInit(): void {
-    void this.dailyTasksService.resetBrokenStreaks().catch((e: unknown) => {
-      console.error(e);
-    });
   }
 
   openForm() {

@@ -71,7 +71,7 @@
   <mat-card-actions class="card-actions" align="end">
     @if (reward().status === 'active') {
       @if (isAffordable()) {
-        <button mat-flat-button class="claim-btn" type="button" (click)="onClaim()">
+        <button mat-flat-button class="claim-btn" type="button" [disabled]="claiming()" (click)="onClaim()">
           <mat-icon>redeem</mat-icon>
           Claim reward
         </button>
