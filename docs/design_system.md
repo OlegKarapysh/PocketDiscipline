@@ -153,7 +153,10 @@ One codebase serves a phone held in one hand and a wide desktop window, and both
 `t.up()` and `t.down()` test the **viewport**. From 840px the side rail takes 240px, so at 840px the content column is about 536px wide, narrower than on a 600px screen. A component that goes two-column "because the screen is wide" breaks exactly there. The dashboard's stat tiles and the ten daily-score buttons did, until they were made to respond to their own width.
 
 - Inside a page, use layouts that respond to their own width: `grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr))`, or `flex-wrap: wrap` with a `flex-basis`. No breakpoint is involved, so they are right in any container.
-- Keep `t.up()` and `t.down()` for what really depends on the screen: the shell, page padding, type size.
+- Take the minimum from the worst content, not from a round number: a stat tile is 264px because that is "9 999 999,99 ₴/day" plus the tile's padding.
+- Where a full-row item sits in the same container, use `flex-wrap`. `auto-fit` only drops a column that nothing crosses, so an item spanning `1 / -1` leaves an empty third column on a wide screen (`dashboard.scss`, `daily-scores-page.scss`).
+- Where the count must step (five or ten buttons, two or four tiles) rather than be whatever fits, group the items and let the groups wrap. Plain `auto-fit` leaves a ragged last row: nine buttons and one (`score-input.scss`, `spending-analytics.scss`).
+- Keep `t.up()` and `t.down()` for what really depends on the screen: the shell, page padding, type size, and a phone's full-width action button.
 
 ### What breaks, and the fix
 
