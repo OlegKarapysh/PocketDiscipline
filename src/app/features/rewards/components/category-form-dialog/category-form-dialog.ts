@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import type { CategoryFormDialogData } from './category-form-dialog-data.model';
+import { CATEGORY_NAME_MAX_LENGTH } from '../../../../shared/constants/text-length.const';
 
 // The palette offered to the user. The chosen value is stored per category, so these are data, not theme colours.
 const PRESET_COLORS = [
@@ -61,7 +62,7 @@ export class CategoryFormDialog {
     validate(path.name, ({ value }) =>
       value().trim() ? null : requiredError({ message: 'Category name is required' }),
     );
-    maxLength(path.name, 50, { message: 'Category name is too long' });
+    maxLength(path.name, CATEGORY_NAME_MAX_LENGTH, { message: 'Category name is too long' });
   });
 
   selectColor(color: string): void {

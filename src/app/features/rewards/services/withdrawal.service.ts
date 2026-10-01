@@ -7,6 +7,7 @@ import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 import type { CreateWithdrawalDto } from '../models/create-withdrawal.dto';
 import type { WithdrawalFilter } from '../models/withdrawal-filter.model';
+import { NOTES_MAX_LENGTH } from '../../../shared/constants/text-length.const';
 
 function getTodayDateString(): string {
   const now = new Date();
@@ -30,8 +31,8 @@ export class WithdrawalService {
       throw new Error('Title cannot be empty');
     }
 
-    if (dto.notes && dto.notes.length > 1000) {
-      throw new Error('Notes must not exceed 1000 characters');
+    if (dto.notes && dto.notes.length > NOTES_MAX_LENGTH) {
+      throw new Error(`Notes must not exceed ${NOTES_MAX_LENGTH} characters`);
     }
 
     return await this.db.transaction('rw', this.db.users, this.db.withdrawals, async () => {

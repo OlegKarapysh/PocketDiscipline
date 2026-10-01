@@ -17,6 +17,7 @@ import type { RewardCategory } from '../../../../core/models/reward-category.mod
 import { FALLBACK_CATEGORY_ID } from '../../../../core/constants/initial-reward-categories.const';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
+import { NOTES_MAX_LENGTH, TITLE_MAX_LENGTH } from '../../../../shared/constants/text-length.const';
 import { Amount } from '../../../../shared/components/amount/amount';
 import { Badge } from '../../../../shared/components/badge/badge';
 
@@ -78,9 +79,9 @@ export class QuickSpendDialog {
     min(path.amount, 0.01, { message: 'Amount must be greater than zero' });
     max(path.amount, () => this.user()?.balance ?? 0, { message: 'Amount exceeds your available balance' });
     validate(path.title, ({ value }) => (value().trim() ? null : requiredError({ message: 'Title is required' })));
-    maxLength(path.title, 100, { message: 'Title is too long' });
+    maxLength(path.title, TITLE_MAX_LENGTH, { message: 'Title is too long' });
     required(path.categoryId, { message: 'Category is required' });
-    maxLength(path.notes, 1000, { message: 'Notes are too long' });
+    maxLength(path.notes, NOTES_MAX_LENGTH, { message: 'Notes are too long' });
   });
 
   async submit(): Promise<void> {
