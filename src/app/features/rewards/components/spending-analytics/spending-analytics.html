@@ -7,21 +7,25 @@
   />
 
   <div class="metrics-grid">
-    <app-stat-card class="money-metric" label="Total spent">
-      <app-amount [value]="analytics().totalSpent" />
-    </app-stat-card>
+    <div class="metric-pair">
+      <app-stat-card label="Total spent">
+        <app-amount [value]="analytics().totalSpent" />
+      </app-stat-card>
 
-    <app-stat-card label="Withdrawals">
-      <span class="metric-count">{{ analytics().withdrawalCount }}</span>
-    </app-stat-card>
+      <app-stat-card label="Withdrawals">
+        <span class="metric-count">{{ analytics().withdrawalCount }}</span>
+      </app-stat-card>
+    </div>
 
-    <app-stat-card label="Top category" [hint]="topCategoryShare()">
-      <span class="metric-text">{{ topCategory()?.categoryName ?? 'None' }}</span>
-    </app-stat-card>
+    <div class="metric-pair">
+      <app-stat-card label="Top category" [hint]="topCategoryShare()">
+        <span class="metric-text">{{ topCategory()?.categoryName ?? 'None' }}</span>
+      </app-stat-card>
 
-    <app-stat-card class="money-metric" label="Average per spend">
-      <app-amount [value]="averagePerWithdrawal()" />
-    </app-stat-card>
+      <app-stat-card label="Average per spend">
+        <app-amount [value]="averagePerWithdrawal()" />
+      </app-stat-card>
+    </div>
   </div>
 
   @if (analytics().totalSpent === 0) {
