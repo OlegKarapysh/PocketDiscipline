@@ -53,6 +53,7 @@ describe('DailyTasksService', () => {
       get: ReturnType<typeof vi.fn>;
       add: ReturnType<typeof vi.fn>;
       update: ReturnType<typeof vi.fn>;
+      delete: ReturnType<typeof vi.fn>;
     };
     dailyTaskCompletions: {
       add: ReturnType<typeof vi.fn>;
@@ -73,6 +74,7 @@ describe('DailyTasksService', () => {
         get: vi.fn().mockResolvedValue(null),
         add: vi.fn().mockResolvedValue(undefined),
         update: vi.fn().mockResolvedValue(1),
+        delete: vi.fn().mockResolvedValue(undefined),
       },
       dailyTaskCompletions: {
         add: vi.fn().mockResolvedValue(undefined),
@@ -114,6 +116,16 @@ describe('DailyTasksService', () => {
         lastCompletedAt: null,
       }),
     );
+  });
+
+  it('should refuse to create a task whose reward is not a whole number of hryvnias, at least 1', async () => {
+    for (const baseReward of [12.5, 0, NaN]) {
+      await expect(
+        service.createTask('Morning Workout', [easy, { id: 'bad', name: 'Bad', baseReward }]),
+      ).rejects.toThrow('The reward for "Bad" must be a whole number of hryvnias, at least 1.');
+    }
+
+    expect(dbMock.dailyTasks.add).not.toHaveBeenCalled();
   });
 
   describe('tasks$ stream', () => {
@@ -218,7 +230,7 @@ describe('DailyTasksService', () => {
       // Completed yesterday, streak was 5.
       // New streak = 6. Bonus days = 6 - 1 = 5.
       // Multiplier = 1 + (5 * 0.10) = 1.50.
-      // Reward = 100 * 1.50 = 150.
+      // Reward = 100 ₴ * 1.50 = 150 ₴.
       const now = Date.now();
       const yesterday = now - ONE_DAY_MS;
 
@@ -246,7 +258,7 @@ describe('DailyTasksService', () => {
       // Completed yesterday, streak was 15.
       // New streak = 16. Bonus days capped at 10.
       // Multiplier = 1 + (10 * 0.10) = 2.0.
-      // Reward = 300 * 2.0 = 600.
+      // Reward = 300 ₴ * 2.0 = 600 ₴.
       const now = Date.now();
       const yesterday = now - ONE_DAY_MS;
 
@@ -268,6 +280,25 @@ describe('DailyTasksService', () => {
         }),
       );
       expect(userMock.addBalance).toHaveBeenCalledWith(600);
+    });
+
+    it('should round the streak bonus to whole hryvnias', async () => {
+      // New streak = 2, so the multiplier is 1.10: 25 ₴ * 1.10 = 27.50 ₴, paid as 28 ₴.
+      const now = Date.now();
+      const quarter: DailyTaskDifficulty = { id: 'quarter', name: 'Quarter', baseReward: 25 };
+      const task: DailyTask = {
+        id: 'test-daily-task-1',
+        title: 'Morning Workout',
+        difficulties: [quarter],
+        createdAt: now - 2 * ONE_DAY_MS,
+        streak: 1,
+        lastCompletedAt: now - ONE_DAY_MS,
+      };
+
+      await service.completeTask(task, quarter);
+
+      expect(userMock.addBalance).toHaveBeenCalledWith(28);
+      expect(dbMock.dailyTaskCompletions.add).toHaveBeenCalledWith(expect.objectContaining({ rewardEarned: 28 }));
     });
 
     it('should reset streak to 1 if task was missed for more than 1 day', async () => {
@@ -354,21 +385,82 @@ describe('DailyTasksService', () => {
       expect(userMock.addBalance).toHaveBeenCalledTimes(1);
     });
 
-    it('should ignore completion if difficulty baseReward is invalid or not finite', async () => {
-      const now = Date.now();
+    it('should refuse a difficulty whose reward is not above zero, and tell the user to edit the task', async () => {
       const task: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
         difficulties: [easy],
-        createdAt: now - ONE_DAY_MS,
+        createdAt: Date.now() - ONE_DAY_MS,
         streak: 5,
         lastCompletedAt: null,
       };
 
-      const invalidDifficulty = { id: 'invalid', name: 'Invalid', baseReward: NaN };
-      await service.completeTask(task, invalidDifficulty);
+      for (const baseReward of [NaN, 0, -500]) {
+        await expect(service.completeTask(task, { id: 'legacy', name: 'Legacy', baseReward })).rejects.toThrow(
+          /"Legacy".*Edit the task/,
+        );
+      }
 
       expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
+      expect(dbMock.dailyTaskCompletions.add).not.toHaveBeenCalled();
+      expect(userMock.addBalance).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateTask', () => {
+    const stored: DailyTask = {
+      id: 'test-daily-task-1',
+      title: 'Morning Workout',
+      difficulties: [easy, hard],
+      createdAt: Date.now() - 10 * ONE_DAY_MS,
+      streak: 7,
+      lastCompletedAt: Date.now() - ONE_DAY_MS,
+    };
+
+    it('should save the new title and difficulties only', async () => {
+      dbMock.dailyTasks.get.mockResolvedValue(stored);
+      const harder: DailyTaskDifficulty = { ...hard, name: 'Harder', baseReward: 450 };
+
+      await service.updateTask(stored.id, 'Evening Workout', [harder]);
+
+      expect(dbMock.dailyTasks.update).toHaveBeenCalledTimes(1);
+      expect(dbMock.dailyTasks.update).toHaveBeenCalledWith(stored.id, {
+        title: 'Evening Workout',
+        difficulties: [harder],
+      });
+    });
+
+    it('should leave past completions and the balance alone', async () => {
+      dbMock.dailyTasks.get.mockResolvedValue(stored);
+
+      await service.updateTask(stored.id, 'Evening Workout', [easy]);
+
+      expect(dbMock.dailyTaskCompletions.add).not.toHaveBeenCalled();
+      expect(userMock.addBalance).not.toHaveBeenCalled();
+    });
+
+    it('should refuse a reward that is not a whole number of hryvnias', async () => {
+      dbMock.dailyTasks.get.mockResolvedValue(stored);
+
+      await expect(service.updateTask(stored.id, 'Evening Workout', [{ ...easy, baseReward: 99.5 }])).rejects.toThrow(
+        'The reward for "Easy" must be a whole number of hryvnias, at least 1.',
+      );
+      expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
+    });
+
+    it('should fail when the task no longer exists', async () => {
+      dbMock.dailyTasks.get.mockResolvedValue(undefined);
+
+      await expect(service.updateTask('gone', 'Evening Workout', [easy])).rejects.toThrow();
+      expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteTask', () => {
+    it('should delete the task and keep its completions and the balance', async () => {
+      await service.deleteTask('test-daily-task-1');
+
+      expect(dbMock.dailyTasks.delete).toHaveBeenCalledWith('test-daily-task-1');
       expect(userMock.addBalance).not.toHaveBeenCalled();
     });
   });

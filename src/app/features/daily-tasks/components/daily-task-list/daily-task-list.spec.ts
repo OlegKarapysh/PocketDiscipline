@@ -6,7 +6,7 @@ import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import type { Observable } from 'rxjs';
 import { signal } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { EMPTY, of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ClockService } from '../../../../core/services/clock.service';
 import { DailyTaskList } from './daily-task-list';
@@ -16,6 +16,7 @@ import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-dif
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { DailyTaskItem } from '../daily-task-item/daily-task-item';
 import { DailyTaskForm } from '../daily-task-form/daily-task-form';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 
 describe('DailyTaskList', () => {
   const easy: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
@@ -25,9 +26,12 @@ describe('DailyTaskList', () => {
     tasks$: Observable<DailyTask[]>;
     createTask: ReturnType<typeof vi.fn>;
     completeTask: ReturnType<typeof vi.fn>;
+    updateTask: ReturnType<typeof vi.fn>;
+    deleteTask: ReturnType<typeof vi.fn>;
     resetBrokenStreaks: ReturnType<typeof vi.fn>;
   };
   let snackBarMock: { open: ReturnType<typeof vi.fn> };
+  let confirmMock: { ask: ReturnType<typeof vi.fn> };
   const today = signal('2026-09-30');
 
   const mockTasks: DailyTask[] = [
@@ -46,9 +50,12 @@ describe('DailyTaskList', () => {
       tasks$: of(mockTasks),
       createTask: vi.fn().mockResolvedValue(undefined),
       completeTask: vi.fn().mockResolvedValue(undefined),
+      updateTask: vi.fn().mockResolvedValue(undefined),
+      deleteTask: vi.fn().mockResolvedValue(undefined),
       resetBrokenStreaks: vi.fn().mockResolvedValue(undefined),
     };
     snackBarMock = { open: vi.fn() };
+    confirmMock = { ask: vi.fn().mockReturnValue(of(true)) };
     today.set('2026-09-30');
 
     await TestBed.configureTestingModule({
@@ -57,6 +64,7 @@ describe('DailyTaskList', () => {
         { provide: DailyTasksService, useValue: dailyTasksServiceMock },
         { provide: ClockService, useValue: { today } },
         { provide: MatSnackBar, useValue: snackBarMock },
+        { provide: ConfirmService, useValue: confirmMock },
         provideRouter([{ path: 'tasks', component: DailyTaskList }]),
       ],
     }).compileComponents();
@@ -138,24 +146,28 @@ describe('DailyTaskList', () => {
     expect(component.showForm()).toBe(false);
   });
 
-  it('should toggle form visibility and create task upon onTaskCreated', async () => {
+  it('should create the task, then close the form and confirm', async () => {
     component.showForm.set(true);
     await component.onTaskCreated({ title: 'Stretch Daily', difficulties: [easy] });
 
     expect(dailyTasksServiceMock.createTask).toHaveBeenCalledWith('Stretch Daily', [easy]);
     expect(component.showForm()).toBe(false);
+    expect(snackBarMock.open).toHaveBeenCalledWith('Daily task added', 'Close', expect.any(Object));
   });
 
-  it('should handle error gracefully when createTask fails', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
-    dailyTasksServiceMock.createTask.mockRejectedValueOnce(new Error('Create error'));
+  it('should keep the form open with the draft and show the error when creating fails', async () => {
+    dailyTasksServiceMock.createTask.mockRejectedValueOnce(new Error('Disk is full'));
+    component.openForm();
+    fixture.detectChanges();
+    await fixture.whenStable();
 
-    component.showForm.set(true);
-    await component.onTaskCreated({ title: 'Stretch Daily', difficulties: [easy] });
+    await saveThroughForm('Stretch Daily');
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
-    expect(component.showForm()).toBe(false);
-    consoleSpy.mockRestore();
+    expect(dailyTasksServiceMock.createTask).toHaveBeenCalledTimes(1);
+    expect(snackBarMock.open).toHaveBeenCalledWith('Disk is full', 'Close', expect.any(Object));
+    const form = fixture.debugElement.query(By.directive(DailyTaskForm)).componentInstance as DailyTaskForm;
+    expect(form.draft().title).toBe('Stretch Daily');
+    expect(component.saving()).toBe(false);
   });
 
   it('should forward completion to service when child item emits complete event', async () => {
@@ -199,13 +211,120 @@ describe('DailyTaskList', () => {
     expect(list.showForm()).toBe(false);
   });
 
-  it('should handle error gracefully when completeTask fails', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
-    dailyTasksServiceMock.completeTask.mockRejectedValueOnce(new Error('Complete error'));
+  it('should show why a completion failed', async () => {
+    dailyTasksServiceMock.completeTask.mockRejectedValueOnce(new Error('"Easy" has no valid reward. Edit the task.'));
 
     await component.onCompleteTask(mockTasks[0], easy);
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
-    consoleSpy.mockRestore();
+    expect(snackBarMock.open).toHaveBeenCalledWith(
+      '"Easy" has no valid reward. Edit the task.',
+      'Close',
+      expect.any(Object),
+    );
   });
+
+  describe('editing a task', () => {
+    const startEditing = async (): Promise<void> => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const item = fixture.debugElement.query(By.directive(DailyTaskItem));
+      (item.query(By.css('button[aria-label="Edit daily task"]')).nativeElement as HTMLElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    it('should open the form in place of the task, pre-filled with it', async () => {
+      await startEditing();
+
+      expect(fixture.debugElement.query(By.directive(DailyTaskItem))).toBeNull();
+      const form = fixture.debugElement.query(By.directive(DailyTaskForm)).componentInstance as DailyTaskForm;
+      expect(form.draft().title).toBe('Stretch Daily');
+      expect(form.draft().difficulties).toEqual([
+        expect.objectContaining({ id: 'easy', name: 'Easy', baseReward: 100 }),
+      ]);
+    });
+
+    it('should save the changes, then close the form and confirm', async () => {
+      await startEditing();
+
+      await saveThroughForm('Stretch Twice');
+
+      expect(dailyTasksServiceMock.updateTask).toHaveBeenCalledWith('task-1', 'Stretch Twice', [easy]);
+      expect(fixture.debugElement.query(By.directive(DailyTaskForm))).toBeNull();
+      expect(snackBarMock.open).toHaveBeenCalledWith('Daily task updated', 'Close', expect.any(Object));
+    });
+
+    it('should keep the form open with the changes and show the error when saving fails', async () => {
+      dailyTasksServiceMock.updateTask.mockRejectedValueOnce(new Error('Disk is full'));
+      await startEditing();
+
+      await saveThroughForm('Stretch Twice');
+
+      expect(snackBarMock.open).toHaveBeenCalledWith('Disk is full', 'Close', expect.any(Object));
+      const form = fixture.debugElement.query(By.directive(DailyTaskForm)).componentInstance as DailyTaskForm;
+      expect(form.draft().title).toBe('Stretch Twice');
+    });
+
+    it('should show the task again when editing is cancelled', async () => {
+      await startEditing();
+
+      (fixture.debugElement.query(By.directive(DailyTaskForm)).componentInstance as DailyTaskForm).cancelForm.emit();
+      fixture.detectChanges();
+
+      expect(dailyTasksServiceMock.updateTask).not.toHaveBeenCalled();
+      expect(fixture.debugElement.query(By.directive(DailyTaskItem))).toBeTruthy();
+    });
+  });
+
+  describe('deleting a task', () => {
+    const clickDelete = async (): Promise<void> => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const item = fixture.debugElement.query(By.directive(DailyTaskItem));
+      (item.query(By.css('button[aria-label="Delete daily task"]')).nativeElement as HTMLElement).click();
+      await fixture.whenStable();
+    };
+
+    it('should ask first, naming the task, as a destructive action', async () => {
+      confirmMock.ask.mockReturnValue(EMPTY);
+
+      await clickDelete();
+
+      expect(confirmMock.ask).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('"Stretch Daily"') as unknown,
+          isDestructive: true,
+        }),
+      );
+      expect(dailyTasksServiceMock.deleteTask).not.toHaveBeenCalled();
+    });
+
+    it('should delete the task once confirmed, and confirm', async () => {
+      await clickDelete();
+
+      expect(dailyTasksServiceMock.deleteTask).toHaveBeenCalledWith('task-1');
+      expect(snackBarMock.open).toHaveBeenCalledWith('Daily task deleted', 'Close', expect.any(Object));
+    });
+
+    it('should show the error when deleting fails', async () => {
+      dailyTasksServiceMock.deleteTask.mockRejectedValueOnce(new Error('Disk is full'));
+
+      await clickDelete();
+
+      expect(snackBarMock.open).toHaveBeenCalledWith('Disk is full', 'Close', expect.any(Object));
+    });
+  });
+
+  // Types a title into the open form and presses its Save button, as the user does.
+  async function saveThroughForm(title: string): Promise<void> {
+    const input = fixture.debugElement.query(By.css('app-daily-task-form input')).nativeElement as HTMLInputElement;
+    input.value = title;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    (fixture.debugElement.query(By.css('app-daily-task-form .save')).nativeElement as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
 });

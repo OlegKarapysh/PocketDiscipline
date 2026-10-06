@@ -1,7 +1,7 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, catchError, filter } from 'rxjs';
+import { EMPTY, catchError, filter, from, switchMap, tap } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
@@ -14,6 +14,7 @@ import type { DailyTaskDraft } from '../../models/daily-task-draft.model';
 import { NEW_ITEM_QUERY_PARAM } from '../../../../shared/constants/new-item-query-param.const';
 import { ClockService } from '../../../../core/services/clock.service';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 
 @Component({
   imports: [MatButtonModule, MatIconModule, DailyTaskItem, DailyTaskForm, EmptyState],
@@ -25,6 +26,8 @@ export class DailyTaskList {
   private readonly dailyTasksService = inject(DailyTasksService);
   private readonly clock = inject(ClockService);
   private readonly snackBar = inject(SnackBarService);
+  private readonly confirmService = inject(ConfirmService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -37,6 +40,8 @@ export class DailyTaskList {
     ),
   );
   readonly showForm = signal(false);
+  readonly editingTaskId = signal<string | null>(null);
+  readonly saving = signal(false);
 
   constructor() {
     effect(() => {
@@ -72,20 +77,73 @@ export class DailyTaskList {
     this.showForm.set(false);
   }
 
+  openEdit(task: DailyTask): void {
+    this.editingTaskId.set(task.id);
+  }
+
+  closeEdit(): void {
+    this.editingTaskId.set(null);
+  }
+
   async onCompleteTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
     try {
       await this.dailyTasksService.completeTask(task, difficulty);
     } catch (e: unknown) {
-      console.error(e);
+      this.snackBar.error(e, 'Failed to complete the daily task');
     }
   }
 
-  async onTaskCreated(event: DailyTaskDraft): Promise<void> {
-    this.showForm.set(false);
+  // The form stays open with what was typed until the save succeeds, so a failed save loses nothing.
+  async onTaskCreated(draft: DailyTaskDraft): Promise<void> {
+    if (await this.persist(() => this.dailyTasksService.createTask(draft.title, draft.difficulties))) {
+      this.closeForm();
+      this.snackBar.show('Daily task added');
+    }
+  }
+
+  async onTaskEdited(task: DailyTask, draft: DailyTaskDraft): Promise<void> {
+    if (await this.persist(() => this.dailyTasksService.updateTask(task.id, draft.title, draft.difficulties))) {
+      this.closeEdit();
+      this.snackBar.show('Daily task updated');
+    }
+  }
+
+  confirmDelete(task: DailyTask): void {
+    this.confirmService
+      .ask({
+        title: 'Delete daily task',
+        message: `Are you sure you want to delete "${task.title}"? Its completion history is kept, and your balance does not change.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        isDestructive: true,
+      })
+      .pipe(
+        switchMap(() =>
+          from(this.dailyTasksService.deleteTask(task.id)).pipe(
+            tap(() => {
+              this.snackBar.show('Daily task deleted');
+            }),
+            catchError((e: unknown) => {
+              this.snackBar.error(e, 'Failed to delete the daily task');
+              return EMPTY;
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
+  }
+
+  private async persist(save: () => Promise<void>): Promise<boolean> {
+    this.saving.set(true);
     try {
-      await this.dailyTasksService.createTask(event.title, event.difficulties);
+      await save();
+      return true;
     } catch (e: unknown) {
-      console.error(e);
+      this.snackBar.error(e, 'Failed to save the daily task');
+      return false;
+    } finally {
+      this.saving.set(false);
     }
   }
 }

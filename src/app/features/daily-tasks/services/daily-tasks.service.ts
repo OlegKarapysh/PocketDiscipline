@@ -11,6 +11,7 @@ import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
 const ONE_DAY_MS = 86_400_000;
 const MAX_STREAK_BONUS_DAYS = 10;
 const STREAK_BONUS_RATE = 0.1;
+const ERROR_TASK_NOT_FOUND = 'This daily task no longer exists.';
 
 @Service()
 export class DailyTasksService {
@@ -68,6 +69,7 @@ export class DailyTasksService {
   }
 
   async createTask(title: string, difficulties: DailyTaskDifficulty[]): Promise<void> {
+    this.assertValidRewards(difficulties);
     const newTask: DailyTask = {
       id: crypto.randomUUID(),
       title,
@@ -79,9 +81,34 @@ export class DailyTasksService {
     await this.db.dailyTasks.add(newTask);
   }
 
+  // Keeps the streak and lastCompletedAt. Past completions keep the reward they earned: a changed
+  // reward applies from the next completion on.
+  async updateTask(id: string, title: string, difficulties: DailyTaskDifficulty[]): Promise<void> {
+    this.assertValidRewards(difficulties);
+    await this.db.transaction('rw', this.db.dailyTasks, async () => {
+      if (!(await this.db.dailyTasks.get(id))) {
+        throw new Error(ERROR_TASK_NOT_FOUND);
+      }
+      await this.db.dailyTasks.update(id, { title, difficulties });
+    });
+  }
+
+  // Keeps the task's completions, so its earnings history and the balance stay as they are.
+  async deleteTask(id: string): Promise<void> {
+    await this.db.dailyTasks.delete(id);
+  }
+
+  private assertValidRewards(difficulties: DailyTaskDifficulty[]): void {
+    const invalid = difficulties.find((d) => !Number.isSafeInteger(d.baseReward) || d.baseReward < 1);
+    if (invalid) {
+      throw new Error(`The reward for "${invalid.name}" must be a whole number of hryvnias, at least 1.`);
+    }
+  }
+
   async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
+    // Rows saved before rewards were validated can hold a reward of zero or less; editing the task fixes it.
     if (!Number.isFinite(difficulty.baseReward) || difficulty.baseReward <= 0) {
-      return;
+      throw new Error(`"${difficulty.name}" has no valid reward. Edit the task to set one above zero.`);
     }
 
     const now = Date.now();

@@ -1,6 +1,6 @@
 <mat-card appearance="outlined">
   <mat-card-header>
-    <mat-card-title>New daily task</mat-card-title>
+    <mat-card-title>{{ heading() }}</mat-card-title>
   </mat-card-header>
 
   <mat-card-content class="form-content">
@@ -26,7 +26,16 @@
 
           <mat-form-field appearance="outline" subscriptSizing="dynamic" class="diff-reward">
             <mat-label>Reward</mat-label>
-            <input matInput type="number" [formField]="taskForm.difficulties[i].baseReward" placeholder="Reward" />
+            <input
+              matInput
+              type="number"
+              step="1"
+              [formField]="taskForm.difficulties[i].baseReward"
+              placeholder="Reward"
+            />
+            @for (error of taskForm.difficulties[i].baseReward().errors(); track error.kind) {
+              <mat-error>{{ error.message }}</mat-error>
+            }
           </mat-form-field>
 
           <button
