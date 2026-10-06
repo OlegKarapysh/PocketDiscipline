@@ -12,7 +12,7 @@ describe('getInitialGoals', () => {
     expect(goals[2].title).toBe('do 12 pomodoro a day');
   });
 
-  it('should return goals that are active, unclaimed and carry their reward value', () => {
+  it('should return goals that are active, unclaimed and carry their reward in whole hryvnias', () => {
     const goals = getInitialGoals();
 
     expect(goals.map((g) => g.rewardValue)).toEqual([2000, 1500, 1500]);

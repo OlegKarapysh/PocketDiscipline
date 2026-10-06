@@ -96,6 +96,37 @@ describe('GoalFormDialog', () => {
     ).toContain('min');
   });
 
+  it('should accept a reward of 1 ₴', async () => {
+    await setup();
+    component.goalForm.rewardValue().value.set(1);
+
+    expect(component.goalForm.rewardValue().errors()).toEqual([]);
+  });
+
+  it('should reject a reward with a fraction of a hryvnia', async () => {
+    await setup();
+    component.goalForm.rewardValue().value.set(10.5);
+
+    expect(
+      component.goalForm
+        .rewardValue()
+        .errors()
+        .map((e) => e.message),
+    ).toEqual(['Reward must be a whole number of hryvnias']);
+  });
+
+  it('should reject a reward above 10 000 000', async () => {
+    await setup();
+    component.goalForm.rewardValue().value.set(10_000_001);
+
+    expect(
+      component.goalForm
+        .rewardValue()
+        .errors()
+        .map((e) => e.kind),
+    ).toEqual(['max']);
+  });
+
   it('should show the error message once a touched field is invalid', async () => {
     await setup();
     component.goalForm.title().value.set('ab');

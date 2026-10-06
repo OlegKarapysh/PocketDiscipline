@@ -40,8 +40,8 @@ describe('DbService', () => {
     expect(service.rewardCategories).toBeDefined();
   });
 
-  it('should declare the schema up to version 8', () => {
-    expect(service.verno).toBe(8);
+  it('should declare the schema up to version 9', () => {
+    expect(service.verno).toBe(9);
   });
 
   describe('on ready', () => {
@@ -106,7 +106,7 @@ describe('DbService', () => {
       });
     });
 
-    it('should seed the user, goals and reward categories a fresh install gets', async () => {
+    it('should seed the user, goals with rewards in whole hryvnias and reward categories a fresh install gets', async () => {
       service.tables.forEach((table) => vi.spyOn(table, 'clear').mockResolvedValue(undefined));
       const addUser = vi.spyOn(service.users, 'add').mockResolvedValue(CURRENT_USER_ID);
       const addGoals = vi.spyOn(service.goals, 'bulkAdd').mockResolvedValue('');
@@ -117,8 +117,9 @@ describe('DbService', () => {
       expect(addUser).toHaveBeenCalledWith(
         expect.objectContaining({ id: CURRENT_USER_ID, balance: DEFAULT_INITIAL_BALANCE }),
       );
-      const seededTitles = (addGoals.mock.calls[0][0] as Goal[]).map((goal) => goal.title);
-      expect(seededTitles).toEqual(getInitialGoals().map((goal) => goal.title));
+      const seededGoals = addGoals.mock.calls[0][0] as Goal[];
+      expect(seededGoals.map((goal) => goal.title)).toEqual(getInitialGoals().map((goal) => goal.title));
+      expect(seededGoals.map((goal) => goal.rewardValue)).toEqual([2000, 1500, 1500]);
       expect(addCategories).toHaveBeenCalledWith([...INITIAL_REWARD_CATEGORIES]);
     });
 

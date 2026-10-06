@@ -20,7 +20,7 @@
 
   <mat-form-field appearance="outline" class="full-width">
     <mat-label>Cost</mat-label>
-    <input matInput type="number" class="pd-num" [formField]="rewardForm.cost" placeholder="0.00" step="any" />
+    <input matInput type="number" class="pd-num" [formField]="rewardForm.cost" placeholder="0" step="1" />
     <span matTextSuffix>₴</span>
     @for (error of rewardForm.cost().errors(); track error.kind) {
       <mat-error>{{ error.message }}</mat-error>

@@ -15,6 +15,7 @@ import type { RewardCategory } from '../core/models/reward-category.model';
 import { INITIAL_REWARD_CATEGORIES } from '../core/constants/initial-reward-categories.const';
 import { getInitialGoals } from '../core/constants/initial-goals.const';
 import { LegacyPomodoroMigrationService } from './legacy-pomodoro-migration.service';
+import { MoneyRoundingMigrationService } from './money-rounding-migration.service';
 
 /**
  * The persistence composition root.
@@ -32,6 +33,7 @@ import { LegacyPomodoroMigrationService } from './legacy-pomodoro-migration.serv
 @Service()
 export class DbService extends Dexie {
   private legacyPomodoroMigration = inject(LegacyPomodoroMigrationService);
+  private moneyRoundingMigration = inject(MoneyRoundingMigrationService);
 
   users!: Table<User, number>;
   tasks!: Table<DisciplineItem, string>;
@@ -95,6 +97,9 @@ export class DbService extends Dexie {
           await tx.table<RewardCategory, string>('rewardCategories').bulkAdd([...INITIAL_REWARD_CATEGORIES]);
         }
       });
+
+    // Money is a whole number of hryvnias from here on. No store changes.
+    this.version(9).upgrade((tx) => this.moneyRoundingMigration.migrate(tx));
 
     this.on('populate', () => this.seedDefaults());
 

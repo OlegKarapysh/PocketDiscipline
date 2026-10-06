@@ -189,6 +189,31 @@ describe('WithdrawalService', () => {
     ).rejects.toThrow('Amount must be greater than zero');
   });
 
+  it('should reject an amount that is not a whole number of hryvnias', async () => {
+    await expect(
+      service.withdraw({
+        amount: 12.5,
+        title: 'Coffee',
+        categoryId: 'cat-food',
+      }),
+    ).rejects.toThrow('Amount must be a whole number of hryvnias');
+  });
+
+  it('should spend a 100 ₴ balance down to exactly zero: 99 ₴, then 1 ₴', async () => {
+    let stored: User = { ...mockUser, balance: 100 };
+    // The service awaits these, so plain values stand in for the resolved promises.
+    dbMock.users.get.mockImplementation(() => ({ ...stored }));
+    dbMock.users.update.mockImplementation((_id: number, changes: Partial<User>) => {
+      stored = { ...stored, ...changes };
+      return 1;
+    });
+
+    await service.withdraw({ amount: 99, title: 'Dinner', categoryId: 'cat-food' });
+    await service.withdraw({ amount: 1, title: 'Gum', categoryId: 'cat-food' });
+
+    expect(stored.balance).toBe(0);
+  });
+
   it('should reject empty title or whitespace-only title', async () => {
     await expect(
       service.withdraw({

@@ -25,6 +25,9 @@ export class WithdrawalService {
     if (dto.amount <= 0 || !Number.isFinite(dto.amount)) {
       throw new Error('Amount must be greater than zero');
     }
+    if (!Number.isSafeInteger(dto.amount)) {
+      throw new Error('Amount must be a whole number of hryvnias');
+    }
 
     const trimmedTitle = dto.title.trim();
     if (!trimmedTitle) {

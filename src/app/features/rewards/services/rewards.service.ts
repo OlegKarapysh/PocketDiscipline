@@ -44,6 +44,9 @@ export class RewardsService {
     if (dto.cost <= 0 || !Number.isFinite(dto.cost)) {
       throw new Error('Reward cost must be greater than zero');
     }
+    if (!Number.isSafeInteger(dto.cost)) {
+      throw new Error('Reward cost must be a whole number of hryvnias');
+    }
 
     const trimmedTitle = dto.title.trim();
     if (!trimmedTitle) {
@@ -89,6 +92,9 @@ export class RewardsService {
       if (dto.cost !== undefined) {
         if (dto.cost <= 0 || !Number.isFinite(dto.cost)) {
           throw new Error('Reward cost must be greater than zero');
+        }
+        if (!Number.isSafeInteger(dto.cost)) {
+          throw new Error('Reward cost must be a whole number of hryvnias');
         }
         updates.cost = dto.cost;
       }

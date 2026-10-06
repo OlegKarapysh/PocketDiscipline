@@ -192,6 +192,40 @@ describe('QuickSpendDialog', () => {
     expect(component.isSubmitting()).toBe(false);
   });
 
+  it('should accept spending exactly the whole balance', () => {
+    // 100 ₴ less 99 ₴ leaves exactly 1 ₴, and all of it can be spent.
+    mockUserService.user$ = of({ id: 1, name: 'Current', balance: 100 - 99, createdAt: 0, updatedAt: 0 });
+    fixture = TestBed.createComponent(QuickSpendDialog);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.spendForm.amount().value.set(1);
+
+    expect(component.spendForm.amount().errors()).toEqual([]);
+  });
+
+  it('should refuse an amount one hryvnia over the balance', () => {
+    component.spendForm.amount().value.set(501);
+
+    expect(
+      component.spendForm
+        .amount()
+        .errors()
+        .some((e) => e.kind === 'max'),
+    ).toBe(true);
+  });
+
+  it('should refuse a fraction of a hryvnia', () => {
+    component.spendForm.amount().value.set(1.5);
+
+    expect(
+      component.spendForm
+        .amount()
+        .errors()
+        .map((e) => e.message),
+    ).toEqual(['Amount must be a whole number of hryvnias']);
+  });
+
   it('should close dialog without submitting when cancel button is clicked in DOM', () => {
     const cancelBtn = fixture.debugElement.query(By.css('mat-dialog-actions button:first-child'))
       .nativeElement as HTMLButtonElement;

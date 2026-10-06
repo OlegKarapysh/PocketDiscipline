@@ -23,7 +23,9 @@ export class LegacyPomodoroMigrationService {
         await oldDb.open();
         if (oldDb.tables.some((t) => t.name === 'sessions')) {
           const rawSessions = await oldDb.table('sessions').toArray();
-          const validSessions = rawSessions.filter((s): s is PomodoroSession => this.isValidSession(s));
+          const validSessions = rawSessions
+            .filter((s): s is PomodoroSession => this.isValidSession(s))
+            .map((s) => this.withRoundedReward(s));
           if (validSessions.length > 0) {
             await target.bulkPut(validSessions);
           }
@@ -36,6 +38,14 @@ export class LegacyPomodoroMigrationService {
     } catch (error) {
       console.error('Failed to migrate legacy Pomodoro database:', error);
     }
+  }
+
+  // Money is a whole number of hryvnias. The legacy database is read on `ready`, after the v9 upgrade
+  // has rounded the main database, so its rows are rounded here on the way in.
+  private withRoundedReward(session: PomodoroSession): PomodoroSession {
+    return typeof session.rewardEarned === 'number'
+      ? { ...session, rewardEarned: Math.round(session.rewardEarned) || 0 }
+      : session;
   }
 
   private isValidSession(item: unknown): item is PomodoroSession {

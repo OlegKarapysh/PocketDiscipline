@@ -61,6 +61,20 @@ describe('LegacyPomodoroMigrationService', () => {
     expect(Dexie.delete).toHaveBeenCalledWith('PomodoroDatabase');
   });
 
+  it('should keep a whole legacy reward and round a fractional one to whole hryvnias', async () => {
+    stageLegacyDb([
+      { ...validSession, id: 'whole', rewardEarned: 12 },
+      { ...validSession, id: 'fraction', rewardEarned: 12.5 },
+    ]);
+
+    await service.migrate(asTarget());
+
+    expect(target.bulkPut).toHaveBeenCalledWith([
+      { ...validSession, id: 'whole', rewardEarned: 12 },
+      { ...validSession, id: 'fraction', rewardEarned: 13 },
+    ]);
+  });
+
   it('should filter out rows that are not valid PomodoroSessions', async () => {
     stageLegacyDb([
       validSession,

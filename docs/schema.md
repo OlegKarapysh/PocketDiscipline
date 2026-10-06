@@ -18,6 +18,33 @@ folders, so this one file is allowed to know every slice. The row interfaces bel
 **The database name and every existing `version(N).stores({...})` block are load-bearing.** Changing
 either discards existing users' IndexedDB data. Add a new version; never edit an old one.
 
+The current version is **9**. IndexedDB itself reports ten times that, 90: Dexie multiplies its
+version numbers by 10.
+
+### Money
+
+Every money field is an **integer number of whole hryvnias**: there are no kopiykas anywhere in the
+app, so sums and differences are exact. Up to version 8 nothing stopped a fraction from being stored
+(a reward cost of 12.50 ₴, a balance that drifted to 0.09999999999999432 ₴). The version 9 upgrade
+(`database/money-rounding-migration.service.ts`) rounds every existing money value with `Math.round`,
+including each `dailyTasks.difficulties[].baseReward`, and leaves a value that is not a number as it
+is. The legacy `PomodoroDatabase` import, which runs on `ready` after the upgrade, rounds its rewards
+the same way as it copies them.
+
+What is stored is what is shown: `MONEY_FORMAT` (`shared/constants/money-format.const.ts`), which
+`<app-amount>` and the `money` pipe use, shows no decimals. Every calculation that can produce a
+fraction (the streak bonuses, the daily score bonus, the pomodoro tiers, averages and chart axes)
+rounds to whole hryvnias where it is computed. Money inputs follow one rule, `moneyAmount()` in
+`shared/validators/money-amount.ts`: required, a whole number, at least 1 ₴; a form adds its own
+maximum (the goal reward's 10 000 000, quick spend's balance). `WithdrawalService`, `RewardsService`,
+`GoalService` and `DailyTasksService` also reject a non-integer amount, so a caller outside the forms
+cannot store one.
+
+The money fields are `users.balance`, `goals.rewardValue`, `tasks.rewardValue`,
+`dailyTasks.difficulties[].baseReward`, `dailyTaskCompletions.rewardEarned`,
+`dailyScores.rewardEarned`, `pomodoroSessions.rewardEarned`, `withdrawals.amount` and `rewards.cost`.
+A new money field is stored in whole hryvnias too.
+
 ### Tables
 
 #### `users`
@@ -29,7 +56,7 @@ either discards existing users' IndexedDB data. Add a new version; never edit an
 export interface User {
   id: number; // Always 1 (single user app)
   name: string;
-  balance: number; // The current accumulated reward balance
+  balance: number; // Whole hryvnias. The current accumulated reward balance
   createdAt: number; // timestamp
   updatedAt: number; // timestamp
 }
@@ -45,7 +72,7 @@ export interface User {
 export interface Goal {
   id: string; // UUID
   title: string; // Display name (unique among active)
-  rewardValue: number; // Fixed reward added to money balance upon completion
+  rewardValue: number; // Whole hryvnias. Fixed reward added to money balance upon completion
   status: 'ACTIVE' | 'COMPLETED';
   completedAt: number | null; // Timestamp of completion
   createdAt: number; // Timestamp of creation
@@ -61,7 +88,7 @@ export interface Goal {
 export interface DailyTaskDifficulty {
   id: string;
   name: string;
-  baseReward: number;
+  baseReward: number; // Whole hryvnias, before the streak bonus
 }
 
 export interface DailyTask {
@@ -86,7 +113,7 @@ export interface DailyTaskCompletion {
   taskId: string; // Reference to DailyTask id
   date: string; // Format: YYYY-MM-DD
   difficultyId: string; // Reference to DailyTaskDifficulty id
-  rewardEarned: number; // Reward earned for this completion
+  rewardEarned: number; // Whole hryvnias. Reward earned for this completion
   completedAt: number; // Timestamp of completion
 }
 ```
@@ -100,7 +127,7 @@ export interface DailyTaskCompletion {
 export interface DailyScore {
   date: string; // Format: YYYY-MM-DD
   score: number; // Rating 1-10
-  rewardEarned: number;
+  rewardEarned: number; // Whole hryvnias
   streakAtThisDay: number;
   createdAt: number; // Timestamp
 }
@@ -123,7 +150,7 @@ export interface PomodoroSession {
   startTime: number; // timestamp
   endTime?: number; // timestamp
   status: PomodoroSessionStatus;
-  rewardEarned?: number;
+  rewardEarned?: number; // Whole hryvnias; absent unless completed
 }
 ```
 
@@ -137,7 +164,7 @@ export interface DisciplineItem {
   id: string;
   title: string;
   type: 'HABIT' | 'ONEOFF';
-  rewardValue: number;
+  rewardValue: number; // Whole hryvnias
   isCompleted: boolean;
   lastCompletedAt: number | null;
   createdAt: number;
@@ -153,7 +180,7 @@ export interface DisciplineItem {
 ```typescript
 export interface WithdrawalRecord {
   id: string; // UUID
-  amount: number; // Amount deducted in ₴ (greater than 0)
+  amount: number; // Whole hryvnias deducted (1 or more)
   title: string; // Name/title of withdrawal or snapshot of reward title
   categoryId: string; // Foreign key to RewardCategory id
   notes?: string; // Optional user notes/description
@@ -176,7 +203,7 @@ export type RewardStatus = 'active' | 'claimed' | 'archived';
 export interface RewardItem {
   id: string; // UUID
   title: string; // Reward title/name
-  cost: number; // Cost in ₴ (greater than 0)
+  cost: number; // Whole hryvnias (1 or more)
   categoryId: string; // Foreign key to RewardCategory id
   type: RewardType; // 'repeatable' or 'one-time'
   status: RewardStatus; // 'active' | 'claimed' | 'archived'

@@ -65,6 +65,14 @@ describe('SpendingTrendChart', () => {
     expect(Math.min(...gaps)).toBeGreaterThanOrEqual(39);
   });
 
+  it('should label the y-axis in whole hryvnias', () => {
+    // 13 ₴ with 15% headroom is 14.95 ₴: the axis tops out at 15 ₴ and halves to 8 ₴, not 7,5 ₴.
+    fixture.componentRef.setInput('data', [{ dateOrMonth: '2026-09-01', label: '1 Sep', amount: 13 }]);
+    fixture.detectChanges();
+
+    expect(component.gridLines().map((line) => line.label)).toEqual(['15 ₴', '8 ₴', '0 ₴']);
+  });
+
   it('should leave room for the widest y-axis amount before the first bar', () => {
     fixture.componentRef.setInput('data', [{ dateOrMonth: '2026-09-01', label: '1 Sep', amount: 141_976 }]);
     fixture.detectChanges();

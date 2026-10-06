@@ -139,8 +139,7 @@ export class DashboardEarningsService {
       }
 
       for (const session of completedSessionsInRange) {
-        const sessionTimestamp = session.endTime ?? session.startTime;
-        const dateStr = this.formatLocalDate(new Date(sessionTimestamp));
+        const dateStr = this.formatLocalDate(new Date(this.creditedAt(session)));
         const record = dateMap.get(dateStr);
         if (record && session.rewardEarned) {
           record.pomodoroEarned += session.rewardEarned;
@@ -234,12 +233,13 @@ export class DashboardEarningsService {
         return [];
       }
 
-      const sessions = await this.db.pomodoroSessions
-        .where('startTime')
-        .between(startTimestamp, endTimestamp, true, true)
-        .toArray();
+      // `endTime` is not indexed, so the range is applied in memory to the completed sessions.
+      const sessions = await this.db.pomodoroSessions.where('status').equals(PomodoroSessionStatus.COMPLETED).toArray();
 
-      return sessions.filter((session) => session.status === PomodoroSessionStatus.COMPLETED);
+      return sessions.filter((session) => {
+        const creditedAt = this.creditedAt(session);
+        return creditedAt >= startTimestamp && creditedAt <= endTimestamp;
+      });
     } catch (error) {
       console.error('Failed to get completed pomodoro sessions in range:', error);
       return [];
@@ -262,6 +262,12 @@ export class DashboardEarningsService {
       averageEarnedPerDay: 0,
       isCurrentMonth: false,
     };
+  }
+
+  // A session's reward is credited when it completes. `endTime` is optional on the row, so a session
+  // without one falls back to when it started.
+  private creditedAt(session: PomodoroSession): number {
+    return session.endTime ?? session.startTime;
   }
 
   private formatLocalDate(date: Date): string {

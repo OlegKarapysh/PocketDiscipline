@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormField, disabled, form, maxLength, min, required, validate, requiredError } from '@angular/forms/signals';
+import { FormField, disabled, form, maxLength, required, validate, requiredError } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -13,6 +13,7 @@ import { ERROR_TYPE_LOCKED, RewardsService } from '../../services/rewards.servic
 import { CategoryService } from '../../services/category.service';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { TITLE_MAX_LENGTH } from '../../../../shared/constants/text-length.const';
+import { moneyAmount } from '../../../../shared/validators/money-amount';
 
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import type { RewardType } from '../../../../core/models/reward-type.type';
@@ -71,8 +72,7 @@ export class RewardFormDialog {
     disabled(path.type, { when: () => (this.isTypeLocked ? ERROR_TYPE_LOCKED : false) });
     validate(path.title, ({ value }) => (value().trim() ? null : requiredError({ message: 'Title is required' })));
     maxLength(path.title, TITLE_MAX_LENGTH, { message: 'Title is too long' });
-    required(path.cost, { message: 'Cost is required' });
-    min(path.cost, 0.01, { message: 'Cost must be greater than zero' });
+    moneyAmount(path.cost, 'Cost');
     required(path.categoryId, { message: 'Category is required' });
   });
 

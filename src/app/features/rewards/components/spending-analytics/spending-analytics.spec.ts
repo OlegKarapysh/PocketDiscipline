@@ -92,6 +92,16 @@ describe('SpendingAnalytics', () => {
     expect(component.averagePerWithdrawal()).toBe(250);
   });
 
+  it('should round the average spend to whole hryvnias', () => {
+    // 10 ₴ over four withdrawals is 2.50 ₴, shown as 3 ₴.
+    mockAnalyticsService.getAnalytics.mockReturnValue(of({ ...mockSummaryWithData, totalSpent: 10 }));
+    fixture = TestBed.createComponent(SpendingAnalytics);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.averagePerWithdrawal()).toBe(3);
+  });
+
   it('should render metric values in template', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;

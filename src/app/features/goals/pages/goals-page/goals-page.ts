@@ -12,6 +12,7 @@ import type { GoalFormDialogData } from '../../models/goal-form-dialog-data.mode
 import type { GoalFormResult } from '../../models/goal-form-result.model';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { CelebrationService } from '../../../../shared/services/celebration.service';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 import { catchError, EMPTY, filter, from, switchMap, tap } from 'rxjs';
 
 @Component({
@@ -25,6 +26,7 @@ export class GoalsPage {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(SnackBarService);
   private readonly celebration = inject(CelebrationService);
+  private readonly confirmService = inject(ConfirmService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly activeGoals = toSignal(
@@ -76,13 +78,33 @@ export class GoalsPage {
     }
   }
 
-  async deleteGoal(id: string): Promise<void> {
-    try {
-      await this.goalService.deleteGoal(id);
-      this.snackBar.show('Goal deleted');
-    } catch (e: unknown) {
-      this.snackBar.error(e);
-    }
+  confirmDeleteGoal(id: string): void {
+    const goal = this.activeGoals().find((g) => g.id === id);
+    if (!goal) return;
+
+    this.confirmService
+      .ask({
+        title: 'Delete goal',
+        message: `Are you sure you want to delete "${goal.title}"? Your balance does not change.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        isDestructive: true,
+      })
+      .pipe(
+        switchMap(() =>
+          from(this.goalService.deleteGoal(id)).pipe(
+            tap(() => {
+              this.snackBar.show('Goal deleted');
+            }),
+            catchError((e: unknown) => {
+              this.snackBar.error(e);
+              return EMPTY;
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 
   openAddDialog(): void {

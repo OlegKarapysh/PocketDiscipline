@@ -9,6 +9,7 @@ import { from } from 'rxjs';
 
 const ERROR_DUPLICATE_GOAL_TITLE = 'A goal with this title already exists.';
 const ERROR_UNDO_DUPLICATE_GOAL_TITLE = 'Cannot undo: an active goal already has this title.';
+const ERROR_INVALID_GOAL_REWARD = 'Goal reward must be a whole number of hryvnias, at least 1.';
 
 @Service()
 export class GoalService {
@@ -16,7 +17,14 @@ export class GoalService {
   private userService = inject(UserService);
 
   getActiveGoals(): Observable<Goal[]> {
-    return from(liveQuery(() => this.db.goals.where('status').equals(GOAL_STATUS.ACTIVE).toArray()));
+    return from(
+      liveQuery(async () => {
+        const goals = await this.db.goals.where('status').equals(GOAL_STATUS.ACTIVE).toArray();
+        // Newest first. `createdAt` is not indexed, and goals created in the same millisecond tie,
+        // so the title (unique among active goals) keeps the order stable.
+        return goals.sort((a, b) => b.createdAt - a.createdAt || a.title.localeCompare(b.title));
+      }),
+    );
   }
 
   getCompletedGoals(): Observable<Goal[]> {
@@ -57,6 +65,7 @@ export class GoalService {
   }
 
   async addGoal(rawTitle: string, rewardValue: number): Promise<void> {
+    this.assertValidReward(rewardValue);
     const title = rawTitle.trim();
     if (await this.isTitleActive(title)) {
       throw new Error(ERROR_DUPLICATE_GOAL_TITLE);
@@ -74,6 +83,7 @@ export class GoalService {
   }
 
   async updateGoal(id: string, rawTitle: string, rewardValue: number): Promise<void> {
+    this.assertValidReward(rewardValue);
     const title = rawTitle.trim();
     const goal = await this.db.goals.get(id);
     if (goal?.status !== GOAL_STATUS.ACTIVE) return;
@@ -87,6 +97,12 @@ export class GoalService {
 
   async deleteGoal(id: string): Promise<void> {
     await this.db.goals.delete(id);
+  }
+
+  private assertValidReward(rewardValue: number): void {
+    if (!Number.isSafeInteger(rewardValue) || rewardValue < 1) {
+      throw new Error(ERROR_INVALID_GOAL_REWARD);
+    }
   }
 
   private async isTitleActive(title: string, exceptId?: string): Promise<boolean> {

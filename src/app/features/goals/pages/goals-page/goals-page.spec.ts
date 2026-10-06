@@ -1,12 +1,14 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { of, throwError } from 'rxjs';
+import { EMPTY, of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { By } from '@angular/platform-browser';
 import { GoalsPage } from './goals-page';
 import { GoalService } from '../../services/goal.service';
 import { CelebrationService } from '../../../../shared/services/celebration.service';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 import type { Goal } from '../../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../../core/models/goal.model';
 
@@ -25,6 +27,7 @@ describe('GoalsPage', () => {
   let dialogMock: { open: ReturnType<typeof vi.fn> };
   let snackBarMock: { open: ReturnType<typeof vi.fn> };
   let celebrationMock: { show: ReturnType<typeof vi.fn> };
+  let confirmMock: { ask: ReturnType<typeof vi.fn> };
 
   const mockGoal: Goal = {
     id: 'g-1',
@@ -57,6 +60,7 @@ describe('GoalsPage', () => {
     celebrationMock = {
       show: vi.fn().mockReturnValue(of('dismissed')),
     };
+    confirmMock = { ask: vi.fn().mockReturnValue(of(true)) };
 
     await TestBed.configureTestingModule({
       imports: [GoalsPage],
@@ -65,6 +69,7 @@ describe('GoalsPage', () => {
         { provide: MatDialog, useValue: dialogMock },
         { provide: MatSnackBar, useValue: snackBarMock },
         { provide: CelebrationService, useValue: celebrationMock },
+        { provide: ConfirmService, useValue: confirmMock },
       ],
     })
       .overrideComponent(GoalsPage, {
@@ -74,7 +79,7 @@ describe('GoalsPage', () => {
             { provide: MatDialog, useValue: dialogMock },
             { provide: MatSnackBar, useValue: snackBarMock },
             { provide: CelebrationService, useValue: celebrationMock },
-            { provide: CelebrationService, useValue: celebrationMock },
+            { provide: ConfirmService, useValue: confirmMock },
           ],
         },
       })
@@ -154,8 +159,22 @@ describe('GoalsPage', () => {
     expect(snackBarMock.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 
-  it('should delete goal and display snackbar', async () => {
-    await component.deleteGoal('g-1');
+  it('should ask before deleting a goal, naming it, as a destructive action', async () => {
+    confirmMock.ask.mockReturnValue(EMPTY);
+
+    await clickDelete();
+
+    expect(confirmMock.ask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('"do 50 push-ups on fists"') as unknown,
+        isDestructive: true,
+      }),
+    );
+    expect(goalServiceMock.deleteGoal).not.toHaveBeenCalled();
+  });
+
+  it('should delete goal once confirmed and display snackbar', async () => {
+    await clickDelete();
 
     expect(goalServiceMock.deleteGoal).toHaveBeenCalledWith('g-1');
     expect(snackBarMock.open).toHaveBeenCalledWith('Goal deleted', 'Close', expect.any(Object));
@@ -289,7 +308,7 @@ describe('GoalsPage', () => {
   it('should show error snackbar when deleteGoal fails with Error', async () => {
     goalServiceMock.deleteGoal.mockRejectedValue(new Error('Delete failed'));
 
-    await component.deleteGoal('g-1');
+    await clickDelete();
 
     expect(snackBarMock.open).toHaveBeenCalledWith('Delete failed', 'Close', expect.any(Object));
   });
@@ -297,7 +316,7 @@ describe('GoalsPage', () => {
   it('should show unknown error snackbar when deleteGoal fails with non-Error', async () => {
     goalServiceMock.deleteGoal.mockRejectedValue('network error');
 
-    await component.deleteGoal('g-1');
+    await clickDelete();
 
     expect(snackBarMock.open).toHaveBeenCalledWith('Unknown error occurred', 'Close', expect.any(Object));
   });
@@ -323,4 +342,12 @@ describe('GoalsPage', () => {
 
     expect(snackBarMock.open).toHaveBeenCalledWith('Dialog crashed', 'Close', expect.any(Object));
   });
+
+  // Presses the active goal's Delete button, as the user does.
+  async function clickDelete(): Promise<void> {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    (fixture.debugElement.query(By.css('button[aria-label="Delete"]')).nativeElement as HTMLButtonElement).click();
+    await fixture.whenStable();
+  }
 });
