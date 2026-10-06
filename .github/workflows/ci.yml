@@ -1,10 +1,16 @@
 name: CI
 
+# One workflow so a deploy can only follow a green build of the same commit: the deploy job needs the
+# test job, and it ships the very build the test job produced and budget-checked.
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -29,9 +35,53 @@ jobs:
         run: npm run lint
 
       - name: Design-system baseline may only shrink
+        # A manual run has no base commit to compare against.
+        if: github.event_name != 'workflow_dispatch'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: node scripts/check-ui.mjs --baseline-against="$BASE_SHA"
 
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Run Unit Tests
         run: npm run test -- --watch=false
+
+      # Production build: fails on the bundle budgets in angular.json.
+      - name: Build
+        run: npm run build -- --base-href /PocketDiscipline/
+
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist/pocket-discipline/browser'
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    # One deployment at a time; a queued one waits rather than cancelling a production deploy in progress.
+    concurrency:
+      group: 'pages'
+      cancel-in-progress: false
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
