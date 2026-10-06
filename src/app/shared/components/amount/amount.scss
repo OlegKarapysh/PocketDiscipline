@@ -11,7 +11,7 @@
 
 :host(.size-sm) {
   font-size: t.numeric-size(sm);
-  letter-spacing: 0.5px;
+  letter-spacing: 0;
 }
 
 :host(.size-md) {
@@ -21,13 +21,13 @@
 :host(.size-lg) {
   gap: t.space(2);
   font-size: t.numeric-size(lg);
-  letter-spacing: calc(-0.03em + 0.5px);
+  letter-spacing: -0.03em;
 }
 
 :host(.size-xl) {
   gap: t.space(2);
   font-size: t.numeric-size(xl);
-  letter-spacing: calc(-0.03em + 0.5px);
+  letter-spacing: -0.03em;
 
   @include t.up(expanded) {
     font-size: t.numeric-size(xxl);
