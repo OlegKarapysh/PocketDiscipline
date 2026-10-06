@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { readBalance, readStores } from './indexed-db';
 
 test.describe('Goals Flow', () => {
   test('should navigate to goals page and show predefined goals', async ({ page }) => {
@@ -30,5 +31,28 @@ test.describe('Goals Flow', () => {
     await expect(page.getByText('Playwright Test Goal')).toBeVisible();
     const card = page.locator('app-goal-item', { hasText: 'Playwright Test Goal' });
     await expect(card.locator('app-amount')).toHaveText(/\+500\s*₴/);
+  });
+
+  test('should delete a goal only once the delete is confirmed, and leave the balance alone', async ({ page }) => {
+    await page.goto('/goals');
+    const card = page.locator('app-goal-item', { hasText: 'do 100 squats' });
+    const confirmDialog = page.locator('app-confirm-dialog');
+    await expect(card).toBeVisible();
+    const balance = await readBalance(page);
+
+    await card.getByRole('button', { name: 'Delete' }).click();
+    await confirmDialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(confirmDialog).toBeHidden();
+    await expect(card).toBeVisible();
+
+    await card.getByRole('button', { name: 'Delete' }).click();
+    await expect(confirmDialog).toContainText('do 100 squats');
+    await confirmDialog.getByRole('button', { name: 'Delete' }).click();
+
+    await expect(card).toBeHidden();
+    await expect
+      .poll(async () => (await readStores(page, ['goals']))['goals'].map((goal) => goal['title']))
+      .not.toContain('do 100 squats');
+    expect(await readBalance(page)).toBe(balance);
   });
 });

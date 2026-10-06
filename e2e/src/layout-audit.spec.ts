@@ -11,12 +11,6 @@ import {
   TITLE_MAX_LENGTH,
 } from '../../src/app/shared/constants/text-length.const';
 
-declare const process: {
-  env: {
-    LAYOUT_AUDIT_SCREENSHOTS?: string;
-  };
-};
-
 // The layout audit: every screen, at every supported width, filled with the worst content the forms
 // allow, must keep all of its text inside its box and must not scroll sideways.
 // docs/design_system.md, "Responsive layout", is the rulebook this enforces.
@@ -72,6 +66,25 @@ const SCREENS: Screen[] = [
       await page.getByRole('button', { name: 'Add difficulty' }).click();
     },
   },
+  {
+    name: 'tasks: edit daily task form',
+    path: '/tasks',
+    ready: 'app-daily-task-item',
+    open: async (page) => {
+      await page.getByRole('button', { name: 'Edit daily task' }).first().click();
+      await expect(page.locator('app-daily-task-form')).toBeVisible();
+    },
+  },
+  {
+    name: 'tasks: delete daily task confirmation',
+    path: '/tasks',
+    ready: 'app-daily-task-item',
+    root: OVERLAY,
+    open: async (page) => {
+      await page.getByRole('button', { name: 'Delete daily task' }).first().click();
+      await expect(page.locator('app-confirm-dialog')).toBeVisible();
+    },
+  },
   { name: 'goals', path: '/goals', ready: 'app-goal-item' },
   {
     name: 'goals: edit dialog',
@@ -91,6 +104,16 @@ const SCREENS: Screen[] = [
     open: async (page) => {
       await page.getByRole('button', { name: 'Complete' }).first().click();
       await expect(page.locator('app-celebration-dialog')).toBeVisible();
+    },
+  },
+  {
+    name: 'goals: delete confirmation',
+    path: '/goals',
+    ready: 'app-goal-item',
+    root: OVERLAY,
+    open: async (page) => {
+      await page.getByRole('button', { name: 'Delete' }).first().click();
+      await expect(page.locator('app-confirm-dialog')).toBeVisible();
     },
   },
   { name: 'rewards: store', path: '/rewards', ready: 'app-reward-card' },
@@ -115,6 +138,17 @@ const SCREENS: Screen[] = [
       await expect(page.locator('app-reward-form-dialog')).toBeVisible();
       await page.getByRole('button', { name: 'Save changes' }).click();
       await expect(page.locator('simple-snack-bar')).toBeVisible();
+    },
+  },
+  {
+    name: 'rewards: delete confirmation',
+    path: '/rewards',
+    ready: 'app-reward-card',
+    root: OVERLAY,
+    open: async (page) => {
+      await page.locator('app-reward-card').first().getByRole('button', { name: 'Reward options' }).click();
+      await page.getByRole('menuitem', { name: 'Delete' }).click();
+      await expect(page.locator('app-confirm-dialog')).toBeVisible();
     },
   },
   {
@@ -534,7 +568,7 @@ async function audit(page: Page, screen: Screen, width: number, testInfo: TestIn
   await screen.open?.(page);
   await settle(page);
 
-  if (process.env.LAYOUT_AUDIT_SCREENSHOTS) {
+  if (process.env['LAYOUT_AUDIT_SCREENSHOTS']) {
     const file = `${screen.name.replace(/[^a-z0-9]+/gi, '-')}.png`;
     await page.screenshot({ path: join(SCREENSHOT_DIR, String(width), file), fullPage: true });
   }
@@ -563,7 +597,7 @@ test.describe('Layout audit', () => {
       const touch = width < RAIL_FROM;
       test.use({
         // The page scrolls inside the shell, so a screenshot shows only the viewport: make it tall.
-        viewport: { width, height: process.env.LAYOUT_AUDIT_SCREENSHOTS ? 2400 : 900 },
+        viewport: { width, height: process.env['LAYOUT_AUDIT_SCREENSHOTS'] ? 2400 : 900 },
         isMobile: touch,
         hasTouch: touch,
         contextOptions: { reducedMotion: 'reduce' },
