@@ -17,7 +17,7 @@
 }
 
 // Four tiles in two pairs, so they sit one, two or four to a row and never three. A tile keeps a
-// seven-digit amount on one line, which takes 212px with the tile's padding.
+// seven-digit amount on one line, which takes 176px with the tile's padding.
 .metrics-grid,
 .metric-pair {
   display: grid;
@@ -29,11 +29,11 @@
 }
 
 .metrics-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 2 * 212px + t.space(4)), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 2 * 176px + t.space(4)), 1fr));
 }
 
 .metric-pair {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 212px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 176px), 1fr));
 }
 
 .metric-count {

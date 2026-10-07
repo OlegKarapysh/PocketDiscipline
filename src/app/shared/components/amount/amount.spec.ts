@@ -27,10 +27,16 @@ describe('Amount', () => {
     fixture = TestBed.createComponent(Amount);
   });
 
-  it('should group thousands and use a decimal comma, the uk-UA format', async () => {
-    const { value } = await render({ value: 1234.567 });
+  it('should group thousands the uk-UA way and show no decimals', async () => {
+    const { value } = await render({ value: 1234.6 });
 
-    expect(value).toMatch(/^1\s234,57$/);
+    expect(value).toMatch(/^1\s235$/);
+  });
+
+  it('should show the seven-digit worst case on one grouped line', async () => {
+    const { value } = await render({ value: 9_999_999 });
+
+    expect(value).toMatch(/^9\s999\s999$/);
   });
 
   it('should render the hryvnia unit by default', async () => {

@@ -1,9 +1,11 @@
 import type { Goal } from '../models/goal.model';
 import { GOAL_STATUS } from '../models/goal.model';
 
-// A function, not a frozen array: each call mints fresh ids and timestamps, and it is invoked both
-// from the Dexie `populate` hook and from the v2 upgrade hook.
+// A function, not a frozen array: each call mints fresh ids and timestamps, and it is invoked from the
+// Dexie `populate` hook, from a purge and from the v2 upgrade hook. Each goal is a millisecond older
+// than the one before it, so a newest-first list shows them in the order written here.
 export function getInitialGoals(): Goal[] {
+  const now = Date.now();
   return [
     {
       id: crypto.randomUUID(),
@@ -11,7 +13,7 @@ export function getInitialGoals(): Goal[] {
       rewardValue: 2000,
       status: GOAL_STATUS.ACTIVE,
       completedAt: null,
-      createdAt: Date.now(),
+      createdAt: now,
     },
     {
       id: crypto.randomUUID(),
@@ -19,7 +21,7 @@ export function getInitialGoals(): Goal[] {
       rewardValue: 1500,
       status: GOAL_STATUS.ACTIVE,
       completedAt: null,
-      createdAt: Date.now(),
+      createdAt: now - 1,
     },
     {
       id: crypto.randomUUID(),
@@ -27,7 +29,7 @@ export function getInitialGoals(): Goal[] {
       rewardValue: 1500,
       status: GOAL_STATUS.ACTIVE,
       completedAt: null,
-      createdAt: Date.now(),
+      createdAt: now - 2,
     },
   ];
 }

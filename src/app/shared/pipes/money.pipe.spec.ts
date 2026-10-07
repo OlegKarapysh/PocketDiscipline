@@ -8,6 +8,6 @@ describe('MoneyPipe', () => {
   });
 
   it('uses the given unit', () => {
-    expect(pipe.transform(12.5, 'min')).toBe(`${(12.5).toLocaleString('uk-UA')} min`);
+    expect(pipe.transform(12, 'min')).toBe(`${(12).toLocaleString('uk-UA')} min`);
   });
 });

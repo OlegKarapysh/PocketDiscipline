@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { SpendingAnalyticsService } from './spending-analytics.service';
 import { DbService } from '../../../database/db.service';
@@ -313,5 +313,53 @@ describe('SpendingAnalyticsService', () => {
     expect(result.categoryBreakdown[0].icon).toBe('category');
     expect(result.categoryBreakdown[0].totalSpent).toBe(50);
     expect(result.categoryBreakdown[0].percentage).toBe(100);
+  });
+
+  // Kyiv moves its clocks forward on 29 March 2026, so that day is 23 hours long.
+  describe('across the spring DST change', () => {
+    beforeEach(() => {
+      vi.stubEnv('TZ', 'Europe/Kyiv');
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.unstubAllEnvs();
+    });
+
+    it('should chart each of the last 30 calendar days exactly once', () => {
+      const now = new Date(2026, 3, 10, 0, 30);
+
+      const result = service.computeAnalytics('last30', [], new Map(), now);
+
+      const expected = Array.from({ length: 30 }, (_, i) => {
+        const day = new Date(2026, 2, 12 + i);
+        return `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+      });
+      expect(result.spendingTrend.map((p) => p.dateOrMonth)).toEqual(expected);
+    });
+
+    it('should count only withdrawals from the last 30 calendar days', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(2026, 3, 10, 0, 30));
+      const spentOn = (id: string, date: string): WithdrawalRecord => ({
+        id,
+        title: id,
+        amount: 100,
+        categoryId: 'cat-food',
+        date,
+        timestamp: 0,
+      });
+      const stored = [spentOn('too-old', '2026-03-11'), spentOn('first-day', '2026-03-12')];
+      mockDb.withdrawals.where.mockReturnValue({
+        between: (lower: string, upper: string) => ({
+          toArray: () => Promise.resolve(stored.filter((w) => w.date >= lower && w.date <= upper)),
+        }),
+      });
+
+      const summary = await firstValueFrom(service.getAnalytics('last30'));
+
+      expect(summary.withdrawalCount).toBe(1);
+      expect(summary.spendingTrend[0]).toEqual(expect.objectContaining({ dateOrMonth: '2026-03-12', amount: 100 }));
+    });
   });
 });

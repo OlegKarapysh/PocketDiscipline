@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 
 import { form, FormField } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,9 +7,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialog } from '@angular/material/dialog';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import type { Observable } from 'rxjs';
-import { EMPTY, catchError, from } from 'rxjs';
+import { EMPTY, catchError, from, switchMap, tap } from 'rxjs';
 import { RewardsService } from '../../services/rewards.service';
 import { CategoryService } from '../../services/category.service';
 import { UserService } from '../../../../core/services/user.service';
@@ -23,6 +23,7 @@ import { SegmentedControl } from '../../../../shared/components/segmented-contro
 import type { SegmentOption } from '../../../../shared/components/segmented-control/segment-option.model';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
 
 @Component({
@@ -47,6 +48,8 @@ export class RewardStore {
   private readonly userService = inject(UserService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(SnackBarService);
+  private readonly confirmService = inject(ConfirmService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly user = toSignal(
     (from(this.userService.user$) as Observable<User | undefined>).pipe(
@@ -147,13 +150,30 @@ export class RewardStore {
     });
   }
 
-  async onDeleteReward(reward: RewardItem): Promise<void> {
-    try {
-      await this.rewardsService.deleteReward(reward.id);
-      this.snackBar.show(`Deleted "${reward.title}"`);
-    } catch (error) {
-      this.snackBar.error(error, 'Failed to delete reward');
-    }
+  onDeleteReward(reward: RewardItem): void {
+    this.confirmService
+      .ask({
+        title: 'Delete reward',
+        message: `Are you sure you want to delete "${reward.title}"? Its redemption history is kept, and your balance does not change.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        isDestructive: true,
+      })
+      .pipe(
+        switchMap(() =>
+          from(this.rewardsService.deleteReward(reward.id)).pipe(
+            tap(() => {
+              this.snackBar.show(`Deleted "${reward.title}"`);
+            }),
+            catchError((error: unknown) => {
+              this.snackBar.error(error, 'Failed to delete reward');
+              return EMPTY;
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
   }
 
   async onClaimReward(reward: RewardItem): Promise<void> {

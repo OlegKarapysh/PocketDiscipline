@@ -1,16 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import {
-  FormField,
-  FormRoot,
-  form,
-  max,
-  maxLength,
-  min,
-  required,
-  validate,
-  requiredError,
-  minLengthError,
-} from '@angular/forms/signals';
+import { FormField, FormRoot, form, maxLength, validate, requiredError, minLengthError } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import type { GoalFormDialogData } from '../../models/goal-form-dialog-data.model';
 import type { GoalFormResult } from '../../models/goal-form-result.model';
 import { TITLE_MAX_LENGTH } from '../../../../shared/constants/text-length.const';
+import { moneyAmount } from '../../../../shared/validators/money-amount';
 
 @Component({
   imports: [FormField, FormRoot, MatDialogModule, MatButtonModule, MatFormFieldModule, MatInputModule],
@@ -40,9 +30,7 @@ export class GoalFormDialog {
       value().trim().length >= 3 ? null : minLengthError(3, { message: 'Title must be at least 3 characters' }),
     );
     maxLength(path.title, TITLE_MAX_LENGTH, { message: `Title cannot exceed ${TITLE_MAX_LENGTH} characters` });
-    required(path.rewardValue, { message: 'Reward is required' });
-    min(path.rewardValue, 1, { message: 'Reward must be greater than 0' });
-    max(path.rewardValue, 10_000_000, { message: 'Reward is too large' });
+    moneyAmount(path.rewardValue, 'Reward');
   });
 
   onSubmit(): void {

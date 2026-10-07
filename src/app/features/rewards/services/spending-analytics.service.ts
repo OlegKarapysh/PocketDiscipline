@@ -12,7 +12,6 @@ import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 import type { RewardCategory } from '../../../core/models/reward-category.model';
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const ONE_DAY_MS = 86_400_000;
 
 function formatZeroPadded(num: number): string {
   return String(num).padStart(2, '0');
@@ -41,7 +40,7 @@ export class SpendingAnalyticsService {
         if (period === 'thisMonth') {
           startDate = `${now.getFullYear()}-${formatZeroPadded(now.getMonth() + 1)}-01`;
         } else if (period === 'last30') {
-          const past30 = new Date(now.getTime() - (30 - 1) * ONE_DAY_MS);
+          const past30 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (30 - 1));
           startDate = formatDateString(past30);
         } else if (period === 'thisYear') {
           startDate = `${now.getFullYear()}-01-01`;
@@ -70,7 +69,7 @@ export class SpendingAnalyticsService {
         const categoryMap = new Map<string, RewardCategory>();
         allCategories.forEach((cat) => categoryMap.set(cat.id, cat));
 
-        return this.computeAnalytics(period, allWithdrawals, categoryMap, startDate, endDate, now);
+        return this.computeAnalytics(period, allWithdrawals, categoryMap, now);
       }),
     );
   }
@@ -79,8 +78,6 @@ export class SpendingAnalyticsService {
     period: AnalyticsPeriod,
     withdrawals: WithdrawalRecord[],
     categoryMap: Map<string, RewardCategory>,
-    _startDate?: string,
-    _endDate?: string,
     now: Date = new Date(),
   ): SpendingAnalyticsSummary {
     let granularity: TrendGranularity;
@@ -91,13 +88,11 @@ export class SpendingAnalyticsService {
       granularity = 'monthly';
     }
 
-    const filteredWithdrawals = withdrawals;
-
-    const totalSpent = filteredWithdrawals.reduce((sum, w) => sum + w.amount, 0);
-    const withdrawalCount = filteredWithdrawals.length;
+    const totalSpent = withdrawals.reduce((sum, w) => sum + w.amount, 0);
+    const withdrawalCount = withdrawals.length;
 
     const categoryTotals = new Map<string, number>();
-    filteredWithdrawals.forEach((w) => {
+    withdrawals.forEach((w) => {
       const current = categoryTotals.get(w.categoryId) ?? 0;
       categoryTotals.set(w.categoryId, current + w.amount);
     });
@@ -117,7 +112,7 @@ export class SpendingAnalyticsService {
       })
       .sort((a, b) => b.totalSpent - a.totalSpent);
 
-    const spendingTrend = this.generateSpendingTrend(period, granularity, filteredWithdrawals, now);
+    const spendingTrend = this.generateSpendingTrend(period, granularity, withdrawals, now);
 
     return {
       period,
@@ -155,7 +150,8 @@ export class SpendingAnalyticsService {
 
     if (period === 'last30') {
       for (let i = 30 - 1; i >= 0; i--) {
-        const d = new Date(now.getTime() - i * ONE_DAY_MS);
+        // Calendar days, not 24-hour steps: a DST change makes one day 23 or 25 hours long.
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
         const dateStr = formatDateString(d);
         const label = `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
         points.push({

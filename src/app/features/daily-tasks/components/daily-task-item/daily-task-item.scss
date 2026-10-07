@@ -1,3 +1,4 @@
+@use '@angular/material' as mat;
 @use '../../../../../styles/tokens' as t;
 
 .task-card {
@@ -15,9 +16,24 @@
 
 .titles {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: t.space(1);
   min-width: 0;
+}
+
+.item-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.delete {
+  @include mat.icon-button-overrides(
+    (
+      icon-color: var(--mat-sys-error),
+    )
+  );
 }
 
 .title {

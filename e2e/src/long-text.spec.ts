@@ -42,7 +42,7 @@ test.describe('Long text on a phone', () => {
     const card = page.locator('app-daily-task-item', { hasText: 'WWWW' });
     await expect(card).toBeVisible();
     const spill = await card
-      .getByRole('button')
+      .locator('.pd-difficulty')
       .first()
       .evaluate((button) => {
         const text = document.createRange();

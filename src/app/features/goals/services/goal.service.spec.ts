@@ -6,6 +6,7 @@ import { DbService } from '../../../database/db.service';
 import { UserService } from '../../../core/services/user.service';
 import type { Goal } from '../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../core/models/goal.model';
+import { getInitialGoals } from '../../../core/constants/initial-goals.const';
 
 vi.mock('dexie', () => {
   class MockDexie {
@@ -133,6 +134,57 @@ describe('GoalService', () => {
       expect(result).toEqual(mockActiveGoals);
     });
 
+    it('should emit active goals newest first, whatever order the store returns them in', async () => {
+      const goal = (id: string, title: string, createdAt: number): Goal => ({
+        id,
+        title,
+        rewardValue: 100,
+        status: GOAL_STATUS.ACTIVE,
+        completedAt: null,
+        createdAt,
+      });
+      dbMock.goals.toArray.mockResolvedValue([
+        goal('b', 'Middle', 2000),
+        goal('c', 'Newest', 3000),
+        goal('a', 'Oldest', 1000),
+      ]);
+
+      const result = await firstValueFrom(service.getActiveGoals());
+
+      expect(result.map((g) => g.title)).toEqual(['Newest', 'Middle', 'Oldest']);
+    });
+
+    it('should list goals created in the same millisecond in the same order on every query', async () => {
+      const goal = (id: string, title: string): Goal => ({
+        id,
+        title,
+        rewardValue: 100,
+        status: GOAL_STATUS.ACTIVE,
+        completedAt: null,
+        createdAt: 1000,
+      });
+      const stored = [goal('3', 'Squats'), goal('1', 'Push-ups'), goal('2', 'Pomodoro')];
+
+      dbMock.goals.toArray.mockResolvedValueOnce([...stored]);
+      const first = await firstValueFrom(service.getActiveGoals());
+      dbMock.goals.toArray.mockResolvedValueOnce([...stored].reverse());
+      const second = await firstValueFrom(service.getActiveGoals());
+
+      expect(second.map((g) => g.id)).toEqual(first.map((g) => g.id));
+    });
+
+    it('should list the starter goals of a fresh install in the order they are defined', async () => {
+      // A fast machine seeds all of them within one millisecond.
+      const clock = vi.spyOn(Date, 'now').mockReturnValue(1_800_000_000_000);
+      const seeded = getInitialGoals();
+      clock.mockRestore();
+      dbMock.goals.toArray.mockResolvedValue([seeded[2], seeded[0], seeded[1]]);
+
+      const result = await firstValueFrom(service.getActiveGoals());
+
+      expect(result.map((g) => g.title)).toEqual(seeded.map((g) => g.title));
+    });
+
     it('should return live query and emit completed goals sorted by completedAt', async () => {
       const mockCompletedGoals: Goal[] = [
         {
@@ -214,6 +266,17 @@ describe('GoalService', () => {
       await expect(service.addGoal('read a book ', 100)).rejects.toThrow('A goal with this title already exists.');
       expect(dbMock.goals.add).not.toHaveBeenCalled();
     });
+
+    it('should refuse a reward that is not a whole number of hryvnias, at least 1', async () => {
+      dbMock.goals.toArray.mockResolvedValue([]);
+
+      for (const rewardValue of [12.5, 0, -100, NaN]) {
+        await expect(service.addGoal('Read a book', rewardValue)).rejects.toThrow(
+          'Goal reward must be a whole number of hryvnias, at least 1.',
+        );
+      }
+      expect(dbMock.goals.add).not.toHaveBeenCalled();
+    });
   });
 
   describe('updateGoal', () => {
@@ -269,6 +332,13 @@ describe('GoalService', () => {
 
       await service.updateGoal('goal-123', 'do 100 push-ups', 2500);
 
+      expect(dbMock.goals.update).not.toHaveBeenCalled();
+    });
+
+    it('should refuse a reward that is not a whole number of hryvnias', async () => {
+      await expect(service.updateGoal('goal-123', 'do 100 push-ups', 2500.5)).rejects.toThrow(
+        'Goal reward must be a whole number of hryvnias, at least 1.',
+      );
       expect(dbMock.goals.update).not.toHaveBeenCalled();
     });
   });

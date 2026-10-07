@@ -5,6 +5,7 @@ import { DashboardEarningsService } from './dashboard-earnings.service';
 import { DbService } from '../../../database/db.service';
 import { GOAL_STATUS } from '../../../core/models/goal.model';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
+import type { DailyEarningsRecord } from '../models/daily-earnings-record.model';
 
 vi.mock('dexie', () => {
   class MockDexie {
@@ -16,6 +17,28 @@ vi.mock('dexie', () => {
     liveQuery: (fn: () => unknown) => fn(),
   };
 });
+
+// A pomodoroSessions table that answers whichever index it is queried by, so the spec does not
+// depend on how the service narrows the query.
+function pomodoroTable(sessions: readonly object[]): { where: ReturnType<typeof vi.fn> } {
+  const valueOf = (session: object, index: string): unknown => (session as Record<string, unknown>)[index];
+  return {
+    where: vi.fn((index: string) => ({
+      equals: (value: unknown) => ({
+        toArray: () => Promise.resolve(sessions.filter((s) => valueOf(s, index) === value)),
+      }),
+      between: (lower: number, upper: number) => ({
+        toArray: () =>
+          Promise.resolve(
+            sessions.filter((s) => {
+              const v = valueOf(s, index) as number;
+              return v >= lower && v <= upper;
+            }),
+          ),
+      }),
+    })),
+  };
+}
 
 describe('DashboardEarningsService', () => {
   let service: DashboardEarningsService;
@@ -99,13 +122,7 @@ describe('DashboardEarningsService', () => {
           }),
         }),
       },
-      pomodoroSessions: {
-        where: vi.fn().mockReturnValue({
-          between: vi.fn().mockReturnValue({
-            toArray: vi.fn().mockResolvedValue(sampleSessions),
-          }),
-        }),
-      },
+      pomodoroSessions: pomodoroTable(sampleSessions),
       dailyTaskCompletions: {
         where: vi.fn().mockReturnValue({
           between: vi.fn().mockReturnValue({
@@ -232,26 +249,78 @@ describe('DashboardEarningsService', () => {
         }),
       });
 
-      dbMock.pomodoroSessions.where = vi.fn().mockReturnValue({
-        between: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockResolvedValue([
-            {
-              id: 'p2',
-              durationMinutes: 25,
-              engagementType: 'work',
-              startTime: new Date('2026-09-01T15:00:00').getTime(),
-              endTime: new Date('2026-09-01T15:25:00').getTime(),
-              status: PomodoroSessionStatus.COMPLETED,
-              rewardEarned: undefined,
-            },
-          ]),
-        }),
-      });
+      dbMock.pomodoroSessions = pomodoroTable([
+        {
+          id: 'p2',
+          durationMinutes: 25,
+          engagementType: 'work',
+          startTime: new Date('2026-09-01T15:00:00').getTime(),
+          endTime: new Date('2026-09-01T15:25:00').getTime(),
+          status: PomodoroSessionStatus.COMPLETED,
+          rewardEarned: undefined,
+        },
+      ]);
 
       const records = await firstValueFrom(service.getDailyEarnings('2026-09-01', '2026-09-02'));
       const day1 = records.find((r) => r.date === '2026-09-01');
       expect(day1?.pomodoroEarned).toBe(0);
       expect(day1?.goalsEarned).toBe(0);
+    });
+
+    it('should credit a pomodoro to the day it ended, even when it started before the range', async () => {
+      dbMock.pomodoroSessions = pomodoroTable([
+        {
+          id: 'p3',
+          durationMinutes: 30,
+          engagementType: 'work',
+          startTime: new Date('2026-08-31T23:50:00').getTime(),
+          endTime: new Date('2026-09-01T00:20:00').getTime(),
+          status: PomodoroSessionStatus.COMPLETED,
+          rewardEarned: 300,
+        },
+      ]);
+
+      const records = await firstValueFrom(service.getDailyEarnings('2026-09-01', '2026-09-02'));
+
+      expect(records.find((r) => r.date === '2026-09-01')?.pomodoroEarned).toBe(300);
+    });
+
+    it('should not credit a pomodoro that ended after the range, even when it started inside it', async () => {
+      dbMock.pomodoroSessions = pomodoroTable([
+        {
+          id: 'p4',
+          durationMinutes: 30,
+          engagementType: 'work',
+          startTime: new Date('2026-09-02T23:50:00').getTime(),
+          endTime: new Date('2026-09-03T00:20:00').getTime(),
+          status: PomodoroSessionStatus.COMPLETED,
+          rewardEarned: 300,
+        },
+      ]);
+
+      const records = await firstValueFrom(service.getDailyEarnings('2026-09-01', '2026-09-02'));
+
+      expect(records.reduce((sum, r) => sum + r.pomodoroEarned, 0)).toBe(0);
+    });
+
+    it('should leave out pomodoros that were cancelled or are still running', async () => {
+      const session = (id: string, status: PomodoroSessionStatus): object => ({
+        id,
+        durationMinutes: 25,
+        engagementType: 'work',
+        startTime: new Date('2026-09-01T15:00:00').getTime(),
+        endTime: new Date('2026-09-01T15:25:00').getTime(),
+        status,
+        rewardEarned: 250,
+      });
+      dbMock.pomodoroSessions = pomodoroTable([
+        session('p5', PomodoroSessionStatus.CANCELLED),
+        session('p6', PomodoroSessionStatus.ACTIVE),
+      ]);
+
+      const records = await firstValueFrom(service.getDailyEarnings('2026-09-01', '2026-09-02'));
+
+      expect(records.reduce((sum, r) => sum + r.pomodoroEarned, 0)).toBe(0);
     });
 
     it('should handle database errors gracefully and return fallback records', async () => {
@@ -276,27 +345,42 @@ describe('DashboardEarningsService', () => {
   });
 
   describe('getMonthlyEarningsSummary', () => {
+    const earnedOn = (date: string, totalEarned: number): DailyEarningsRecord => ({
+      date,
+      totalEarned,
+      goalsEarned: totalEarned,
+      dailyTasksEarned: 0,
+      pomodoroEarned: 0,
+      dailyScoresEarned: 0,
+    });
+
     it('should calculate monthly average using elapsed days for current month', async () => {
       const now = new Date();
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth() + 1;
       const currentDay = now.getDate();
+      vi.spyOn(service, 'calculateDailyEarnings').mockResolvedValue([earnedOn('2026-09-01', 31_000)]);
 
       const summary = await firstValueFrom(service.getMonthlyEarningsSummary(currentYear, currentMonth));
 
       expect(summary.isCurrentMonth).toBe(true);
       expect(summary.daysCount).toBe(currentDay);
-      expect(summary.averageEarnedPerDay).toBe(Math.round(summary.totalEarned / currentDay));
+      // 31 000 ₴ over the elapsed days, in whole hryvnias.
+      expect(summary.averageEarnedPerDay).toBe(Math.round(31_000 / currentDay));
     });
 
     it('should calculate monthly average using total month days for completed past month', async () => {
       // Past month: August 2026 (31 days)
+      vi.spyOn(service, 'calculateDailyEarnings').mockResolvedValue([earnedOn('2026-08-01', 10_000)]);
+
       const summary = await firstValueFrom(service.getMonthlyEarningsSummary(2026, 8));
 
       expect(summary.isCurrentMonth).toBe(false);
       expect(summary.daysCount).toBe(31);
       expect(summary.monthLabel).toContain('August');
-      expect(summary.averageEarnedPerDay).toBe(Math.round(summary.totalEarned / 31));
+      expect(summary.totalEarned).toBe(10_000);
+      // 10 000 ₴ / 31 is 322.58 ₴: the average is rounded to whole hryvnias, 323 ₴.
+      expect(summary.averageEarnedPerDay).toBe(323);
     });
 
     it('should handle error gracefully and return fallback summary when calculation fails', async () => {

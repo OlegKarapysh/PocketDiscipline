@@ -146,7 +146,19 @@ describe('RewardFormDialog', () => {
         .cost()
         .errors()
         .map((e) => e.message),
-    ).toEqual(['Cost must be greater than zero']);
+    ).toEqual(['Cost must be at least 1 ₴']);
+  });
+
+  it('should reject a cost with a fraction of a hryvnia', () => {
+    component.rewardForm.title().value.set('Book');
+    component.rewardForm.cost().value.set(12.5);
+
+    expect(
+      component.rewardForm
+        .cost()
+        .errors()
+        .map((e) => e.message),
+    ).toEqual(['Cost must be a whole number of hryvnias']);
   });
 
   it('should create new reward and close dialog when clicking submit in DOM', async () => {

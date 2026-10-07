@@ -11,6 +11,14 @@
         <app-streak-badge [days]="task().streak" />
       }
     </div>
+    <div class="item-actions">
+      <button mat-icon-button type="button" (click)="edit.emit(task())" aria-label="Edit daily task">
+        <mat-icon>edit</mat-icon>
+      </button>
+      <button mat-icon-button type="button" class="delete" (click)="delete.emit(task())" aria-label="Delete daily task">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
   </div>
 
   @if (!isCompletedToday()) {

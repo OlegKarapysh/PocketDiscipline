@@ -180,6 +180,17 @@ describe('RewardsService', () => {
     ).rejects.toThrow('Reward cost must be greater than zero');
   });
 
+  it('should reject creating reward with a cost that is not a whole number of hryvnias', async () => {
+    await expect(
+      service.createReward({
+        title: 'Bad Cost',
+        cost: 12.5,
+        categoryId: 'cat-tech',
+        type: 'one-time',
+      }),
+    ).rejects.toThrow('Reward cost must be a whole number of hryvnias');
+  });
+
   it('should reject creating reward with empty or whitespace title', async () => {
     await expect(
       service.createReward({
@@ -238,6 +249,10 @@ describe('RewardsService', () => {
     await expect(service.updateReward('rew-1', { cost: 0 })).rejects.toThrow('Reward cost must be greater than zero');
 
     await expect(service.updateReward('rew-1', { cost: -10 })).rejects.toThrow('Reward cost must be greater than zero');
+
+    await expect(service.updateReward('rew-1', { cost: 12.5 })).rejects.toThrow(
+      'Reward cost must be a whole number of hryvnias',
+    );
   });
 
   it('should reject empty title on update', async () => {

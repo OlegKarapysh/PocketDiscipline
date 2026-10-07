@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormField, form, max, maxLength, min, required, validate, requiredError } from '@angular/forms/signals';
+import { FormField, form, max, maxLength, required, validate, requiredError } from '@angular/forms/signals';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -17,6 +17,7 @@ import type { RewardCategory } from '../../../../core/models/reward-category.mod
 import { FALLBACK_CATEGORY_ID } from '../../../../core/constants/initial-reward-categories.const';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
+import { moneyAmount } from '../../../../shared/validators/money-amount';
 import { NOTES_MAX_LENGTH, TITLE_MAX_LENGTH } from '../../../../shared/constants/text-length.const';
 import { Amount } from '../../../../shared/components/amount/amount';
 import { Badge } from '../../../../shared/components/badge/badge';
@@ -75,8 +76,7 @@ export class QuickSpendDialog {
   readonly model = signal<QuickSpendModel>({ amount: null, title: '', categoryId: FALLBACK_CATEGORY_ID, notes: '' });
 
   readonly spendForm = form(this.model, (path) => {
-    required(path.amount, { message: 'Amount is required' });
-    min(path.amount, 0.01, { message: 'Amount must be greater than zero' });
+    moneyAmount(path.amount, 'Amount');
     max(path.amount, () => this.user()?.balance ?? 0, { message: 'Amount exceeds your available balance' });
     validate(path.title, ({ value }) => (value().trim() ? null : requiredError({ message: 'Title is required' })));
     maxLength(path.title, TITLE_MAX_LENGTH, { message: 'Title is too long' });

@@ -9,13 +9,27 @@
   </div>
 
   @if (showForm()) {
-    <app-daily-task-form (taskCreated)="onTaskCreated($event)" (cancelForm)="closeForm()" />
+    <app-daily-task-form [saving]="saving()" (save)="onTaskCreated($event)" (cancelForm)="closeForm()" />
   }
 
   @if (tasks(); as tasks) {
     <div class="task-list">
       @for (task of tasks; track task.id) {
-        <app-daily-task-item [task]="task" (complete)="onCompleteTask(task, $event)" />
+        @if (editingTaskId() === task.id) {
+          <app-daily-task-form
+            [task]="task"
+            [saving]="saving()"
+            (save)="onTaskEdited(task, $event)"
+            (cancelForm)="closeEdit()"
+          />
+        } @else {
+          <app-daily-task-item
+            [task]="task"
+            (complete)="onCompleteTask(task, $event)"
+            (edit)="openEdit($event)"
+            (delete)="confirmDelete($event)"
+          />
+        }
       } @empty {
         <app-empty-state heading="No daily tasks yet" message="Add one small thing you want to do every day." />
       }

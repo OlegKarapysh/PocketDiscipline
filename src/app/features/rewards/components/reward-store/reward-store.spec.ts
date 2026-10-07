@@ -2,7 +2,7 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Observable } from 'rxjs';
-import { of, throwError } from 'rxjs';
+import { EMPTY, of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { By } from '@angular/platform-browser';
@@ -15,7 +15,7 @@ import type { RewardItem } from '../../../../core/models/reward.model';
 import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import { RewardFormDialog } from '../reward-form-dialog/reward-form-dialog';
 import { RewardCard } from '../reward-card/reward-card';
-import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
 
 describe('RewardStore', () => {
   let component: RewardStore;
@@ -30,6 +30,7 @@ describe('RewardStore', () => {
   let mockUserService: { user$: Observable<User | undefined> };
   let mockDialog: { open: ReturnType<typeof vi.fn> };
   let mockSnackBar: { open: ReturnType<typeof vi.fn> };
+  let mockConfirm: { ask: ReturnType<typeof vi.fn> };
 
   let mockCategories: RewardCategory[];
   let mockRewards: RewardItem[];
@@ -92,6 +93,7 @@ describe('RewardStore', () => {
     };
     mockDialog = { open: vi.fn() };
     mockSnackBar = { open: vi.fn() };
+    mockConfirm = { ask: vi.fn().mockReturnValue(of(true)) };
 
     await TestBed.configureTestingModule({
       imports: [RewardStore],
@@ -101,6 +103,7 @@ describe('RewardStore', () => {
         { provide: UserService, useValue: mockUserService },
         { provide: MatDialog, useValue: mockDialog },
         { provide: MatSnackBar, useValue: mockSnackBar },
+        { provide: ConfirmService, useValue: mockConfirm },
       ],
     }).compileComponents();
 
@@ -198,7 +201,7 @@ describe('RewardStore', () => {
 
     expect(mockRewardsService.claimReward).toHaveBeenCalledWith(mockRewards[0]);
     expect(mockSnackBar.open).toHaveBeenCalledWith(
-      `Redeemed "Mechanical Keyboard" for ${MONEY_FORMAT.format(2500)} ₴`,
+      `Redeemed "Mechanical Keyboard" for ${(2500).toLocaleString('uk-UA')} ₴`,
       'Close',
       { duration: 3000 },
     );
@@ -251,7 +254,23 @@ describe('RewardStore', () => {
     });
   });
 
-  it('should handle delete output from child card component', async () => {
+  it('should ask before deleting, naming the reward, as a destructive action', async () => {
+    mockConfirm.ask.mockReturnValue(EMPTY);
+    const cardComponent = fixture.debugElement.query(By.directive(RewardCard)).componentInstance as RewardCard;
+
+    cardComponent.delete.emit(mockRewards[0]);
+    await fixture.whenStable();
+
+    expect(mockConfirm.ask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('"Mechanical Keyboard"') as unknown,
+        isDestructive: true,
+      }),
+    );
+    expect(mockRewardsService.deleteReward).not.toHaveBeenCalled();
+  });
+
+  it('should delete the reward once confirmed', async () => {
     const cardDebugEl = fixture.debugElement.query(By.directive(RewardCard));
     const cardComponent = cardDebugEl.componentInstance as RewardCard;
 

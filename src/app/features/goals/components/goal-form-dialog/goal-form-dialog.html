@@ -11,7 +11,7 @@
 
     <mat-form-field appearance="outline">
       <mat-label>Reward (₴)</mat-label>
-      <input matInput type="number" [formField]="goalForm.rewardValue" />
+      <input matInput type="number" step="1" [formField]="goalForm.rewardValue" />
       @for (error of goalForm.rewardValue().errors(); track error.kind) {
         <mat-error>{{ error.message }}</mat-error>
       }

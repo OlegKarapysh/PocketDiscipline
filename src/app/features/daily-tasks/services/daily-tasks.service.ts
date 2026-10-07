@@ -11,6 +11,7 @@ import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
 const ONE_DAY_MS = 86_400_000;
 const MAX_STREAK_BONUS_DAYS = 10;
 const STREAK_BONUS_RATE = 0.1;
+const ERROR_TASK_NOT_FOUND = 'This daily task no longer exists.';
 
 @Service()
 export class DailyTasksService {
@@ -68,6 +69,7 @@ export class DailyTasksService {
   }
 
   async createTask(title: string, difficulties: DailyTaskDifficulty[]): Promise<void> {
+    this.assertValidRewards(difficulties);
     const newTask: DailyTask = {
       id: crypto.randomUUID(),
       title,
@@ -79,16 +81,48 @@ export class DailyTasksService {
     await this.db.dailyTasks.add(newTask);
   }
 
-  async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
-    if (!Number.isFinite(difficulty.baseReward) || difficulty.baseReward <= 0) {
-      return;
-    }
+  // Keeps the streak and lastCompletedAt. Past completions keep the reward they earned: a changed
+  // reward applies from the next completion on.
+  async updateTask(id: string, title: string, difficulties: DailyTaskDifficulty[]): Promise<void> {
+    this.assertValidRewards(difficulties);
+    await this.db.transaction('rw', this.db.dailyTasks, async () => {
+      if (!(await this.db.dailyTasks.get(id))) {
+        throw new Error(ERROR_TASK_NOT_FOUND);
+      }
+      await this.db.dailyTasks.update(id, { title, difficulties });
+    });
+  }
 
+  // Keeps the task's completions, so its earnings history and the balance stay as they are.
+  async deleteTask(id: string): Promise<void> {
+    await this.db.dailyTasks.delete(id);
+  }
+
+  private assertValidRewards(difficulties: DailyTaskDifficulty[]): void {
+    const invalid = difficulties.find((d) => !Number.isSafeInteger(d.baseReward) || d.baseReward < 1);
+    if (invalid) {
+      throw new Error(`The reward for "${invalid.name}" must be a whole number of hryvnias, at least 1.`);
+    }
+  }
+
+  async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
     const now = Date.now();
     const todayStr = new Date(now).toLocaleDateString(DATE_LOCALE_CA);
 
     await this.db.transaction('rw', this.db.dailyTasks, this.db.users, this.db.dailyTaskCompletions, async () => {
-      const freshTask = (await this.db.dailyTasks.get(task.id)) ?? task;
+      // The stored row, not the rendered one: another tab may have edited or deleted the task since.
+      const freshTask = await this.db.dailyTasks.get(task.id);
+      if (!freshTask) {
+        throw new Error(ERROR_TASK_NOT_FOUND);
+      }
+      const freshDifficulty = freshTask.difficulties.find((d) => d.id === difficulty.id);
+      if (!freshDifficulty) {
+        throw new Error(`"${difficulty.name}" is no longer a difficulty of this task.`);
+      }
+      // Rows saved before rewards were validated can hold a reward of zero or less; editing the task fixes it.
+      if (!Number.isFinite(freshDifficulty.baseReward) || freshDifficulty.baseReward <= 0) {
+        throw new Error(`"${freshDifficulty.name}" has no valid reward. Edit the task to set one above zero.`);
+      }
 
       const diffDays = freshTask.lastCompletedAt === null ? null : this.getDiffDays(now, freshTask.lastCompletedAt);
       if (diffDays === 0) return;
@@ -98,7 +132,7 @@ export class DailyTasksService {
       const streakCountForBonus = Math.max(newStreak - 1, 0);
       const cappedStreakBonus = Math.min(streakCountForBonus, MAX_STREAK_BONUS_DAYS);
       const bonusMultiplier = 1 + cappedStreakBonus * STREAK_BONUS_RATE;
-      const finalReward = Math.round(difficulty.baseReward * bonusMultiplier);
+      const finalReward = Math.round(freshDifficulty.baseReward * bonusMultiplier);
 
       await this.db.dailyTasks.update(freshTask.id, {
         lastCompletedAt: now,

@@ -133,7 +133,7 @@ Use these before reaching for raw Material in a feature. A live gallery is at `/
 
 Rules:
 
-- Money is always `app-amount`. Never interpolate `{{ x }} ₴` by hand. Where a component cannot render (SVG `<text>`, attribute bindings, aria labels) use the `money` pipe (`MoneyPipe`, `shared/pipes/money.pipe.ts`); in TypeScript strings such as snackbar messages use `MONEY_FORMAT` from `shared/constants/money-format.const.ts`.
+- Money is always `app-amount`. Never interpolate `{{ x }} ₴` by hand. Where a component cannot render (SVG `<text>`, attribute bindings, aria labels) use the `money` pipe (`MoneyPipe`, `shared/pipes/money.pipe.ts`); in TypeScript strings such as snackbar messages use `MONEY_FORMAT` from `shared/constants/money-format.const.ts`. All three show the stored whole hryvnias with no decimals (see Money in [schema.md](./schema.md#money)).
 - Use `CelebrationService` for earning moments, and `SnackBarService` for everything else ("Morning run done · +200 ₴").
 - One `app-page-header` per routed page.
 
@@ -153,7 +153,7 @@ One codebase serves a phone held in one hand and a wide desktop window, and both
 `t.up()` and `t.down()` test the **viewport**. From 840px the side rail takes 240px, so at 840px the content column is about 536px wide, narrower than on a 600px screen. A component that goes two-column "because the screen is wide" breaks exactly there. The dashboard's stat tiles and the ten daily-score buttons did, until they were made to respond to their own width.
 
 - Inside a page, use layouts that respond to their own width: `grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr))`, or `flex-wrap: wrap` with a `flex-basis`. No breakpoint is involved, so they are right in any container.
-- Take the minimum from the worst content, not from a round number: a stat tile is 264px because that is "9 999 999,99 ₴/day" plus the tile's padding.
+- Take the minimum from the worst content, not from a round number: a stat tile is 228px because that is "9 999 999 ₴/day" plus the tile's padding, and a little slack for Linux, which rounds each glyph to a whole pixel.
 - Where a full-row item sits in the same container, use `flex-wrap`. `auto-fit` only drops a column that nothing crosses, so an item spanning `1 / -1` leaves an empty third column on a wide screen (`dashboard.scss`, `daily-scores-page.scss`).
 - Where the count must step (five or ten buttons, two or four tiles) rather than be whatever fits, group the items and let the groups wrap. Plain `auto-fit` leaves a ragged last row: nine buttons and one (`score-input.scss`, `spending-analytics.scss`).
 - Keep `t.up()` and `t.down()` for what really depends on the screen: the shell, page padding, type size, and a phone's full-width action button.
@@ -168,7 +168,7 @@ Each row has happened in this repo.
 | One long word widens a card                       | Flex and grid items default to `min-width: auto`, and a word does not break by default | `min-width: 0` on the item, `overflow-wrap: anywhere` on the text           |
 | A row of controls runs off the edge               | The row cannot wrap, or its buttons cannot shrink                                      | `flex-wrap: wrap`; let buttons shrink and their labels wrap                 |
 | A dialog or panel is wider than a phone           | A fixed `width` or `min-width` in px                                                   | `min(320px, 100%)`, or `max-width`                                          |
-| A money value spills out of a half-width tile     | `app-amount` never wraps                                                               | Size the tile's column from the amount: `minmax(min(100%, 212px), 1fr)`     |
+| A money value spills out of a half-width tile     | `app-amount` never wraps                                                               | Size the tile's column from the amount: `minmax(min(100%, 176px), 1fr)`     |
 | A money value spills out of a wrapping button     | Material's `min-width: 64px` replaces the content minimum a flex item has by default   | `min-width: min-content` on the button (`.pd-difficulty`)                   |
 | Chart text shrinks to 5px, or the chart scrolls   | A fixed `viewBox`, or a minimum width                                                  | Draw at the measured width with `(appObserveWidth)`                         |
 | A long name runs across a chart                   | SVG `<text>` can neither wrap nor truncate                                             | HTML laid over the chart                                                    |

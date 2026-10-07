@@ -21,11 +21,11 @@
   font-weight: 600;
 }
 
-// A tile keeps a seven-digit amount and its "₴/day" unit on one line, which takes 264px with the
+// A tile keeps a seven-digit amount and its "₴/day" unit on one line, which takes 228px with the
 // tile's padding. The tiles sit side by side only where each gets that much.
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 264px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 228px), 1fr));
   gap: t.space(3);
   width: 100%;
 }
