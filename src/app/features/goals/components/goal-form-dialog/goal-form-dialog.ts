@@ -1,14 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import {
-  FormField,
-  FormRoot,
-  form,
-  max,
-  maxLength,
-  validate,
-  requiredError,
-  minLengthError,
-} from '@angular/forms/signals';
+import { FormField, FormRoot, form, maxLength, validate, requiredError, minLengthError } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -40,7 +31,6 @@ export class GoalFormDialog {
     );
     maxLength(path.title, TITLE_MAX_LENGTH, { message: `Title cannot exceed ${TITLE_MAX_LENGTH} characters` });
     moneyAmount(path.rewardValue, 'Reward');
-    max(path.rewardValue, 10_000_000, { message: 'Reward is too large' });
   });
 
   onSubmit(): void {

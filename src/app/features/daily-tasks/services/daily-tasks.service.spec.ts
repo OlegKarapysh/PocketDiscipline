@@ -215,6 +215,8 @@ describe('DailyTasksService', () => {
         lastCompletedAt: null,
       };
 
+      dbMock.dailyTasks.get.mockResolvedValue(task);
+
       await service.completeTask(task, easy);
 
       expect(dbMock.dailyTasks.update).toHaveBeenCalledWith(
@@ -242,6 +244,8 @@ describe('DailyTasksService', () => {
         streak: 5,
         lastCompletedAt: yesterday,
       };
+
+      dbMock.dailyTasks.get.mockResolvedValue(task);
 
       await service.completeTask(task, easy);
 
@@ -271,6 +275,8 @@ describe('DailyTasksService', () => {
         lastCompletedAt: yesterday,
       };
 
+      dbMock.dailyTasks.get.mockResolvedValue(task);
+
       await service.completeTask(task, hard);
 
       expect(dbMock.dailyTasks.update).toHaveBeenCalledWith(
@@ -295,6 +301,8 @@ describe('DailyTasksService', () => {
         lastCompletedAt: now - ONE_DAY_MS,
       };
 
+      dbMock.dailyTasks.get.mockResolvedValue(task);
+
       await service.completeTask(task, quarter);
 
       expect(userMock.addBalance).toHaveBeenCalledWith(28);
@@ -313,6 +321,8 @@ describe('DailyTasksService', () => {
         streak: 5,
         lastCompletedAt: twoDaysAgo,
       };
+
+      dbMock.dailyTasks.get.mockResolvedValue(task);
 
       await service.completeTask(task, easy);
 
@@ -335,6 +345,8 @@ describe('DailyTasksService', () => {
         lastCompletedAt: null,
       };
 
+      dbMock.dailyTasks.get.mockResolvedValue(task);
+
       await service.completeTask(task, easy);
 
       expect(dbMock.dailyTaskCompletions.add).toHaveBeenCalledWith(
@@ -356,6 +368,8 @@ describe('DailyTasksService', () => {
         streak: 5,
         lastCompletedAt: new Date().setHours(0, 0, 0, 0),
       };
+
+      dbMock.dailyTasks.get.mockResolvedValue(task);
 
       await service.completeTask(task, easy);
 
@@ -386,22 +400,73 @@ describe('DailyTasksService', () => {
     });
 
     it('should refuse a difficulty whose reward is not above zero, and tell the user to edit the task', async () => {
+      for (const baseReward of [NaN, 0, -500]) {
+        const legacy: DailyTaskDifficulty = { id: 'legacy', name: 'Legacy', baseReward };
+        const task: DailyTask = {
+          id: 'test-daily-task-1',
+          title: 'Morning Workout',
+          difficulties: [easy, legacy],
+          createdAt: Date.now() - ONE_DAY_MS,
+          streak: 5,
+          lastCompletedAt: null,
+        };
+        dbMock.dailyTasks.get.mockResolvedValue(task);
+
+        await expect(service.completeTask(task, legacy)).rejects.toThrow(/"Legacy".*Edit the task/);
+      }
+
+      expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
+      expect(dbMock.dailyTaskCompletions.add).not.toHaveBeenCalled();
+      expect(userMock.addBalance).not.toHaveBeenCalled();
+    });
+
+    it('should credit nothing for a task deleted since it was shown', async () => {
       const task: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
         difficulties: [easy],
         createdAt: Date.now() - ONE_DAY_MS,
-        streak: 5,
+        streak: 0,
         lastCompletedAt: null,
       };
+      dbMock.dailyTasks.get.mockResolvedValue(undefined);
 
-      for (const baseReward of [NaN, 0, -500]) {
-        await expect(service.completeTask(task, { id: 'legacy', name: 'Legacy', baseReward })).rejects.toThrow(
-          /"Legacy".*Edit the task/,
-        );
-      }
+      await expect(service.completeTask(task, easy)).rejects.toThrow('This daily task no longer exists.');
 
-      expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
+      expect(dbMock.dailyTaskCompletions.add).not.toHaveBeenCalled();
+      expect(userMock.addBalance).not.toHaveBeenCalled();
+    });
+
+    it('should pay the stored reward when the task was edited since it was shown', async () => {
+      const shown: DailyTask = {
+        id: 'test-daily-task-1',
+        title: 'Morning Workout',
+        difficulties: [hard],
+        createdAt: Date.now() - ONE_DAY_MS,
+        streak: 0,
+        lastCompletedAt: null,
+      };
+      dbMock.dailyTasks.get.mockResolvedValue({ ...shown, difficulties: [{ ...hard, baseReward: 50 }] });
+
+      await service.completeTask(shown, hard);
+
+      expect(userMock.addBalance).toHaveBeenCalledWith(50);
+      expect(dbMock.dailyTaskCompletions.add).toHaveBeenCalledWith(expect.objectContaining({ rewardEarned: 50 }));
+    });
+
+    it('should credit nothing for a difficulty removed since the task was shown', async () => {
+      const shown: DailyTask = {
+        id: 'test-daily-task-1',
+        title: 'Morning Workout',
+        difficulties: [easy, hard],
+        createdAt: Date.now() - ONE_DAY_MS,
+        streak: 0,
+        lastCompletedAt: null,
+      };
+      dbMock.dailyTasks.get.mockResolvedValue({ ...shown, difficulties: [easy] });
+
+      await expect(service.completeTask(shown, hard)).rejects.toThrow(/"Hard"/);
+
       expect(dbMock.dailyTaskCompletions.add).not.toHaveBeenCalled();
       expect(userMock.addBalance).not.toHaveBeenCalled();
     });

@@ -35,8 +35,8 @@ What is stored is what is shown: `MONEY_FORMAT` (`shared/constants/money-format.
 `<app-amount>` and the `money` pipe use, shows no decimals. Every calculation that can produce a
 fraction (the streak bonuses, the daily score bonus, the pomodoro tiers, averages and chart axes)
 rounds to whole hryvnias where it is computed. Money inputs follow one rule, `moneyAmount()` in
-`shared/validators/money-amount.ts`: required, a whole number, at least 1 ₴; a form adds its own
-maximum (the goal reward's 10 000 000, quick spend's balance). `WithdrawalService`, `RewardsService`,
+`shared/validators/money-amount.ts`: required, a whole number, from 1 ₴ to 10 000 000 ₴; a form can
+add a lower maximum of its own (quick spend's balance). `WithdrawalService`, `RewardsService`,
 `GoalService` and `DailyTasksService` also reject a non-integer amount, so a caller outside the forms
 cannot store one.
 

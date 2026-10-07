@@ -32,6 +32,13 @@ describe('moneyAmount', () => {
     expect(messagesFor(-5)).toEqual(['Price must be at least 1 ₴']);
   });
 
+  it('should accept up to 10 000 000 and reject anything larger', () => {
+    expect(messagesFor(10_000_000)).toEqual([]);
+    for (const amount of [10_000_001, 1e16]) {
+      expect(messagesFor(amount)).toEqual(['Price is too large']);
+    }
+  });
+
   it('should reject an amount with a fraction of a hryvnia', () => {
     for (const amount of [1.5, 12.01, 99.9]) {
       expect(messagesFor(amount)).toEqual(['Price must be a whole number of hryvnias']);

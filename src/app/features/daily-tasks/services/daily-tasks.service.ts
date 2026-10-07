@@ -106,16 +106,23 @@ export class DailyTasksService {
   }
 
   async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
-    // Rows saved before rewards were validated can hold a reward of zero or less; editing the task fixes it.
-    if (!Number.isFinite(difficulty.baseReward) || difficulty.baseReward <= 0) {
-      throw new Error(`"${difficulty.name}" has no valid reward. Edit the task to set one above zero.`);
-    }
-
     const now = Date.now();
     const todayStr = new Date(now).toLocaleDateString(DATE_LOCALE_CA);
 
     await this.db.transaction('rw', this.db.dailyTasks, this.db.users, this.db.dailyTaskCompletions, async () => {
-      const freshTask = (await this.db.dailyTasks.get(task.id)) ?? task;
+      // The stored row, not the rendered one: another tab may have edited or deleted the task since.
+      const freshTask = await this.db.dailyTasks.get(task.id);
+      if (!freshTask) {
+        throw new Error(ERROR_TASK_NOT_FOUND);
+      }
+      const freshDifficulty = freshTask.difficulties.find((d) => d.id === difficulty.id);
+      if (!freshDifficulty) {
+        throw new Error(`"${difficulty.name}" is no longer a difficulty of this task.`);
+      }
+      // Rows saved before rewards were validated can hold a reward of zero or less; editing the task fixes it.
+      if (!Number.isFinite(freshDifficulty.baseReward) || freshDifficulty.baseReward <= 0) {
+        throw new Error(`"${freshDifficulty.name}" has no valid reward. Edit the task to set one above zero.`);
+      }
 
       const diffDays = freshTask.lastCompletedAt === null ? null : this.getDiffDays(now, freshTask.lastCompletedAt);
       if (diffDays === 0) return;
@@ -125,7 +132,7 @@ export class DailyTasksService {
       const streakCountForBonus = Math.max(newStreak - 1, 0);
       const cappedStreakBonus = Math.min(streakCountForBonus, MAX_STREAK_BONUS_DAYS);
       const bonusMultiplier = 1 + cappedStreakBonus * STREAK_BONUS_RATE;
-      const finalReward = Math.round(difficulty.baseReward * bonusMultiplier);
+      const finalReward = Math.round(freshDifficulty.baseReward * bonusMultiplier);
 
       await this.db.dailyTasks.update(freshTask.id, {
         lastCompletedAt: now,

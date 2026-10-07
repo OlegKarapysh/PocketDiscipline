@@ -9,8 +9,6 @@ import { from } from 'rxjs';
 
 const ERROR_DUPLICATE_GOAL_TITLE = 'A goal with this title already exists.';
 const ERROR_UNDO_DUPLICATE_GOAL_TITLE = 'Cannot undo: an active goal already has this title.';
-const ERROR_INVALID_GOAL_REWARD = 'Goal reward must be a whole number of hryvnias, at least 1.';
-
 @Service()
 export class GoalService {
   private db = inject(DbService);
@@ -101,7 +99,7 @@ export class GoalService {
 
   private assertValidReward(rewardValue: number): void {
     if (!Number.isSafeInteger(rewardValue) || rewardValue < 1) {
-      throw new Error(ERROR_INVALID_GOAL_REWARD);
+      throw new Error('Goal reward must be a whole number of hryvnias, at least 1.');
     }
   }
 
