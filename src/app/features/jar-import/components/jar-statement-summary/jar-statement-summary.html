@@ -1,0 +1,27 @@
+@let s = summary();
+<app-section-card heading="Statement">
+  <div class="stats">
+    <app-stat-card label="Rewards paid in" [hint]="s.paidHint">
+      <app-amount [value]="s.paid" tone="reward" />
+    </app-stat-card>
+    <app-stat-card label="Withdrawn" [hint]="s.withdrawnHint">
+      <app-amount [value]="s.withdrawn" />
+    </app-stat-card>
+    <app-stat-card label="Period" [hint]="s.periodHint">
+      <span class="period">{{ s.period }}</span>
+    </app-stat-card>
+  </div>
+
+  <ul class="kinds" aria-label="Rewards by kind">
+    @for (kind of s.kinds; track kind.kind) {
+      <li class="kind">
+        <span class="kind-label">{{ kind.label }}</span>
+        <span class="kind-count pd-num">{{ kind.count }}</span>
+      </li>
+    }
+  </ul>
+
+  @for (note of s.notes; track note) {
+    <p class="note">{{ note }}</p>
+  }
+</app-section-card>

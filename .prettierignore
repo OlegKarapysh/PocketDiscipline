@@ -8,6 +8,9 @@ pnpm-lock.yaml
 
 # Vendored spec-kit tooling: overwritten on upgrade, so keep it byte-identical to upstream.
 .agents/skills/speckit-*/
+.claude/skills/speckit-*/
+.specify/init-options.json
+.specify/integrations/
 .specify/workflows/
 .specify/scripts/
 .specify/templates/

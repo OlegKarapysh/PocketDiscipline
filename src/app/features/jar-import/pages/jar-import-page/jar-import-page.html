@@ -1,0 +1,41 @@
+<app-page-header title="Import jar statement" eyebrow="Settings" />
+
+<div class="jar-import">
+  <app-section-card heading="Statement file">
+    <p class="intro">
+      Export the jar's statement from monobank as CSV and pick it here. It is read on this device and never uploaded.
+      The balance is not changed, and "Purge database" in Settings is the only way to undo an import.
+    </p>
+
+    <input #picker type="file" accept=".csv,text/csv" class="picker" (change)="readFile(picker)" />
+    <div class="file-row">
+      <button mat-flat-button type="button" class="choose-button" (click)="picker.click()">
+        <mat-icon>upload_file</mat-icon>
+        Choose statement
+      </button>
+      @if (fileName(); as name) {
+        <span class="file-name">{{ name }}</span>
+      }
+    </div>
+
+    @if (error(); as message) {
+      <p class="error" role="alert">
+        <mat-icon>error</mat-icon>
+        <span class="error-text">{{ message }}</span>
+      </p>
+    }
+  </app-section-card>
+
+  @if (statement(); as rows) {
+    <app-jar-statement-summary [rows]="rows" />
+  }
+
+  @if (suggestion(); as s) {
+    <app-jar-review-list
+      [rows]="s.rows"
+      [existingTaskTitles]="s.existingTaskTitles"
+      [importing]="importing()"
+      (confirmImport)="runImport($event)"
+    />
+  }
+</div>

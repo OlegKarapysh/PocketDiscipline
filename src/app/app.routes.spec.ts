@@ -6,6 +6,7 @@ import { GoalsPage } from './features/goals/pages/goals-page/goals-page';
 import { POMODORO_ROUTES } from './features/pomodoro/pomodoro.routes';
 import { DailyScoresPage } from './features/daily-scores/pages/daily-scores-page';
 import { Settings } from './features/settings/settings';
+import { JarImportPage } from './features/jar-import/pages/jar-import-page/jar-import-page';
 
 describe('App Routes', () => {
   it('should redirect empty path to /dashboard with full pathMatch', () => {
@@ -62,9 +63,16 @@ describe('App Routes', () => {
   });
 
   it('should lazy-load Settings component for settings route', async () => {
-    const route = routes.find((r) => r.path === 'settings');
+    const route = routes.find((r) => r.path === 'settings')?.children?.find((r) => r.path === '');
     expect(route?.loadComponent).toBeDefined();
     const component = await (route?.loadComponent as () => Promise<unknown>)();
     expect(component).toBe(Settings);
+  });
+
+  it('should lazy-load the jar import page under settings', async () => {
+    const route = routes.find((r) => r.path === 'settings')?.children?.find((r) => r.path === 'jar-import');
+    expect(route?.loadComponent).toBeDefined();
+    const component = await (route?.loadComponent as () => Promise<unknown>)();
+    expect(component).toBe(JarImportPage);
   });
 });
