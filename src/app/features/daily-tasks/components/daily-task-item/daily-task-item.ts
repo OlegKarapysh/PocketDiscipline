@@ -1,31 +1,35 @@
-import { Component, input, output, computed, inject } from '@angular/core';
-import { ClockService } from '../../../../core/services/clock.service';
-import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
+import { Component, input, output, computed } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatRippleModule } from '@angular/material/core';
 import { Amount } from '../../../../shared/components/amount/amount';
 import { StreakBadge } from '../../../../shared/components/streak-badge/streak-badge';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
 
+// One compact row that opens to show the difficulties. The list decides which row is open and
+// whether the task is done today.
 @Component({
-  imports: [MatCardModule, MatButtonModule, MatIconModule, Amount, StreakBadge],
+  imports: [MatCardModule, MatButtonModule, MatIconModule, MatRippleModule, Amount, StreakBadge],
   selector: 'app-daily-task-item',
   styleUrl: './daily-task-item.scss',
   templateUrl: './daily-task-item.html',
 })
 export class DailyTaskItem {
   task = input.required<DailyTask>();
+  completed = input(false);
+  expanded = input(false);
+  // What today's completion earned; null while the task is pending, or if no completion was found.
+  earned = input<number | null>(null);
+  expandedChange = output<boolean>();
   complete = output<DailyTaskDifficulty>();
   edit = output<DailyTask>();
-  delete = output<DailyTask>();
 
-  private readonly clock = inject(ClockService);
-
-  isCompletedToday = computed(() => {
-    const lastCompletedAt = this.task().lastCompletedAt;
-    if (!lastCompletedAt) return false;
-    return new Date(lastCompletedAt).toLocaleDateString(DATE_LOCALE_CA) === this.clock.today();
+  rewardRange = computed(() => {
+    const rewards = this.task().difficulties.map((d) => d.baseReward);
+    return { min: Math.min(...rewards), max: Math.max(...rewards) };
   });
+
+  detailsId = computed(() => `daily-task-${this.task().id}-details`);
 }

@@ -1,23 +1,27 @@
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { EMPTY, catchError, filter, from, switchMap, tap } from 'rxjs';
+import { EMPTY, catchError, filter, from, of, switchMap, tap } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
 import { DailyTaskItem } from '../daily-task-item/daily-task-item';
+import { DailyTaskReorderList } from '../daily-task-reorder-list/daily-task-reorder-list';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
+import type { DailyTaskCompletion } from '../../../../core/models/daily-task-completion.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
 import { DailyTaskForm } from '../daily-task-form/daily-task-form';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import type { DailyTaskDraft } from '../../models/daily-task-draft.model';
 import { NEW_ITEM_QUERY_PARAM } from '../../../../shared/constants/new-item-query-param.const';
+import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
+import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
 import { ClockService } from '../../../../core/services/clock.service';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { ConfirmService } from '../../../../shared/services/confirm.service';
 
 @Component({
-  imports: [MatButtonModule, MatIconModule, DailyTaskItem, DailyTaskForm, EmptyState],
+  imports: [MatButtonModule, MatIconModule, DailyTaskItem, DailyTaskReorderList, DailyTaskForm, EmptyState],
   selector: 'app-daily-task-list',
   styleUrl: './daily-task-list.scss',
   templateUrl: './daily-task-list.html',
@@ -39,9 +43,39 @@ export class DailyTaskList {
       }),
     ),
   );
+  // Only to show what each task done today earned: a failed query leaves the amounts out, nothing more.
+  private readonly todayCompletions = toSignal(
+    toObservable(this.clock.today).pipe(
+      switchMap((date) =>
+        this.dailyTasksService.completionsOn(date).pipe(catchError(() => of([] as DailyTaskCompletion[]))),
+      ),
+    ),
+    { initialValue: [] as DailyTaskCompletion[] },
+  );
+
   readonly showForm = signal(false);
   readonly editingTaskId = signal<string | null>(null);
+  readonly expandedTaskId = signal<string | null>(null);
+  readonly showDone = signal(false);
+  readonly reordering = signal(false);
   readonly saving = signal(false);
+
+  readonly rows = computed(() => {
+    const today = this.clock.today();
+    const earned = new Map<string, number>();
+    for (const completion of this.todayCompletions()) {
+      earned.set(completion.taskId, (earned.get(completion.taskId) ?? 0) + completion.rewardEarned);
+    }
+    return (this.tasks() ?? []).map((task) => ({
+      task,
+      done:
+        task.lastCompletedAt !== null && new Date(task.lastCompletedAt).toLocaleDateString(DATE_LOCALE_CA) === today,
+      earned: earned.get(task.id) ?? null,
+    }));
+  });
+  readonly pending = computed(() => this.rows().filter((row) => !row.done));
+  readonly done = computed(() => this.rows().filter((row) => row.done));
+  readonly canReorder = computed(() => this.rows().length > 1);
 
   constructor() {
     effect(() => {
@@ -59,6 +93,7 @@ export class DailyTaskList {
         takeUntilDestroyed(),
       )
       .subscribe(() => {
+        this.reordering.set(false);
         this.showForm.set(true);
         void this.router.navigate([], {
           relativeTo: this.route,
@@ -85,9 +120,41 @@ export class DailyTaskList {
     this.editingTaskId.set(null);
   }
 
+  // One task is open at a time, so the list stays short.
+  setExpanded(task: DailyTask, expanded: boolean): void {
+    this.expandedTaskId.set(expanded ? task.id : null);
+  }
+
+  toggleDone(): void {
+    this.showDone.update((show) => !show);
+  }
+
+  startReordering(): void {
+    this.showForm.set(false);
+    this.editingTaskId.set(null);
+    this.reordering.set(true);
+  }
+
+  stopReordering(): void {
+    this.reordering.set(false);
+  }
+
+  async onReorder(ids: string[]): Promise<void> {
+    try {
+      await this.dailyTasksService.reorder(ids);
+    } catch (e: unknown) {
+      this.snackBar.error(e, 'Failed to save the order');
+    }
+  }
+
+  // A completed task moves to "Done today", so the snackbar says where it went and what it earned.
   async onCompleteTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
     try {
-      await this.dailyTasksService.completeTask(task, difficulty);
+      const reward = await this.dailyTasksService.completeTask(task, difficulty);
+      this.expandedTaskId.set(null);
+      if (reward !== null) {
+        this.snackBar.show(`${task.title} done · +${MONEY_FORMAT.format(reward)} ₴`);
+      }
     } catch (e: unknown) {
       this.snackBar.error(e, 'Failed to complete the daily task');
     }
@@ -121,6 +188,7 @@ export class DailyTaskList {
         switchMap(() =>
           from(this.dailyTasksService.deleteTask(task.id)).pipe(
             tap(() => {
+              this.closeEdit();
               this.snackBar.show('Daily task deleted');
             }),
             catchError((e: unknown) => {

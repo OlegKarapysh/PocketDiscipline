@@ -57,6 +57,12 @@
   </mat-card-content>
 
   <mat-card-actions align="end" class="actions">
+    @if (task()) {
+      <button mat-button type="button" class="delete" (click)="delete.emit()">
+        <mat-icon>delete</mat-icon>
+        Delete task
+      </button>
+    }
     <button mat-button type="button" (click)="cancelForm.emit()">Cancel</button>
     <button mat-flat-button type="button" class="save" [disabled]="!canSubmit()" (click)="submit()">Save task</button>
   </mat-card-actions>

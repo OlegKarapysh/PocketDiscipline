@@ -55,6 +55,8 @@ export class DailyTaskForm implements OnInit {
   readonly saving = input(false);
   readonly save = output<DailyTaskDraft>();
   readonly cancelForm = output();
+  // Offered only while a task is edited. The parent asks before deleting.
+  readonly delete = output();
 
   readonly draft = signal<DailyTaskFormModel>(emptyDraft());
   readonly taskForm = form(this.draft, (path) => {

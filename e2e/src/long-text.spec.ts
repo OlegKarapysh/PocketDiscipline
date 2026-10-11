@@ -41,6 +41,7 @@ test.describe('Long text on a phone', () => {
 
     const card = page.locator('app-daily-task-item', { hasText: 'WWWW' });
     await expect(card).toBeVisible();
+    await card.locator('button.summary').click();
     const spill = await card
       .locator('.pd-difficulty')
       .first()

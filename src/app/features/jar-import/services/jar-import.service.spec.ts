@@ -133,7 +133,15 @@ describe('JarImportService', () => {
 
     it('suggests the title of an existing task with the same folded title', async () => {
       await db.dailyTasks.bulkPut([
-        { id: 'mine', title: 'ХОЛОДНЫЙ  Душ', createdAt: 0, difficulties: [], streak: 0, lastCompletedAt: null },
+        {
+          id: 'mine',
+          title: 'ХОЛОДНЫЙ  Душ',
+          createdAt: 0,
+          sortOrder: 0,
+          difficulties: [],
+          streak: 0,
+          lastCompletedAt: null,
+        },
       ]);
 
       const suggestion = await service.suggest(parser.parse(JAR_STATEMENT_FIXTURE));
@@ -230,6 +238,7 @@ describe('JarImportService', () => {
           id: 'mine',
           title: 'тренировка',
           createdAt: 0,
+          sortOrder: 0,
           difficulties: [{ id: 'easy', name: 'Лёгкая', baseReward: 40 }],
           streak: 1,
           lastCompletedAt: lastAugust,
@@ -259,6 +268,27 @@ describe('JarImportService', () => {
       expect(completionsOf('тренировка').filter((completion) => completion.difficultyId === 'easy')).toHaveLength(7);
       // The app's completion on 31 August joins the imported run of 1–8 September.
       expect(taskTitled('тренировка')?.streak).toBe(9);
+    });
+
+    it('puts the tasks it creates after the existing ones, each in a place of its own', async () => {
+      await db.dailyTasks.bulkPut([
+        {
+          id: 'mine',
+          title: 'Stretch',
+          createdAt: 0,
+          sortOrder: 7,
+          difficulties: [{ id: 'easy', name: 'Easy', baseReward: 40 }],
+          streak: 0,
+          lastCompletedAt: null,
+        },
+      ]);
+
+      await importStatement();
+
+      const created = db.dailyTasks.all().filter((task) => task.id !== 'mine');
+      expect(created).toHaveLength(6);
+      expect(created.map((task) => task.sortOrder).sort((a, b) => a - b)).toEqual([8, 9, 10, 11, 12, 13]);
+      expect(taskTitled('Stretch')?.sortOrder).toBe(7);
     });
 
     it('merges groups given the same task title', async () => {

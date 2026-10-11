@@ -3,6 +3,7 @@ import { DbService } from '../../../database/db.service';
 import { UserService } from '../../../core/services/user.service';
 import type { DailyTask } from '../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../core/models/daily-task-difficulty.model';
+import type { DailyTaskCompletion } from '../../../core/models/daily-task-completion.model';
 import { liveQuery } from 'dexie';
 import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
@@ -31,6 +32,7 @@ export class DailyTasksService {
     liveQuery(async () => {
       const tasks = await this.db.dailyTasks.toArray();
       const now = Date.now();
+      tasks.sort((a, b) => a.sortOrder - b.sortOrder || a.createdAt - b.createdAt);
 
       return tasks.map((task) => {
         let currentStreak = task.streak;
@@ -48,8 +50,13 @@ export class DailyTasksService {
     }),
   );
 
+  // In the order the user gave them.
   get tasks$(): Observable<DailyTask[]> {
     return this._tasks$;
+  }
+
+  completionsOn(date: string): Observable<DailyTaskCompletion[]> {
+    return from(liveQuery(() => this.db.dailyTaskCompletions.where('date').equals(date).toArray()));
   }
 
   async resetBrokenStreaks(): Promise<void> {
@@ -70,15 +77,27 @@ export class DailyTasksService {
 
   async createTask(title: string, difficulties: DailyTaskDifficulty[]): Promise<void> {
     this.assertValidRewards(difficulties);
-    const newTask: DailyTask = {
-      id: crypto.randomUUID(),
-      title,
-      difficulties,
-      createdAt: Date.now(),
-      streak: 0,
-      lastCompletedAt: null,
-    };
-    await this.db.dailyTasks.add(newTask);
+    // A new task goes to the end of the list.
+    await this.db.transaction('rw', this.db.dailyTasks, async () => {
+      const tasks = await this.db.dailyTasks.toArray();
+      await this.db.dailyTasks.add({
+        id: crypto.randomUUID(),
+        title,
+        difficulties,
+        createdAt: Date.now(),
+        sortOrder: tasks.reduce((max, task) => Math.max(max, task.sortOrder + 1), 0),
+        streak: 0,
+        lastCompletedAt: null,
+      });
+    });
+  }
+
+  async reorder(ids: string[]): Promise<void> {
+    await this.db.transaction('rw', this.db.dailyTasks, async () => {
+      for (const [sortOrder, id] of ids.entries()) {
+        await this.db.dailyTasks.update(id, { sortOrder });
+      }
+    });
   }
 
   // Keeps the streak and lastCompletedAt. Past completions keep the reward they earned: a changed
@@ -105,11 +124,12 @@ export class DailyTasksService {
     }
   }
 
-  async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
+  // Resolves to the reward earned, streak bonus included, or null when the task was already done today.
+  async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<number | null> {
     const now = Date.now();
     const todayStr = new Date(now).toLocaleDateString(DATE_LOCALE_CA);
 
-    await this.db.transaction('rw', this.db.dailyTasks, this.db.users, this.db.dailyTaskCompletions, async () => {
+    return this.db.transaction('rw', this.db.dailyTasks, this.db.users, this.db.dailyTaskCompletions, async () => {
       // The stored row, not the rendered one: another tab may have edited or deleted the task since.
       const freshTask = await this.db.dailyTasks.get(task.id);
       if (!freshTask) {
@@ -125,7 +145,7 @@ export class DailyTasksService {
       }
 
       const diffDays = freshTask.lastCompletedAt === null ? null : this.getDiffDays(now, freshTask.lastCompletedAt);
-      if (diffDays === 0) return;
+      if (diffDays === 0) return null;
 
       const newStreak = diffDays === 1 ? freshTask.streak + 1 : 1;
 
@@ -149,6 +169,7 @@ export class DailyTasksService {
       });
 
       await this.userService.addBalance(finalReward);
+      return finalReward;
     });
   }
 }

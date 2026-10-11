@@ -1,11 +1,25 @@
 <section class="daily-tasks">
   <div class="header">
-    <h2 class="title">Daily tasks</h2>
-    @if (!showForm()) {
-      <button matButton="tonal" type="button" class="add" (click)="openForm()">
-        <mat-icon>add</mat-icon> Add daily task
-      </button>
-    }
+    <div class="heading">
+      <h2 class="title">Daily tasks</h2>
+      @if (rows().length > 0) {
+        <span class="progress">{{ done().length }} of {{ rows().length }} done today</span>
+      }
+    </div>
+    <div class="header-actions">
+      @if (reordering()) {
+        <button mat-flat-button type="button" (click)="stopReordering()"><mat-icon>check</mat-icon> Done</button>
+      } @else {
+        @if (canReorder()) {
+          <button mat-button type="button" (click)="startReordering()"><mat-icon>swap_vert</mat-icon> Reorder</button>
+        }
+        @if (!showForm()) {
+          <button matButton="tonal" type="button" class="add" (click)="openForm()">
+            <mat-icon>add</mat-icon> Add daily task
+          </button>
+        }
+      }
+    </div>
   </div>
 
   @if (showForm()) {
@@ -13,26 +27,79 @@
   }
 
   @if (tasks(); as tasks) {
-    <div class="task-list">
-      @for (task of tasks; track task.id) {
-        @if (editingTaskId() === task.id) {
-          <app-daily-task-form
-            [task]="task"
-            [saving]="saving()"
-            (save)="onTaskEdited(task, $event)"
-            (cancelForm)="closeEdit()"
-          />
-        } @else {
-          <app-daily-task-item
-            [task]="task"
-            (complete)="onCompleteTask(task, $event)"
-            (edit)="openEdit($event)"
-            (delete)="confirmDelete($event)"
-          />
-        }
-      } @empty {
-        <app-empty-state heading="No daily tasks yet" message="Add one small thing you want to do every day." />
+    @if (tasks.length === 0) {
+      <app-empty-state heading="No daily tasks yet" message="Add one small thing you want to do every day." />
+    } @else if (reordering()) {
+      <app-daily-task-reorder-list [tasks]="tasks" (reorder)="onReorder($event)" />
+    } @else {
+      @if (pending().length > 0) {
+        <div class="task-list">
+          @for (row of pending(); track row.task.id) {
+            @if (editingTaskId() === row.task.id) {
+              <app-daily-task-form
+                [task]="row.task"
+                [saving]="saving()"
+                (save)="onTaskEdited(row.task, $event)"
+                (cancelForm)="closeEdit()"
+                (delete)="confirmDelete(row.task)"
+              />
+            } @else {
+              <app-daily-task-item
+                [task]="row.task"
+                [expanded]="expandedTaskId() === row.task.id"
+                (expandedChange)="setExpanded(row.task, $event)"
+                (complete)="onCompleteTask(row.task, $event)"
+                (edit)="openEdit($event)"
+              />
+            }
+          }
+        </div>
+      } @else {
+        <p class="all-done">
+          <mat-icon class="pd-icon-filled" aria-hidden="true">check_circle</mat-icon>
+          Everything is done for today.
+        </p>
       }
-    </div>
+
+      @if (done().length > 0) {
+        <div class="done-group">
+          <button
+            mat-button
+            type="button"
+            class="done-toggle"
+            [attr.aria-expanded]="showDone()"
+            aria-controls="daily-tasks-done"
+            (click)="toggleDone()"
+          >
+            <mat-icon>{{ showDone() ? 'expand_less' : 'expand_more' }}</mat-icon>
+            Done today ({{ done().length }})
+          </button>
+          @if (showDone()) {
+            <div class="task-list" id="daily-tasks-done">
+              @for (row of done(); track row.task.id) {
+                @if (editingTaskId() === row.task.id) {
+                  <app-daily-task-form
+                    [task]="row.task"
+                    [saving]="saving()"
+                    (save)="onTaskEdited(row.task, $event)"
+                    (cancelForm)="closeEdit()"
+                    (delete)="confirmDelete(row.task)"
+                  />
+                } @else {
+                  <app-daily-task-item
+                    [task]="row.task"
+                    [completed]="true"
+                    [earned]="row.earned"
+                    [expanded]="expandedTaskId() === row.task.id"
+                    (expandedChange)="setExpanded(row.task, $event)"
+                    (edit)="openEdit($event)"
+                  />
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    }
   }
 </section>

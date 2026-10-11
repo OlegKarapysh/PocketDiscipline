@@ -1,0 +1,28 @@
+<div class="rows" role="list" aria-label="Daily task order" cdkDropList (cdkDropListDropped)="drop($event)">
+  @for (task of order(); track task.id; let i = $index, first = $first, last = $last) {
+    <mat-card appearance="outlined" class="row" role="listitem" cdkDrag cdkDragLockAxis="y">
+      <span class="handle" cdkDragHandle>
+        <mat-icon aria-hidden="true">drag_indicator</mat-icon>
+      </span>
+      <span class="title">{{ task.title }}</span>
+      <button
+        mat-icon-button
+        type="button"
+        [disabled]="first"
+        [attr.aria-label]="'Move up: ' + task.title"
+        (click)="move(i, i - 1)"
+      >
+        <mat-icon>arrow_upward</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        type="button"
+        [disabled]="last"
+        [attr.aria-label]="'Move down: ' + task.title"
+        (click)="move(i, i + 1)"
+      >
+        <mat-icon>arrow_downward</mat-icon>
+      </button>
+    </mat-card>
+  }
+</div>

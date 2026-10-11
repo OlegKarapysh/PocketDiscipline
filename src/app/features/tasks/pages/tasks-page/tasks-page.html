@@ -1,6 +1,32 @@
 <app-page-header title="Tasks" />
 
-<div class="tasks">
-  <app-daily-task-list />
-  <app-task-list />
-</div>
+<mat-tab-group
+  animationDuration="200ms"
+  class="task-tabs"
+  [selectedIndex]="selectedTab()"
+  (selectedIndexChange)="selectedTab.set($event)"
+>
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <span class="tab-label">
+        <mat-icon class="tab-icon">event_repeat</mat-icon>
+        Daily
+      </span>
+    </ng-template>
+    <div class="tab-content">
+      <app-daily-task-list />
+    </div>
+  </mat-tab>
+
+  <mat-tab>
+    <ng-template mat-tab-label>
+      <span class="tab-label">
+        <mat-icon class="tab-icon">task_alt</mat-icon>
+        One-off
+      </span>
+    </ng-template>
+    <div class="tab-content">
+      <app-task-list />
+    </div>
+  </mat-tab>
+</mat-tab-group>

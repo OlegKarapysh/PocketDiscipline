@@ -1,17 +1,32 @@
-@use '@angular/material' as mat;
 @use '../../../../../styles/tokens' as t;
 
 .task-card {
   display: flex;
   flex-direction: column;
-  gap: t.space(3);
-  padding: t.space(4);
+  overflow: hidden;
 }
 
-.header {
+// The whole row is the toggle, so a tap anywhere on it opens the difficulties.
+.summary {
   display: flex;
   align-items: center;
   gap: t.space(3);
+  width: 100%;
+  min-height: 64px;
+  padding: t.space(3) t.space(3) t.space(3) t.space(4);
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -2px;
+    border-radius: t.radius(lg);
+  }
 }
 
 .titles {
@@ -22,22 +37,36 @@
   min-width: 0;
 }
 
-.item-actions {
-  display: flex;
-  flex-shrink: 0;
-  align-self: flex-start;
-}
-
-.delete {
-  @include mat.icon-button-overrides(
-    (
-      icon-color: var(--mat-sys-error),
-    )
-  );
-}
-
 .title {
   @include t.card-title;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: t.space(3);
+  row-gap: t.space(1);
+}
+
+.reward {
+  display: inline-flex;
+  align-items: baseline;
+  gap: t.space(1);
+}
+
+.range-dash {
+  color: var(--mat-sys-tertiary);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--mat-sys-on-surface-variant);
+  transition: transform 150ms ease;
+}
+
+.expanded .chevron {
+  transform: rotate(180deg);
 }
 
 .done-icon {
@@ -55,6 +84,13 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(2);
+  padding: 0 t.space(4) t.space(3);
+}
+
 // Three to a row on a phone. A .pd-difficulty button is never narrower than its reward, so a
 // seven-digit reward takes the buttons two to a row.
 .actions {
@@ -65,4 +101,9 @@
   > * {
     flex: 1 1 88px;
   }
+}
+
+.manage {
+  display: flex;
+  justify-content: flex-end;
 }

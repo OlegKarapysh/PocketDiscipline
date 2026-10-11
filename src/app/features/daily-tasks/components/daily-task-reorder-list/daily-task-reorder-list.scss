@@ -1,0 +1,45 @@
+@use '../../../../../styles/tokens' as t;
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(2);
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: t.space(1);
+  min-height: 64px;
+  padding: t.space(2) t.space(1) t.space(2) 0;
+}
+
+.handle {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: t.$touch-target;
+  min-height: t.$touch-target;
+  color: var(--mat-sys-on-surface-variant);
+  cursor: grab;
+}
+
+.title {
+  @include t.card-title;
+  flex: 1;
+  min-width: 0;
+}
+
+.cdk-drag-preview {
+  box-shadow: var(--pd-sys-elevation-2);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.4;
+}
+
+.cdk-drag-animating,
+.rows.cdk-drop-list-dragging .row:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
