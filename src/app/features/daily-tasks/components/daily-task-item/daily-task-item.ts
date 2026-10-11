@@ -19,7 +19,6 @@ export class DailyTaskItem {
   task = input.required<DailyTask>();
   complete = output<DailyTaskDifficulty>();
   edit = output<DailyTask>();
-  delete = output<DailyTask>();
 
   private readonly clock = inject(ClockService);
 

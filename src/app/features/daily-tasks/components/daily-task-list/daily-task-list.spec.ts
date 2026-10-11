@@ -281,10 +281,18 @@ describe('DailyTaskList', () => {
     const clickDelete = async (): Promise<void> => {
       fixture.detectChanges();
       await fixture.whenStable();
-      const item = fixture.debugElement.query(By.directive(DailyTaskItem));
-      (item.query(By.css('button[aria-label="Delete daily task"]')).nativeElement as HTMLElement).click();
+      await openEdit();
+      (fixture.debugElement.query(By.css('app-daily-task-form .delete')).nativeElement as HTMLElement).click();
+      fixture.detectChanges();
       await fixture.whenStable();
     };
+
+    it('should offer Delete only from the edit form', async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Delete');
+    });
 
     it('should ask first, naming the task, as a destructive action', async () => {
       confirmMock.ask.mockReturnValue(EMPTY);
@@ -300,11 +308,20 @@ describe('DailyTaskList', () => {
       expect(dailyTasksServiceMock.deleteTask).not.toHaveBeenCalled();
     });
 
-    it('should delete the task once confirmed, and confirm', async () => {
+    it('should delete the task once confirmed, close the form and confirm', async () => {
       await clickDelete();
 
       expect(dailyTasksServiceMock.deleteTask).toHaveBeenCalledWith('task-1');
       expect(snackBarMock.open).toHaveBeenCalledWith('Daily task deleted', 'Close', expect.any(Object));
+      expect(component.editingTaskId()).toBeNull();
+    });
+
+    it('should keep the form open when the deletion is cancelled', async () => {
+      confirmMock.ask.mockReturnValue(EMPTY);
+
+      await clickDelete();
+
+      expect(component.editingTaskId()).toBe('task-1');
     });
 
     it('should show the error when deleting fails', async () => {
@@ -315,6 +332,15 @@ describe('DailyTaskList', () => {
       expect(snackBarMock.open).toHaveBeenCalledWith('Disk is full', 'Close', expect.any(Object));
     });
   });
+
+  // Opens the first task's edit form, as the user does.
+  async function openEdit(): Promise<void> {
+    (fixture.nativeElement as HTMLElement)
+      .querySelector<HTMLElement>('app-daily-task-item button[aria-label="Edit daily task"]')
+      ?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
 
   // Types a title into the open form and presses its Save button, as the user does.
   async function saveThroughForm(title: string): Promise<void> {

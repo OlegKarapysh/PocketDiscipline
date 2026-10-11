@@ -50,6 +50,23 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: t.space(2);
   padding: t.space(2) t.space(4) t.space(4);
+}
+
+// Kept apart from Cancel and Save, at the start of the row.
+.delete {
+  @include mat.button-overrides(
+    (
+      text-label-text-color: var(--mat-sys-error),
+      text-state-layer-color: var(--mat-sys-error),
+      text-ripple-color: color-mix(
+          in srgb,
+          var(--mat-sys-error) calc(var(--mat-sys-pressed-state-layer-opacity) * 100%),
+          transparent
+        ),
+    )
+  );
+  margin-inline-end: auto;
 }

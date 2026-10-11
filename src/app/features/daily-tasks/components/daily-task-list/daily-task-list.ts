@@ -121,6 +121,7 @@ export class DailyTaskList {
         switchMap(() =>
           from(this.dailyTasksService.deleteTask(task.id)).pipe(
             tap(() => {
+              this.closeEdit();
               this.snackBar.show('Daily task deleted');
             }),
             catchError((e: unknown) => {

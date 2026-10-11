@@ -321,5 +321,19 @@ describe('DailyTaskForm', () => {
       await type(secondReward, '20');
       expect(component.canSubmit()).toBe(true);
     });
+
+    it('should offer to delete the task, and leave the asking to the parent', async () => {
+      await openFor(task);
+      let deleted = 0;
+      component.delete.subscribe(() => deleted++);
+
+      (fixture.debugElement.query(By.css('.actions .delete')).nativeElement as HTMLButtonElement).click();
+
+      expect(deleted).toBe(1);
+    });
+  });
+
+  it('should not offer to delete a task that is still being created', () => {
+    expect(fixture.debugElement.query(By.css('.actions .delete'))).toBeNull();
   });
 });

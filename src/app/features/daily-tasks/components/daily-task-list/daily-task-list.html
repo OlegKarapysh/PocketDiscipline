@@ -21,14 +21,10 @@
             [saving]="saving()"
             (save)="onTaskEdited(task, $event)"
             (cancelForm)="closeEdit()"
+            (delete)="confirmDelete(task)"
           />
         } @else {
-          <app-daily-task-item
-            [task]="task"
-            (complete)="onCompleteTask(task, $event)"
-            (edit)="openEdit($event)"
-            (delete)="confirmDelete($event)"
-          />
+          <app-daily-task-item [task]="task" (complete)="onCompleteTask(task, $event)" (edit)="openEdit($event)" />
         }
       } @empty {
         <app-empty-state heading="No daily tasks yet" message="Add one small thing you want to do every day." />
