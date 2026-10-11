@@ -1,0 +1,25 @@
+@use '../../../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.hint {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  column-gap: t.space(3);
+}
+
+.save-button {
+  align-self: flex-start;
+
+  @include t.down(medium) {
+    align-self: stretch;
+  }
+}

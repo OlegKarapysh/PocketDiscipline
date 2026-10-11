@@ -12,6 +12,8 @@ import type { DailyTaskCompletion } from '../core/models/daily-task-completion.m
 import type { WithdrawalRecord } from '../core/models/withdrawal.model';
 import type { RewardItem } from '../core/models/reward.model';
 import type { RewardCategory } from '../core/models/reward-category.model';
+import type { PomodoroRewardRate } from '../core/models/pomodoro-reward-rate.model';
+import type { EngagementType } from '../core/models/engagement-type.enum';
 import { INITIAL_REWARD_CATEGORIES } from '../core/constants/initial-reward-categories.const';
 import { getInitialGoals } from '../core/constants/initial-goals.const';
 import { LegacyPomodoroMigrationService } from './legacy-pomodoro-migration.service';
@@ -47,6 +49,7 @@ export class DbService extends Dexie {
   withdrawals!: Table<WithdrawalRecord, string>;
   rewards!: Table<RewardItem, string>;
   rewardCategories!: Table<RewardCategory, string>;
+  pomodoroRewardRates!: Table<PomodoroRewardRate, EngagementType>;
 
   constructor() {
     super('pocket-discipline-db');
@@ -105,6 +108,11 @@ export class DbService extends Dexie {
 
     // Daily tasks keep the order the user gives them. No store changes: the list sorts in memory.
     this.version(10).upgrade((tx) => this.dailyTaskOrderMigration.migrate(tx));
+
+    // A missing rate means the default, so nothing is seeded.
+    this.version(11).stores({
+      pomodoroRewardRates: 'engagementType',
+    });
 
     this.on('populate', () => this.seedDefaults());
 

@@ -268,6 +268,17 @@ const SCREENS: Screen[] = [
   },
   { name: 'settings', path: '/settings', ready: '.settings-link' },
   {
+    name: 'settings: invalid pomodoro rewards',
+    path: '/settings',
+    ready: 'app-pomodoro-reward-settings input',
+    open: async (page) => {
+      await page.getByLabel('Work').fill('12.5');
+      await page.getByLabel('Study').fill('12.5');
+      await page.getByLabel('Work').focus();
+      await expect(page.locator('app-pomodoro-reward-settings mat-error')).toHaveCount(2);
+    },
+  },
+  {
     name: 'settings: purge confirmation',
     path: '/settings',
     ready: '.settings-link',
@@ -470,6 +481,10 @@ function worstCaseRows(): Rows {
 
   return {
     users: [{ id: CURRENT_USER_ID, name: CURRENT_USER_NAME, balance: 1_234_567, createdAt: now, updatedAt: now }],
+    pomodoroRewardRates: [
+      { engagementType: 'work', baseReward: 10_000_000 },
+      { engagementType: 'study', baseReward: 10_000_000 },
+    ],
     goals: [
       goal('goal-word', word(TITLE_MAX_LENGTH)),
       goal('goal-url', url(TITLE_MAX_LENGTH)),

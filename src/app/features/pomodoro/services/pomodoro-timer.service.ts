@@ -1,6 +1,7 @@
 import type { OnDestroy } from '@angular/core';
 import { Service, signal, inject, DestroyRef } from '@angular/core';
 import { PomodoroStorageService } from './pomodoro-storage.service';
+import { PomodoroRewardRateService } from './pomodoro-reward-rate.service';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
@@ -13,10 +14,7 @@ export type { TimerConfig };
 
 const DEFAULT_DURATION_MINUTES = 25;
 
-const BASE_REWARD_WORK = 25;
-const BASE_REWARD_STUDY = 20;
-
-// Checked top-down: the first tier whose minimum the session reaches sets the multiplier.
+// Each tier multiplies the rate of a 25-minute session. Checked top-down: the first tier whose minimum the session reaches sets the multiplier.
 const REWARD_TIERS: readonly { minMinutes: number; multiplier: number }[] = [
   { minMinutes: 80, multiplier: 3 },
   { minMinutes: 50, multiplier: 2 },
@@ -43,6 +41,7 @@ export class PomodoroTimerService implements OnDestroy {
   private isDestroyed = false;
 
   private storage = inject(PomodoroStorageService);
+  private rewardRates = inject(PomodoroRewardRateService);
   private celebration = inject(CelebrationService);
   private notifications = inject(BrowserNotificationService);
   private destroyRef = inject(DestroyRef);
@@ -92,8 +91,7 @@ export class PomodoroTimerService implements OnDestroy {
     } else {
       if (this.isActive()) {
         this.backgroundTimeStart = Date.now();
-        const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
-        void this.scheduleNotification(COMPLETION_TITLE, this.rewardMessage(reward), this.expectedEndTime);
+        void this.scheduleCompletionNotification();
       }
     }
   };
@@ -183,7 +181,7 @@ export class PomodoroTimerService implements OnDestroy {
     if (!id) return;
 
     try {
-      const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
+      const reward = await this.calculateReward();
       if (!(await this.storage.completeSession(id, reward))) return;
 
       this.notifications
@@ -213,10 +211,11 @@ export class PomodoroTimerService implements OnDestroy {
     this.timeRemaining.set(this.durationMinutes() * 60);
   }
 
-  private calculateReward(duration: number, type: EngagementType): number {
-    const base = type === EngagementType.WORK ? BASE_REWARD_WORK : BASE_REWARD_STUDY;
+  private async calculateReward(): Promise<number> {
+    const rates = await this.rewardRates.getRates();
+    const duration = this.durationMinutes();
     const multiplier = REWARD_TIERS.find((tier) => duration >= tier.minMinutes)?.multiplier ?? 0;
-    return Math.trunc(base * multiplier);
+    return Math.trunc(rates[this.engagementType()] * multiplier);
   }
 
   private rewardMessage(reward: number): string {
@@ -271,6 +270,15 @@ export class PomodoroTimerService implements OnDestroy {
       }
     } catch (e) {
       console.error('Failed to request notification permission:', e);
+    }
+  }
+
+  private async scheduleCompletionNotification(): Promise<void> {
+    try {
+      const reward = await this.calculateReward();
+      await this.scheduleNotification(COMPLETION_TITLE, this.rewardMessage(reward), this.expectedEndTime);
+    } catch (err: unknown) {
+      console.error('Failed to schedule notification:', err);
     }
   }
 

@@ -38,10 +38,11 @@ describe('DbService', () => {
     expect(service.withdrawals).toBeDefined();
     expect(service.rewards).toBeDefined();
     expect(service.rewardCategories).toBeDefined();
+    expect(service.pomodoroRewardRates).toBeDefined();
   });
 
-  it('should declare the schema up to version 10', () => {
-    expect(service.verno).toBe(10);
+  it('should declare the schema up to version 11', () => {
+    expect(service.verno).toBe(11);
   });
 
   describe('on ready', () => {
