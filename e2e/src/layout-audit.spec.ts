@@ -4,6 +4,8 @@ import type { Page, TestInfo } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 import { FALLBACK_CATEGORY_ID } from '../../src/app/core/constants/initial-reward-categories.const';
 import { CURRENT_USER_ID, CURRENT_USER_NAME } from '../../src/app/core/models/user.model';
+import { JAR_STATEMENT_HEADER } from '../../src/app/features/jar-import/constants/jar-statement-format.const';
+import { jarStatementOf } from '../../src/app/features/jar-import/testing/jar-statement.fixture';
 import {
   CATEGORY_NAME_MAX_LENGTH,
   DIFFICULTY_NAME_MAX_LENGTH,
@@ -235,6 +237,27 @@ const SCREENS: Screen[] = [
       await expect(page.locator('app-confirm-dialog')).toBeVisible();
     },
   },
+  { name: 'jar import', path: '/settings/jar-import', ready: '.choose-button' },
+  {
+    name: 'jar import: rejected file',
+    path: '/settings/jar-import',
+    ready: '.choose-button',
+    open: async (page) => {
+      // The message quotes the value it could not read: text from the file, of any length.
+      const row = `${url(1000)},Разові поповнення,1.00,UAH,"","Йога",1.00,UAH`;
+      await pickJarStatement(page, `${word(300)}.csv`, [JAR_STATEMENT_HEADER, row].join('\n'));
+      await expect(page.getByRole('alert')).toContainText('could not be read');
+    },
+  },
+  {
+    name: 'jar import: worst-case statement',
+    path: '/settings/jar-import',
+    ready: '.choose-button',
+    open: async (page) => {
+      await pickJarStatement(page, 'Jar_statement.csv', worstCaseJarStatement());
+      await expect(page.locator('.review-row')).toHaveCount(JAR_ONE_OFFS + 5);
+    },
+  },
   { name: 'design system gallery', path: '/design-system', ready: 'app-stat-card' },
 ];
 
@@ -432,6 +455,39 @@ function worstCaseRows(): Rows {
       withdrawal('spend-prose', prose(TITLE_MAX_LENGTH), FALLBACK_CATEGORY_ID, prose(NOTES_MAX_LENGTH), 1234.5),
     ],
   };
+}
+
+// More one-offs than a real statement has, each a review row of its own. The review adds five more:
+// the habit, scores, pomodoro, top-ups and withdrawals.
+const JAR_ONE_OFFS = 60;
+
+// A jar statement with the longest labels the review can show: a habit whose label is the longest
+// task title (it matches the seeded task, so the review says it adds to it), one-offs as one
+// unbroken word, a URL and prose, and amounts that add up to seven digits.
+function worstCaseJarStatement(): string {
+  const letters = 'абвгдежзик';
+  const oneOff = (i: number) => `Награда ${[...String(i)].map((digit) => letters[Number(digit)]).join('')}`;
+  const at = (i: number) =>
+    `${String((i % 28) + 1).padStart(2, '0')}.09.2025 ${String(8 + Math.floor(i / 28)).padStart(2, '0')}:00`;
+  return jarStatementOf([
+    [at(0), '1000000.00', `${word(TITLE_MAX_LENGTH)} (+10%)`],
+    [at(1), '1000000.00', word(TITLE_MAX_LENGTH)],
+    [at(2), '1000000.00', url(TITLE_MAX_LENGTH)],
+    [at(3), '1000000.00', prose(TITLE_MAX_LENGTH)],
+    [at(4), '1000000.00', '10/10'],
+    [at(5), '1000000.00', 'Помидор работа 99'],
+    [at(6), '1000000.00', 'Поповнення рахунку банки'],
+    [at(7), '2999999.00', null],
+    ...Array.from({ length: JAR_ONE_OFFS - 2 }, (_, i) => [at(8 + i), '1.00', oneOff(i)] as [string, string, string]),
+  ]);
+}
+
+async function pickJarStatement(page: Page, name: string, text: string): Promise<void> {
+  await page.locator('app-jar-import-page input[type="file"]').setInputFiles({
+    name,
+    mimeType: 'text/csv',
+    buffer: Buffer.from(text, 'utf8'),
+  });
 }
 
 // Runs in the page. Returns one line per piece of text that does not fit, and per region that scrolls sideways.
