@@ -45,6 +45,17 @@ The money fields are `users.balance`, `goals.rewardValue`, `tasks.rewardValue`,
 `dailyScores.rewardEarned`, `pomodoroSessions.rewardEarned`, `withdrawals.amount` and `rewards.cost`.
 A new money field is stored in whole hryvnias too.
 
+### Imported rows
+
+The jar import (`features/jar-import/`, spec 010) writes history from a monobank jar statement. Its
+rows in `dailyTaskCompletions`, `pomodoroSessions`, `goals` and `withdrawals` are **not UUIDs**: their
+id is `jar-<YYYYMMDDHHmm>-<closing balance in kopiykas>`, taken from the statement row's bank time and
+the jar's balance after it (`jar-202609081930-123450` for 19:30 on 8 September 2026, closing at 1 234.50 ₴). That pair is unique within a statement and the
+same in every export, so importing the same or an overlapping statement writes only the rows that are
+missing. A pomodoro row of several sessions gives its second and later sessions a `-2`, `-3`… suffix.
+Imported `dailyScores` are keyed by `date` like any other score, with `createdAt` set to the row's time.
+Daily tasks the import creates keep UUIDs. The import never changes `users.balance`.
+
 ### Tables
 
 #### `users`
