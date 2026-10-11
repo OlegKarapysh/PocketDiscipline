@@ -16,6 +16,7 @@ import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-dif
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { DailyTaskItem } from '../daily-task-item/daily-task-item';
 import { DailyTaskForm } from '../daily-task-form/daily-task-form';
+import type { DailyTaskCompletion } from '../../../../core/models/daily-task-completion.model';
 import { ConfirmService } from '../../../../shared/services/confirm.service';
 
 describe('DailyTaskList', () => {
@@ -24,6 +25,8 @@ describe('DailyTaskList', () => {
   let fixture: ComponentFixture<DailyTaskList>;
   let dailyTasksServiceMock: {
     tasks$: Observable<DailyTask[]>;
+    completionsOn: ReturnType<typeof vi.fn>;
+    reorder: ReturnType<typeof vi.fn>;
     createTask: ReturnType<typeof vi.fn>;
     completeTask: ReturnType<typeof vi.fn>;
     updateTask: ReturnType<typeof vi.fn>;
@@ -49,8 +52,10 @@ describe('DailyTaskList', () => {
   beforeEach(async () => {
     dailyTasksServiceMock = {
       tasks$: of(mockTasks),
+      completionsOn: vi.fn().mockReturnValue(of([])),
+      reorder: vi.fn().mockResolvedValue(undefined),
       createTask: vi.fn().mockResolvedValue(undefined),
-      completeTask: vi.fn().mockResolvedValue(undefined),
+      completeTask: vi.fn().mockResolvedValue(100),
       updateTask: vi.fn().mockResolvedValue(undefined),
       deleteTask: vi.fn().mockResolvedValue(undefined),
       resetBrokenStreaks: vi.fn().mockResolvedValue(undefined),
@@ -224,30 +229,6 @@ describe('DailyTaskList', () => {
     );
   });
 
-  it('should open one task at a time', async () => {
-    const second: DailyTask = { ...mockTasks[0], id: 'task-2', title: 'Read', sortOrder: 1 };
-    dailyTasksServiceMock.tasks$ = of([mockTasks[0], second]);
-    fixture = TestBed.createComponent(DailyTaskList);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    await fixture.whenStable();
-    const expanded = () =>
-      fixture.debugElement
-        .queryAll(By.directive(DailyTaskItem))
-        .map((el) => el.componentInstance as DailyTaskItem)
-        .filter((item) => item.expanded())
-        .map((item) => item.task().title);
-
-    component.setExpanded(mockTasks[0], true);
-    component.setExpanded(second, true);
-    fixture.detectChanges();
-    expect(expanded()).toEqual(['Read']);
-
-    component.setExpanded(second, false);
-    fixture.detectChanges();
-    expect(expanded()).toEqual([]);
-  });
-
   describe('editing a task', () => {
     const startEditing = async (): Promise<void> => {
       fixture.detectChanges();
@@ -353,6 +334,112 @@ describe('DailyTaskList', () => {
       await clickDelete();
 
       expect(snackBarMock.open).toHaveBeenCalledWith('Disk is full', 'Close', expect.any(Object));
+    });
+  });
+
+  describe('grouping by what is done today', () => {
+    const todayAt = new Date(2026, 8, 30, 8, 0).getTime();
+    const yesterdayAt = new Date(2026, 8, 29, 8, 0).getTime();
+    const listed = (overrides: Partial<DailyTask>): DailyTask => ({ ...mockTasks[0], ...overrides });
+    const tasks = [
+      listed({ id: 'run', title: 'Run', sortOrder: 0, lastCompletedAt: todayAt }),
+      listed({ id: 'read', title: 'Read', sortOrder: 1, lastCompletedAt: yesterdayAt }),
+      listed({ id: 'swim', title: 'Swim', sortOrder: 2, lastCompletedAt: null }),
+    ];
+    const completion: DailyTaskCompletion = {
+      id: 'c1',
+      taskId: 'run',
+      date: '2026-09-30',
+      difficultyId: 'easy',
+      rewardEarned: 150,
+      completedAt: todayAt,
+    };
+
+    const render = async (shown: DailyTask[]): Promise<void> => {
+      dailyTasksServiceMock.tasks$ = of(shown);
+      fixture = TestBed.createComponent(DailyTaskList);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    };
+    const items = () =>
+      fixture.debugElement.queryAll(By.directive(DailyTaskItem)).map((el) => el.componentInstance as DailyTaskItem);
+    const doneToggle = () => (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.done-toggle');
+
+    beforeEach(async () => {
+      dailyTasksServiceMock.completionsOn.mockReturnValue(of([completion]));
+      await render(tasks);
+    });
+
+    it('should list the pending tasks and say how many are done', () => {
+      expect(items().map((item) => item.task().title)).toEqual(['Read', 'Swim']);
+      expect((fixture.nativeElement as HTMLElement).querySelector('.progress')?.textContent.trim()).toBe(
+        '1 of 3 done today',
+      );
+      expect(doneToggle()?.textContent).toContain('Done today (1)');
+      expect(doneToggle()?.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('should show the tasks done today, with what they earned, once their group is opened', () => {
+      doneToggle()?.click();
+      fixture.detectChanges();
+
+      const done = items().filter((item) => item.completed());
+      expect(done.map((item) => [item.task().title, item.earned()])).toEqual([['Run', 150]]);
+      expect(dailyTasksServiceMock.completionsOn).toHaveBeenCalledWith('2026-09-30');
+    });
+
+    it('should open one task at a time', () => {
+      component.setExpanded(tasks[1], true);
+      component.setExpanded(tasks[2], true);
+      fixture.detectChanges();
+
+      expect(
+        items()
+          .filter((item) => item.expanded())
+          .map((item) => item.task().title),
+      ).toEqual(['Swim']);
+
+      component.setExpanded(tasks[2], false);
+      fixture.detectChanges();
+
+      expect(items().some((item) => item.expanded())).toBe(false);
+    });
+
+    it('should say when everything is done for today', async () => {
+      await render([tasks[0]]);
+
+      expect((fixture.nativeElement as HTMLElement).querySelector('.all-done')?.textContent).toContain(
+        'Everything is done for today',
+      );
+    });
+
+    it('should offer a task done yesterday again once the next day begins', () => {
+      today.set('2026-10-01');
+      fixture.detectChanges();
+
+      expect(items().map((item) => item.task().title)).toEqual(['Run', 'Read', 'Swim']);
+      expect(doneToggle()).toBeNull();
+    });
+  });
+
+  describe('completing a task', () => {
+    it('should close the task and say what it earned', async () => {
+      component.setExpanded(mockTasks[0], true);
+
+      await component.onCompleteTask(mockTasks[0], easy);
+
+      expect(component.expandedTaskId()).toBeNull();
+      expect(snackBarMock.open).toHaveBeenCalledWith('Stretch Daily done · +100 ₴', 'Close', expect.any(Object));
+    });
+
+    it('should say nothing when the task had already been done today', async () => {
+      dailyTasksServiceMock.completeTask.mockResolvedValueOnce(null);
+
+      await component.onCompleteTask(mockTasks[0], easy);
+
+      expect(snackBarMock.open).not.toHaveBeenCalled();
     });
   });
 
