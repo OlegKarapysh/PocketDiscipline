@@ -21,7 +21,17 @@ export const routes: Routes = [
     loadComponent: () => import('./features/daily-scores/pages/daily-scores-page').then((m) => m.DailyScoresPage),
   },
   { path: 'rewards', loadChildren: () => import('./features/rewards/rewards.routes').then((m) => m.REWARDS_ROUTES) },
-  { path: 'settings', loadComponent: () => import('./features/settings/settings').then((m) => m.Settings) },
+  {
+    path: 'settings',
+    children: [
+      { path: '', loadComponent: () => import('./features/settings/settings').then((m) => m.Settings) },
+      {
+        path: 'jar-import',
+        loadComponent: () =>
+          import('./features/jar-import/pages/jar-import-page/jar-import-page').then((m) => m.JarImportPage),
+      },
+    ],
+  },
   ...(isDevMode()
     ? [
         {

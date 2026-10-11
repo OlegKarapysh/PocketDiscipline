@@ -1,0 +1,51 @@
+@use '../../../../../styles/tokens' as t;
+
+.stats {
+  display: grid;
+  // Sized from the worst amount, "9 999 999 ₴", plus the tile's padding.
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 228px), 1fr));
+  gap: t.space(3);
+  margin-bottom: t.space(4);
+}
+
+.period {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+  overflow-wrap: anywhere;
+}
+
+.kinds {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: t.space(1) t.space(6);
+  margin: 0 0 t.space(3);
+  padding: 0;
+  list-style: none;
+}
+
+.kind {
+  display: flex;
+  justify-content: space-between;
+  gap: t.space(3);
+  min-width: 0;
+  padding: t.space(1) 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.kind-label {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.kind-count {
+  font-size: var(--mat-sys-body-medium-size);
+  color: var(--mat-sys-on-surface);
+}
+
+.note {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

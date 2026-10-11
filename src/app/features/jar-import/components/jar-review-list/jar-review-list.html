@@ -1,0 +1,52 @@
+<app-section-card heading="Review">
+  <p class="intro">
+    One line per label in the statement. Pick what each becomes; lines given the same task name become one task.
+  </p>
+
+  <ul class="review-rows" aria-label="Statement groups">
+    @for (item of items(); track item.key) {
+      <li class="review-row">
+        <div class="row-head">
+          <span class="row-label">{{ item.label }}</span>
+          <span class="row-meta">
+            <span
+              ><span class="pd-num">{{ item.count }}</span> {{ item.countNoun }}</span
+            >
+            <app-amount [value]="item.paid" size="sm" />
+          </span>
+        </div>
+
+        <div class="row-controls">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="action-field">
+            <mat-label>Import as</mat-label>
+            <mat-select [formField]="reviewForm.rows[item.index].action">
+              @for (option of item.options; track option.action) {
+                <mat-option [value]="option.action">{{ option.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          @if (item.isTask) {
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="title-field">
+              <mat-label>Task</mat-label>
+              <input matInput type="text" [formField]="reviewForm.rows[item.index].taskTitle" />
+              @if (item.isExisting) {
+                <mat-hint>Adds to an existing task</mat-hint>
+              }
+              @for (error of reviewForm.rows[item.index].taskTitle().errors(); track error.kind) {
+                <mat-error>{{ error.message }}</mat-error>
+              }
+            </mat-form-field>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+
+  <div class="footer">
+    <span class="totals">{{ totals() }}</span>
+    <button mat-flat-button type="button" class="import-button" [disabled]="!canImport()" (click)="submit()">
+      Import
+    </button>
+  </div>
+</app-section-card>

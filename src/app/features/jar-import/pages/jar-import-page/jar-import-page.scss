@@ -1,0 +1,50 @@
+@use '../../../../../styles/tokens' as t;
+
+.jar-import {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: t.space(4);
+}
+
+.intro {
+  margin: 0 0 t.space(4);
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.picker {
+  display: none;
+}
+
+.file-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.space(3);
+}
+
+.file-name {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: t.space(2);
+  margin: t.space(4) 0 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-error);
+
+  mat-icon {
+    @include t.icon-size(md);
+    flex-shrink: 0;
+  }
+}
+
+.error-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
