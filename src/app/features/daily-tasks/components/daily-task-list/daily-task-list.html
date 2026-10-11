@@ -7,10 +7,17 @@
       }
     </div>
     <div class="header-actions">
-      @if (!showForm()) {
-        <button matButton="tonal" type="button" class="add" (click)="openForm()">
-          <mat-icon>add</mat-icon> Add daily task
-        </button>
+      @if (reordering()) {
+        <button mat-flat-button type="button" (click)="stopReordering()"><mat-icon>check</mat-icon> Done</button>
+      } @else {
+        @if (canReorder()) {
+          <button mat-button type="button" (click)="startReordering()"><mat-icon>swap_vert</mat-icon> Reorder</button>
+        }
+        @if (!showForm()) {
+          <button matButton="tonal" type="button" class="add" (click)="openForm()">
+            <mat-icon>add</mat-icon> Add daily task
+          </button>
+        }
       }
     </div>
   </div>
@@ -22,6 +29,8 @@
   @if (tasks(); as tasks) {
     @if (tasks.length === 0) {
       <app-empty-state heading="No daily tasks yet" message="Add one small thing you want to do every day." />
+    } @else if (reordering()) {
+      <app-daily-task-reorder-list [tasks]="tasks" (reorder)="onReorder($event)" />
     } @else {
       @if (pending().length > 0) {
         <div class="task-list">

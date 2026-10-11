@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DailyTasksService } from '../../services/daily-tasks.service';
 import { DailyTaskItem } from '../daily-task-item/daily-task-item';
+import { DailyTaskReorderList } from '../daily-task-reorder-list/daily-task-reorder-list';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
 import type { DailyTaskCompletion } from '../../../../core/models/daily-task-completion.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
@@ -20,7 +21,7 @@ import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { ConfirmService } from '../../../../shared/services/confirm.service';
 
 @Component({
-  imports: [MatButtonModule, MatIconModule, DailyTaskItem, DailyTaskForm, EmptyState],
+  imports: [MatButtonModule, MatIconModule, DailyTaskItem, DailyTaskReorderList, DailyTaskForm, EmptyState],
   selector: 'app-daily-task-list',
   styleUrl: './daily-task-list.scss',
   templateUrl: './daily-task-list.html',
@@ -56,6 +57,7 @@ export class DailyTaskList {
   readonly editingTaskId = signal<string | null>(null);
   readonly expandedTaskId = signal<string | null>(null);
   readonly showDone = signal(false);
+  readonly reordering = signal(false);
   readonly saving = signal(false);
 
   readonly rows = computed(() => {
@@ -73,6 +75,7 @@ export class DailyTaskList {
   });
   readonly pending = computed(() => this.rows().filter((row) => !row.done));
   readonly done = computed(() => this.rows().filter((row) => row.done));
+  readonly canReorder = computed(() => this.rows().length > 1);
 
   constructor() {
     effect(() => {
@@ -90,6 +93,7 @@ export class DailyTaskList {
         takeUntilDestroyed(),
       )
       .subscribe(() => {
+        this.reordering.set(false);
         this.showForm.set(true);
         void this.router.navigate([], {
           relativeTo: this.route,
@@ -123,6 +127,24 @@ export class DailyTaskList {
 
   toggleDone(): void {
     this.showDone.update((show) => !show);
+  }
+
+  startReordering(): void {
+    this.showForm.set(false);
+    this.editingTaskId.set(null);
+    this.reordering.set(true);
+  }
+
+  stopReordering(): void {
+    this.reordering.set(false);
+  }
+
+  async onReorder(ids: string[]): Promise<void> {
+    try {
+      await this.dailyTasksService.reorder(ids);
+    } catch (e: unknown) {
+      this.snackBar.error(e, 'Failed to save the order');
+    }
   }
 
   // A completed task moves to "Done today", so the snackbar says where it went and what it earned.

@@ -16,6 +16,7 @@ import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-dif
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { DailyTaskItem } from '../daily-task-item/daily-task-item';
 import { DailyTaskForm } from '../daily-task-form/daily-task-form';
+import { DailyTaskReorderList } from '../daily-task-reorder-list/daily-task-reorder-list';
 import type { DailyTaskCompletion } from '../../../../core/models/daily-task-completion.model';
 import { ConfirmService } from '../../../../shared/services/confirm.service';
 
@@ -440,6 +441,78 @@ describe('DailyTaskList', () => {
       await component.onCompleteTask(mockTasks[0], easy);
 
       expect(snackBarMock.open).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reordering', () => {
+    const twoTasks: DailyTask[] = [
+      { ...mockTasks[0], id: 'a', title: 'First', sortOrder: 0 },
+      { ...mockTasks[0], id: 'b', title: 'Second', sortOrder: 1 },
+    ];
+    const reorderButton = () =>
+      [...(fixture.nativeElement as HTMLElement).querySelectorAll('button')].find((button) =>
+        button.textContent.includes('Reorder'),
+      );
+
+    const render = async (shown: DailyTask[]): Promise<void> => {
+      dailyTasksServiceMock.tasks$ = of(shown);
+      fixture = TestBed.createComponent(DailyTaskList);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    it('should not offer to reorder a single task', async () => {
+      await render(mockTasks);
+
+      expect(reorderButton()).toBeUndefined();
+    });
+
+    it('should show every task in order to rearrange, and save the new order', async () => {
+      await render(twoTasks);
+      reorderButton()?.click();
+      fixture.detectChanges();
+
+      const reorderList = fixture.debugElement.query(By.directive(DailyTaskReorderList))
+        .componentInstance as DailyTaskReorderList;
+      expect(reorderList.tasks()).toEqual(twoTasks);
+      expect(fixture.debugElement.queryAll(By.directive(DailyTaskItem))).toHaveLength(0);
+
+      reorderList.reorder.emit(['b', 'a']);
+      await fixture.whenStable();
+
+      expect(dailyTasksServiceMock.reorder).toHaveBeenCalledWith(['b', 'a']);
+    });
+
+    it('should show the error when the order cannot be saved', async () => {
+      dailyTasksServiceMock.reorder.mockRejectedValueOnce(new Error('Disk is full'));
+
+      await component.onReorder(['b', 'a']);
+
+      expect(snackBarMock.open).toHaveBeenCalledWith('Disk is full', 'Close', expect.any(Object));
+    });
+
+    it('should close an open form when reordering starts', async () => {
+      await render(twoTasks);
+      component.openForm();
+      component.openEdit(twoTasks[0]);
+
+      component.startReordering();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.directive(DailyTaskForm))).toBeNull();
+    });
+
+    it('should go back to the list when done', async () => {
+      await render(twoTasks);
+      component.startReordering();
+      fixture.detectChanges();
+
+      component.stopReordering();
+      fixture.detectChanges();
+
+      expect(fixture.debugElement.query(By.directive(DailyTaskReorderList))).toBeNull();
+      expect(fixture.debugElement.queryAll(By.directive(DailyTaskItem))).toHaveLength(2);
     });
   });
 
