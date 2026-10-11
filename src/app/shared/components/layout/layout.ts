@@ -42,8 +42,13 @@ export class Layout {
   private readonly breakpointObserver = inject(BreakpointObserver);
 
   readonly navItems: readonly NavItem[] = [DASHBOARD, TASKS, GOALS, POMODORO, DAILY_SCORES, REWARDS, SETTINGS];
-  readonly primaryNav: readonly NavItem[] = [{ ...DASHBOARD, label: 'Today', icon: 'home' }, TASKS, GOALS, REWARDS];
-  readonly moreNav: readonly NavItem[] = [POMODORO, DAILY_SCORES, SETTINGS];
+  readonly primaryNav: readonly NavItem[] = [
+    { ...DASHBOARD, label: 'Today', icon: 'home' },
+    TASKS,
+    POMODORO,
+    { ...DAILY_SCORES, label: 'Scores' },
+  ];
+  readonly moreNav: readonly NavItem[] = [GOALS, REWARDS, SETTINGS];
   readonly quickActions: readonly SpeedDialAction[] = [
     { icon: 'timer', label: 'Start focus', path: '/pomodoro' },
     { icon: 'add_task', label: 'New task', path: '/tasks', queryParams: { [NEW_ITEM_QUERY_PARAM]: '1' } },
