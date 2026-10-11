@@ -287,7 +287,7 @@ describe('DailyTasksService', () => {
 
       dbMock.dailyTasks.get.mockResolvedValue(task);
 
-      await service.completeTask(task, easy);
+      const reward = await service.completeTask(task, easy);
 
       expect(dbMock.dailyTasks.update).toHaveBeenCalledWith(
         'test-daily-task-1',
@@ -296,6 +296,7 @@ describe('DailyTasksService', () => {
         }),
       );
       expect(userMock.addBalance).toHaveBeenCalledWith(150);
+      expect(reward).toBe(150);
     });
 
     it('should cap streak bonus at 100% (+10 days) for streaks of 11 or more', async () => {
@@ -416,7 +417,7 @@ describe('DailyTasksService', () => {
 
       dbMock.dailyTasks.get.mockResolvedValue(task);
 
-      await service.completeTask(task, easy);
+      await expect(service.completeTask(task, easy)).resolves.toBeNull();
 
       expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
       expect(dbMock.dailyTaskCompletions.add).not.toHaveBeenCalled();
@@ -582,6 +583,21 @@ describe('DailyTasksService', () => {
         ['a', { sortOrder: 1 }],
         ['b', { sortOrder: 2 }],
       ]);
+    });
+  });
+
+  describe('completionsOn', () => {
+    it('should emit the completions recorded on the day', async () => {
+      const completion = { id: 'c1', taskId: 't', date: '2026-09-30', difficultyId: 'easy', rewardEarned: 100 };
+      const equals = vi.fn().mockReturnValue({ toArray: vi.fn().mockResolvedValue([completion]) });
+      const where = vi.fn().mockReturnValue({ equals });
+      Object.assign(dbMock.dailyTaskCompletions, { where });
+
+      const completions = await firstValueFrom(service.completionsOn('2026-09-30'));
+
+      expect(where).toHaveBeenCalledWith('date');
+      expect(equals).toHaveBeenCalledWith('2026-09-30');
+      expect(completions).toEqual([completion]);
     });
   });
 

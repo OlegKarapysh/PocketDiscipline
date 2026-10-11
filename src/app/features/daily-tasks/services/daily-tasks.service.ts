@@ -3,6 +3,7 @@ import { DbService } from '../../../database/db.service';
 import { UserService } from '../../../core/services/user.service';
 import type { DailyTask } from '../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../core/models/daily-task-difficulty.model';
+import type { DailyTaskCompletion } from '../../../core/models/daily-task-completion.model';
 import { liveQuery } from 'dexie';
 import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
@@ -52,6 +53,10 @@ export class DailyTasksService {
   // In the order the user gave them.
   get tasks$(): Observable<DailyTask[]> {
     return this._tasks$;
+  }
+
+  completionsOn(date: string): Observable<DailyTaskCompletion[]> {
+    return from(liveQuery(() => this.db.dailyTaskCompletions.where('date').equals(date).toArray()));
   }
 
   async resetBrokenStreaks(): Promise<void> {
@@ -119,11 +124,12 @@ export class DailyTasksService {
     }
   }
 
-  async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {
+  // Resolves to the reward earned, streak bonus included, or null when the task was already done today.
+  async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<number | null> {
     const now = Date.now();
     const todayStr = new Date(now).toLocaleDateString(DATE_LOCALE_CA);
 
-    await this.db.transaction('rw', this.db.dailyTasks, this.db.users, this.db.dailyTaskCompletions, async () => {
+    return this.db.transaction('rw', this.db.dailyTasks, this.db.users, this.db.dailyTaskCompletions, async () => {
       // The stored row, not the rendered one: another tab may have edited or deleted the task since.
       const freshTask = await this.db.dailyTasks.get(task.id);
       if (!freshTask) {
@@ -139,7 +145,7 @@ export class DailyTasksService {
       }
 
       const diffDays = freshTask.lastCompletedAt === null ? null : this.getDiffDays(now, freshTask.lastCompletedAt);
-      if (diffDays === 0) return;
+      if (diffDays === 0) return null;
 
       const newStreak = diffDays === 1 ? freshTask.streak + 1 : 1;
 
@@ -163,6 +169,7 @@ export class DailyTasksService {
       });
 
       await this.userService.addBalance(finalReward);
+      return finalReward;
     });
   }
 }
