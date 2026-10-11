@@ -52,6 +52,7 @@ test.describe('Jar import', () => {
     }
     // Ревью дня stopped on the 3rd, so its streak is over by the 9th.
     await expect(taskCard(page, 'Ревью дня').locator('app-streak-badge')).toHaveCount(0);
+    await taskCard(page, 'Подтягивания').locator('button.summary').click();
     await expect(taskCard(page, 'Подтягивания').locator('.pd-difficulty')).toHaveText([
       /^\s*12–19 /,
       /^\s*20–29 /,

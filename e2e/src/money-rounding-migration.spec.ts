@@ -60,6 +60,14 @@ const V8_ROWS: Rows = {
       streak: 0,
       lastCompletedAt: null,
     },
+    {
+      id: 'daily-2',
+      title: 'Second daily task',
+      createdAt: 0,
+      difficulties: [{ id: 'easy', name: 'Easy', baseReward: 50 }],
+      streak: 0,
+      lastCompletedAt: null,
+    },
   ],
   dailyTaskCompletions: [
     {
@@ -207,7 +215,8 @@ test.describe('Money in whole hryvnias: the version 9 upgrade', () => {
   test('should round every stored money value to whole hryvnias', async ({ page }) => {
     const { version, rows } = await readDatabase(page);
 
-    expect(version).toBe(NATIVE_V9);
+    // The later upgrades run too.
+    expect(version).toBeGreaterThanOrEqual(NATIVE_V9);
     expect(rows['users'][0]['balance']).toBe(1000);
     expect(rows['goals'][0]['rewardValue']).toBe(1235);
     expect(rows['tasks'][0]['rewardValue']).toBe(10);
@@ -236,6 +245,7 @@ test.describe('Money in whole hryvnias: the version 9 upgrade', () => {
 
     await page.goto('/tasks');
     const dailyTask = page.locator('app-daily-task-item', { hasText: 'Migrated daily task' });
+    await dailyTask.locator('button.summary').click();
     await expect(dailyTask.getByRole('button', { name: /Easy\s*\+100\s*₴/ })).toBeVisible();
     await expect(dailyTask.getByRole('button', { name: /Odd\s*\+13\s*₴/ })).toBeVisible();
 
@@ -245,5 +255,20 @@ test.describe('Money in whole hryvnias: the version 9 upgrade', () => {
     );
     await page.getByRole('tab', { name: /History/ }).click();
     await expect(page.locator('.ledger-item', { hasText: 'Dinner' }).locator('app-amount')).toHaveText(/^-100\s*₴$/);
+  });
+});
+
+test.describe('Daily tasks in the order the list showed them: the version 10 upgrade', () => {
+  test('should number the daily tasks in the order they were listed, and list them so', async ({ page }) => {
+    await createV8Database(page);
+    await page.goto('/tasks');
+    await expect(page.locator('app-daily-task-item').first()).toBeVisible();
+
+    const { rows } = await readDatabase(page);
+    expect(Object.fromEntries(rows['dailyTasks'].map((task) => [task['id'], task['sortOrder']]))).toEqual({
+      'daily-1': 0,
+      'daily-2': 1,
+    });
+    await expect(page.locator('app-daily-task-item .title')).toHaveText(['Migrated daily task', 'Second daily task']);
   });
 });

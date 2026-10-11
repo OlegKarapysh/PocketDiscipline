@@ -69,10 +69,39 @@ const SCREENS: Screen[] = [
     },
   },
   {
+    name: 'tasks: daily task opened',
+    path: '/tasks',
+    ready: 'app-daily-task-item',
+    open: async (page) => {
+      await page.locator('app-daily-task-item button.summary').first().click();
+      await expect(page.locator('.pd-difficulty').first()).toBeVisible();
+    },
+  },
+  {
+    name: 'tasks: done today opened',
+    path: '/tasks',
+    ready: 'app-daily-task-item',
+    open: async (page) => {
+      await page.getByRole('button', { name: /Done today/ }).click();
+      await page.locator('#daily-tasks-done app-daily-task-item button.summary').first().click();
+      await expect(page.locator('#daily-tasks-done').getByRole('button', { name: 'Edit daily task' })).toBeVisible();
+    },
+  },
+  {
+    name: 'tasks: reorder daily tasks',
+    path: '/tasks',
+    ready: 'app-daily-task-item',
+    open: async (page) => {
+      await page.getByRole('button', { name: 'Reorder' }).click();
+      await expect(page.locator('app-daily-task-reorder-list')).toBeVisible();
+    },
+  },
+  {
     name: 'tasks: edit daily task form',
     path: '/tasks',
     ready: 'app-daily-task-item',
     open: async (page) => {
+      await page.locator('app-daily-task-item button.summary').first().click();
       await page.getByRole('button', { name: 'Edit daily task' }).first().click();
       await expect(page.locator('app-daily-task-form')).toBeVisible();
     },
@@ -83,8 +112,19 @@ const SCREENS: Screen[] = [
     ready: 'app-daily-task-item',
     root: OVERLAY,
     open: async (page) => {
-      await page.getByRole('button', { name: 'Delete daily task' }).first().click();
+      await page.locator('app-daily-task-item button.summary').first().click();
+      await page.getByRole('button', { name: 'Edit daily task' }).first().click();
+      await page.getByRole('button', { name: 'Delete task' }).click();
       await expect(page.locator('app-confirm-dialog')).toBeVisible();
+    },
+  },
+  {
+    name: 'tasks: one-off tab',
+    path: '/tasks',
+    ready: 'app-daily-task-item',
+    open: async (page) => {
+      await page.getByRole('tab', { name: /One-off/ }).click();
+      await expect(page.locator('app-task-list .task-row').first()).toBeVisible();
     },
   },
   { name: 'goals', path: '/goals', ready: 'app-goal-item' },
@@ -266,6 +306,15 @@ const SCREENS: Screen[] = [
 const EMPTY_SCREENS: Screen[] = [
   { name: 'dashboard: no earnings', path: '/dashboard', ready: '.empty-earnings-indicator' },
   { name: 'tasks: nothing yet', path: '/tasks', ready: 'app-empty-state' },
+  {
+    name: 'tasks: no one-off tasks yet',
+    path: '/tasks',
+    ready: 'app-empty-state',
+    open: async (page) => {
+      await page.getByRole('tab', { name: /One-off/ }).click();
+      await expect(page.locator('app-task-list app-empty-state')).toBeVisible();
+    },
+  },
   { name: 'goals: nothing yet', path: '/goals', ready: 'app-empty-state' },
   { name: 'rewards: empty store', path: '/rewards', ready: 'app-reward-store app-empty-state' },
   {
@@ -429,9 +478,13 @@ function worstCaseRows(): Rows {
       goal('goal-done', word(TITLE_MAX_LENGTH), { rewardValue: 9_999_999, status: 'COMPLETED', completedAt: now }),
     ],
     dailyTasks: [
-      dailyTask('daily-word', word(TITLE_MAX_LENGTH), word, { streak: 365, lastCompletedAt: now - 86_400_000 }),
-      dailyTask('daily-url', url(TITLE_MAX_LENGTH), prose),
-      dailyTask('daily-done', word(TITLE_MAX_LENGTH), word, { streak: 365, lastCompletedAt: now }),
+      dailyTask('daily-word', word(TITLE_MAX_LENGTH), word, {
+        sortOrder: 0,
+        streak: 365,
+        lastCompletedAt: now - 86_400_000,
+      }),
+      dailyTask('daily-url', url(TITLE_MAX_LENGTH), prose, { sortOrder: 1 }),
+      dailyTask('daily-done', word(TITLE_MAX_LENGTH), word, { sortOrder: 2, streak: 365, lastCompletedAt: now }),
     ],
     tasks: [task('task-word', word(TITLE_MAX_LENGTH), false), task('task-url', url(TITLE_MAX_LENGTH), true)],
     rewardCategories: [

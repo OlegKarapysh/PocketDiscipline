@@ -77,14 +77,37 @@ const MONEY_STORES = ['users', 'dailyTasks', 'dailyTaskCompletions'];
 
 const taskItem = (page: Page, title: string) => page.locator('app-daily-task-item', { hasText: title });
 const snackBar = (page: Page, text: string) => page.locator('simple-snack-bar', { hasText: text });
+const titles = (page: Page) => page.locator('app-daily-task-item .title');
 
-async function createAndCompleteTask(page: Page, title: string): Promise<void> {
-  await page.goto('/tasks');
+// Opens a closed task to show its difficulties and its Edit button.
+async function openTask(page: Page, title: string): Promise<void> {
+  const summary = taskItem(page, title).locator('button.summary');
+  await summary.click();
+  await expect(summary).toHaveAttribute('aria-expanded', 'true');
+}
+
+async function createTask(page: Page, title: string): Promise<void> {
   await page.getByRole('button', { name: 'Add daily task' }).click();
   await page.getByPlaceholder('e.g. Morning Workout').fill(title);
   await page.getByRole('button', { name: 'Save task' }).click();
+  await expect(taskItem(page, title)).toBeVisible();
+}
+
+// Leaves the task in the opened "Done today" group.
+async function createAndCompleteTask(page: Page, title: string): Promise<void> {
+  await page.goto('/tasks');
+  await createTask(page, title);
+  await openTask(page, title);
   await taskItem(page, title).locator('.pd-difficulty', { hasText: 'Easy' }).click();
+  await expect(snackBar(page, `${title} done`)).toBeVisible();
+  await page.getByRole('button', { name: /Done today/ }).click();
   await expect(taskItem(page, title).getByLabel('Completed today')).toBeVisible();
+}
+
+async function openEdit(page: Page, title: string): Promise<void> {
+  await openTask(page, title);
+  await taskItem(page, title).getByRole('button', { name: 'Edit daily task' }).click();
+  await expect(page.locator('app-daily-task-form')).toBeVisible();
 }
 
 test.describe('Daily Tasks Flow', () => {
@@ -116,7 +139,9 @@ test.describe('Daily Tasks Flow', () => {
     await expect(page.locator('app-daily-task-form')).not.toBeVisible();
     await expect(page.getByText('Morning Running')).toBeVisible();
 
-    // Verify difficulties are rendered
+    // The difficulties show once the task is opened
+    await expect(page.getByRole('button', { name: /Easy\s*\+100/i })).toHaveCount(0);
+    await openTask(page, 'Morning Running');
     await expect(page.getByRole('button', { name: /Easy\s*\+100/i })).toBeVisible();
   });
 
@@ -124,7 +149,7 @@ test.describe('Daily Tasks Flow', () => {
     await createAndCompleteTask(page, 'Morning Running');
     const before = await readStores(page, MONEY_STORES);
 
-    await taskItem(page, 'Morning Running').getByRole('button', { name: 'Edit daily task' }).click();
+    await openEdit(page, 'Morning Running');
     const form = page.locator('app-daily-task-form');
     await expect(form.locator('mat-card-title')).toHaveText('Edit daily task');
     await expect(form.getByPlaceholder('e.g. Morning Workout')).toHaveValue('Morning Running');
@@ -157,19 +182,26 @@ test.describe('Daily Tasks Flow', () => {
   test('should ask before deleting a task, and keep its history and the balance', async ({ page }) => {
     await createAndCompleteTask(page, 'Morning Running');
     const before = await readStores(page, MONEY_STORES);
-    const deleteButton = taskItem(page, 'Morning Running').getByRole('button', { name: 'Delete daily task' });
+    const form = page.locator('app-daily-task-form');
+    const deleteButton = form.getByRole('button', { name: 'Delete task' });
     const confirm = page.locator('app-confirm-dialog');
+
+    // Delete is offered only once the task is being edited.
+    await openTask(page, 'Morning Running');
+    await expect(page.getByRole('button', { name: /Delete/ })).toHaveCount(0);
+    await taskItem(page, 'Morning Running').getByRole('button', { name: 'Edit daily task' }).click();
 
     await deleteButton.click();
     await expect(confirm).toContainText('"Morning Running"');
     await confirm.getByRole('button', { name: 'Cancel' }).click();
     await expect(confirm).toHaveCount(0);
-    await expect(taskItem(page, 'Morning Running')).toBeVisible();
+    await expect(form).toBeVisible();
 
     await deleteButton.click();
     await confirm.getByRole('button', { name: 'Delete' }).click();
 
     await expect(snackBar(page, 'Daily task deleted')).toBeVisible();
+    await expect(form).toHaveCount(0);
     await expect(taskItem(page, 'Morning Running')).toHaveCount(0);
 
     const after = await readStores(page, MONEY_STORES);
@@ -191,12 +223,14 @@ test.describe('Daily Tasks Flow', () => {
       id: 'legacy',
       title: 'Legacy task',
       createdAt: 1,
+      sortOrder: 0,
       difficulties: [{ id: 'easy', name: 'Easy', baseReward: -500 }],
       streak: 0,
       lastCompletedAt: null,
     });
     await page.reload();
 
+    await openTask(page, 'Legacy task');
     await taskItem(page, 'Legacy task').locator('.pd-difficulty').click();
     await expect(snackBar(page, 'Edit the task')).toBeVisible();
     expect((await readStores(page, ['dailyTaskCompletions']))['dailyTaskCompletions']).toEqual([]);
@@ -208,6 +242,85 @@ test.describe('Daily Tasks Flow', () => {
     await form.getByRole('button', { name: 'Save task' }).click();
 
     await taskItem(page, 'Legacy task').locator('.pd-difficulty').click();
-    await expect(taskItem(page, 'Legacy task').getByLabel('Completed today')).toBeVisible();
+    await expect(snackBar(page, 'Legacy task done · +50 ₴')).toBeVisible();
+  });
+
+  test('should move a task done today into its own group, and count it', async ({ page }) => {
+    await page.goto('/tasks');
+    await createTask(page, 'Run');
+    await createTask(page, 'Read');
+    await expect(page.locator('.progress')).toHaveText('0 of 2 done today');
+
+    await openTask(page, 'Run');
+    await taskItem(page, 'Run').locator('.pd-difficulty', { hasText: 'Medium' }).click();
+
+    await expect(snackBar(page, 'Run done · +200 ₴')).toBeVisible();
+    await expect(page.locator('.progress')).toHaveText('1 of 2 done today');
+    await expect(titles(page)).toHaveText(['Read']);
+
+    const doneToggle = page.getByRole('button', { name: 'Done today (1)' });
+    await doneToggle.click();
+    await expect(doneToggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(taskItem(page, 'Run').getByLabel('Completed today')).toBeVisible();
+    await expect(taskItem(page, 'Run').locator('app-amount')).toHaveText(/^\+200\s*₴$/);
+  });
+
+  test('should open one task at a time', async ({ page }) => {
+    await page.goto('/tasks');
+    await createTask(page, 'Run');
+    await createTask(page, 'Read');
+
+    await openTask(page, 'Run');
+    await openTask(page, 'Read');
+
+    await expect(taskItem(page, 'Run').locator('button.summary')).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('.pd-difficulty')).toHaveCount(3);
+  });
+
+  test('should keep the order the user gives the tasks, after a reload', async ({ page }) => {
+    await page.goto('/tasks');
+    for (const title of ['Run', 'Read', 'Swim']) await createTask(page, title);
+    await expect(titles(page)).toHaveText(['Run', 'Read', 'Swim']);
+
+    await page.getByRole('button', { name: 'Reorder' }).click();
+    const order = page.locator('app-daily-task-reorder-list .title');
+    await page.getByRole('button', { name: 'Move down: Run' }).click();
+    await expect(order).toHaveText(['Read', 'Run', 'Swim']);
+
+    // Drags Swim by its handle to the top.
+    const handle = page.locator('app-daily-task-reorder-list .row', { hasText: 'Swim' }).locator('.handle');
+    const target = page.locator('app-daily-task-reorder-list .row', { hasText: 'Read' });
+    const from = await handle.boundingBox();
+    const to = await target.boundingBox();
+    if (!from || !to) throw new Error('the rows are not on screen');
+    const x = from.x + from.width / 2;
+    await page.mouse.move(x, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(x, from.y + from.height / 2 - 10, { steps: 5 });
+    await page.mouse.move(x, to.y + 4, { steps: 20 });
+    await page.mouse.up();
+    await expect(order).toHaveText(['Swim', 'Read', 'Run']);
+
+    await page.getByRole('button', { name: 'Done', exact: true }).click();
+    await expect(titles(page)).toHaveText(['Swim', 'Read', 'Run']);
+
+    await page.reload();
+    await expect(titles(page)).toHaveText(['Swim', 'Read', 'Run']);
+    const { dailyTasks } = await readStores(page, ['dailyTasks']);
+    expect(Object.fromEntries(dailyTasks.map((task) => [task['title'], task['sortOrder']]))).toEqual({
+      Swim: 0,
+      Read: 1,
+      Run: 2,
+    });
+  });
+
+  test('should keep the one-off tasks on a tab of their own', async ({ page }) => {
+    await page.goto('/tasks');
+    await expect(page.locator('app-task-list')).toHaveCount(0);
+
+    await page.getByRole('tab', { name: /One-off/ }).click();
+
+    await expect(page.locator('app-task-list')).toBeVisible();
+    await expect(page.locator('app-daily-task-list')).toHaveCount(0);
   });
 });
