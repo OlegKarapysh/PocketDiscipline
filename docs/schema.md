@@ -18,7 +18,7 @@ folders, so this one file is allowed to know every slice. The row interfaces bel
 **The database name and every existing `version(N).stores({...})` block are load-bearing.** Changing
 either discards existing users' IndexedDB data. Add a new version; never edit an old one.
 
-The current version is **9**. IndexedDB itself reports ten times that, 90: Dexie multiplies its
+The current version is **10**. IndexedDB itself reports ten times that, 100: Dexie multiplies its
 version numbers by 10.
 
 ### Money
@@ -94,6 +94,9 @@ export interface Goal {
 
 **Primary Key**: `id`  
 **Description**: Recurring daily tasks that users can complete on various difficulty levels to build streaks.
+The list sorts by `sortOrder` in memory, so the field has no index. The version 10 upgrade
+(`database/daily-task-order-migration.service.ts`) numbers the existing tasks in primary key order, the
+order the list showed them in before. Gaps are allowed: deleting a task does not renumber the rest.
 
 ```typescript
 export interface DailyTaskDifficulty {
@@ -106,6 +109,7 @@ export interface DailyTask {
   id: string;
   title: string;
   createdAt: number;
+  sortOrder: number; // Position in the list, lowest first. New and imported tasks go to the end
   difficulties: DailyTaskDifficulty[];
   streak: number;
   lastCompletedAt: number | null;
