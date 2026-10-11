@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EMPTY, catchError, filter, from, switchMap, tap } from 'rxjs';
@@ -12,6 +12,7 @@ import { DailyTaskForm } from '../daily-task-form/daily-task-form';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import type { DailyTaskDraft } from '../../models/daily-task-draft.model';
 import { NEW_ITEM_QUERY_PARAM } from '../../../../shared/constants/new-item-query-param.const';
+import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
 import { ClockService } from '../../../../core/services/clock.service';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { ConfirmService } from '../../../../shared/services/confirm.service';
@@ -41,7 +42,17 @@ export class DailyTaskList {
   );
   readonly showForm = signal(false);
   readonly editingTaskId = signal<string | null>(null);
+  readonly expandedTaskId = signal<string | null>(null);
   readonly saving = signal(false);
+
+  readonly rows = computed(() => {
+    const today = this.clock.today();
+    return (this.tasks() ?? []).map((task) => ({
+      task,
+      done:
+        task.lastCompletedAt !== null && new Date(task.lastCompletedAt).toLocaleDateString(DATE_LOCALE_CA) === today,
+    }));
+  });
 
   constructor() {
     effect(() => {
@@ -83,6 +94,11 @@ export class DailyTaskList {
 
   closeEdit(): void {
     this.editingTaskId.set(null);
+  }
+
+  // One task is open at a time, so the list stays short.
+  setExpanded(task: DailyTask, expanded: boolean): void {
+    this.expandedTaskId.set(expanded ? task.id : null);
   }
 
   async onCompleteTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<void> {

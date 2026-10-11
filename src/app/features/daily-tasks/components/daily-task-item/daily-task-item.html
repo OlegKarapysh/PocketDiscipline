@@ -1,31 +1,59 @@
-<mat-card appearance="outlined" class="task-card" [class.completed]="isCompletedToday()">
-  <div class="header">
-    @if (isCompletedToday()) {
+<mat-card appearance="outlined" class="task-card" [class.completed]="completed()" [class.expanded]="expanded()">
+  <button
+    type="button"
+    class="summary"
+    matRipple
+    [attr.aria-expanded]="expanded()"
+    [attr.aria-controls]="detailsId()"
+    (click)="expandedChange.emit(!expanded())"
+  >
+    @if (completed()) {
       <span class="done-icon">
         <mat-icon class="pd-icon-filled" aria-hidden="false" aria-label="Completed today">check_circle</mat-icon>
       </span>
     }
-    <div class="titles">
+    <span class="titles">
       <span class="title">{{ task().title }}</span>
-      @if (task().streak > 0) {
-        <app-streak-badge [days]="task().streak" />
-      }
-    </div>
-    <div class="item-actions">
-      <button mat-icon-button type="button" (click)="edit.emit(task())" aria-label="Edit daily task">
-        <mat-icon>edit</mat-icon>
-      </button>
-    </div>
-  </div>
+      <span class="meta">
+        @if (task().streak > 0) {
+          <app-streak-badge [days]="task().streak" />
+        }
+        @if (completed()) {
+          @if (earned() !== null) {
+            <app-amount class="reward" [value]="earned()" size="sm" tone="reward" [showSign]="true" />
+          }
+        } @else {
+          <span class="reward">
+            <app-amount [value]="rewardRange().min" size="sm" tone="reward" [showSign]="true" />
+            @if (rewardRange().max !== rewardRange().min) {
+              <span class="range-dash" aria-hidden="true">–</span>
+              <app-amount [value]="rewardRange().max" size="sm" tone="reward" />
+            }
+          </span>
+        }
+      </span>
+    </span>
+    <mat-icon class="chevron" aria-hidden="true">expand_more</mat-icon>
+  </button>
 
-  @if (!isCompletedToday()) {
-    <div class="actions">
-      @for (diff of task().difficulties; track diff.id) {
-        <button mat-stroked-button class="pd-difficulty" type="button" (click)="complete.emit(diff)">
-          {{ diff.name }}
-          <app-amount [value]="diff.baseReward" size="sm" tone="reward" [showSign]="true" />
-        </button>
+  @if (expanded()) {
+    <div class="details" [id]="detailsId()">
+      @if (!completed()) {
+        <div class="actions">
+          @for (diff of task().difficulties; track diff.id) {
+            <button mat-stroked-button class="pd-difficulty" type="button" (click)="complete.emit(diff)">
+              {{ diff.name }}
+              <app-amount [value]="diff.baseReward" size="sm" tone="reward" [showSign]="true" />
+            </button>
+          }
+        </div>
       }
+      <div class="manage">
+        <button mat-button type="button" class="edit" (click)="edit.emit(task())" aria-label="Edit daily task">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+      </div>
     </div>
   }
 </mat-card>

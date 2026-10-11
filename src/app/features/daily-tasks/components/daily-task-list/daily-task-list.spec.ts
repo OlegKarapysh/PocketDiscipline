@@ -224,14 +224,35 @@ describe('DailyTaskList', () => {
     );
   });
 
+  it('should open one task at a time', async () => {
+    const second: DailyTask = { ...mockTasks[0], id: 'task-2', title: 'Read', sortOrder: 1 };
+    dailyTasksServiceMock.tasks$ = of([mockTasks[0], second]);
+    fixture = TestBed.createComponent(DailyTaskList);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const expanded = () =>
+      fixture.debugElement
+        .queryAll(By.directive(DailyTaskItem))
+        .map((el) => el.componentInstance as DailyTaskItem)
+        .filter((item) => item.expanded())
+        .map((item) => item.task().title);
+
+    component.setExpanded(mockTasks[0], true);
+    component.setExpanded(second, true);
+    fixture.detectChanges();
+    expect(expanded()).toEqual(['Read']);
+
+    component.setExpanded(second, false);
+    fixture.detectChanges();
+    expect(expanded()).toEqual([]);
+  });
+
   describe('editing a task', () => {
     const startEditing = async (): Promise<void> => {
       fixture.detectChanges();
       await fixture.whenStable();
-      const item = fixture.debugElement.query(By.directive(DailyTaskItem));
-      (item.query(By.css('button[aria-label="Edit daily task"]')).nativeElement as HTMLElement).click();
-      fixture.detectChanges();
-      await fixture.whenStable();
+      await openEdit();
     };
 
     it('should open the form in place of the task, pre-filled with it', async () => {
@@ -290,6 +311,8 @@ describe('DailyTaskList', () => {
     it('should offer Delete only from the edit form', async () => {
       fixture.detectChanges();
       await fixture.whenStable();
+      (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('button.summary')?.click();
+      fixture.detectChanges();
 
       expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Delete');
     });
@@ -333,8 +356,10 @@ describe('DailyTaskList', () => {
     });
   });
 
-  // Opens the first task's edit form, as the user does.
+  // Opens the first task, then its edit form, as the user does.
   async function openEdit(): Promise<void> {
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('app-daily-task-item button.summary')?.click();
+    fixture.detectChanges();
     (fixture.nativeElement as HTMLElement)
       .querySelector<HTMLElement>('app-daily-task-item button[aria-label="Edit daily task"]')
       ?.click();
