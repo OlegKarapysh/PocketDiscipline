@@ -31,6 +31,7 @@ export class DailyTasksService {
     liveQuery(async () => {
       const tasks = await this.db.dailyTasks.toArray();
       const now = Date.now();
+      tasks.sort((a, b) => a.sortOrder - b.sortOrder || a.createdAt - b.createdAt);
 
       return tasks.map((task) => {
         let currentStreak = task.streak;
@@ -48,6 +49,7 @@ export class DailyTasksService {
     }),
   );
 
+  // In the order the user gave them.
   get tasks$(): Observable<DailyTask[]> {
     return this._tasks$;
   }
@@ -70,15 +72,27 @@ export class DailyTasksService {
 
   async createTask(title: string, difficulties: DailyTaskDifficulty[]): Promise<void> {
     this.assertValidRewards(difficulties);
-    const newTask: DailyTask = {
-      id: crypto.randomUUID(),
-      title,
-      difficulties,
-      createdAt: Date.now(),
-      streak: 0,
-      lastCompletedAt: null,
-    };
-    await this.db.dailyTasks.add(newTask);
+    // A new task goes to the end of the list.
+    await this.db.transaction('rw', this.db.dailyTasks, async () => {
+      const tasks = await this.db.dailyTasks.toArray();
+      await this.db.dailyTasks.add({
+        id: crypto.randomUUID(),
+        title,
+        difficulties,
+        createdAt: Date.now(),
+        sortOrder: tasks.reduce((max, task) => Math.max(max, task.sortOrder + 1), 0),
+        streak: 0,
+        lastCompletedAt: null,
+      });
+    });
+  }
+
+  async reorder(ids: string[]): Promise<void> {
+    await this.db.transaction('rw', this.db.dailyTasks, async () => {
+      for (const [sortOrder, id] of ids.entries()) {
+        await this.db.dailyTasks.update(id, { sortOrder });
+      }
+    });
   }
 
   // Keeps the streak and lastCompletedAt. Past completions keep the reward they earned: a changed

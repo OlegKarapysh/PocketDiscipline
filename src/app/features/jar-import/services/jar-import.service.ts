@@ -211,6 +211,8 @@ export class JarImportService {
   ): Promise<{ completions: number; tasks: number }> {
     const existing = await this.db.dailyTasks.toArray();
     const byTitle = new Map(existing.map((task) => [this.parser.fold(task.title), task]));
+    // The tasks the import creates go to the end of the list.
+    let nextSortOrder = existing.reduce((max, task) => Math.max(max, task.sortOrder + 1), 0);
     const completions: DailyTaskCompletion[] = [];
     const touched: DailyTask[] = [];
 
@@ -223,6 +225,7 @@ export class JarImportService {
         id: crypto.randomUUID(),
         title: group.title,
         createdAt: Math.min(...fresh.map((row) => row.completedAt)),
+        sortOrder: nextSortOrder++,
         difficulties: [],
         streak: 0,
         lastCompletedAt: null,

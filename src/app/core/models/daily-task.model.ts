@@ -4,6 +4,7 @@ export interface DailyTask {
   id: string;
   title: string;
   createdAt: number;
+  sortOrder: number;
 
   difficulties: DailyTaskDifficulty[];
 

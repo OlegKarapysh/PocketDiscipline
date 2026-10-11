@@ -37,6 +37,7 @@ describe('DailyTaskItem', () => {
       title: 'Evening Reading',
       difficulties: [easy, hard],
       createdAt: Date.now(),
+      sortOrder: 0,
       streak: 4,
       lastCompletedAt: null,
     };
@@ -58,6 +59,7 @@ describe('DailyTaskItem', () => {
       title: 'Evening Reading',
       difficulties: [easy],
       createdAt: Date.now(),
+      sortOrder: 0,
       streak: 0,
       lastCompletedAt: null,
     };
@@ -75,6 +77,7 @@ describe('DailyTaskItem', () => {
       title: 'Evening Reading',
       difficulties: [easy, hard],
       createdAt: Date.now(),
+      sortOrder: 0,
       streak: 0,
       lastCompletedAt: null,
     };
@@ -99,6 +102,7 @@ describe('DailyTaskItem', () => {
       title: 'Evening Reading',
       difficulties: [easy, hard],
       createdAt: Date.now(),
+      sortOrder: 0,
       streak: 0,
       lastCompletedAt: null,
     };
@@ -124,6 +128,7 @@ describe('DailyTaskItem', () => {
       title: 'Evening Reading',
       difficulties: [easy],
       createdAt: Date.now(),
+      sortOrder: 0,
       streak: 1,
       lastCompletedAt: Date.now(),
     };
@@ -149,6 +154,7 @@ describe('DailyTaskItem', () => {
       title: 'Evening Reading',
       difficulties: [easy],
       createdAt: Date.now() - 5 * ONE_DAY_MS,
+      sortOrder: 0,
       streak: 1,
       lastCompletedAt: yesterday,
     };
@@ -167,6 +173,7 @@ describe('DailyTaskItem', () => {
       title: 'Morning Workout',
       difficulties: [easy, hard],
       createdAt: new Date(2026, 8, 1).getTime(),
+      sortOrder: 0,
       streak: 1,
       lastCompletedAt: new Date(2026, 8, 30, 21, 0).getTime(),
     } satisfies DailyTask);

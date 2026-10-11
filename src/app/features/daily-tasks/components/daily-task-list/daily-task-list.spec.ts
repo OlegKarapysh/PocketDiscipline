@@ -40,6 +40,7 @@ describe('DailyTaskList', () => {
       title: 'Stretch Daily',
       difficulties: [easy],
       createdAt: Date.now(),
+      sortOrder: 0,
       streak: 2,
       lastCompletedAt: null,
     },

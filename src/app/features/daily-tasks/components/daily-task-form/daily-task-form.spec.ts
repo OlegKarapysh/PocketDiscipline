@@ -239,6 +239,7 @@ describe('DailyTaskForm', () => {
       id: 'task-1',
       title: 'Morning run',
       createdAt: 0,
+      sortOrder: 0,
       difficulties: [
         { id: 'short', name: 'Short', baseReward: 125 },
         { id: 'long', name: 'Long', baseReward: 300 },

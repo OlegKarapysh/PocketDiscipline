@@ -118,6 +118,23 @@ describe('DailyTasksService', () => {
     );
   });
 
+  it('should put a new task at the end of the list', async () => {
+    dbMock.dailyTasks.toArray.mockResolvedValue([
+      { id: 'a', sortOrder: 5 },
+      { id: 'b', sortOrder: 2 },
+    ]);
+
+    await service.createTask('Morning Workout', [easy]);
+
+    expect(dbMock.dailyTasks.add).toHaveBeenCalledWith(expect.objectContaining({ sortOrder: 6 }));
+  });
+
+  it('should put the first task first', async () => {
+    await service.createTask('Morning Workout', [easy]);
+
+    expect(dbMock.dailyTasks.add).toHaveBeenCalledWith(expect.objectContaining({ sortOrder: 0 }));
+  });
+
   it('should refuse to create a task whose reward is not a whole number of hryvnias, at least 1', async () => {
     for (const baseReward of [12.5, 0, NaN]) {
       await expect(
@@ -135,6 +152,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [easy],
         createdAt: Date.now(),
+        sortOrder: 0,
         streak: 0,
         lastCompletedAt: null,
       };
@@ -147,12 +165,30 @@ describe('DailyTasksService', () => {
       expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
     });
 
+    it('should emit the tasks in the order the user gave them', async () => {
+      const listed = (id: string, sortOrder: number): DailyTask => ({
+        id,
+        title: id,
+        difficulties: [easy],
+        createdAt: 0,
+        sortOrder,
+        streak: 0,
+        lastCompletedAt: null,
+      });
+      dbMock.dailyTasks.toArray.mockResolvedValue([listed('c', 2), listed('a', 0), listed('b', 1)]);
+
+      const tasks = await firstValueFrom(service.tasks$);
+
+      expect(tasks.map((task) => task.id)).toEqual(['a', 'b', 'c']);
+    });
+
     it('should reset broken streak to 0 in stream when task was missed for more than 1 day', async () => {
       const staleTask: DailyTask = {
         id: 'test-daily-task-1',
         title: 'Morning Workout',
         difficulties: [easy],
         createdAt: Date.now() - 10 * ONE_DAY_MS,
+        sortOrder: 0,
         streak: 5,
         lastCompletedAt: Date.now() - 2 * ONE_DAY_MS,
       };
@@ -170,6 +206,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [easy],
         createdAt: Date.now() - 10 * ONE_DAY_MS,
+        sortOrder: 0,
         streak: 5,
         lastCompletedAt: Date.now() - 2 * ONE_DAY_MS,
       };
@@ -186,6 +223,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [easy],
         createdAt: Date.now() - 5 * ONE_DAY_MS,
+        sortOrder: 0,
         streak: 5,
         lastCompletedAt: Date.now() - ONE_DAY_MS,
       };
@@ -211,6 +249,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [easy],
         createdAt: Date.now() - ONE_DAY_MS,
+        sortOrder: 0,
         streak: 0,
         lastCompletedAt: null,
       };
@@ -241,6 +280,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [easy],
         createdAt: now - 6 * ONE_DAY_MS,
+        sortOrder: 0,
         streak: 5,
         lastCompletedAt: yesterday,
       };
@@ -271,6 +311,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [hard],
         createdAt: now - 16 * ONE_DAY_MS,
+        sortOrder: 0,
         streak: 15,
         lastCompletedAt: yesterday,
       };
@@ -297,6 +338,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [quarter],
         createdAt: now - 2 * ONE_DAY_MS,
+        sortOrder: 0,
         streak: 1,
         lastCompletedAt: now - ONE_DAY_MS,
       };
@@ -318,6 +360,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [easy],
         createdAt: now - 10 * ONE_DAY_MS,
+        sortOrder: 0,
         streak: 5,
         lastCompletedAt: twoDaysAgo,
       };
@@ -341,6 +384,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [easy],
         createdAt: Date.now() - ONE_DAY_MS,
+        sortOrder: 0,
         streak: 0,
         lastCompletedAt: null,
       };
@@ -365,6 +409,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [easy],
         createdAt: Date.now() - ONE_DAY_MS,
+        sortOrder: 0,
         streak: 5,
         lastCompletedAt: new Date().setHours(0, 0, 0, 0),
       };
@@ -384,6 +429,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [easy, hard],
         createdAt: Date.now() - ONE_DAY_MS,
+        sortOrder: 0,
         streak: 0,
         lastCompletedAt: null,
       };
@@ -407,6 +453,7 @@ describe('DailyTasksService', () => {
           title: 'Morning Workout',
           difficulties: [easy, legacy],
           createdAt: Date.now() - ONE_DAY_MS,
+          sortOrder: 0,
           streak: 5,
           lastCompletedAt: null,
         };
@@ -426,6 +473,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [easy],
         createdAt: Date.now() - ONE_DAY_MS,
+        sortOrder: 0,
         streak: 0,
         lastCompletedAt: null,
       };
@@ -443,6 +491,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [hard],
         createdAt: Date.now() - ONE_DAY_MS,
+        sortOrder: 0,
         streak: 0,
         lastCompletedAt: null,
       };
@@ -460,6 +509,7 @@ describe('DailyTasksService', () => {
         title: 'Morning Workout',
         difficulties: [easy, hard],
         createdAt: Date.now() - ONE_DAY_MS,
+        sortOrder: 0,
         streak: 0,
         lastCompletedAt: null,
       };
@@ -478,6 +528,7 @@ describe('DailyTasksService', () => {
       title: 'Morning Workout',
       difficulties: [easy, hard],
       createdAt: Date.now() - 10 * ONE_DAY_MS,
+      sortOrder: 0,
       streak: 7,
       lastCompletedAt: Date.now() - ONE_DAY_MS,
     };
@@ -518,6 +569,19 @@ describe('DailyTasksService', () => {
 
       await expect(service.updateTask('gone', 'Evening Workout', [easy])).rejects.toThrow();
       expect(dbMock.dailyTasks.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reorder', () => {
+    it('should number the tasks in the order given, in one transaction', async () => {
+      await service.reorder(['c', 'a', 'b']);
+
+      expect(dbMock.transaction).toHaveBeenCalledTimes(1);
+      expect(dbMock.dailyTasks.update.mock.calls).toEqual([
+        ['c', { sortOrder: 0 }],
+        ['a', { sortOrder: 1 }],
+        ['b', { sortOrder: 2 }],
+      ]);
     });
   });
 

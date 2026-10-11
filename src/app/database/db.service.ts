@@ -16,6 +16,7 @@ import { INITIAL_REWARD_CATEGORIES } from '../core/constants/initial-reward-cate
 import { getInitialGoals } from '../core/constants/initial-goals.const';
 import { LegacyPomodoroMigrationService } from './legacy-pomodoro-migration.service';
 import { MoneyRoundingMigrationService } from './money-rounding-migration.service';
+import { DailyTaskOrderMigrationService } from './daily-task-order-migration.service';
 
 /**
  * The persistence composition root.
@@ -34,6 +35,7 @@ import { MoneyRoundingMigrationService } from './money-rounding-migration.servic
 export class DbService extends Dexie {
   private legacyPomodoroMigration = inject(LegacyPomodoroMigrationService);
   private moneyRoundingMigration = inject(MoneyRoundingMigrationService);
+  private dailyTaskOrderMigration = inject(DailyTaskOrderMigrationService);
 
   users!: Table<User, number>;
   tasks!: Table<DisciplineItem, string>;
@@ -100,6 +102,9 @@ export class DbService extends Dexie {
 
     // Money is a whole number of hryvnias from here on. No store changes.
     this.version(9).upgrade((tx) => this.moneyRoundingMigration.migrate(tx));
+
+    // Daily tasks keep the order the user gives them. No store changes: the list sorts in memory.
+    this.version(10).upgrade((tx) => this.dailyTaskOrderMigration.migrate(tx));
 
     this.on('populate', () => this.seedDefaults());
 

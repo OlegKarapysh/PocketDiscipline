@@ -40,8 +40,8 @@ describe('DbService', () => {
     expect(service.rewardCategories).toBeDefined();
   });
 
-  it('should declare the schema up to version 9', () => {
-    expect(service.verno).toBe(9);
+  it('should declare the schema up to version 10', () => {
+    expect(service.verno).toBe(10);
   });
 
   describe('on ready', () => {
