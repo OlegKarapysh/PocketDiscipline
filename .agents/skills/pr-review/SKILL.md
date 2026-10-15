@@ -78,7 +78,7 @@ Perform an exhaustive, multi-dimensional code review of a pull request or branch
    ```
 2. Gather project context:
    - Changed files list.
-   - Project rules: `GEMINI.md`, `docs/code_style.md`, `docs/schema.md`, `docs/design_system.md`.
+   - Project rules: `AGENTS.md`, `docs/code_style.md`, `docs/schema.md`, `docs/design_system.md`.
    - Relevant feature specs in `specs/`.
 
 ### Step 2: Parallel Subagent Dispatch

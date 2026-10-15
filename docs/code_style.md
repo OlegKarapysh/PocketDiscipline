@@ -1,8 +1,7 @@
 # Code Style Guidelines
 
-This file is the **single source of truth** for code conventions in this project. `GEMINI.md` and
-`CLAUDE.md` link here and must not restate or paraphrase these rules — if a rule changes, it changes
-here only.
+This file is the **single source of truth** for code conventions in this project. `AGENTS.md` links
+here and must not restate or paraphrase these rules — if a rule changes, it changes here only.
 
 Every Angular claim below was verified on 2026-09-20 against the installed packages
 (`@angular/core`, `@angular/forms`, `@angular/material` all at 22.1.3) and the `angular-cli` MCP
