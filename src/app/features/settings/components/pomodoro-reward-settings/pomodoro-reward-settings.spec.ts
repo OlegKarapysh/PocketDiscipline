@@ -2,16 +2,18 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { of } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { PomodoroRewardSettings } from './pomodoro-reward-settings';
 import { EngagementType } from '../../../../core/models/engagement-type.enum';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
+import type { PomodoroRewardRates } from '../../../pomodoro/models/pomodoro-reward-rates.type';
 import { PomodoroRewardRateService } from '../../../pomodoro/services/pomodoro-reward-rate.service';
 
 describe('PomodoroRewardSettings', () => {
   let fixture: ComponentFixture<PomodoroRewardSettings>;
   let saveRatesMock: ReturnType<typeof vi.fn>;
   let snackBarMock: { show: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
+  let rates$: BehaviorSubject<PomodoroRewardRates>;
 
   const inputs = () =>
     fixture.debugElement.queryAll(By.css('input')).map((input) => input.nativeElement as HTMLInputElement);
@@ -25,6 +27,7 @@ describe('PomodoroRewardSettings', () => {
   beforeEach(async () => {
     saveRatesMock = vi.fn().mockResolvedValue(undefined);
     snackBarMock = { show: vi.fn(), error: vi.fn() };
+    rates$ = new BehaviorSubject<PomodoroRewardRates>({ [EngagementType.WORK]: 100, [EngagementType.STUDY]: 125 });
 
     await TestBed.configureTestingModule({
       imports: [PomodoroRewardSettings],
@@ -32,7 +35,7 @@ describe('PomodoroRewardSettings', () => {
         {
           provide: PomodoroRewardRateService,
           useValue: {
-            rates$: of({ [EngagementType.WORK]: 100, [EngagementType.STUDY]: 125 }),
+            rates$,
             saveRates: saveRatesMock,
           },
         },
@@ -68,6 +71,24 @@ describe('PomodoroRewardSettings', () => {
     saveButton().click();
     await fixture.whenStable();
     expect(saveRatesMock).not.toHaveBeenCalled();
+  });
+
+  it('should keep unsaved edits when the stored rates change', async () => {
+    type(inputs()[0], '90');
+
+    rates$.next({ [EngagementType.WORK]: 40, [EngagementType.STUDY]: 50 });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(inputs().map((input) => input.value)).toEqual(['90', '125']);
+  });
+
+  it('should show stored rates that change while nothing is being edited', async () => {
+    rates$.next({ [EngagementType.WORK]: 40, [EngagementType.STUDY]: 50 });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(inputs().map((input) => input.value)).toEqual(['40', '50']);
   });
 
   it('should report a failed save', async () => {

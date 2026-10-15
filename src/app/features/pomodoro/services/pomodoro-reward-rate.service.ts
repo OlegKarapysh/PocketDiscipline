@@ -2,6 +2,7 @@ import { Service, inject } from '@angular/core';
 import { liveQuery } from 'dexie';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { DbService } from '../../../database/db.service';
+import { MAX_MONEY_AMOUNT } from '../../../shared/validators/money-amount';
 import type { PomodoroRewardRates } from '../models/pomodoro-reward-rates.type';
 
 const DEFAULT_RATES: PomodoroRewardRates = {
@@ -15,20 +16,22 @@ export class PomodoroRewardRateService {
 
   readonly rates$ = liveQuery(() => this.getRates());
 
-  // An engagement type without a stored rate pays its default.
+  // An engagement type without a valid stored rate pays its default.
   async getRates(): Promise<PomodoroRewardRates> {
     const stored = await this.db.pomodoroRewardRates.toArray();
-    return stored.reduce<PomodoroRewardRates>(
-      (rates, rate) => ({ ...rates, [rate.engagementType]: rate.baseReward }),
-      DEFAULT_RATES,
-    );
+    const valid = stored.filter((row) => row.engagementType in DEFAULT_RATES && this.isValidRate(row.baseReward));
+    return { ...DEFAULT_RATES, ...Object.fromEntries(valid.map((row) => [row.engagementType, row.baseReward])) };
   }
 
   async saveRates(rates: PomodoroRewardRates): Promise<void> {
     const types = Object.values(EngagementType);
-    if (types.some((type) => !Number.isSafeInteger(rates[type]) || rates[type] < 1)) {
-      throw new Error('A pomodoro reward must be a whole number of hryvnias, at least 1.');
+    if (!types.every((type) => this.isValidRate(rates[type]))) {
+      throw new Error(`A pomodoro reward must be a whole number of hryvnias, from 1 to ${MAX_MONEY_AMOUNT}.`);
     }
     await this.db.pomodoroRewardRates.bulkPut(types.map((type) => ({ engagementType: type, baseReward: rates[type] })));
+  }
+
+  private isValidRate(rate: unknown): boolean {
+    return typeof rate === 'number' && Number.isInteger(rate) && rate >= 1 && rate <= MAX_MONEY_AMOUNT;
   }
 }

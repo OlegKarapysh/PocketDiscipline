@@ -48,6 +48,19 @@ describe('PomodoroRewardRateService', () => {
         [EngagementType.STUDY]: 300,
       });
     });
+
+    it('should keep the default for a stored rate that is not a valid amount', async () => {
+      stored([
+        { engagementType: EngagementType.WORK, baseReward: null as unknown as number },
+        { engagementType: EngagementType.STUDY, baseReward: 12.5 },
+        { engagementType: 'sleep' as EngagementType, baseReward: 50 },
+      ]);
+
+      await expect(service.getRates()).resolves.toEqual({
+        [EngagementType.WORK]: 100,
+        [EngagementType.STUDY]: 125,
+      });
+    });
   });
 
   describe('saveRates', () => {
@@ -64,7 +77,7 @@ describe('PomodoroRewardRateService', () => {
       );
     });
 
-    it.each([0, -5, 12.5, Number.NaN])('should reject a rate of %s', async (rate) => {
+    it.each([0, -5, 12.5, Number.NaN, 10_000_001])('should reject a rate of %s', async (rate) => {
       await expect(service.saveRates({ [EngagementType.WORK]: rate, [EngagementType.STUDY]: 90 })).rejects.toThrow(
         'whole number of hryvnias',
       );

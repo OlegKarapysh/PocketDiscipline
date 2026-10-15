@@ -180,8 +180,9 @@ export class PomodoroTimerService implements OnDestroy {
     const id = this.currentSessionId();
     if (!id) return;
 
+    const engagementType = this.engagementType();
     try {
-      const reward = await this.calculateReward();
+      const reward = await this.calculateReward(this.durationMinutes(), engagementType);
       if (!(await this.storage.completeSession(id, reward))) return;
 
       this.notifications
@@ -193,7 +194,7 @@ export class PomodoroTimerService implements OnDestroy {
       this.celebration
         .show({
           title: COMPLETION_TITLE,
-          subtitle: `Great job focusing on your ${this.engagementType()} session.`,
+          subtitle: `Great job focusing on your ${engagementType} session.`,
           amount: reward,
         })
         .subscribe();
@@ -211,11 +212,10 @@ export class PomodoroTimerService implements OnDestroy {
     this.timeRemaining.set(this.durationMinutes() * 60);
   }
 
-  private async calculateReward(): Promise<number> {
+  private async calculateReward(duration: number, type: EngagementType): Promise<number> {
     const rates = await this.rewardRates.getRates();
-    const duration = this.durationMinutes();
     const multiplier = REWARD_TIERS.find((tier) => duration >= tier.minMinutes)?.multiplier ?? 0;
-    return Math.trunc(rates[this.engagementType()] * multiplier);
+    return Math.trunc(rates[type] * multiplier);
   }
 
   private rewardMessage(reward: number): string {
@@ -275,7 +275,9 @@ export class PomodoroTimerService implements OnDestroy {
 
   private async scheduleCompletionNotification(): Promise<void> {
     try {
-      const reward = await this.calculateReward();
+      const reward = await this.calculateReward(this.durationMinutes(), this.engagementType());
+      // The tab may have come back, and cancelled the notifications, while the rate was read.
+      if (document.visibilityState !== 'hidden' || !this.isActive()) return;
       await this.scheduleNotification(COMPLETION_TITLE, this.rewardMessage(reward), this.expectedEndTime);
     } catch (err: unknown) {
       console.error('Failed to schedule notification:', err);

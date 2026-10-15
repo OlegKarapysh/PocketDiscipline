@@ -9,12 +9,12 @@ import { EngagementType } from '../../../../core/models/engagement-type.enum';
 import { SectionCard } from '../../../../shared/components/section-card/section-card';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { moneyAmount } from '../../../../shared/validators/money-amount';
+import type { PomodoroRewardRates } from '../../../pomodoro/models/pomodoro-reward-rates.type';
 import { PomodoroRewardRateService } from '../../../pomodoro/services/pomodoro-reward-rate.service';
 
-interface RewardRatesModel {
-  work: number | null;
-  study: number | null;
-}
+type RewardRatesModel = Record<EngagementType, number | null>;
+
+const NO_RATES: RewardRatesModel = { [EngagementType.WORK]: null, [EngagementType.STUDY]: null };
 
 @Component({
   selector: 'app-pomodoro-reward-settings',
@@ -38,30 +38,40 @@ export class PomodoroRewardSettings {
     { initialValue: undefined },
   );
 
-  readonly model = linkedSignal<RewardRatesModel>(() => {
-    const rates = this.rates();
-    return { work: rates?.[EngagementType.WORK] ?? null, study: rates?.[EngagementType.STUDY] ?? null };
+  // A change made elsewhere (another tab, a purge) replaces the fields unless the user is editing them.
+  readonly model = linkedSignal<PomodoroRewardRates | undefined, RewardRatesModel>({
+    source: this.rates,
+    computation: (rates, previous) => (previous && this.isEdited(previous) ? previous.value : (rates ?? NO_RATES)),
   });
 
   readonly ratesForm = form(this.model, (path) => {
-    moneyAmount(path.work, 'Work reward');
-    moneyAmount(path.study, 'Study reward');
+    moneyAmount(path[EngagementType.WORK], 'Work reward');
+    moneyAmount(path[EngagementType.STUDY], 'Study reward');
   });
 
   async save(): Promise<void> {
-    const { work, study } = this.model();
-    if (this.ratesForm().invalid() || this.isSaving() || work === null || study === null) {
+    const rates = this.model();
+    if (this.ratesForm().invalid() || this.isSaving() || !this.isFilledIn(rates)) {
       return;
     }
 
     this.isSaving.set(true);
     try {
-      await this.rewardRates.saveRates({ [EngagementType.WORK]: work, [EngagementType.STUDY]: study });
+      await this.rewardRates.saveRates(rates);
       this.snackBar.show('Pomodoro rewards saved.');
     } catch (error) {
       this.snackBar.error(error, 'Failed to save pomodoro rewards.');
     } finally {
       this.isSaving.set(false);
     }
+  }
+
+  private isEdited({ source, value }: { source: PomodoroRewardRates | undefined; value: RewardRatesModel }): boolean {
+    return source !== undefined && Object.values(EngagementType).some((type) => value[type] !== source[type]);
+  }
+
+  // The form's required() rule already guarantees this; the guard narrows the type.
+  private isFilledIn(rates: RewardRatesModel): rates is PomodoroRewardRates {
+    return Object.values(rates).every((rate) => rate !== null);
   }
 }
