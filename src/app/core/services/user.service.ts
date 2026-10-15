@@ -22,6 +22,11 @@ export class UserService {
   // Callers that also write their own source row (a completed goal, a completion record) must open a
   // transaction over that table and `users`; this one then joins it, so both commit or neither does.
   async addBalance(amount: number) {
+    if (!Number.isFinite(amount)) {
+      console.error('Refusing to credit non-finite amount to balance:', amount);
+      return;
+    }
+
     await this.db.transaction('rw', this.db.users, async () => {
       const user = await this.db.users.get(CURRENT_USER_ID);
       if (user) {

@@ -9,6 +9,7 @@ import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { CelebrationService } from '../../../shared/services/celebration.service';
+import { SnackBarService } from '../../../shared/services/snack-bar.service';
 
 describe('PomodoroTimerService', () => {
   let service: PomodoroTimerService;
@@ -20,6 +21,7 @@ describe('PomodoroTimerService', () => {
   };
   let celebrationMock: { show: ReturnType<typeof vi.fn> };
   let rewardRatesMock: { getRates: ReturnType<typeof vi.fn> };
+  let snackBarMock: { show: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
 
   const createService = (sessions: PomodoroSession[] | Promise<PomodoroSession[]> = []) => {
     TestBed.resetTestingModule();
@@ -30,6 +32,7 @@ describe('PomodoroTimerService', () => {
         { provide: PomodoroStorageService, useValue: storageMock },
         { provide: CelebrationService, useValue: celebrationMock },
         { provide: PomodoroRewardRateService, useValue: rewardRatesMock },
+        { provide: SnackBarService, useValue: snackBarMock },
       ],
     });
     service = TestBed.inject(PomodoroTimerService);
@@ -53,6 +56,11 @@ describe('PomodoroTimerService', () => {
 
     rewardRatesMock = {
       getRates: vi.fn().mockResolvedValue({ [EngagementType.WORK]: 100, [EngagementType.STUDY]: 125 }),
+    };
+
+    snackBarMock = {
+      show: vi.fn(),
+      error: vi.fn(),
     };
 
     service = createService([]);
@@ -405,7 +413,17 @@ describe('PomodoroTimerService', () => {
 
       expect(service.isActive()).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith('Failed to complete pomodoro session:', testError);
+      expect(snackBarMock.error).toHaveBeenCalledWith(testError, 'Failed to save completed session reward.');
       consoleSpy.mockRestore();
+    });
+
+    it('should fall back to default base reward if rate lookup lacks engagement type', async () => {
+      rewardRatesMock.getRates.mockResolvedValue({});
+
+      await service.startTimer();
+      await vi.advanceTimersByTimeAsync(1500 * 1000);
+
+      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 100);
     });
 
     it('should catch error gracefully if getAllSessions fails on startup', async () => {
@@ -419,6 +437,7 @@ describe('PomodoroTimerService', () => {
           PomodoroTimerService,
           { provide: PomodoroStorageService, useValue: storageMock },
           { provide: CelebrationService, useValue: celebrationMock },
+          { provide: SnackBarService, useValue: snackBarMock },
         ],
       });
       const failingService = TestBed.inject(PomodoroTimerService);

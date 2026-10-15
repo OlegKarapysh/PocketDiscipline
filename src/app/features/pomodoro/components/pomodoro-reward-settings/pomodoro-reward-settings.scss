@@ -13,7 +13,7 @@
 .fields {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-  column-gap: t.space(3);
+  gap: t.space(3);
 }
 
 .save-button {

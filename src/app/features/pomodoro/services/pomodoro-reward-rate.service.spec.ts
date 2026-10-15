@@ -61,6 +61,27 @@ describe('PomodoroRewardRateService', () => {
         [EngagementType.STUDY]: 125,
       });
     });
+
+    it('should ignore prototype property names in stored rows', async () => {
+      stored([
+        { engagementType: 'toString' as unknown as EngagementType, baseReward: 500 },
+        { engagementType: 'valueOf' as unknown as EngagementType, baseReward: 500 },
+      ]);
+
+      await expect(service.getRates()).resolves.toEqual({
+        [EngagementType.WORK]: 100,
+        [EngagementType.STUDY]: 125,
+      });
+    });
+
+    it('should fall back to default rates when database read fails', async () => {
+      dbMock.pomodoroRewardRates.toArray.mockRejectedValue(new Error('IndexedDB connection lost'));
+
+      await expect(service.getRates()).resolves.toEqual({
+        [EngagementType.WORK]: 100,
+        [EngagementType.STUDY]: 125,
+      });
+    });
   });
 
   describe('saveRates', () => {
@@ -82,6 +103,15 @@ describe('PomodoroRewardRateService', () => {
         'whole number of hryvnias',
       );
       expect(dbMock.pomodoroRewardRates.bulkPut).not.toHaveBeenCalled();
+    });
+
+    it.each([1, 10_000_000])('should accept boundary rate of %s', async (rate) => {
+      await service.saveRates({ [EngagementType.WORK]: rate, [EngagementType.STUDY]: rate });
+
+      expect(dbMock.pomodoroRewardRates.bulkPut).toHaveBeenCalledWith([
+        { engagementType: EngagementType.WORK, baseReward: rate },
+        { engagementType: EngagementType.STUDY, baseReward: rate },
+      ]);
     });
   });
 });

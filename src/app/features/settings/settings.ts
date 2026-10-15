@@ -8,7 +8,7 @@ import { PageHeader } from '../../shared/components/page-header/page-header';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { SnackBarService } from '../../shared/services/snack-bar.service';
 import { DatabasePurgeService } from './services/database-purge.service';
-import { PomodoroRewardSettings } from './components/pomodoro-reward-settings/pomodoro-reward-settings';
+import { PomodoroRewardSettings } from '../pomodoro/components/pomodoro-reward-settings/pomodoro-reward-settings';
 
 @Component({
   imports: [RouterLink, MatButtonModule, MatIconModule, PageHeader, PomodoroRewardSettings],

@@ -60,6 +60,11 @@ describe('Settings', () => {
     expect(linkEl.textContent).toContain('Manage reward categories');
   });
 
+  it('should render pomodoro reward settings', () => {
+    const rewardSettings = fixture.debugElement.query(By.css('app-pomodoro-reward-settings'));
+    expect(rewardSettings).toBeTruthy();
+  });
+
   describe('purge database', () => {
     const clickPurge = () => {
       const button = fixture.debugElement.query(By.css('button.destructive'));

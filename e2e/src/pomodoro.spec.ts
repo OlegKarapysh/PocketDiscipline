@@ -9,7 +9,9 @@ import { readBalance, readStores } from './indexed-db';
 const SESSION = '25:00';
 
 async function completeSession(page: Page): Promise<void> {
-  await page.goto('/pomodoro');
+  if (!page.url().includes('/pomodoro')) {
+    await page.goto('/pomodoro');
+  }
   const start = page.getByRole('button', { name: 'Start Timer' });
   await expect(start).toBeEnabled();
   await start.click();
@@ -52,5 +54,23 @@ test.describe('Pomodoro', () => {
 
     await expect(page.locator('app-celebration-dialog app-amount')).toHaveText(/^\+40\s*₴$/);
     await expect.poll(() => readBalance(page)).toBe(balance + 40);
+  });
+
+  test('should pay the default study rate for a study session', async ({ page }) => {
+    await page.goto('/pomodoro');
+    await expect(page.getByRole('button', { name: 'Start Timer' })).toBeEnabled();
+    const balance = await readBalance(page);
+
+    await page.getByLabel('Engagement type').click();
+    await page.getByRole('option', { name: 'Study' }).click();
+
+    await completeSession(page);
+
+    const celebration = page.locator('app-celebration-dialog');
+    await expect(celebration).toContainText('Pomodoro complete');
+    await expect(celebration.locator('app-amount')).toHaveText(/^\+125\s*₴$/);
+    await expect.poll(() => readBalance(page)).toBe(balance + 125);
+    const { pomodoroSessions } = await readStores(page, ['pomodoroSessions']);
+    expect(pomodoroSessions).toEqual([expect.objectContaining({ status: 'completed', rewardEarned: 125 })]);
   });
 });

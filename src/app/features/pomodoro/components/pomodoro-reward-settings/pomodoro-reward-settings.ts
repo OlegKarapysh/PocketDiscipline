@@ -4,13 +4,13 @@ import { FormField, form } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { EMPTY, catchError, from } from 'rxjs';
+import { catchError, from, of } from 'rxjs';
 import { EngagementType } from '../../../../core/models/engagement-type.enum';
 import { SectionCard } from '../../../../shared/components/section-card/section-card';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { moneyAmount } from '../../../../shared/validators/money-amount';
-import type { PomodoroRewardRates } from '../../../pomodoro/models/pomodoro-reward-rates.type';
-import { PomodoroRewardRateService } from '../../../pomodoro/services/pomodoro-reward-rate.service';
+import type { PomodoroRewardRates } from '../../models/pomodoro-reward-rates.type';
+import { DEFAULT_RATES, PomodoroRewardRateService } from '../../services/pomodoro-reward-rate.service';
 
 type RewardRatesModel = Record<EngagementType, number | null>;
 
@@ -32,7 +32,7 @@ export class PomodoroRewardSettings {
     from(this.rewardRates.rates$).pipe(
       catchError((err: unknown) => {
         this.snackBar.error(err, 'Failed to load pomodoro rewards');
-        return EMPTY;
+        return of(DEFAULT_RATES);
       }),
     ),
     { initialValue: undefined },
@@ -72,6 +72,8 @@ export class PomodoroRewardSettings {
 
   // The form's required() rule already guarantees this; the guard narrows the type.
   private isFilledIn(rates: RewardRatesModel): rates is PomodoroRewardRates {
-    return Object.values(rates).every((rate) => rate !== null);
+    return Object.values(EngagementType).every(
+      (type) => typeof rates[type] === 'number' && Number.isFinite(rates[type]),
+    );
   }
 }

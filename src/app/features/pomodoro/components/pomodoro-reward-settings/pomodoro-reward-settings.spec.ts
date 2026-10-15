@@ -2,12 +2,12 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, throwError } from 'rxjs';
 import { PomodoroRewardSettings } from './pomodoro-reward-settings';
 import { EngagementType } from '../../../../core/models/engagement-type.enum';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
-import type { PomodoroRewardRates } from '../../../pomodoro/models/pomodoro-reward-rates.type';
-import { PomodoroRewardRateService } from '../../../pomodoro/services/pomodoro-reward-rate.service';
+import type { PomodoroRewardRates } from '../../models/pomodoro-reward-rates.type';
+import { PomodoroRewardRateService } from '../../services/pomodoro-reward-rate.service';
 
 describe('PomodoroRewardSettings', () => {
   let fixture: ComponentFixture<PomodoroRewardSettings>;
@@ -101,5 +101,34 @@ describe('PomodoroRewardSettings', () => {
     expect(snackBarMock.error).toHaveBeenCalledWith(failure, 'Failed to save pomodoro rewards.');
     fixture.detectChanges();
     expect(saveButton().disabled).toBe(false);
+  });
+
+  it('should notify via snackbar and fall back to default rates when rates stream errors', async () => {
+    const err = new Error('IndexedDB stream failure');
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [PomodoroRewardSettings],
+      providers: [
+        {
+          provide: PomodoroRewardRateService,
+          useValue: {
+            rates$: throwError(() => err),
+            saveRates: saveRatesMock,
+          },
+        },
+        { provide: SnackBarService, useValue: snackBarMock },
+      ],
+    }).compileComponents();
+
+    const failingFixture = TestBed.createComponent(PomodoroRewardSettings);
+    failingFixture.detectChanges();
+    await failingFixture.whenStable();
+
+    expect(snackBarMock.error).toHaveBeenCalledWith(err, 'Failed to load pomodoro rewards');
+    const failingInputs = failingFixture.debugElement
+      .queryAll(By.css('input'))
+      .map((input) => (input.nativeElement as HTMLInputElement).value);
+    expect(failingInputs).toEqual(['100', '125']);
   });
 });
