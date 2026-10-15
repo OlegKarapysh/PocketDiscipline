@@ -1,11 +1,14 @@
 import type { OnDestroy } from '@angular/core';
 import { Service, signal, inject, DestroyRef } from '@angular/core';
 import { PomodoroStorageService } from './pomodoro-storage.service';
+import { DEFAULT_RATES, PomodoroRewardRateService } from './pomodoro-reward-rate.service';
+import type { PomodoroRewardRates } from '../models/pomodoro-reward-rates.type';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
 import { CelebrationService } from '../../../shared/services/celebration.service';
 import { BrowserNotificationService } from '../../../core/services/browser-notification.service';
+import { SnackBarService } from '../../../shared/services/snack-bar.service';
 import { MONEY_FORMAT } from '../../../shared/constants/money-format.const';
 import type { TimerConfig } from '../models/timer-config.model';
 
@@ -13,10 +16,7 @@ export type { TimerConfig };
 
 const DEFAULT_DURATION_MINUTES = 25;
 
-const BASE_REWARD_WORK = 25;
-const BASE_REWARD_STUDY = 20;
-
-// Checked top-down: the first tier whose minimum the session reaches sets the multiplier.
+// Each tier multiplies the rate of a 25-minute session. Checked top-down: the first tier whose minimum the session reaches sets the multiplier.
 const REWARD_TIERS: readonly { minMinutes: number; multiplier: number }[] = [
   { minMinutes: 80, multiplier: 3 },
   { minMinutes: 50, multiplier: 2 },
@@ -43,8 +43,10 @@ export class PomodoroTimerService implements OnDestroy {
   private isDestroyed = false;
 
   private storage = inject(PomodoroStorageService);
+  private rewardRates = inject(PomodoroRewardRateService);
   private celebration = inject(CelebrationService);
   private notifications = inject(BrowserNotificationService);
+  private snackBar = inject(SnackBarService);
   private destroyRef = inject(DestroyRef);
 
   constructor() {
@@ -92,8 +94,7 @@ export class PomodoroTimerService implements OnDestroy {
     } else {
       if (this.isActive()) {
         this.backgroundTimeStart = Date.now();
-        const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
-        void this.scheduleNotification(COMPLETION_TITLE, this.rewardMessage(reward), this.expectedEndTime);
+        void this.scheduleCompletionNotification();
       }
     }
   };
@@ -181,13 +182,16 @@ export class PomodoroTimerService implements OnDestroy {
     this.clearInterval();
     const id = this.currentSessionId();
     if (!id) return;
+    this.currentSessionId.set(null);
 
+    const engagementType = this.engagementType();
+    const durationMinutes = this.durationMinutes();
     try {
-      const reward = this.calculateReward(this.durationMinutes(), this.engagementType());
+      const reward = await this.calculateReward(durationMinutes, engagementType);
       if (!(await this.storage.completeSession(id, reward))) return;
 
       this.notifications
-        .show(COMPLETION_TITLE, { body: this.rewardMessage(reward), icon: 'icons/icon-192x192.png' })
+        .show(COMPLETION_TITLE, { body: this.rewardMessage(reward, engagementType), icon: 'icons/icon-192x192.png' })
         .catch((err: unknown) => {
           console.error('Failed to show notification:', err);
         });
@@ -195,12 +199,13 @@ export class PomodoroTimerService implements OnDestroy {
       this.celebration
         .show({
           title: COMPLETION_TITLE,
-          subtitle: `Great job focusing on your ${this.engagementType()} session.`,
+          subtitle: `Great job focusing on your ${engagementType} session.`,
           amount: reward,
         })
         .subscribe();
     } catch (err: unknown) {
       console.error('Failed to complete pomodoro session:', err);
+      this.snackBar.error(err, 'Failed to save completed session reward.');
     } finally {
       this.resetTimer();
     }
@@ -213,14 +218,16 @@ export class PomodoroTimerService implements OnDestroy {
     this.timeRemaining.set(this.durationMinutes() * 60);
   }
 
-  private calculateReward(duration: number, type: EngagementType): number {
-    const base = type === EngagementType.WORK ? BASE_REWARD_WORK : BASE_REWARD_STUDY;
+  private async calculateReward(duration: number, type: EngagementType): Promise<number> {
+    const rates: Partial<PomodoroRewardRates> = await this.rewardRates.getRates();
     const multiplier = REWARD_TIERS.find((tier) => duration >= tier.minMinutes)?.multiplier ?? 0;
-    return Math.trunc(base * multiplier);
+    const base = rates[type] ?? DEFAULT_RATES[type];
+    const reward = Math.trunc(base * multiplier);
+    return Number.isFinite(reward) && reward >= 0 ? reward : 0;
   }
 
-  private rewardMessage(reward: number): string {
-    return `You earned ${MONEY_FORMAT.format(reward)} ₴ for your ${this.engagementType()} session.`;
+  private rewardMessage(reward: number, type: EngagementType): string {
+    return `You earned ${MONEY_FORMAT.format(reward)} ₴ for your ${type} session.`;
   }
 
   private async restoreActiveSession(): Promise<void> {
@@ -271,6 +278,23 @@ export class PomodoroTimerService implements OnDestroy {
       }
     } catch (e) {
       console.error('Failed to request notification permission:', e);
+    }
+  }
+
+  private async scheduleCompletionNotification(): Promise<void> {
+    try {
+      const durationMinutes = this.durationMinutes();
+      const engagementType = this.engagementType();
+      const reward = await this.calculateReward(durationMinutes, engagementType);
+      // The tab may have come back, and cancelled the notifications, while the rate was read.
+      if (document.visibilityState !== 'hidden' || !this.isActive()) return;
+      await this.scheduleNotification(
+        COMPLETION_TITLE,
+        this.rewardMessage(reward, engagementType),
+        this.expectedEndTime,
+      );
+    } catch (err: unknown) {
+      console.error('Failed to schedule notification:', err);
     }
   }
 

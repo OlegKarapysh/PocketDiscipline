@@ -18,7 +18,7 @@ folders, so this one file is allowed to know every slice. The row interfaces bel
 **The database name and every existing `version(N).stores({...})` block are load-bearing.** Changing
 either discards existing users' IndexedDB data. Add a new version; never edit an old one.
 
-The current version is **10**. IndexedDB itself reports ten times that, 100: Dexie multiplies its
+The current version is **11**. IndexedDB itself reports ten times that, 110: Dexie multiplies its
 version numbers by 10.
 
 ### Money
@@ -42,7 +42,8 @@ cannot store one.
 
 The money fields are `users.balance`, `goals.rewardValue`, `tasks.rewardValue`,
 `dailyTasks.difficulties[].baseReward`, `dailyTaskCompletions.rewardEarned`,
-`dailyScores.rewardEarned`, `pomodoroSessions.rewardEarned`, `withdrawals.amount` and `rewards.cost`.
+`dailyScores.rewardEarned`, `pomodoroSessions.rewardEarned`, `pomodoroRewardRates.baseReward`,
+`withdrawals.amount` and `rewards.cost`.
 A new money field is stored in whole hryvnias too.
 
 ### Imported rows
@@ -166,6 +167,22 @@ export interface PomodoroSession {
   endTime?: number; // timestamp
   status: PomodoroSessionStatus;
   rewardEarned?: number; // Whole hryvnias; absent unless completed
+}
+```
+
+#### `pomodoroRewardRates` _(Version 11)_
+
+**Primary Key**: `engagementType`  
+**Description**: What a 25-minute pomodoro session pays, per engagement type, as set in Settings.
+`PomodoroRewardRateService` (`features/pomodoro/`) owns it. A type without a row pays its default,
+100 ₴ for work and 125 ₴ for study, so nothing is seeded and a purge restores the defaults. A
+session's reward is this rate times its duration tier (15 minutes ×0.5, 25 ×1, 50 ×2, 80 ×3),
+truncated to whole hryvnias, using the rate in effect when the session completes.
+
+```typescript
+export interface PomodoroRewardRate {
+  engagementType: EngagementType; // 'work' | 'study'
+  baseReward: number; // Whole hryvnias (1 or more) for a 25-minute session
 }
 ```
 

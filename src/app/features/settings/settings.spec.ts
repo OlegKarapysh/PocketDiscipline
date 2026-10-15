@@ -8,6 +8,7 @@ import { By } from '@angular/platform-browser';
 import { ConfirmService } from '../../shared/services/confirm.service';
 import { SnackBarService } from '../../shared/services/snack-bar.service';
 import { DatabasePurgeService } from './services/database-purge.service';
+import { PomodoroRewardRateService } from '../pomodoro/services/pomodoro-reward-rate.service';
 
 describe('Settings', () => {
   let component: Settings;
@@ -29,6 +30,7 @@ describe('Settings', () => {
         { provide: ConfirmService, useValue: { ask: askMock } },
         { provide: DatabasePurgeService, useValue: { purge: purgeMock } },
         { provide: SnackBarService, useValue: snackBarMock },
+        { provide: PomodoroRewardRateService, useValue: { rates$: NEVER, saveRates: vi.fn() } },
       ],
     }).compileComponents();
 
@@ -56,6 +58,11 @@ describe('Settings', () => {
     expect(link).toBeTruthy();
     const linkEl = link.nativeElement as HTMLElement;
     expect(linkEl.textContent).toContain('Manage reward categories');
+  });
+
+  it('should render pomodoro reward settings', () => {
+    const rewardSettings = fixture.debugElement.query(By.css('app-pomodoro-reward-settings'));
+    expect(rewardSettings).toBeTruthy();
   });
 
   describe('purge database', () => {

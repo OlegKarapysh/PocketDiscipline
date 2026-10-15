@@ -1,0 +1,32 @@
+<app-section-card heading="Pomodoro rewards">
+  <p class="hint">Paid for a 25-minute session. 15 minutes pays half, 50 minutes double and 80 minutes triple.</p>
+  @if (rates()) {
+    <div class="fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Work</mat-label>
+        <input matInput type="number" class="pd-num" step="1" [formField]="ratesForm.work" />
+        <span matTextSuffix>₴</span>
+        @for (error of ratesForm.work().errors(); track error.kind) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Study</mat-label>
+        <input matInput type="number" class="pd-num" step="1" [formField]="ratesForm.study" />
+        <span matTextSuffix>₴</span>
+        @for (error of ratesForm.study().errors(); track error.kind) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+    <button
+      mat-flat-button
+      type="button"
+      class="save-button"
+      (click)="save()"
+      [disabled]="ratesForm().invalid() || isSaving()"
+    >
+      Save rewards
+    </button>
+  }
+</app-section-card>

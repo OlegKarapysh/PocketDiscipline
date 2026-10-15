@@ -149,6 +149,13 @@ describe('UserService', () => {
       );
     });
 
+    it('should ignore non-finite amounts to protect balance integrity', async () => {
+      await service.addBalance(Number.NaN);
+      await service.addBalance(Infinity);
+
+      expect(dbMock.transaction).not.toHaveBeenCalled();
+    });
+
     it('should apply concurrent credits one after another so neither is lost', async () => {
       let stored: User = { id: CURRENT_USER_ID, name: 'Current', balance: 500, createdAt: 1000, updatedAt: 1000 };
       dbMock.users.get.mockImplementation(() => ({ ...stored }));

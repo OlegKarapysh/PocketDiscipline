@@ -1,7 +1,7 @@
 import type { SchemaPath } from '@angular/forms/signals';
 import { max, min, required, validate } from '@angular/forms/signals';
 
-const MAX_MONEY_AMOUNT = 10_000_000;
+export const MAX_MONEY_AMOUNT = 10_000_000;
 
 /**
  * The rule every money input follows: a whole number of hryvnias, required, from 1 up to 10 000 000.

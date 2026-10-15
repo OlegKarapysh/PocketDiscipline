@@ -1,17 +1,20 @@
 <div class="settings-container">
   <app-page-header title="Settings" />
-  <div class="settings-list">
-    <a mat-stroked-button routerLink="/rewards/categories" class="settings-link">
-      <mat-icon>category</mat-icon>
-      Manage reward categories
-    </a>
-    <a mat-stroked-button routerLink="/settings/jar-import" class="settings-link">
-      <mat-icon>upload_file</mat-icon>
-      Import jar statement
-    </a>
-    <button mat-stroked-button type="button" class="settings-link destructive" (click)="confirmPurge()">
-      <mat-icon>delete_forever</mat-icon>
-      Purge database
-    </button>
+  <div class="settings-content">
+    <app-pomodoro-reward-settings />
+    <div class="settings-list">
+      <a mat-stroked-button routerLink="/rewards/categories" class="settings-link">
+        <mat-icon>category</mat-icon>
+        Manage reward categories
+      </a>
+      <a mat-stroked-button routerLink="/settings/jar-import" class="settings-link">
+        <mat-icon>upload_file</mat-icon>
+        Import jar statement
+      </a>
+      <button mat-stroked-button type="button" class="settings-link destructive" (click)="confirmPurge()">
+        <mat-icon>delete_forever</mat-icon>
+        Purge database
+      </button>
+    </div>
   </div>
 </div>
