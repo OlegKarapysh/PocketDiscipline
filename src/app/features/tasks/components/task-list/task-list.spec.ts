@@ -1,58 +1,73 @@
-import { signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import type { Observable } from 'rxjs';
-import { of, throwError } from 'rxjs';
+import { EMPTY, of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TaskList } from './task-list';
-import { TaskService } from '../../../../core/services/task.service';
-import { ClockService } from '../../../../core/services/clock.service';
+import { TaskService } from '../../services/task.service';
 import type { DisciplineItem } from '../../../../core/models/discipline-item.model';
 import { DisciplineItemType } from '../../../../core/models/discipline-item-type.enum';
 import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
+import { ConfirmService } from '../../../../shared/services/confirm.service';
+import { TaskForm } from '../task-form/task-form';
+import { TaskItem } from '../task-item/task-item';
 
 describe('TaskList', () => {
   let component: TaskList;
   let fixture: ComponentFixture<TaskList>;
   let taskServiceMock: {
     tasks$: Observable<DisciplineItem[]>;
-    completeTask: ReturnType<typeof vi.fn>;
     addTask: ReturnType<typeof vi.fn>;
-    performDailyReset: ReturnType<typeof vi.fn>;
+    updateTask: ReturnType<typeof vi.fn>;
+    deleteTask: ReturnType<typeof vi.fn>;
+    completeTask: ReturnType<typeof vi.fn>;
+    undoCompleteTask: ReturnType<typeof vi.fn>;
   };
+  let confirmServiceMock: { ask: ReturnType<typeof vi.fn> };
   let snackBarMock: { open: ReturnType<typeof vi.fn> };
-  const today = signal('2026-09-30');
 
-  const mockTasks: DisciplineItem[] = [
-    {
-      id: 't-1',
-      title: 'Drink 2L Water',
-      type: DisciplineItemType.HABIT,
-      rewardValue: 1500,
-      isCompleted: false,
-      lastCompletedAt: null,
-      createdAt: Date.now(),
-    },
-  ];
+  const pendingTask: DisciplineItem = {
+    id: 't-1',
+    title: 'Pay internet bill',
+    type: DisciplineItemType.ONEOFF,
+    rewardValue: 150,
+    isCompleted: false,
+    lastCompletedAt: null,
+    createdAt: 2000,
+  };
+
+  const completedTask: DisciplineItem = {
+    id: 't-2',
+    title: 'Book dentist appointment',
+    type: DisciplineItemType.ONEOFF,
+    rewardValue: 80,
+    isCompleted: true,
+    lastCompletedAt: 3000,
+    createdAt: 1000,
+  };
 
   beforeEach(async () => {
     taskServiceMock = {
-      tasks$: of(mockTasks),
-      completeTask: vi.fn().mockResolvedValue(undefined),
+      tasks$: of([pendingTask, completedTask]),
       addTask: vi.fn().mockResolvedValue(undefined),
-      performDailyReset: vi.fn().mockResolvedValue(undefined),
+      updateTask: vi.fn().mockResolvedValue(undefined),
+      deleteTask: vi.fn().mockResolvedValue(undefined),
+      completeTask: vi.fn().mockResolvedValue(150),
+      undoCompleteTask: vi.fn().mockResolvedValue(true),
+    };
+    confirmServiceMock = {
+      ask: vi.fn().mockReturnValue(of(undefined)),
     };
     snackBarMock = { open: vi.fn() };
-    today.set('2026-09-30');
 
     await TestBed.configureTestingModule({
       imports: [TaskList],
       providers: [
         { provide: TaskService, useValue: taskServiceMock },
-        { provide: ClockService, useValue: { today } },
+        { provide: ConfirmService, useValue: confirmServiceMock },
         { provide: MatSnackBar, useValue: snackBarMock },
       ],
     }).compileComponents();
@@ -61,28 +76,17 @@ describe('TaskList', () => {
     component = fixture.componentInstance;
   });
 
-  it('should render tasks from service stream', async () => {
+  it('should render empty state without any "Add initial tasks" button when tasks stream is empty', async () => {
+    taskServiceMock.tasks$ = of([]);
+    fixture = TestBed.createComponent(TaskList);
+    component = fixture.componentInstance;
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const titleEl = fixture.debugElement.query(By.css('.task-title')).nativeElement as HTMLElement;
-    expect(titleEl.textContent.trim()).toBe('Drink 2L Water');
-
-    const rewardEl = fixture.debugElement.query(By.css('.reward')).nativeElement as HTMLElement;
-    expect(rewardEl.textContent.replace(/\s+/g, ' ')).toContain(`+${MONEY_FORMAT.format(1500)}`.replace(/\s+/g, ' '));
-    expect(rewardEl.textContent).toContain('₴');
-  });
-
-  it('should run the daily habit reset on start and again when the day changes', async () => {
-    fixture.detectChanges();
-    await fixture.whenStable();
-    expect(taskServiceMock.performDailyReset).toHaveBeenCalledTimes(1);
-
-    today.set('2026-10-01');
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(taskServiceMock.performDailyReset).toHaveBeenCalledTimes(2);
+    const emptyState = fixture.debugElement.query(By.directive(EmptyState));
+    expect(emptyState).toBeTruthy();
+    expect((emptyState.nativeElement as HTMLElement).textContent).toContain('No one-off tasks yet');
+    expect(emptyState.query(By.css('button'))).toBeNull();
   });
 
   it('should report a failed task query instead of breaking the view', async () => {
@@ -97,83 +101,153 @@ describe('TaskList', () => {
     expect(snackBarMock.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 
-  it('should complete task when completeTask is invoked for uncompleted task', async () => {
-    await component.completeTask(mockTasks[0]);
-    expect(taskServiceMock.completeTask).toHaveBeenCalledWith('t-1');
-  });
-
-  it('should complete task when checkbox is clicked in template', async () => {
+  it('should open TaskForm when "Add one-off task" is clicked, create a task, and show a snackbar', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const checkboxEl = fixture.debugElement.query(By.css('mat-checkbox'));
-    expect(checkboxEl).toBeTruthy();
+    const addBtn = fixture.debugElement.query(By.css('button.add')).nativeElement as HTMLButtonElement;
+    addBtn.click();
+    fixture.detectChanges();
 
-    const checkboxNativeEl = checkboxEl.nativeElement as HTMLElement;
-    const input = checkboxNativeEl.querySelector('input')!;
-    input.click();
+    const formDebug = fixture.debugElement.query(By.directive(TaskForm));
+    expect(formDebug).toBeTruthy();
+
+    await component.onTaskCreated({ title: 'Renew passport', rewardValue: 300 });
+    fixture.detectChanges();
+
+    expect(taskServiceMock.addTask).toHaveBeenCalledWith('Renew passport', 300);
+    expect(component.showForm()).toBe(false);
+    expect(snackBarMock.open).toHaveBeenCalledWith('One-off task added', 'Close', expect.any(Object));
+  });
+
+  it('should keep the form open and show an error snackbar when adding a task fails', async () => {
+    taskServiceMock.addTask.mockRejectedValueOnce(new Error('Add failed'));
+    component.openForm();
+
+    await component.onTaskCreated({ title: 'Renew passport', rewardValue: 300 });
+
+    expect(component.showForm()).toBe(true);
+    expect(snackBarMock.open).toHaveBeenCalledWith('Add failed', 'Close', expect.any(Object));
+  });
+
+  it('should complete a pending task and show earned reward in snackbar', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
+    const pendingItem = fixture.debugElement.query(By.directive(TaskItem));
+    const completeBtn = pendingItem.query(By.css('button.complete')).nativeElement as HTMLButtonElement;
+    completeBtn.click();
+    await fixture.whenStable();
+
     expect(taskServiceMock.completeTask).toHaveBeenCalledWith('t-1');
+    expect(snackBarMock.open).toHaveBeenCalledWith(
+      `Pay internet bill done · +${MONEY_FORMAT.format(150)} ₴`,
+      'Close',
+      expect.any(Object),
+    );
   });
 
-  it('should not call completeTask if task is already completed', async () => {
-    const completedTask: DisciplineItem = {
-      ...mockTasks[0],
-      isCompleted: true,
-    };
-    await component.completeTask(completedTask);
-    expect(taskServiceMock.completeTask).not.toHaveBeenCalled();
-  });
-
-  it('should render empty state when task stream is empty and trigger addDummyTask on button click', async () => {
-    taskServiceMock.tasks$ = of([]);
+  it('should show "Everything is done." when all tasks are completed', async () => {
+    taskServiceMock.tasks$ = of([completedTask]);
     fixture = TestBed.createComponent(TaskList);
     component = fixture.componentInstance;
-    const addDummySpy = vi.spyOn(component, 'addDummyTask');
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const emptyState = fixture.debugElement.query(By.directive(EmptyState));
-    expect(emptyState).toBeTruthy();
+    const allDoneEl = fixture.debugElement.query(By.css('.all-done')).nativeElement as HTMLElement;
+    expect(allDoneEl.textContent).toContain('Everything is done.');
+  });
 
-    const addBtn = emptyState.query(By.css('button'));
-    expect(addBtn).toBeTruthy();
+  it('should toggle the collapsible Completed section and undo a completed task', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
 
-    const addBtnEl = addBtn.nativeElement as HTMLElement;
-    addBtnEl.click();
-    await addDummySpy.mock.results[0].value;
+    expect(fixture.debugElement.query(By.css('#oneoff-tasks-done'))).toBeNull();
+
+    const doneToggle = fixture.debugElement.query(By.css('button.done-toggle')).nativeElement as HTMLButtonElement;
+    expect(doneToggle.textContent).toContain('Completed (1)');
+    doneToggle.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const doneContainer = fixture.debugElement.query(By.css('#oneoff-tasks-done'));
+    expect(doneContainer).toBeTruthy();
+
+    const undoBtn = doneContainer.query(By.css('button.undo')).nativeElement as HTMLButtonElement;
+    undoBtn.click();
+    await fixture.whenStable();
+
+    expect(taskServiceMock.undoCompleteTask).toHaveBeenCalledWith('t-2');
+    expect(snackBarMock.open).toHaveBeenCalledWith('Completion undone', 'Close', expect.any(Object));
+  });
+
+  it('should open in-place edit form for a pending task, save changes, and close the edit form', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const pendingItem = fixture.debugElement.query(By.directive(TaskItem));
+    const editBtn = pendingItem.query(By.css('button.edit')).nativeElement as HTMLButtonElement;
+    editBtn.click();
     fixture.detectChanges();
 
-    expect(taskServiceMock.addTask).toHaveBeenCalledTimes(3);
+    expect(component.editingTaskId()).toBe('t-1');
+    const formDebug = fixture.debugElement.query(By.directive(TaskForm));
+    expect(formDebug).toBeTruthy();
+
+    await component.onTaskEdited(pendingTask, { title: 'File quarterly taxes', rewardValue: 200 });
+    fixture.detectChanges();
+
+    expect(taskServiceMock.updateTask).toHaveBeenCalledWith('t-1', 'File quarterly taxes', 200);
+    expect(component.editingTaskId()).toBeNull();
+    expect(snackBarMock.open).toHaveBeenCalledWith('One-off task updated', 'Close', expect.any(Object));
   });
 
-  it('should sequentially add dummy tasks when addDummyTask is called directly', async () => {
-    await component.addDummyTask();
-    expect(taskServiceMock.addTask).toHaveBeenCalledTimes(3);
-    expect(taskServiceMock.addTask).toHaveBeenNthCalledWith(1, 'Drink 2L Water', DisciplineItemType.HABIT, 10);
-    expect(taskServiceMock.addTask).toHaveBeenNthCalledWith(2, 'Read 10 pages', DisciplineItemType.HABIT, 20);
-    expect(taskServiceMock.addTask).toHaveBeenNthCalledWith(3, 'Pay internet bill', DisciplineItemType.ONEOFF, 5);
+  it('should close the in-place edit form without saving when cancelled', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    component.openEdit(pendingTask);
+    fixture.detectChanges();
+
+    const formDebug = fixture.debugElement.query(By.directive(TaskForm));
+    const cancelBtn = formDebug.query(By.css('button.cancel')).nativeElement as HTMLButtonElement;
+    cancelBtn.click();
+    fixture.detectChanges();
+
+    expect(component.editingTaskId()).toBeNull();
+    expect(taskServiceMock.updateTask).not.toHaveBeenCalled();
   });
 
-  it('should handle errors gracefully when completeTask fails', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
-    taskServiceMock.completeTask.mockRejectedValue(new Error('Complete failed'));
+  it('should confirm and delete a pending task when confirmed', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
 
-    await component.completeTask(mockTasks[0]);
+    const pendingItem = fixture.debugElement.query(By.directive(TaskItem));
+    const deleteBtn = pendingItem.query(By.css('button.delete')).nativeElement as HTMLButtonElement;
+    deleteBtn.click();
+    await fixture.whenStable();
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
-    consoleSpy.mockRestore();
+    expect(confirmServiceMock.ask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Delete one-off task',
+        message: 'Are you sure you want to delete "Pay internet bill"?',
+        isDestructive: true,
+      }),
+    );
+    expect(taskServiceMock.deleteTask).toHaveBeenCalledWith('t-1');
+    expect(snackBarMock.open).toHaveBeenCalledWith('One-off task deleted', 'Close', expect.any(Object));
   });
 
-  it('should handle errors gracefully when addDummyTask fails', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
-    taskServiceMock.addTask.mockRejectedValue(new Error('Add failed'));
+  it('should not delete a pending task when the confirmation dialog is cancelled', async () => {
+    confirmServiceMock.ask.mockReturnValueOnce(EMPTY);
+    fixture.detectChanges();
+    await fixture.whenStable();
 
-    await component.addDummyTask();
+    const pendingItem = fixture.debugElement.query(By.directive(TaskItem));
+    const deleteBtn = pendingItem.query(By.css('button.delete')).nativeElement as HTMLButtonElement;
+    deleteBtn.click();
+    await fixture.whenStable();
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
-    consoleSpy.mockRestore();
+    expect(taskServiceMock.deleteTask).not.toHaveBeenCalled();
   });
 });

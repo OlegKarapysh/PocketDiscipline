@@ -1,0 +1,68 @@
+@use '@angular/material' as mat;
+@use '../../../../../styles/tokens' as t;
+
+.task-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.task-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.space(3);
+  padding: t.space(3) t.space(4);
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  gap: t.space(3);
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.done-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: t.radius(md);
+  background: var(--pd-sys-success-container);
+  color: var(--pd-sys-success);
+}
+
+.titles {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: t.space(1);
+  min-width: 0;
+}
+
+.title {
+  @include t.card-title;
+}
+
+.completed .title {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: t.space(1);
+  margin-inline-start: auto;
+}
+
+.delete {
+  @include mat.icon-button-overrides(
+    (
+      icon-color: var(--mat-sys-error),
+    )
+  );
+}

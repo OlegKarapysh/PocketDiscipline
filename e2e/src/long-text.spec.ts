@@ -53,4 +53,19 @@ test.describe('Long text on a phone', () => {
     expect(spill).toBeLessThanOrEqual(0);
     expect(await sidewaysOverflow(page)).toBeLessThanOrEqual(0);
   });
+
+  test('should cut a pasted one-off task title at the limit and wrap it inside the card', async ({ page }) => {
+    await page.goto('/tasks');
+    await page.getByRole('tab', { name: /One-off/ }).click();
+    await page.getByRole('button', { name: 'Add one-off task' }).click();
+
+    const title = page.getByPlaceholder('e.g. Pay internet bill');
+    await title.fill(PASTED);
+    await expect(title).toHaveValue('W'.repeat(TITLE_MAX_LENGTH));
+
+    await page.getByRole('button', { name: /Save task/i }).click();
+
+    await expect(page.locator('app-task-item', { hasText: 'WWWW' })).toBeVisible();
+    expect(await sidewaysOverflow(page)).toBeLessThanOrEqual(0);
+  });
 });
