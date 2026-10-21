@@ -1,40 +1,69 @@
 @use '../../../../../styles/tokens' as t;
 
-.card-title {
-  @include t.card-title;
-}
-
-.task-rows {
+.oneoff-tasks {
   display: flex;
   flex-direction: column;
-  gap: t.space(3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: t.space(4);
 }
 
-.task-row {
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: t.space(3);
+}
+
+.heading {
   display: flex;
   flex-direction: column;
   gap: t.space(1);
 }
 
-.completed {
-  opacity: 0.65;
+.title {
+  margin: 0;
+  font: var(--mat-sys-title-large);
+  font-weight: 600;
 }
 
-.task-title {
-  overflow-wrap: anywhere;
-
-  &.strike {
-    text-decoration: line-through;
-  }
+.progress {
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
 }
 
-.task-meta {
+.header-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: t.space(2);
-  padding-left: t.space(3);
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(2);
+}
+
+.all-done {
+  display: flex;
+  align-items: center;
+  gap: t.space(2);
+  margin: 0;
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface-variant);
+
+  .mat-icon {
+    color: var(--pd-sys-success);
+  }
+}
+
+.done-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: t.space(2);
+
+  > .task-list {
+    align-self: stretch;
+  }
 }

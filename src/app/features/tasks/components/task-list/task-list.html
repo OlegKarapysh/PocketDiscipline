@@ -1,31 +1,78 @@
-<mat-card appearance="outlined" class="card">
-  <mat-card-header>
-    <mat-card-title class="card-title">Your tasks</mat-card-title>
-  </mat-card-header>
-  <mat-card-content>
-    @if (tasks(); as tasks) {
-      @if (tasks.length > 0) {
-        <ul class="task-rows">
-          @for (task of tasks; track task.id) {
-            <li class="task-row" [class.completed]="task.isCompleted">
-              <mat-checkbox [checked]="task.isCompleted" [disabled]="task.isCompleted" (change)="completeTask(task)">
-                <span class="task-title" [class.strike]="task.isCompleted">{{ task.title }}</span>
-              </mat-checkbox>
-              <div class="task-meta">
-                <app-amount class="reward" [value]="task.rewardValue" size="sm" tone="reward" [showSign]="true" />
-                <app-badge>{{ task.type }}</app-badge>
-              </div>
-            </li>
+<section class="oneoff-tasks">
+  <div class="header">
+    <div class="heading">
+      <h2 class="title">One-off tasks</h2>
+      @if ((tasks() ?? []).length > 0) {
+        <span class="progress">{{ pending().length }} pending · {{ completed().length }} completed</span>
+      }
+    </div>
+    <div class="header-actions">
+      @if (!showForm()) {
+        <button matButton="tonal" type="button" class="add" (click)="openForm()">
+          <mat-icon>add</mat-icon> Add one-off task
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (showForm()) {
+    <app-task-form [saving]="saving()" (save)="onTaskCreated($event)" (cancelForm)="closeForm()" />
+  }
+
+  @if (tasks(); as tasks) {
+    @if (tasks.length === 0) {
+      <app-empty-state heading="No one-off tasks yet" message="Add a task you want to get done once." />
+    } @else {
+      @if (pending().length > 0) {
+        <div class="task-list">
+          @for (task of pending(); track task.id) {
+            @if (editingTaskId() === task.id) {
+              <app-task-form
+                [task]="task"
+                [saving]="saving()"
+                (save)="onTaskEdited(task, $event)"
+                (cancelForm)="closeEdit()"
+                (delete)="confirmDelete(task)"
+              />
+            } @else {
+              <app-task-item
+                [task]="task"
+                (complete)="onCompleteTask($event)"
+                (edit)="openEdit($event)"
+                (delete)="confirmDelete($event)"
+              />
+            }
           }
-        </ul>
+        </div>
       } @else {
-        <app-empty-state
-          class="empty-state"
-          heading="You have no tasks yet"
-          actionLabel="Add initial tasks"
-          (action)="addDummyTask()"
-        />
+        <p class="all-done">
+          <mat-icon class="pd-icon-filled" aria-hidden="true">check_circle</mat-icon>
+          Everything is done.
+        </p>
+      }
+
+      @if (completed().length > 0) {
+        <div class="done-group">
+          <button
+            mat-button
+            type="button"
+            class="done-toggle"
+            [attr.aria-expanded]="showCompleted()"
+            aria-controls="oneoff-tasks-done"
+            (click)="toggleCompleted()"
+          >
+            <mat-icon>{{ showCompleted() ? 'expand_less' : 'expand_more' }}</mat-icon>
+            Completed ({{ completed().length }})
+          </button>
+          @if (showCompleted()) {
+            <div class="task-list" id="oneoff-tasks-done">
+              @for (task of completed(); track task.id) {
+                <app-task-item [task]="task" (undo)="onUndoTask($event)" />
+              }
+            </div>
+          }
+        </div>
       }
     }
-  </mat-card-content>
-</mat-card>
+  }
+</section>
