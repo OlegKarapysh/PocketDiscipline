@@ -124,7 +124,48 @@ const SCREENS: Screen[] = [
     ready: 'app-daily-task-item',
     open: async (page) => {
       await page.getByRole('tab', { name: /One-off/ }).click();
-      await expect(page.locator('app-task-list .task-row').first()).toBeVisible();
+      await expect(page.locator('app-task-item').first()).toBeVisible();
+    },
+  },
+  {
+    name: 'tasks: new one-off task form',
+    path: '/tasks',
+    ready: 'app-daily-task-item',
+    open: async (page) => {
+      await page.getByRole('tab', { name: /One-off/ }).click();
+      await page.getByRole('button', { name: 'Add one-off task' }).click();
+      await page.getByPlaceholder('e.g. Pay internet bill').fill('W'.repeat(TITLE_MAX_LENGTH));
+    },
+  },
+  {
+    name: 'tasks: edit one-off task form',
+    path: '/tasks',
+    ready: 'app-daily-task-item',
+    open: async (page) => {
+      await page.getByRole('tab', { name: /One-off/ }).click();
+      await page.getByRole('button', { name: 'Edit one-off task' }).first().click();
+      await expect(page.locator('app-task-form')).toBeVisible();
+    },
+  },
+  {
+    name: 'tasks: completed one-off tasks opened',
+    path: '/tasks',
+    ready: 'app-daily-task-item',
+    open: async (page) => {
+      await page.getByRole('tab', { name: /One-off/ }).click();
+      await page.getByRole('button', { name: /Completed \(/ }).click();
+      await expect(page.locator('#oneoff-tasks-done app-task-item').first()).toBeVisible();
+    },
+  },
+  {
+    name: 'tasks: delete one-off task confirmation',
+    path: '/tasks',
+    ready: 'app-daily-task-item',
+    root: OVERLAY,
+    open: async (page) => {
+      await page.getByRole('tab', { name: /One-off/ }).click();
+      await page.getByRole('button', { name: 'Delete one-off task' }).first().click();
+      await expect(page.locator('app-confirm-dialog')).toBeVisible();
     },
   },
   { name: 'goals', path: '/goals', ready: 'app-goal-item' },
@@ -437,8 +478,8 @@ function worstCaseRows(): Rows {
   const task = (id: string, text: string, isCompleted: boolean) => ({
     id,
     title: text,
-    type: isCompleted ? 'ONEOFF' : 'HABIT',
-    rewardValue: 100_000,
+    type: 'ONEOFF',
+    rewardValue: 9_999_999,
     isCompleted,
     lastCompletedAt: isCompleted ? now : null,
     createdAt: now,
@@ -501,7 +542,12 @@ function worstCaseRows(): Rows {
       dailyTask('daily-url', url(TITLE_MAX_LENGTH), prose, { sortOrder: 1 }),
       dailyTask('daily-done', word(TITLE_MAX_LENGTH), word, { sortOrder: 2, streak: 365, lastCompletedAt: now }),
     ],
-    tasks: [task('task-word', word(TITLE_MAX_LENGTH), false), task('task-url', url(TITLE_MAX_LENGTH), true)],
+    tasks: [
+      task('task-word', word(TITLE_MAX_LENGTH), false),
+      task('task-url', url(TITLE_MAX_LENGTH), false),
+      task('task-prose', prose(TITLE_MAX_LENGTH), false),
+      task('task-done', word(TITLE_MAX_LENGTH), true),
+    ],
     rewardCategories: [
       category('cat-word', word(CATEGORY_NAME_MAX_LENGTH), '#e91e63'),
       category('cat-url', url(CATEGORY_NAME_MAX_LENGTH), '#009688'),
