@@ -37,7 +37,7 @@ fraction (the streak bonuses, the daily score bonus, the pomodoro tiers, average
 rounds to whole hryvnias where it is computed. Money inputs follow one rule, `moneyAmount()` in
 `shared/validators/money-amount.ts`: required, a whole number, from 1 ₴ to 10 000 000 ₴; a form can
 add a lower maximum of its own (quick spend's balance). `WithdrawalService`, `RewardsService`,
-`GoalService` and `DailyTasksService` also reject a non-integer amount, so a caller outside the forms
+`GoalService`, `DailyTasksService` and `TaskService` also reject a non-integer amount, so a caller outside the forms
 cannot store one.
 
 The money fields are `users.balance`, `goals.rewardValue`, `tasks.rewardValue`,
@@ -186,10 +186,11 @@ export interface PomodoroRewardRate {
 }
 ```
 
-#### `tasks` _(Legacy / Generic Discipline Items)_
+#### `tasks` _(One-Off Tasks)_
 
 **Primary Key**: `id`  
-**Indexed Properties**: `id`, `type`, `isCompleted`
+**Indexed Properties**: `id`, `type`, `isCompleted`  
+**Description**: Single-completion one-off tasks (`DisciplineItem`) managed by `TaskService` (`features/tasks/`). New tasks always store `type: 'ONEOFF'`.
 
 ```typescript
 export interface DisciplineItem {
