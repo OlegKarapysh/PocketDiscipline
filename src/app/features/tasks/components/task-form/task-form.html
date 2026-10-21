@@ -1,0 +1,49 @@
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-card-title>{{ heading() }}</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content class="form-content">
+    <div class="fields-row">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="title-field">
+        <mat-label>Title</mat-label>
+        <input
+          matInput
+          type="text"
+          [formField]="taskForm.title"
+          (keydown.enter)="submit()"
+          placeholder="e.g. Pay internet bill"
+        />
+        @for (error of taskForm.title().errors(); track error.kind) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="reward-field">
+        <mat-label>Reward</mat-label>
+        <input
+          matInput
+          type="number"
+          step="1"
+          [formField]="taskForm.rewardValue"
+          (keydown.enter)="submit()"
+          placeholder="Reward"
+        />
+        @for (error of taskForm.rewardValue().errors(); track error.kind) {
+          <mat-error>{{ error.message }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
+  </mat-card-content>
+
+  <mat-card-actions align="end" class="actions">
+    @if (task()) {
+      <button mat-button type="button" class="delete" (click)="delete.emit()">
+        <mat-icon>delete</mat-icon>
+        Delete task
+      </button>
+    }
+    <button mat-button type="button" class="cancel" (click)="cancelForm.emit()">Cancel</button>
+    <button mat-flat-button type="button" class="save" [disabled]="!canSubmit()" (click)="submit()">Save task</button>
+  </mat-card-actions>
+</mat-card>

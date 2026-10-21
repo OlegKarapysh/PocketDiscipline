@@ -1,0 +1,48 @@
+@use '@angular/material' as mat;
+@use '../../../../../styles/tokens' as t;
+
+.form-content {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(4);
+  padding-top: t.space(2);
+}
+
+.fields-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.space(3);
+  align-items: flex-start;
+}
+
+.title-field {
+  flex: 2 1 220px;
+  min-width: 0;
+}
+
+.reward-field {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.space(2);
+  padding: t.space(2) t.space(4) t.space(4);
+}
+
+.delete {
+  @include mat.button-overrides(
+    (
+      text-label-text-color: var(--mat-sys-error),
+      text-state-layer-color: var(--mat-sys-error),
+      text-ripple-color: color-mix(
+          in srgb,
+          var(--mat-sys-error) calc(var(--mat-sys-pressed-state-layer-opacity) * 100%),
+          transparent
+        ),
+    )
+  );
+  margin-inline-end: auto;
+}

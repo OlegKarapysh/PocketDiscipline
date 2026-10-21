@@ -1,0 +1,39 @@
+<mat-card appearance="outlined" class="task-card" [class.completed]="task().isCompleted">
+  <div class="task-row">
+    <div class="main">
+      @if (task().isCompleted) {
+        <span class="done-icon">
+          <mat-icon class="pd-icon-filled" aria-hidden="false" aria-label="Completed">check_circle</mat-icon>
+        </span>
+      }
+      <div class="titles">
+        <span class="title">{{ task().title }}</span>
+        <app-amount class="reward" [value]="task().rewardValue" size="sm" tone="reward" [showSign]="true" />
+      </div>
+    </div>
+
+    <div class="actions">
+      @if (!task().isCompleted) {
+        <button mat-icon-button type="button" class="edit" (click)="edit.emit(task())" aria-label="Edit one-off task">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          class="delete"
+          (click)="delete.emit(task())"
+          aria-label="Delete one-off task"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+        <button mat-flat-button type="button" class="complete" (click)="complete.emit(task())">
+          <mat-icon>check</mat-icon> Complete
+        </button>
+      } @else {
+        <button mat-stroked-button type="button" class="undo" (click)="undo.emit(task())">
+          <mat-icon>undo</mat-icon> Undo
+        </button>
+      }
+    </div>
+  </div>
+</mat-card>
