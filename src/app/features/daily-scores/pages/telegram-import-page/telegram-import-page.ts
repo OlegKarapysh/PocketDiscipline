@@ -14,6 +14,8 @@ import { TelegramScoresParserService } from '../../services/telegram-scores-pars
 
 const COUNT_FORMAT = new Intl.NumberFormat('en-US');
 const DAY_FORMAT = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+const MAX_DISPLAYED_SKIPPED = 100;
 
 @Component({
   imports: [MatButtonModule, MatIconModule, PageHeader, SectionCard, StatCard],
@@ -52,6 +54,10 @@ export class TelegramImportPage {
       p.skippedMessages.length > 0 ? `${COUNT_FORMAT.format(p.skippedMessages.length)} skipped` : '',
     ].filter(Boolean);
 
+    const totalSkipped = p.skippedMessages.length;
+    const visibleSkipped = p.skippedMessages.slice(0, MAX_DISPLAYED_SKIPPED);
+    const remainingSkipped = Math.max(0, totalSkipped - MAX_DISPLAYED_SKIPPED);
+
     return {
       totalScores: COUNT_FORMAT.format(p.totalScores),
       scoresHint:
@@ -65,7 +71,8 @@ export class TelegramImportPage {
       period: `${DAY_FORMAT.format(p.startDate)} – ${DAY_FORMAT.format(p.endDate)}`,
       periodHint: count(p.totalScores, 'day'),
       notes,
-      skippedMessages: p.skippedMessages,
+      skippedMessages: visibleSkipped,
+      remainingSkipped,
       footerSummary: summaryParts.join(' · '),
     };
   });
@@ -79,6 +86,17 @@ export class TelegramImportPage {
     this.parsed.set(null);
     this.preview.set(null);
     this.error.set(null);
+
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      this.error.set('Please select a JSON file (.json).');
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      this.error.set('The selected file is too large (maximum allowed size is 25 MB).');
+      return;
+    }
+
     try {
       const parsed = this.parser.parse(await file.text());
       this.preview.set(await this.importService.preview(parsed));
@@ -89,6 +107,7 @@ export class TelegramImportPage {
   }
 
   async runImport(): Promise<void> {
+    if (this.importing()) return;
     const parsed = this.parsed();
     if (!parsed) return;
 

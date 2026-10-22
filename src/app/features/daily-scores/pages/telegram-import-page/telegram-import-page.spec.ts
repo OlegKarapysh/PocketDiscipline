@@ -74,6 +74,26 @@ describe('TelegramImportPage', () => {
     fixture.detectChanges();
   }
 
+  it('shows an error alert when the selected file is not a json file', async () => {
+    await selectFile('scores.csv', 'some,csv,data');
+
+    const alert = fixture.debugElement.query(By.css('[role="alert"]')).nativeElement as HTMLElement;
+    expect(alert.textContent).toContain('Please select a JSON file (.json).');
+  });
+
+  it('shows an error alert when the selected file exceeds 25 MB', async () => {
+    const input = fixture.debugElement.query(By.css('input[type="file"]')).nativeElement as HTMLInputElement;
+    const file = new File([''], 'huge.json', { type: 'application/json' });
+    Object.defineProperty(file, 'size', { value: 26 * 1024 * 1024 });
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    input.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const alert = fixture.debugElement.query(By.css('[role="alert"]')).nativeElement as HTMLElement;
+    expect(alert.textContent).toContain('The selected file is too large (maximum allowed size is 25 MB).');
+  });
+
   it('shows an error alert when the selected file is not a valid Telegram export', async () => {
     await selectFile('bad.json', '{"invalid": true}');
 
@@ -125,5 +145,30 @@ describe('TelegramImportPage', () => {
     expect(snackBarMock.show).not.toHaveBeenCalled();
     expect(router.navigate).not.toHaveBeenCalled();
     expect(importBtn.disabled).toBe(false);
+  });
+
+  it('renders capped skipped messages and an overflow note when skipped count exceeds 100', async () => {
+    importServiceMock.preview.mockResolvedValueOnce({
+      totalScores: 1,
+      newScores: 1,
+      replacedScores: 0,
+      highScores: 1,
+      averageScore: 9,
+      resultingStreak: 1,
+      startDate: new Date(2026, 8, 1).getTime(),
+      endDate: new Date(2026, 8, 1).getTime(),
+      duplicateDates: 0,
+      skippedMessages: Array.from({ length: 105 }, (_, i) => `2026-09-01: "skipped ${i + 1}"`),
+    });
+
+    const exportJson = JSON.stringify({
+      messages: [{ id: 1, type: 'message', date: '2026-09-01T22:00:00', text: '9/10' }],
+    });
+    await selectFile('result.json', exportJson);
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.textContent).toContain('… and 5 more skipped messages');
+    const items = fixture.debugElement.queryAll(By.css('.skipped-item'));
+    expect(items).toHaveLength(100);
   });
 });

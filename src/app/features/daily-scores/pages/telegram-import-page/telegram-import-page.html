@@ -55,13 +55,20 @@
               <li class="skipped-item">{{ msg }}</li>
             }
           </ul>
+          @if (v.remainingSkipped > 0) {
+            <p class="skipped-overflow">… and {{ v.remainingSkipped }} more skipped messages</p>
+          }
         </div>
       }
 
       <div class="footer">
         <span class="totals">{{ v.footerSummary }}</span>
         <button mat-flat-button type="button" class="import-button" [disabled]="importing()" (click)="runImport()">
-          Import
+          @if (importing()) {
+            Importing…
+          } @else {
+            Import
+          }
         </button>
       </div>
     </app-section-card>

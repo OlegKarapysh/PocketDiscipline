@@ -106,6 +106,12 @@
   border-bottom: 1px solid var(--mat-sys-outline-variant);
 }
 
+.skipped-overflow {
+  margin: t.space(2) 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .footer {
   display: flex;
   flex-wrap: wrap;
