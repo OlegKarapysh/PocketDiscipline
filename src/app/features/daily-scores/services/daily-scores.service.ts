@@ -5,13 +5,14 @@ import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
-
-const REWARD_PERFECT = 500;
-const REWARD_GOOD = 100;
-const SCORE_PERFECT = 10;
-const SCORE_GOOD = 9;
-const MAX_STREAK_BONUS = 1.0;
-const STREAK_BONUS_STEP = 0.1;
+import {
+  MAX_STREAK_BONUS,
+  REWARD_GOOD,
+  REWARD_PERFECT,
+  SCORE_GOOD,
+  SCORE_PERFECT,
+  STREAK_BONUS_STEP,
+} from '../constants/daily-score-reward.const';
 
 @Service()
 export class DailyScoresService {
