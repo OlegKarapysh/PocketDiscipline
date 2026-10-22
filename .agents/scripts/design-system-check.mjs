@@ -10,8 +10,10 @@ import { dirname, join, relative, resolve } from 'node:path';
 
 let input = {};
 try {
-  const raw = readFileSync(0, 'utf8').trim();
-  if (raw) input = JSON.parse(raw);
+  if (!process.stdin.isTTY) {
+    const raw = readFileSync(0, 'utf8').trim();
+    if (raw) input = JSON.parse(raw);
+  }
 } catch {
   input = {};
 }

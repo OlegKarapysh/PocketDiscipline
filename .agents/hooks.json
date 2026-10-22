@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"const {spawnSync}=require('child_process'),fs=require('fs');const p=['./scripts/design-system-check.mjs','./.agents/scripts/design-system-check.mjs','../.agents/scripts/design-system-check.mjs','./.claude/hooks/design-system-check.mjs','../.claude/hooks/design-system-check.mjs'].find(fs.existsSync);process.exit(spawnSync(process.execPath,[p],{stdio:'inherit'}).status)\"",
+            "command": "node -e \"try{require('./scripts/design-system-hook.cjs')}catch{require('./.agents/scripts/design-system-hook.cjs')}\"",
             "timeout": 30
           }
         ]
@@ -29,7 +29,7 @@
     "Stop": [
       {
         "type": "command",
-        "command": "node -e \"const {spawnSync}=require('child_process'),fs=require('fs');const p=['./scripts/design-system-check.mjs','./.agents/scripts/design-system-check.mjs','../.agents/scripts/design-system-check.mjs','./.claude/hooks/design-system-check.mjs','../.claude/hooks/design-system-check.mjs'].find(fs.existsSync);process.exit(spawnSync(process.execPath,[p],{stdio:'inherit'}).status)\"",
+        "command": "node -e \"try{require('./scripts/design-system-hook.cjs')}catch{require('./.agents/scripts/design-system-hook.cjs')}\"",
         "timeout": 30
       }
     ]
