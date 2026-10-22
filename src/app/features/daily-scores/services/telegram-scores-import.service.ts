@@ -1,5 +1,4 @@
 import { Service, inject } from '@angular/core';
-import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
 import type { DailyScore } from '../../../core/models/daily-score.model';
 import { DbService } from '../../../database/db.service';
 import {
@@ -24,7 +23,17 @@ export class TelegramScoresImportService {
     const totalScores = parsed.scores.length;
     const sum = parsed.scores.reduce((acc, row) => acc + row.score, 0);
     const highScores = parsed.scores.filter((row) => row.score >= SCORE_GOOD).length;
-    const times = parsed.scores.map((row) => row.createdAt);
+
+    let startDate = 0;
+    let endDate = 0;
+    if (totalScores > 0) {
+      startDate = parsed.scores[0].createdAt;
+      endDate = parsed.scores[0].createdAt;
+      for (const row of parsed.scores) {
+        if (row.createdAt < startDate) startDate = row.createdAt;
+        if (row.createdAt > endDate) endDate = row.createdAt;
+      }
+    }
 
     return {
       totalScores,
@@ -33,8 +42,8 @@ export class TelegramScoresImportService {
       highScores,
       averageScore: Math.round((sum / totalScores) * 10) / 10,
       resultingStreak: plan.resultingStreak,
-      startDate: Math.min(...times),
-      endDate: Math.max(...times),
+      startDate,
+      endDate,
       duplicateDates: parsed.duplicateDates,
       skippedMessages: parsed.skippedMessages,
     };
@@ -121,6 +130,6 @@ export class TelegramScoresImportService {
 
   private dayBefore(date: string): string {
     const [year, month, day] = date.split('-').map(Number);
-    return new Date(year, month - 1, day - 1).toLocaleDateString(DATE_LOCALE_CA);
+    return new Date(Date.UTC(year, month - 1, day - 1)).toISOString().slice(0, 10);
   }
 }

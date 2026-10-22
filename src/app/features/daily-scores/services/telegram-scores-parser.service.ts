@@ -1,5 +1,4 @@
 import { Service } from '@angular/core';
-import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
 import type { TelegramExportParseResult } from '../models/telegram-export-parse-result.model';
 import type { TelegramScoreRow } from '../models/telegram-score-row.model';
 
@@ -33,18 +32,17 @@ export class TelegramScoresParserService {
       const body = this.extractText(item['text']);
       if (!body) continue;
 
-      const timestamp = this.parseDate(item['date']);
-      const date = timestamp.toLocaleDateString(DATE_LOCALE_CA);
+      const parsedDate = this.parseDate(item['date']);
       const match = SCORE_TEXT.exec(body);
 
       if (match?.groups?.['score']) {
         candidates.push({
-          date,
+          date: parsedDate.date,
           score: Number(match.groups['score']),
-          createdAt: timestamp.getTime(),
+          createdAt: parsedDate.timestamp,
         });
       } else {
-        skippedMessages.push(`${date}: ${this.quote(body)}`);
+        skippedMessages.push(`${parsedDate.date}: ${this.quote(body)}`);
       }
     }
 
@@ -84,7 +82,7 @@ export class TelegramScoresParserService {
     return '';
   }
 
-  private parseDate(raw: unknown): Date {
+  private parseDate(raw: unknown): { date: string; timestamp: number } {
     const rawStr = typeof raw === 'string' ? raw : '';
     const parts = DATE_TIME.exec(rawStr);
     if (!parts) {
@@ -97,20 +95,22 @@ export class TelegramScoresParserService {
     const hours = parts[4] ? Number(parts[4]) : 12;
     const minutes = parts[5] ? Number(parts[5]) : 0;
     const seconds = parts[6] ? Number(parts[6]) : 0;
-    const date = new Date(year, month - 1, day, hours, minutes, seconds);
 
-    if (
-      date.getFullYear() !== year ||
-      date.getMonth() !== month - 1 ||
-      date.getDate() !== day ||
-      date.getHours() !== hours ||
-      date.getMinutes() !== minutes ||
-      date.getSeconds() !== seconds
-    ) {
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
       throw new Error(`Invalid message date ${this.quote(rawStr)} in export.`);
     }
 
-    return date;
+    const utc = new Date(Date.UTC(year, month - 1, day));
+    if (utc.getUTCFullYear() !== year || utc.getUTCMonth() !== month - 1 || utc.getUTCDate() !== day) {
+      throw new Error(`Invalid message date ${this.quote(rawStr)} in export.`);
+    }
+
+    const localDate = new Date(year, month - 1, day, hours, minutes, seconds);
+
+    return {
+      date: `${parts[1]}-${parts[2]}-${parts[3]}`,
+      timestamp: localDate.getTime(),
+    };
   }
 
   private quote(value: string): string {

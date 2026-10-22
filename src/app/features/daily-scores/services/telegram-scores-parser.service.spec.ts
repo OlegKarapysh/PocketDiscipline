@@ -35,10 +35,23 @@ describe('TelegramScoresParserService', () => {
 
   it('rejects a message with an invalid or missing date', () => {
     const invalidCalendar = exportOf([{ id: 1, type: 'message', date: '2026-02-31T22:00:00', text: '9/10' }]);
+    const invalidHours = exportOf([{ id: 1, type: 'message', date: '2026-09-01T25:00:00', text: '9/10' }]);
+    const invalidMinutes = exportOf([{ id: 1, type: 'message', date: '2026-09-01T12:60:00', text: '9/10' }]);
     const missingDate = exportOf([{ id: 1, type: 'message', text: '9/10' }]);
 
     expect(() => parser.parse(invalidCalendar)).toThrow('Invalid message date "2026-02-31T22:00:00" in export.');
+    expect(() => parser.parse(invalidHours)).toThrow('Invalid message date "2026-09-01T25:00:00" in export.');
+    expect(() => parser.parse(invalidMinutes)).toThrow('Invalid message date "2026-09-01T12:60:00" in export.');
     expect(() => parser.parse(missingDate)).toThrow('Invalid message date "missing" in export.');
+  });
+
+  it('accepts messages on daylight saving time transition dates', () => {
+    const json = exportOf([{ id: 1, type: 'message', date: '2026-03-29T03:15:00', text: '9/10' }]);
+
+    const result = parser.parse(json);
+    expect(result.scores).toEqual([
+      { date: '2026-03-29', score: 9, createdAt: new Date(2026, 2, 29, 3, 15, 0).getTime() },
+    ]);
   });
 
   it('parses string and entity-array score messages (1/10–10/10), ignores service/empty messages, and records skipped text', () => {
