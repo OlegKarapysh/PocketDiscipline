@@ -350,6 +350,36 @@ const SCREENS: Screen[] = [
       await expect(page.locator('.review-row')).toHaveCount(JAR_ONE_OFFS + 5);
     },
   },
+  { name: 'telegram import', path: '/settings/telegram-import', ready: '.choose-button' },
+  {
+    name: 'telegram import: rejected file',
+    path: '/settings/telegram-import',
+    ready: '.choose-button',
+    open: async (page) => {
+      const broken = JSON.stringify({
+        messages: [{ id: 1, type: 'message', date: url(1000), text: '9/10' }],
+      });
+      await pickTelegramExport(page, `${word(300)}.json`, broken);
+      await expect(page.getByRole('alert')).toContainText('Invalid message date');
+    },
+  },
+  {
+    name: 'telegram import: worst-case export',
+    path: '/settings/telegram-import',
+    ready: '.choose-button',
+    open: async (page) => {
+      const messages = [
+        { id: 1, type: 'message', date: '2025-12-30T22:00:00', text: '9/10' },
+        { id: 2, type: 'message', date: '2025-12-30T23:00:00', text: '10/10' },
+        { id: 3, type: 'message', date: '2025-12-31T22:00:00', text: '9/10' },
+        { id: 4, type: 'message', date: '2026-01-01T10:00:00', text: word(500) },
+        { id: 5, type: 'message', date: '2026-01-01T11:00:00', text: url(500) },
+        { id: 6, type: 'message', date: '2026-01-01T12:00:00', text: prose(500) },
+      ];
+      await pickTelegramExport(page, `${word(300)}.json`, JSON.stringify({ messages }));
+      await expect(page.locator('.import-button')).toBeVisible();
+    },
+  },
   { name: 'design system gallery', path: '/design-system', ready: 'app-stat-card' },
 ];
 
@@ -600,6 +630,14 @@ async function pickJarStatement(page: Page, name: string, text: string): Promise
   await page.locator('app-jar-import-page input[type="file"]').setInputFiles({
     name,
     mimeType: 'text/csv',
+    buffer: Buffer.from(text, 'utf8'),
+  });
+}
+
+async function pickTelegramExport(page: Page, name: string, text: string): Promise<void> {
+  await page.locator('app-telegram-import-page input[type="file"]').setInputFiles({
+    name,
+    mimeType: 'application/json',
     buffer: Buffer.from(text, 'utf8'),
   });
 }

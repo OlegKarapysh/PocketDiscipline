@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { routes } from './app.routes';
 import { Dashboard } from './features/dashboard/dashboard';
 import { TasksPage } from './features/tasks/pages/tasks-page/tasks-page';
@@ -7,6 +7,7 @@ import { POMODORO_ROUTES } from './features/pomodoro/pomodoro.routes';
 import { DailyScoresPage } from './features/daily-scores/pages/daily-scores-page';
 import { Settings } from './features/settings/settings';
 import { JarImportPage } from './features/jar-import/pages/jar-import-page/jar-import-page';
+import { TelegramImportPage } from './features/daily-scores/pages/telegram-import-page/telegram-import-page';
 
 describe('App Routes', () => {
   it('should redirect empty path to /dashboard with full pathMatch', () => {
@@ -74,5 +75,12 @@ describe('App Routes', () => {
     expect(route?.loadComponent).toBeDefined();
     const component = await (route?.loadComponent as () => Promise<unknown>)();
     expect(component).toBe(JarImportPage);
+  });
+
+  it('should lazy-load the telegram import page under settings', async () => {
+    const route = routes.find((r) => r.path === 'settings')?.children?.find((r) => r.path === 'telegram-import');
+    expect(route?.loadComponent).toBeDefined();
+    const component = await (route?.loadComponent as () => Promise<unknown>)();
+    expect(component).toBe(TelegramImportPage);
   });
 });
