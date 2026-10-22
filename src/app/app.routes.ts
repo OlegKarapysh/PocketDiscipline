@@ -30,6 +30,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/jar-import/pages/jar-import-page/jar-import-page').then((m) => m.JarImportPage),
       },
+      {
+        path: 'telegram-import',
+        loadComponent: () =>
+          import('./features/daily-scores/pages/telegram-import-page/telegram-import-page').then(
+            (m) => m.TelegramImportPage,
+          ),
+      },
     ],
   },
   ...(isDevMode()

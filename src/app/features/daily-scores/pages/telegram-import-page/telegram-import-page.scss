@@ -1,0 +1,129 @@
+@use '../../../../../styles/tokens' as t;
+
+.telegram-import {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: t.space(4);
+}
+
+.intro {
+  margin: 0 0 t.space(4);
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.picker {
+  display: none;
+}
+
+.file-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.space(3);
+}
+
+.file-name {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: t.space(2);
+  margin: t.space(4) 0 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-error);
+
+  mat-icon {
+    @include t.icon-size(md);
+    flex-shrink: 0;
+  }
+}
+
+.error-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 228px), 1fr));
+  gap: t.space(3);
+  margin-bottom: t.space(4);
+}
+
+.stat-value {
+  font-size: t.numeric-size(lg);
+  font-weight: 700;
+  color: var(--mat-sys-on-surface);
+
+  &.reward {
+    color: var(--mat-sys-tertiary);
+  }
+}
+
+.period {
+  font: var(--mat-sys-title-medium);
+  color: var(--mat-sys-on-surface);
+  overflow-wrap: anywhere;
+}
+
+.note {
+  margin: 0 0 t.space(1);
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.skipped-section {
+  margin-top: t.space(3);
+}
+
+.skipped-heading {
+  margin: 0 0 t.space(2);
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.skipped-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: t.space(1) t.space(6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skipped-item {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: t.space(1) 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.space(3);
+  padding-top: t.space(4);
+}
+
+.totals {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.import-button {
+  @include t.down(medium) {
+    width: 100%;
+  }
+}

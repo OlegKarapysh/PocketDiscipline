@@ -60,6 +60,12 @@ describe('Settings', () => {
     expect(linkEl.textContent).toContain('Manage reward categories');
   });
 
+  it('should render link to import Telegram scores', () => {
+    const link = fixture.debugElement.query(By.css('a[routerLink="/settings/telegram-import"]'));
+    expect(link).toBeTruthy();
+    expect((link.nativeElement as HTMLElement).textContent).toContain('Import Telegram scores');
+  });
+
   it('should render pomodoro reward settings', () => {
     const rewardSettings = fixture.debugElement.query(By.css('app-pomodoro-reward-settings'));
     expect(rewardSettings).toBeTruthy();

@@ -1,0 +1,69 @@
+<app-page-header title="Import Telegram scores" eyebrow="Settings" />
+
+<div class="telegram-import">
+  <app-section-card heading="Export file">
+    <p class="intro">
+      Export the chat history from Telegram Desktop as JSON (result.json) and pick it here. It is read on this device
+      and never uploaded. The balance is not changed, and existing scores on overlapping dates are replaced.
+    </p>
+
+    <input #picker type="file" accept=".json,application/json" class="picker" (change)="readFile(picker)" />
+    <div class="file-row">
+      <button mat-flat-button type="button" class="choose-button" (click)="picker.click()">
+        <mat-icon>upload_file</mat-icon>
+        Choose export
+      </button>
+      @if (fileName(); as name) {
+        <span class="file-name">{{ name }}</span>
+      }
+    </div>
+
+    @if (error(); as message) {
+      <p class="error" role="alert">
+        <mat-icon>error</mat-icon>
+        <span class="error-text">{{ message }}</span>
+      </p>
+    }
+  </app-section-card>
+
+  @if (view(); as v) {
+    <app-section-card heading="Preview">
+      <div class="stats">
+        <app-stat-card label="Scores to import" [hint]="v.scoresHint">
+          <span class="stat-value pd-num">{{ v.totalScores }}</span>
+        </app-stat-card>
+        <app-stat-card label="Current streak" [hint]="v.streakHint">
+          <span class="stat-value pd-num" [class.reward]="v.resultingStreak > 0">{{ v.resultingStreak }}</span>
+        </app-stat-card>
+        <app-stat-card label="Average score" [hint]="v.highScoresHint">
+          <span class="stat-value pd-num">{{ v.averageScore }}</span>
+        </app-stat-card>
+        <app-stat-card label="Period" [hint]="v.periodHint">
+          <span class="period">{{ v.period }}</span>
+        </app-stat-card>
+      </div>
+
+      @for (note of v.notes; track note) {
+        <p class="note">{{ note }}</p>
+      }
+
+      @if (v.skippedMessages.length > 0) {
+        <div class="skipped-section">
+          <p class="skipped-heading">Skipped messages</p>
+          <ul class="skipped-list" aria-label="Skipped messages">
+            @for (msg of v.skippedMessages; track $index) {
+              <li class="skipped-item">{{ msg }}</li>
+            }
+          </ul>
+        </div>
+      }
+
+      <div class="footer">
+        <span class="totals">{{ v.footerSummary }}</span>
+        <button mat-flat-button type="button" class="import-button" [disabled]="importing()" (click)="runImport()">
+          Import
+        </button>
+      </div>
+    </app-section-card>
+  }
+</div>
