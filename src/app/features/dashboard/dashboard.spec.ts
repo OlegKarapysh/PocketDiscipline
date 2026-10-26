@@ -71,7 +71,7 @@ describe('Dashboard', () => {
 
   it('should contain the earnings filter controls', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('app-earnings-filter')).toBeTruthy();
+    expect(compiled.querySelector('app-period-filter')).toBeTruthy();
   });
 
   it('should contain the daily earnings chart', () => {

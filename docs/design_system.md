@@ -125,6 +125,7 @@ Use these before reaching for raw Material in a feature. A live gallery is at `/
 | Badge                 | `app-badge`                         | `tone` neutral/primary/reward/success/danger, `icon?`                   | Status and reward pills                           |
 | StreakBadge           | `app-streak-badge`                  | `days`, `compact`                                                       | Streaks; shows "Start a streak today" at 0        |
 | SegmentedControl      | `app-segmented-control`             | `options`, `[(value)]`, `ariaLabel`, `fullWidth`                        | Period and view filters (2–4 options)             |
+| PeriodFilter          | `app-period-filter`                 | `filter`, `ariaLabel?`, `(filterChange)`                                | 7/14/30-day presets with custom date range picker |
 | ProgressRing          | `app-progress-ring`                 | `value` 0–100, `diameter`, `strokeWidth`; project the label             | Daily habit completion, focus progress            |
 | EmptyState            | `app-empty-state`                   | `heading`, `message?`, `actionLabel?`, `actionIcon`, `(action)`         | Empty lists, with the mascot                      |
 | CelebrationDialog     | via `CelebrationService.show(data)` | `title`, `subtitle?`, `amount?`, `canUndo?` → `'dismissed' \| 'undo'`   | Goal completed, streak milestones                 |

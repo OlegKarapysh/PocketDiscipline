@@ -19,28 +19,39 @@ describe('ScoresStats', () => {
     component = fixture.componentInstance;
   });
 
-  it('should display default 0 average and 0 streak when no data is provided', async () => {
+  it('should display default 0 average, default period label, and 0 streak when no data is provided', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.monthlyAverage()).toBe(0);
+    expect(component.averageScore()).toBe(0);
+    expect(component.averageLabel()).toBe('Average score (7 days)');
     expect(component.currentStreak()).toBe(0);
     const noDataEl = fixture.debugElement.query(By.css('.stat-value.no-data'));
     expect((noDataEl.nativeElement as HTMLElement).textContent.trim()).toBe('-');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Average score (7 days)');
   });
 
-  it('should correctly calculate monthly average rounded to 1 decimal place', async () => {
-    const mockMonthlyScores: DailyScore[] = [
+  it('should update the average card label when periodLabel changes', async () => {
+    fixture.componentRef.setInput('periodLabel', '10/01 – 10/15');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.averageLabel()).toBe('Average score (10/01 – 10/15)');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Average score (10/01 – 10/15)');
+  });
+
+  it('should correctly calculate period average rounded to 1 decimal place', async () => {
+    const mockScores: DailyScore[] = [
       { date: '2026-08-01', score: 10, rewardEarned: 500, streakAtThisDay: 1, createdAt: 1 },
       { date: '2026-08-02', score: 8, rewardEarned: 0, streakAtThisDay: 0, createdAt: 2 },
       { date: '2026-08-03', score: 8, rewardEarned: 0, streakAtThisDay: 0, createdAt: 3 },
     ];
 
-    fixture.componentRef.setInput('monthlyScores', mockMonthlyScores);
+    fixture.componentRef.setInput('scores', mockScores);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.monthlyAverage()).toBe(8.7);
+    expect(component.averageScore()).toBe(8.7);
     const statValues = fixture.debugElement.queryAll(By.css('.stat-value'));
     expect((statValues[0].nativeElement as HTMLElement).textContent.trim()).toBe('8.7');
   });

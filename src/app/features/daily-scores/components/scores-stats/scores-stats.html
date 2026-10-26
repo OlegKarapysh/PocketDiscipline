@@ -1,7 +1,7 @@
 <div class="stats-container">
-  <app-stat-card label="Monthly average">
-    <span class="stat-value" [class.no-data]="monthlyAverage() === 0">
-      {{ monthlyAverage() > 0 ? monthlyAverage() : '-' }}
+  <app-stat-card [label]="averageLabel()">
+    <span class="stat-value" [class.no-data]="averageScore() === 0">
+      {{ averageScore() > 0 ? averageScore() : '-' }}
     </span>
   </app-stat-card>
 

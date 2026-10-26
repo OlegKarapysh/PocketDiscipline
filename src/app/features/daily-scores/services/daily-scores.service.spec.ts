@@ -123,6 +123,32 @@ describe('DailyScoresService', () => {
       expect(whereMock.between).toHaveBeenCalled();
       expect(result).toEqual(mockList);
     });
+
+    it('should retrieve scores in a specified date range', async () => {
+      const mockList: DailyScore[] = [
+        {
+          date: '2026-08-15',
+          score: 10,
+          rewardEarned: 500,
+          streakAtThisDay: 2,
+          createdAt: Date.now(),
+        },
+      ];
+      whereMock.toArray.mockResolvedValue(mockList);
+
+      const result = await firstValueFrom(service.getScoresInRange('2026-08-01', '2026-08-31'));
+
+      expect(dbMock.dailyScores.where).toHaveBeenCalledWith('date');
+      expect(whereMock.between).toHaveBeenCalledWith('2026-08-01', '2026-08-31', true, true);
+      expect(result).toEqual(mockList);
+    });
+
+    it('should return empty array when startDate or endDate is missing or invalid in getScoresInRange', async () => {
+      expect(await firstValueFrom(service.getScoresInRange('', '2026-08-31'))).toEqual([]);
+      expect(await firstValueFrom(service.getScoresInRange('2026-08-31', ''))).toEqual([]);
+      expect(await firstValueFrom(service.getScoresInRange('2026-08-31', '2026-08-01'))).toEqual([]);
+      expect(dbMock.dailyScores.where).not.toHaveBeenCalled();
+    });
   });
 
   describe('saveTodayScore Business Logic and Rewards', () => {

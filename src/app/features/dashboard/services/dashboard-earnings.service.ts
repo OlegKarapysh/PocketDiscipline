@@ -6,7 +6,8 @@ import { liveQuery } from 'dexie';
 import { DbService } from '../../../database/db.service';
 import type { DailyEarningsRecord } from '../models/daily-earnings-record.model';
 import type { MonthlyEarningsSummary } from '../models/monthly-earnings-summary.model';
-import type { PeriodPreset } from '../models/period-preset.type';
+import type { PeriodPreset } from '../../../shared/components/period-filter/period-preset.type';
+import { getPresetDateRange } from '../../../shared/components/period-filter/preset-date-range';
 import type { Goal } from '../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../core/models/goal.model';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
@@ -23,21 +24,7 @@ export class DashboardEarningsService {
   private readonly db = inject(DbService);
 
   getPresetDateRange(preset: PeriodPreset): { startDate: string; endDate: string } {
-    const today = new Date();
-    const endDate = this.formatLocalDate(today);
-
-    let days = 7;
-    if (preset === 'last14') {
-      days = 14;
-    } else if (preset === 'last30') {
-      days = 30;
-    }
-
-    // The range includes today.
-    const startDateObj = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (days - 1));
-    const startDate = this.formatLocalDate(startDateObj);
-
-    return { startDate, endDate };
+    return getPresetDateRange(preset);
   }
 
   getDailyEarnings(startDate: string, endDate: string): Observable<DailyEarningsRecord[]> {

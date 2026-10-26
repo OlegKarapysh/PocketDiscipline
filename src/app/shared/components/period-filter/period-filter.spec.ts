@@ -2,38 +2,24 @@ import { signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EarningsFilter } from './earnings-filter';
-import { ClockService } from '../../../../core/services/clock.service';
-import { DashboardEarningsService } from '../../services/dashboard-earnings.service';
-import type { PeriodPreset } from '../../models/period-preset.type';
+import { PeriodFilter } from './period-filter';
+import { ClockService } from '../../../core/services/clock.service';
+import { formatPeriodLabel, getPresetDateRange } from './preset-date-range';
 
-describe('EarningsFilter', () => {
-  let component: EarningsFilter;
-  let fixture: ComponentFixture<EarningsFilter>;
+describe('PeriodFilter', () => {
+  let component: PeriodFilter;
+  let fixture: ComponentFixture<PeriodFilter>;
   const today = signal('2026-09-02');
 
-  const earningsServiceMock = {
-    getPresetDateRange: vi.fn((preset: PeriodPreset) => {
-      if (preset === 'last14') {
-        return { startDate: '2026-08-20', endDate: '2026-09-02' };
-      }
-      if (preset === 'last30') {
-        return { startDate: '2026-08-04', endDate: '2026-09-02' };
-      }
-      return { startDate: '2026-08-27', endDate: '2026-09-02' };
-    }),
-  };
-
   beforeEach(async () => {
+    today.set('2026-09-02');
+
     await TestBed.configureTestingModule({
-      imports: [EarningsFilter],
-      providers: [
-        { provide: DashboardEarningsService, useValue: earningsServiceMock },
-        { provide: ClockService, useValue: { today } },
-      ],
+      imports: [PeriodFilter],
+      providers: [{ provide: ClockService, useValue: { today } }],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(EarningsFilter);
+    fixture = TestBed.createComponent(PeriodFilter);
     component = fixture.componentInstance;
   });
 
@@ -155,5 +141,32 @@ describe('EarningsFilter', () => {
     today.set('2026-10-01');
 
     expect(component.maxDate()).toEqual(new Date(2026, 9, 1));
+  });
+
+  describe('preset-date-range helpers', () => {
+    it('should compute date ranges for last7, last14, and last30', () => {
+      expect(getPresetDateRange('last7', '2026-09-02')).toEqual({
+        startDate: '2026-08-27',
+        endDate: '2026-09-02',
+      });
+      expect(getPresetDateRange('last14', '2026-09-02')).toEqual({
+        startDate: '2026-08-20',
+        endDate: '2026-09-02',
+      });
+      expect(getPresetDateRange('last30', '2026-09-02')).toEqual({
+        startDate: '2026-08-04',
+        endDate: '2026-09-02',
+      });
+    });
+
+    it('should format period labels for presets and custom ranges', () => {
+      expect(formatPeriodLabel({ preset: 'last7', startDate: '2026-08-27', endDate: '2026-09-02' })).toBe('7 days');
+      expect(formatPeriodLabel({ preset: 'last14', startDate: '2026-08-20', endDate: '2026-09-02' })).toBe('14 days');
+      expect(formatPeriodLabel({ preset: 'last30', startDate: '2026-08-04', endDate: '2026-09-02' })).toBe('30 days');
+      expect(formatPeriodLabel({ preset: 'custom', startDate: '2026-10-01', endDate: '2026-10-15' })).toBe(
+        '10/01 – 10/15',
+      );
+      expect(formatPeriodLabel({ preset: 'custom', startDate: '', endDate: '' })).toBe('custom');
+    });
   });
 });

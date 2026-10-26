@@ -1,5 +1,13 @@
 export interface ChartDayData {
+  date: string;
+  formattedDate: string;
   dayOfWeek: string;
   score: number | null;
-  date: string;
+  rewardEarned: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  isHighScore: boolean;
+  shouldShowLabel: boolean;
 }

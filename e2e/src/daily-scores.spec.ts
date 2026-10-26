@@ -7,15 +7,20 @@ test.describe('Daily Scores Flow', () => {
     // Verify loading indicator is not visible
     await expect(page.locator('mat-spinner')).not.toBeVisible();
 
-    // Verify stats cards are rendered
+    // Verify stats cards are rendered with the period label
     await expect(page.locator('.stats-container')).toBeVisible();
-    await expect(page.getByText('Monthly average')).toBeVisible();
+    await expect(page.getByText('Average score (7 days)')).toBeVisible();
     await expect(page.getByText('Current streak')).toBeVisible();
 
-    // Verify 7-day chart is rendered
+    // Verify period filter and chart are rendered
+    await expect(page.locator('app-period-filter')).toBeVisible();
     await expect(page.locator('app-scores-chart')).toBeVisible();
-    await expect(page.getByText('Last 7 days')).toBeVisible();
-    await expect(page.locator('.bars .bar-wrapper')).toHaveCount(7);
+    await expect(page.locator('app-scores-chart .chart-bar-group')).toHaveCount(7);
+
+    // Switching to 14 days updates both the average score card label and chart bars
+    await page.locator('app-period-filter').getByRole('radio', { name: '14 days' }).click();
+    await expect(page.getByText('Average score (14 days)')).toBeVisible();
+    await expect(page.locator('app-scores-chart .chart-bar-group')).toHaveCount(14);
 
     // Verify score input prompt and 10 score buttons
     await expect(page.getByText("Today's score")).toBeVisible();

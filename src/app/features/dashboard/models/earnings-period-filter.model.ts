@@ -1,7 +1,3 @@
-import type { PeriodPreset } from './period-preset.type';
+import type { PeriodFilterValue } from '../../../shared/components/period-filter/period-filter-value.model';
 
-export interface EarningsPeriodFilter {
-  preset: PeriodPreset;
-  startDate: string;
-  endDate: string;
-}
+export type EarningsPeriodFilter = PeriodFilterValue;

@@ -1,4 +1,1 @@
-export interface ChartGridLine {
-  y: number;
-  label: string;
-}
+export type { ChartGridLine } from '../../../shared/models/chart-grid-line.model';
