@@ -1,0 +1,25 @@
+<h2 mat-dialog-title class="dialog-header">
+  <mat-icon class="header-icon">account_balance_wallet</mat-icon>
+  <span>Set up balance</span>
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <p class="hint">
+    Enter your balance as it is now. It replaces the current one. You can do this once; purging the database makes it
+    available again.
+  </p>
+
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-width">
+    <mat-label>Balance</mat-label>
+    <input matInput type="number" class="pd-num" [formField]="balanceForm.amount" step="1" cdkFocusInitial />
+    <span matTextSuffix>₴</span>
+    @for (error of balanceForm.amount().errors(); track error.kind) {
+      <mat-error>{{ error.message }}</mat-error>
+    }
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-flat-button type="button" (click)="submit()" [disabled]="balanceForm().invalid()">Continue</button>
+</mat-dialog-actions>

@@ -57,6 +57,18 @@ const SCREENS: Screen[] = [
       await page.getByRole('option').filter({ hasText: 'WWWW' }).click();
     },
   },
+  {
+    name: 'dashboard: quick spend dialog, invalid amount',
+    path: '/dashboard',
+    ready: 'app-stat-card',
+    root: OVERLAY,
+    open: async (page) => {
+      await page.getByRole('button', { name: 'Quick spend' }).first().click();
+      await page.locator('app-quick-spend-dialog').getByLabel('Amount').fill('12.5');
+      await page.locator('app-quick-spend-dialog').getByLabel('Amount').blur();
+      await expect(page.locator('app-quick-spend-dialog mat-error')).toBeVisible();
+    },
+  },
   { name: 'tasks', path: '/tasks', ready: 'app-daily-task-item' },
   {
     name: 'tasks: new daily task form',
@@ -326,6 +338,30 @@ const SCREENS: Screen[] = [
       await page.getByLabel('Study').fill('12.5');
       await page.getByLabel('Work').focus();
       await expect(page.locator('app-pomodoro-reward-settings mat-error')).toHaveCount(2);
+    },
+  },
+  {
+    name: 'settings: balance setup dialog',
+    path: '/settings',
+    ready: '.settings-link',
+    root: OVERLAY,
+    open: async (page) => {
+      await page.getByRole('button', { name: 'Set up balance' }).click();
+      await page.locator('app-balance-setup-dialog').getByLabel('Balance').fill('12.5');
+      await page.locator('app-balance-setup-dialog').getByLabel('Balance').blur();
+      await expect(page.locator('app-balance-setup-dialog mat-error')).toBeVisible();
+    },
+  },
+  {
+    name: 'settings: balance setup confirmation',
+    path: '/settings',
+    ready: '.settings-link',
+    root: OVERLAY,
+    open: async (page) => {
+      await page.getByRole('button', { name: 'Set up balance' }).click();
+      await page.locator('app-balance-setup-dialog').getByLabel('Balance').fill('9999999');
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await expect(page.locator('app-confirm-dialog')).toBeVisible();
     },
   },
   {

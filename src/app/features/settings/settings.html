@@ -15,6 +15,12 @@
         <mat-icon>chat</mat-icon>
         Import Telegram scores
       </a>
+      @if (canSetUpBalance()) {
+        <button mat-stroked-button type="button" class="settings-link" (click)="setUpBalance()">
+          <mat-icon>account_balance_wallet</mat-icon>
+          Set up balance
+        </button>
+      }
       <button mat-stroked-button type="button" class="settings-link destructive" (click)="confirmPurge()">
         <mat-icon>delete_forever</mat-icon>
         Purge database

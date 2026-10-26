@@ -36,7 +36,8 @@ What is stored is what is shown: `MONEY_FORMAT` (`shared/constants/money-format.
 fraction (the streak bonuses, the daily score bonus, the pomodoro tiers, averages and chart axes)
 rounds to whole hryvnias where it is computed. Money inputs follow one rule, `moneyAmount()` in
 `shared/validators/money-amount.ts`: required, a whole number, from 1 ₴ to 10 000 000 ₴; a form can
-add a lower maximum of its own (quick spend's balance). `WithdrawalService`, `RewardsService`,
+add a lower maximum of its own (quick spend's balance). The balance setup is the one input that
+lowers the floor to 0 ₴. `WithdrawalService`, `RewardsService`,
 `GoalService`, `DailyTasksService` and `TaskService` also reject a non-integer amount, so a caller outside the forms
 cannot store one.
 
@@ -63,12 +64,16 @@ Daily tasks the import creates keep UUIDs. The import never changes `users.balan
 
 **Primary Key**: `id`  
 **Description**: Stores the user profile and their overall balance (virtual currency/reward points).
+The balance can be set up once in Settings (`UserService.setUpBalance`): it replaces the balance and
+records `balanceSetUpAt`, and a second setup is refused. A purge reseeds the row without that field,
+so the setup is available again. The field has no index, so it needed no schema version.
 
 ```typescript
 export interface User {
   id: number; // Always 1 (single user app)
   name: string;
   balance: number; // Whole hryvnias. The current accumulated reward balance
+  balanceSetUpAt?: number; // timestamp of the one-time balance setup; absent until it is used
   createdAt: number; // timestamp
   updatedAt: number; // timestamp
 }
