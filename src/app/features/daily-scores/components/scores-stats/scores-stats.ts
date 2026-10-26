@@ -10,11 +10,14 @@ import { StatCard } from '../../../../shared/components/stat-card/stat-card';
   styleUrl: './scores-stats.scss',
 })
 export class ScoresStats {
-  readonly monthlyScores = input<DailyScore[]>([]);
+  readonly scores = input<DailyScore[]>([]);
+  readonly periodLabel = input<string>('7 days');
   readonly latestScore = input<DailyScore | null>(null);
 
-  readonly monthlyAverage = computed<number>(() => {
-    const scores = this.monthlyScores();
+  readonly averageLabel = computed<string>(() => `Average score (${this.periodLabel()})`);
+
+  readonly averageScore = computed<number>(() => {
+    const scores = this.scores();
     if (scores.length > 0) {
       const sum = scores.reduce((acc, curr) => acc + curr.score, 0);
       return Math.round((sum / scores.length) * 10) / 10;

@@ -1,20 +1,122 @@
-<app-section-card heading="Last 7 days">
-  @if (chartData().length > 0) {
-    <div class="bars">
-      @for (item of chartData(); track item.date) {
-        <div class="bar-wrapper">
-          <div class="score-label">{{ item.score !== null ? item.score : '-' }}</div>
-          <div
-            class="bar"
-            [style.height.%]="item.score ? item.score * 10 : 0"
-            [class.empty]="!item.score"
-            [class.high-score]="item.score && item.score >= 9"
-          ></div>
-          <div class="day-label">{{ item.dayOfWeek }}</div>
-        </div>
-      }
+<app-section-card heading="Daily scores">
+  <div class="chart-content">
+    <div class="legend-container">
+      <div class="legend-item">
+        <span class="swatch standard"></span>
+        <span>Score 1–8</span>
+      </div>
+      <div class="legend-item">
+        <span class="swatch high-score"></span>
+        <span>Score 9–10 (reward)</span>
+      </div>
     </div>
-  } @else {
-    <p class="no-data">No scores yet for the last 7 days.</p>
-  }
+
+    <div class="svg-container" (appObserveWidth)="width.set($event)">
+      <svg
+        [attr.viewBox]="viewBox()"
+        class="scores-svg"
+        preserveAspectRatio="xMidYMid meet"
+        role="region"
+        aria-label="Daily scores chart"
+      >
+        @for (line of gridLines(); track line.y) {
+          <line
+            [attr.x1]="chartLeftX()"
+            [attr.y1]="line.y"
+            [attr.x2]="chartRightX()"
+            [attr.y2]="line.y"
+            class="grid-line"
+          />
+          <text
+            [attr.x]="yAxisTextX()"
+            [attr.y]="line.y + axisLabelYOffset"
+            class="axis-label pd-num"
+            text-anchor="end"
+          >
+            {{ line.label }}
+          </text>
+        }
+
+        <line
+          [attr.x1]="chartLeftX()"
+          [attr.y1]="chartBaselineY"
+          [attr.x2]="chartRightX()"
+          [attr.y2]="chartBaselineY"
+          class="baseline"
+        />
+
+        @for (bar of chartData(); track bar.date) {
+          <g
+            class="chart-bar-group"
+            (mouseenter)="onBarMouseEnter(bar, $event)"
+            (mousemove)="onBarMouseMove($event)"
+            (mouseleave)="onBarMouseLeave()"
+            (click)="onBarClick(bar, $event)"
+            (focus)="onBarFocus(bar, $event)"
+            (blur)="onBarBlur()"
+            tabindex="0"
+            [attr.aria-label]="bar.date + ': ' + (bar.score !== null ? 'Score ' + bar.score : 'No score')"
+          >
+            <rect
+              [attr.x]="bar.x"
+              [attr.y]="chartTopY"
+              [attr.width]="bar.width"
+              [attr.height]="chartHeight"
+              class="bar-hitbox"
+            />
+
+            @if (bar.score === null) {
+              <rect
+                [attr.x]="bar.x"
+                [attr.y]="zeroBarY"
+                [attr.width]="bar.width"
+                [attr.height]="zeroBarHeight"
+                class="zero-bar"
+              />
+            } @else {
+              <rect
+                [attr.x]="bar.x"
+                [attr.y]="bar.y"
+                [attr.width]="bar.width"
+                [attr.height]="bar.height"
+                class="bar"
+                [class.high-score]="bar.isHighScore"
+              />
+            }
+
+            @if (bar.shouldShowLabel) {
+              <text
+                [attr.x]="bar.x + bar.width / 2"
+                [attr.y]="axisLabelYPos"
+                class="axis-label pd-num"
+                text-anchor="middle"
+              >
+                {{ bar.formattedDate }}
+              </text>
+            }
+          </g>
+        }
+      </svg>
+    </div>
+
+    @if (hoveredDay(); as day) {
+      <div class="chart-tooltip" [style.left.px]="tooltipPosition()?.x" [style.top.px]="tooltipPosition()?.y">
+        <div class="tooltip-date pd-num">{{ day.date }} ({{ day.dayOfWeek }})</div>
+        @if (day.score !== null) {
+          <div class="tooltip-row">
+            <span>Score</span>
+            <span class="tooltip-score pd-num">{{ day.score }} / 10</span>
+          </div>
+          @if (day.rewardEarned > 0) {
+            <div class="tooltip-row">
+              <span>Reward</span>
+              <app-amount [value]="day.rewardEarned" size="sm" tone="inherit" [showSign]="true" />
+            </div>
+          }
+        } @else {
+          <div class="no-score-text">No score recorded</div>
+        }
+      </div>
+    }
+  </div>
 </app-section-card>

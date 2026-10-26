@@ -2,9 +2,10 @@ import { Service, inject } from '@angular/core';
 import { DbService } from '../../../database/db.service';
 import type { DailyScore } from '../../../core/models/daily-score.model';
 import type { Observable } from 'rxjs';
-import { from } from 'rxjs';
+import { from, of } from 'rxjs';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { getPresetDateRange } from '../../../shared/components/period-filter/preset-date-range';
 import {
   MAX_STREAK_BONUS,
   REWARD_GOOD,
@@ -31,15 +32,17 @@ export class DailyScoresService {
     return from(this.db.dailyScores.where('date').between(startStr, endStr, true, true).toArray());
   }
 
-  getLast7DaysScores(): Observable<DailyScore[]> {
-    const today = new Date();
-    const endDate = today.toLocaleDateString(DATE_LOCALE_CA);
-
-    const start = new Date();
-    start.setDate(today.getDate() - 6);
-    const startDate = start.toLocaleDateString(DATE_LOCALE_CA);
+  getScoresInRange(startDate: string, endDate: string): Observable<DailyScore[]> {
+    if (!startDate || !endDate || startDate > endDate) {
+      return of([]);
+    }
 
     return from(this.db.dailyScores.where('date').between(startDate, endDate, true, true).toArray());
+  }
+
+  getLast7DaysScores(): Observable<DailyScore[]> {
+    const { startDate, endDate } = getPresetDateRange('last7');
+    return this.getScoresInRange(startDate, endDate);
   }
 
   getTodayScore(): Observable<DailyScore | undefined> {
