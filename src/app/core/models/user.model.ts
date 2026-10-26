@@ -6,6 +6,8 @@ export interface User {
   id: number;
   name: string;
   balance: number;
+  // Absent until the balance is set up in Settings, which can be done once per database.
+  balanceSetUpAt?: number;
   createdAt: number;
   updatedAt: number;
 }

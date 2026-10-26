@@ -118,6 +118,7 @@ describe('DbService', () => {
       expect(addUser).toHaveBeenCalledWith(
         expect.objectContaining({ id: CURRENT_USER_ID, balance: DEFAULT_INITIAL_BALANCE }),
       );
+      expect(addUser.mock.calls[0][0]).not.toHaveProperty('balanceSetUpAt');
       const seededGoals = addGoals.mock.calls[0][0] as Goal[];
       expect(seededGoals.map((goal) => goal.title)).toEqual(getInitialGoals().map((goal) => goal.title));
       expect(seededGoals.map((goal) => goal.rewardValue)).toEqual([2000, 1500, 1500]);

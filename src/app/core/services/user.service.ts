@@ -45,4 +45,35 @@ export class UserService {
       }
     });
   }
+
+  /**
+   * Replaces the balance with `amount`, a whole number of hryvnias from 0. Allowed once: a purge
+   * reseeds the user row without `balanceSetUpAt`, which makes it available again.
+   */
+  async setUpBalance(amount: number): Promise<void> {
+    if (!Number.isInteger(amount) || amount < 0) {
+      throw new Error('The balance must be a whole number of hryvnias, 0 or more.');
+    }
+
+    await this.db.transaction('rw', this.db.users, async () => {
+      const user = await this.db.users.get(CURRENT_USER_ID);
+      if (user?.balanceSetUpAt !== undefined) {
+        throw new Error('The balance has already been set up.');
+      }
+
+      const now = Date.now();
+      if (user) {
+        await this.db.users.update(CURRENT_USER_ID, { balance: amount, balanceSetUpAt: now, updatedAt: now });
+      } else {
+        await this.db.users.add({
+          id: CURRENT_USER_ID,
+          name: CURRENT_USER_NAME,
+          balance: amount,
+          balanceSetUpAt: now,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+    });
+  }
 }

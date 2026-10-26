@@ -182,4 +182,65 @@ describe('UserService', () => {
       );
     });
   });
+
+  describe('setUpBalance', () => {
+    const existingUser: User = { id: CURRENT_USER_ID, name: 'Current', balance: 500, createdAt: 1000, updatedAt: 1000 };
+
+    it('should replace the balance and record when it was set up', async () => {
+      dbMock.users.get.mockResolvedValue(existingUser);
+
+      await service.setUpBalance(12_000);
+
+      expect(dbMock.users.update).toHaveBeenCalledWith(
+        CURRENT_USER_ID,
+        expect.objectContaining({ balance: 12_000, balanceSetUpAt: expect.any(Number) as number }),
+      );
+    });
+
+    it('should accept a balance of 0', async () => {
+      dbMock.users.get.mockResolvedValue(existingUser);
+
+      await service.setUpBalance(0);
+
+      expect(dbMock.users.update).toHaveBeenCalledWith(CURRENT_USER_ID, expect.objectContaining({ balance: 0 }));
+    });
+
+    it('should create the user record with the balance if it is missing', async () => {
+      await service.setUpBalance(300);
+
+      expect(dbMock.users.add).toHaveBeenCalledWith(
+        expect.objectContaining({ id: CURRENT_USER_ID, balance: 300, balanceSetUpAt: expect.any(Number) as number }),
+      );
+    });
+
+    it('should refuse a second setup', async () => {
+      dbMock.users.get.mockResolvedValue({ ...existingUser, balanceSetUpAt: 2000 });
+
+      await expect(service.setUpBalance(12_000)).rejects.toThrow();
+
+      expect(dbMock.users.update).not.toHaveBeenCalled();
+    });
+
+    it('should let only the first of two concurrent setups through', async () => {
+      let stored: User = { ...existingUser };
+      dbMock.users.get.mockImplementation(() => ({ ...stored }));
+      dbMock.users.update.mockImplementation((_id: number, changes: Partial<User>) => {
+        stored = { ...stored, ...changes };
+        return 1;
+      });
+
+      const results = await Promise.allSettled([service.setUpBalance(100), service.setUpBalance(200)]);
+
+      expect(results.map((result) => result.status)).toEqual(['fulfilled', 'rejected']);
+      expect(stored.balance).toBe(100);
+    });
+
+    it('should reject a negative or fractional balance without touching the database', async () => {
+      for (const amount of [-1, 12.5, Number.NaN]) {
+        await expect(service.setUpBalance(amount)).rejects.toThrow();
+      }
+
+      expect(dbMock.transaction).not.toHaveBeenCalled();
+    });
+  });
 });
