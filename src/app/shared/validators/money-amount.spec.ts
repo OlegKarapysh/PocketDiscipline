@@ -5,10 +5,10 @@ import { describe, expect, it } from 'vitest';
 import { moneyAmount } from './money-amount';
 
 describe('moneyAmount', () => {
-  const messagesFor = (amount: number | null): string[] => {
+  const messagesFor = (amount: number | null, minimum?: number): string[] => {
     const priceForm = TestBed.runInInjectionContext(() =>
       form(signal({ price: amount }), (path) => {
-        moneyAmount(path.price, 'Price');
+        moneyAmount(path.price, 'Price', minimum);
       }),
     );
     return priceForm
@@ -30,6 +30,11 @@ describe('moneyAmount', () => {
   it('should reject an amount below 1', () => {
     expect(messagesFor(0)).toEqual(['Price must be at least 1 ₴']);
     expect(messagesFor(-5)).toEqual(['Price must be at least 1 ₴']);
+  });
+
+  it('should accept 0 when the floor is lowered to 0, and still reject a negative amount', () => {
+    expect(messagesFor(0, 0)).toEqual([]);
+    expect(messagesFor(-1, 0)).toEqual(['Price must be at least 0 ₴']);
   });
 
   it('should accept up to 10 000 000 and reject anything larger', () => {
