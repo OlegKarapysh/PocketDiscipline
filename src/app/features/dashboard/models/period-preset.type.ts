@@ -1,1 +1,1 @@
-export type PeriodPreset = 'last7' | 'last14' | 'last30' | 'custom';
+export type { PeriodPreset } from '../../../shared/components/period-filter/period-preset.type';

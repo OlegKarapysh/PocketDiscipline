@@ -4,31 +4,31 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
-import { SegmentedControl } from '../../../../shared/components/segmented-control/segmented-control';
-import type { SegmentOption } from '../../../../shared/components/segmented-control/segment-option.model';
-import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
-import { ClockService } from '../../../../core/services/clock.service';
-import { DashboardEarningsService } from '../../services/dashboard-earnings.service';
-import type { EarningsPeriodFilter } from '../../models/earnings-period-filter.model';
-import type { PeriodPreset } from '../../models/period-preset.type';
+import { SegmentedControl } from '../segmented-control/segmented-control';
+import type { SegmentOption } from '../segmented-control/segment-option.model';
+import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { ClockService } from '../../../core/services/clock.service';
+import type { PeriodFilterValue } from './period-filter-value.model';
+import type { PeriodPreset } from './period-preset.type';
+import { getPresetDateRange } from './preset-date-range';
 
 @Component({
-  selector: 'app-earnings-filter',
+  selector: 'app-period-filter',
   imports: [FormField, MatDatepickerModule, MatFormFieldModule, MatNativeDateModule, MatInputModule, SegmentedControl],
-  templateUrl: './earnings-filter.html',
-  styleUrl: './earnings-filter.scss',
+  templateUrl: './period-filter.html',
+  styleUrl: './period-filter.scss',
 })
-export class EarningsFilter {
-  private readonly earningsService = inject(DashboardEarningsService);
+export class PeriodFilter {
   private readonly clock = inject(ClockService);
 
-  readonly filter = input<EarningsPeriodFilter>({
+  readonly filter = input<PeriodFilterValue>({
     preset: 'last7',
     startDate: '',
     endDate: '',
   });
+  readonly ariaLabel = input<string>('Period');
 
-  readonly filterChange = output<EarningsPeriodFilter>();
+  readonly filterChange = output<PeriodFilterValue>();
 
   readonly presetOptions: readonly SegmentOption<PeriodPreset>[] = [
     { value: 'last7', label: '7 days' },
@@ -52,7 +52,7 @@ export class EarningsFilter {
       return;
     }
 
-    const range = this.earningsService.getPresetDateRange(preset);
+    const range = getPresetDateRange(preset, this.clock.today());
     this.filterChange.emit({
       preset,
       startDate: range.startDate,

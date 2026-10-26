@@ -1,6 +1,6 @@
-<div class="earnings-filter-container">
+<div class="period-filter-container">
   <app-segmented-control
-    ariaLabel="Earnings period"
+    [ariaLabel]="ariaLabel()"
     [options]="presetOptions"
     [value]="activePreset()"
     (valueChange)="selectPreset($event)"

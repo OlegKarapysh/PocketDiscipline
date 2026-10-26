@@ -9,6 +9,8 @@ import { Amount } from '../../shared/components/amount/amount';
 import { Badge } from '../../shared/components/badge/badge';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { PageHeader } from '../../shared/components/page-header/page-header';
+import { PeriodFilter } from '../../shared/components/period-filter/period-filter';
+import type { PeriodFilterValue } from '../../shared/components/period-filter/period-filter-value.model';
 import { ProgressRing } from '../../shared/components/progress-ring/progress-ring';
 import { SectionCard } from '../../shared/components/section-card/section-card';
 import { SegmentedControl } from '../../shared/components/segmented-control/segmented-control';
@@ -33,6 +35,7 @@ type Period = 'last7' | 'last14' | 'last30' | 'custom';
     Badge,
     EmptyState,
     PageHeader,
+    PeriodFilter,
     ProgressRing,
     SectionCard,
     SegmentedControl,
@@ -47,6 +50,7 @@ export class DesignSystemPage {
   private readonly confirm = inject(ConfirmService);
 
   readonly period = signal<Period>('last7');
+  readonly periodFilter = signal<PeriodFilterValue>({ preset: 'last7', startDate: '', endDate: '' });
   readonly periodOptions: readonly SegmentOption<Period>[] = [
     { value: 'last7', label: '7 days' },
     { value: 'last14', label: '14 days' },

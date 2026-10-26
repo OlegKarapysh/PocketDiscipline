@@ -43,6 +43,7 @@ If this skill and `docs/design_system.md` disagree, the doc wins. Fix the skill 
    | Status or reward pill      | `app-badge`                                   |
    | Streak                     | `app-streak-badge`                            |
    | 2–4 option filter          | `app-segmented-control`                       |
+   | Date range period filter   | `app-period-filter`                           |
    | Ring progress              | `app-progress-ring`                           |
    | Empty list                 | `app-empty-state`                             |
    | Earning moment             | `CelebrationService.show()`                   |

@@ -6,7 +6,7 @@
   <app-earnings-stats class="month-stats" [summary]="monthlySummary()" (monthChange)="onMonthChange($event)" />
 
   <div class="earnings">
-    <app-earnings-filter [filter]="currentFilter()" (filterChange)="onFilterChange($event)" />
+    <app-period-filter ariaLabel="Earnings period" [filter]="currentFilter()" (filterChange)="onFilterChange($event)" />
 
     <app-earnings-chart [records]="dailyEarnings()" />
   </div>

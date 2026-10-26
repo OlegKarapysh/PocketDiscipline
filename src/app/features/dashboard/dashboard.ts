@@ -4,9 +4,9 @@ import { defer, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { BalanceWidget } from './components/balance-widget/balance-widget';
 import { EarningsChart } from './components/earnings-chart/earnings-chart';
-import { EarningsFilter } from './components/earnings-filter/earnings-filter';
 import { EarningsStats } from './components/earnings-stats/earnings-stats';
 import { PageHeader } from '../../shared/components/page-header/page-header';
+import { PeriodFilter } from '../../shared/components/period-filter/period-filter';
 import { DashboardEarningsService } from './services/dashboard-earnings.service';
 import { ClockService } from '../../core/services/clock.service';
 import type { EarningsPeriodFilter } from './models/earnings-period-filter.model';
@@ -14,7 +14,7 @@ import type { MonthChangeEvent } from './models/month-change-event.model';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [BalanceWidget, EarningsChart, EarningsFilter, EarningsStats, PageHeader],
+  imports: [BalanceWidget, EarningsChart, EarningsStats, PageHeader, PeriodFilter],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

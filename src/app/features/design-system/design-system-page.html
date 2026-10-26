@@ -51,6 +51,11 @@
 
   <app-section-card heading="Filter &amp; fields">
     <app-segmented-control ariaLabel="Earnings period" [options]="periodOptions" [(value)]="period" />
+    <app-period-filter
+      ariaLabel="Sample date range period"
+      [filter]="periodFilter()"
+      (filterChange)="periodFilter.set($event)"
+    />
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Goal title</mat-label>
       <input matInput value="do 100 squats" />
