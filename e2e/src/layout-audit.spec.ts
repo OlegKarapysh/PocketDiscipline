@@ -288,6 +288,15 @@ const SCREENS: Screen[] = [
   { name: 'pomodoro', path: '/pomodoro', ready: 'app-session-config' },
   { name: 'daily scores', path: '/daily-scores', ready: '.score-btn' },
   {
+    name: 'daily scores: custom range',
+    path: '/daily-scores',
+    ready: '.score-btn',
+    open: async (page) => {
+      await page.locator('app-period-filter').getByRole('radio', { name: 'Custom' }).click();
+      await expect(page.locator('app-period-filter .custom-range')).toBeVisible();
+    },
+  },
+  {
     name: 'daily scores: score selected',
     path: '/daily-scores',
     ready: '.score-btn',
