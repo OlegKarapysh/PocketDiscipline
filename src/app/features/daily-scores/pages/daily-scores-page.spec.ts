@@ -15,7 +15,7 @@ describe('DailyScoresPage', () => {
   const today = signal('2026-09-30');
   let dailyScoresServiceMock: {
     getTodayScore: ReturnType<typeof vi.fn>;
-    getCurrentMonthScores: ReturnType<typeof vi.fn>;
+    getScoresInRange: ReturnType<typeof vi.fn>;
     getLast7DaysScores: ReturnType<typeof vi.fn>;
     saveTodayScore: ReturnType<typeof vi.fn>;
   };
@@ -23,7 +23,7 @@ describe('DailyScoresPage', () => {
   beforeEach(async () => {
     dailyScoresServiceMock = {
       getTodayScore: vi.fn().mockReturnValue(of(undefined)),
-      getCurrentMonthScores: vi.fn().mockReturnValue(of([])),
+      getScoresInRange: vi.fn().mockReturnValue(of([])),
       getLast7DaysScores: vi.fn().mockReturnValue(of([])),
       saveTodayScore: vi.fn().mockResolvedValue({ reward: 500, newStreak: 1 }),
     };
@@ -41,9 +41,9 @@ describe('DailyScoresPage', () => {
     component = fixture.componentInstance;
   });
 
-  it('should load today score, monthly scores, and weekly scores on init', async () => {
+  it('should load today score, period scores, and recent scores on init', async () => {
     const mockTodayScore: DailyScore = {
-      date: '2026-08-28',
+      date: '2026-09-30',
       score: 10,
       rewardEarned: 500,
       streakAtThisDay: 1,
@@ -51,7 +51,7 @@ describe('DailyScoresPage', () => {
     };
 
     dailyScoresServiceMock.getTodayScore.mockReturnValue(of(mockTodayScore));
-    dailyScoresServiceMock.getCurrentMonthScores.mockReturnValue(of([mockTodayScore]));
+    dailyScoresServiceMock.getScoresInRange.mockReturnValue(of([mockTodayScore]));
     dailyScoresServiceMock.getLast7DaysScores.mockReturnValue(of([mockTodayScore]));
 
     fixture.detectChanges();
@@ -60,9 +60,35 @@ describe('DailyScoresPage', () => {
     expect(component.loading()).toBe(false);
     expect(component.hasScoreToday()).toBe(true);
     expect(component.currentScore()).toBe(10);
-    expect(component.monthlyScores().length).toBe(1);
-    expect(component.weeklyScores().length).toBe(1);
+    expect(component.periodScores().length).toBe(1);
     expect(component.latestScore()).toEqual(mockTodayScore);
+    expect(dailyScoresServiceMock.getScoresInRange).toHaveBeenCalledWith('2026-09-24', '2026-09-30');
+  });
+
+  it('should update periodFilter, periodLabel, and reload periodScores when onFilterChange is called', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const customScore: DailyScore = {
+      date: '2026-08-10',
+      score: 8,
+      rewardEarned: 0,
+      streakAtThisDay: 0,
+      createdAt: Date.now(),
+    };
+    dailyScoresServiceMock.getScoresInRange.mockReturnValue(of([customScore]));
+
+    component.onFilterChange({
+      preset: 'custom',
+      startDate: '2026-08-01',
+      endDate: '2026-08-15',
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.periodLabel()).toBe('08/01 – 08/15');
+    expect(dailyScoresServiceMock.getScoresInRange).toHaveBeenLastCalledWith('2026-08-01', '2026-08-15');
+    expect(component.periodScores()).toEqual([customScore]);
   });
 
   it('should set hasScoreToday to false when no score is recorded for today', async () => {
@@ -77,7 +103,7 @@ describe('DailyScoresPage', () => {
   it('should render loading container when loading is true and replace with score components when false', async () => {
     const pendingSubject = new Subject<DailyScore | undefined>();
     dailyScoresServiceMock.getTodayScore.mockReturnValue(pendingSubject);
-    dailyScoresServiceMock.getCurrentMonthScores.mockReturnValue(of([]));
+    dailyScoresServiceMock.getScoresInRange.mockReturnValue(of([]));
     dailyScoresServiceMock.getLast7DaysScores.mockReturnValue(of([]));
 
     component.loadData();
@@ -96,6 +122,7 @@ describe('DailyScoresPage', () => {
     expect(component.loading()).toBe(false);
     expect(fixture.debugElement.query(By.css('.loading-container'))).toBeNull();
     expect(fixture.debugElement.query(By.css('app-scores-stats'))).toBeTruthy();
+    expect(fixture.debugElement.query(By.css('app-period-filter'))).toBeTruthy();
     expect(fixture.debugElement.query(By.css('app-scores-chart'))).toBeTruthy();
     expect(fixture.debugElement.query(By.css('app-score-input'))).toBeTruthy();
   });
@@ -161,7 +188,7 @@ describe('DailyScoresPage', () => {
   it('should unsubscribe from loadData when component is destroyed', () => {
     const pendingSubject = new Subject<DailyScore | undefined>();
     dailyScoresServiceMock.getTodayScore.mockReturnValue(pendingSubject);
-    dailyScoresServiceMock.getCurrentMonthScores.mockReturnValue(of([]));
+    dailyScoresServiceMock.getScoresInRange.mockReturnValue(of([]));
     dailyScoresServiceMock.getLast7DaysScores.mockReturnValue(of([]));
 
     component.loadData();
@@ -174,7 +201,7 @@ describe('DailyScoresPage', () => {
   it('should unsubscribe from previous loadData when called again', () => {
     const pendingSubject1 = new Subject<DailyScore | undefined>();
     dailyScoresServiceMock.getTodayScore.mockReturnValue(pendingSubject1);
-    dailyScoresServiceMock.getCurrentMonthScores.mockReturnValue(of([]));
+    dailyScoresServiceMock.getScoresInRange.mockReturnValue(of([]));
     dailyScoresServiceMock.getLast7DaysScores.mockReturnValue(of([]));
 
     component.loadData();
@@ -198,5 +225,6 @@ describe('DailyScoresPage', () => {
     await fixture.whenStable();
 
     expect(dailyScoresServiceMock.getTodayScore.mock.calls.length).toBe(loads + 1);
+    expect(dailyScoresServiceMock.getScoresInRange).toHaveBeenLastCalledWith('2026-09-25', '2026-10-01');
   });
 });

@@ -12,7 +12,7 @@
       </div>
     }
 
-    <app-scores-stats class="full-row" [monthlyScores]="monthlyScores()" [latestScore]="latestScore()" />
+    <app-scores-stats [scores]="periodScores()" [periodLabel]="periodLabel()" [latestScore]="latestScore()" />
 
     <app-score-input
       [readonly]="hasScoreToday()"
@@ -20,6 +20,18 @@
       (scoreSubmitted)="onScoreSubmit($event)"
     />
 
-    <app-scores-chart [scores]="weeklyScores()" />
+    <div class="scores-history">
+      <app-period-filter
+        ariaLabel="Daily scores period"
+        [filter]="currentFilter()"
+        (filterChange)="onFilterChange($event)"
+      />
+
+      <app-scores-chart
+        [scores]="periodScores()"
+        [startDate]="currentFilter().startDate"
+        [endDate]="currentFilter().endDate"
+      />
+    </div>
   </div>
 }

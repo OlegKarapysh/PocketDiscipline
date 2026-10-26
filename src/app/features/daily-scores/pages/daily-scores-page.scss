@@ -1,22 +1,15 @@
 @use '../../../../styles/tokens' as t;
 
-// The score input and the chart sit side by side only where each gets 320px, whatever the
-// viewport is.
 .page-grid {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  flex-direction: column;
   gap: t.space(4);
+}
 
-  > * {
-    flex: 1 1 320px;
-    min-width: 0;
-  }
-
-  > .full-row,
-  > .success-message {
-    flex-basis: 100%;
-  }
+.scores-history {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(3);
 }
 
 .loading-container {
