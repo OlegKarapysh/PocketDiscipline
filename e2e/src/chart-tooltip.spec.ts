@@ -4,7 +4,8 @@ import type { Rows } from './indexed-db';
 import { putRows, userRow } from './indexed-db';
 
 // A bar's tooltip opens next to the pointer. On a phone the outermost bars sit at the screen's edges,
-// and a bar low on the screen leaves little room below it, yet the whole tooltip has to stay on screen.
+// and a bar low on the screen leaves little room below it, yet the whole tooltip has to stay on screen,
+// also when the window narrows while it is open.
 
 const NOW = new Date('2026-10-29T12:00:00');
 const at = (date: string) => new Date(`${date}T12:00:00`).getTime();
@@ -114,4 +115,23 @@ test.describe('Chart tooltip on a phone-width screen', () => {
       });
     }
   }
+});
+
+test.describe('Chart tooltip when the window narrows', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('should move a tooltip that is open back on screen', async ({ page }) => {
+    await page.clock.setFixedTime(NOW);
+    await page.goto('/daily-scores');
+    const chart = page.locator('app-scores-chart');
+    // Keyboard focus keeps the tooltip open while the window changes under it.
+    await chart.locator('.chart-bar-group').last().focus();
+    const tooltip = chart.locator('.chart-tooltip');
+    await expect(tooltip).toBeVisible();
+
+    await page.setViewportSize({ width: 600, height: 800 });
+
+    await expect(tooltip).toBeVisible();
+    await expect(() => expectOnScreen(page, tooltip)).toPass();
+  });
 });
