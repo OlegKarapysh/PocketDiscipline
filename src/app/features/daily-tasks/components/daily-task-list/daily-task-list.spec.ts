@@ -33,6 +33,7 @@ describe('DailyTaskList', () => {
     updateTask: ReturnType<typeof vi.fn>;
     deleteTask: ReturnType<typeof vi.fn>;
     resetBrokenStreaks: ReturnType<typeof vi.fn>;
+    rewardsFor: ReturnType<typeof vi.fn>;
   };
   let snackBarMock: { open: ReturnType<typeof vi.fn> };
   let confirmMock: { ask: ReturnType<typeof vi.fn> };
@@ -60,6 +61,7 @@ describe('DailyTaskList', () => {
       updateTask: vi.fn().mockResolvedValue(undefined),
       deleteTask: vi.fn().mockResolvedValue(undefined),
       resetBrokenStreaks: vi.fn().mockResolvedValue(undefined),
+      rewardsFor: vi.fn().mockReturnValue([{ difficulty: easy, reward: 100 }]),
     };
     snackBarMock = { open: vi.fn() };
     confirmMock = { ask: vi.fn().mockReturnValue(of(true)) };
@@ -422,6 +424,29 @@ describe('DailyTaskList', () => {
 
       expect(items().map((item) => item.task().title)).toEqual(['Run', 'Read', 'Swim']);
       expect(doneToggle()).toBeNull();
+    });
+
+    it('should offer each pending task what completing it pays now', async () => {
+      dailyTasksServiceMock.rewardsFor.mockImplementation((task: DailyTask) => [
+        { difficulty: easy, reward: task.id === 'read' ? 130 : 100 },
+      ]);
+      await render(tasks);
+
+      expect(items().map((item) => [item.task().title, item.rewards()])).toEqual([
+        ['Read', [{ difficulty: easy, reward: 130 }]],
+        ['Swim', [{ difficulty: easy, reward: 100 }]],
+      ]);
+    });
+
+    it('should price the tasks again when the day changes', async () => {
+      dailyTasksServiceMock.rewardsFor.mockReturnValue([{ difficulty: easy, reward: 130 }]);
+      await render(tasks);
+      dailyTasksServiceMock.rewardsFor.mockReturnValue([{ difficulty: easy, reward: 100 }]);
+
+      today.set('2026-10-01');
+      fixture.detectChanges();
+
+      expect(items().map((item) => item.rewards()[0].reward)).toEqual([100, 100, 100]);
     });
   });
 

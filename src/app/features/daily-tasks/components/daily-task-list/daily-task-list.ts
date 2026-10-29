@@ -71,6 +71,8 @@ export class DailyTaskList {
       done:
         task.lastCompletedAt !== null && new Date(task.lastCompletedAt).toLocaleDateString(DATE_LOCALE_CA) === today,
       earned: earned.get(task.id) ?? null,
+      // Priced again when the day changes: whether a completion continues the streak depends on the day.
+      rewards: this.dailyTasksService.rewardsFor(task),
     }));
   });
   readonly pending = computed(() => this.rows().filter((row) => !row.done));

@@ -4,6 +4,7 @@ import { UserService } from '../../../core/services/user.service';
 import type { DailyTask } from '../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../core/models/daily-task-difficulty.model';
 import type { DailyTaskCompletion } from '../../../core/models/daily-task-completion.model';
+import type { DifficultyReward } from '../models/difficulty-reward.model';
 import { liveQuery } from 'dexie';
 import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
@@ -124,6 +125,37 @@ export class DailyTasksService {
     }
   }
 
+  // What completing the task now pays at each difficulty, the same as completeTask would. Empty once it is
+  // done today.
+  rewardsFor(task: DailyTask): DifficultyReward[] {
+    const streak = this.nextStreak(task, Date.now());
+    if (streak === null) return [];
+    return task.difficulties.map((difficulty) => ({
+      difficulty,
+      reward: this.isPayable(difficulty.baseReward) ? this.withStreakBonus(difficulty.baseReward, streak) : null,
+    }));
+  }
+
+  // Rows saved before rewards were validated can hold a reward of zero or less, or one that is not a number at
+  // all. Completing refuses those until the task is edited.
+  private isPayable(baseReward: number): boolean {
+    return Number.isFinite(baseReward) && baseReward > 0;
+  }
+
+  // The streak a completion at `now` makes, or null when the task was already completed that day.
+  private nextStreak(task: DailyTask, now: number): number | null {
+    const diffDays = task.lastCompletedAt === null ? null : this.getDiffDays(now, task.lastCompletedAt);
+    if (diffDays === 0) return null;
+    return diffDays === 1 ? task.streak + 1 : 1;
+  }
+
+  private withStreakBonus(baseReward: number, streak: number): number {
+    const streakCountForBonus = Math.max(streak - 1, 0);
+    const cappedStreakBonus = Math.min(streakCountForBonus, MAX_STREAK_BONUS_DAYS);
+    const bonusMultiplier = 1 + cappedStreakBonus * STREAK_BONUS_RATE;
+    return Math.round(baseReward * bonusMultiplier);
+  }
+
   // Resolves to the reward earned, streak bonus included, or null when the task was already done today.
   async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<number | null> {
     const now = Date.now();
@@ -139,20 +171,14 @@ export class DailyTasksService {
       if (!freshDifficulty) {
         throw new Error(`"${difficulty.name}" is no longer a difficulty of this task.`);
       }
-      // Rows saved before rewards were validated can hold a reward of zero or less; editing the task fixes it.
-      if (!Number.isFinite(freshDifficulty.baseReward) || freshDifficulty.baseReward <= 0) {
+      if (!this.isPayable(freshDifficulty.baseReward)) {
         throw new Error(`"${freshDifficulty.name}" has no valid reward. Edit the task to set one above zero.`);
       }
 
-      const diffDays = freshTask.lastCompletedAt === null ? null : this.getDiffDays(now, freshTask.lastCompletedAt);
-      if (diffDays === 0) return null;
+      const newStreak = this.nextStreak(freshTask, now);
+      if (newStreak === null) return null;
 
-      const newStreak = diffDays === 1 ? freshTask.streak + 1 : 1;
-
-      const streakCountForBonus = Math.max(newStreak - 1, 0);
-      const cappedStreakBonus = Math.min(streakCountForBonus, MAX_STREAK_BONUS_DAYS);
-      const bonusMultiplier = 1 + cappedStreakBonus * STREAK_BONUS_RATE;
-      const finalReward = Math.round(freshDifficulty.baseReward * bonusMultiplier);
+      const finalReward = this.withStreakBonus(freshDifficulty.baseReward, newStreak);
 
       await this.db.dailyTasks.update(freshTask.id, {
         lastCompletedAt: now,
