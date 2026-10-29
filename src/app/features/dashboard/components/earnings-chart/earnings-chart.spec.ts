@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { EarningsChart } from './earnings-chart';
 import type { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
+import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
 
 describe('EarningsChart', () => {
   let component: EarningsChart;
@@ -34,6 +35,8 @@ describe('EarningsChart', () => {
       dailyScoresEarned: 0,
     },
   ];
+
+  const bucketAt = (index: number) => component.bars()[index].bucket;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -84,12 +87,12 @@ describe('EarningsChart', () => {
     fixture.componentRef.setInput('records', mockRecords);
     fixture.detectChanges();
 
-    component.onBarMouseEnter(mockRecords[0], { clientX: 100, clientY: 200 } as MouseEvent);
-    expect(component.hoveredRecord()).toEqual(mockRecords[0]);
+    component.onBarMouseEnter(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
+    expect(component.hoveredBucket()).toBe(bucketAt(0));
     expect(component.tooltipPosition()).toEqual({ x: 110, y: 215 });
 
     component.onBarMouseLeave();
-    expect(component.hoveredRecord()).toBeNull();
+    expect(component.hoveredBucket()).toBeNull();
     expect(component.tooltipPosition()).toBeNull();
   });
 
@@ -113,7 +116,7 @@ describe('EarningsChart', () => {
     fixture.componentRef.setInput('records', mockRecords);
     fixture.detectChanges();
 
-    component.onBarMouseEnter(mockRecords[0], { clientX: 100, clientY: 200 } as MouseEvent);
+    component.onBarMouseEnter(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -148,24 +151,24 @@ describe('EarningsChart', () => {
     fixture.componentRef.setInput('records', mockRecords);
     fixture.detectChanges();
 
-    expect(component.maxDailyEarned()).toBe(1500);
+    expect(component.maxBarTotal()).toBe(1500);
     expect(component.gridLines().at(-1)?.label).toBe((1500).toLocaleString('uk-UA'));
 
     fixture.componentRef.setInput('records', [{ ...mockRecords[0], totalEarned: 1501 }]);
     fixture.detectChanges();
-    expect(component.maxDailyEarned()).toBe(2000);
+    expect(component.maxBarTotal()).toBe(2000);
   });
 
   it('should toggle tooltip on bar click', () => {
     fixture.componentRef.setInput('records', mockRecords);
     fixture.detectChanges();
 
-    component.onBarClick(mockRecords[0], { clientX: 100, clientY: 200 } as MouseEvent);
-    expect(component.hoveredRecord()).toEqual(mockRecords[0]);
+    component.onBarClick(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
+    expect(component.hoveredBucket()).toBe(bucketAt(0));
 
     // Second click on same bar dismisses it
-    component.onBarClick(mockRecords[0], { clientX: 100, clientY: 200 } as MouseEvent);
-    expect(component.hoveredRecord()).toBeNull();
+    component.onBarClick(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
+    expect(component.hoveredBucket()).toBeNull();
   });
 
   it('should thin labels when record count exceeds 16', () => {
@@ -215,7 +218,7 @@ describe('EarningsChart', () => {
       component
         .bars()
         .filter((bar) => bar.shouldShowLabel)
-        .map((bar) => bar.x + bar.width / 2);
+        .map((bar) => bar.axisLabelX);
 
     it('should label every day of a week on a wide chart', () => {
       component.width.set(600);
@@ -242,14 +245,14 @@ describe('EarningsChart', () => {
     fixture.detectChanges();
 
     expect(component.bars().length).toBe(0);
-    expect(component.maxDailyEarned()).toBe(500);
+    expect(component.maxBarTotal()).toBe(500);
   });
 
   it('should update tooltip position on mouse move if bar is hovered', () => {
     fixture.componentRef.setInput('records', mockRecords);
     fixture.detectChanges();
 
-    component.onBarMouseEnter(mockRecords[0], { clientX: 100, clientY: 200 } as MouseEvent);
+    component.onBarMouseEnter(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
     component.onBarMouseMove({ clientX: 150, clientY: 250 } as MouseEvent);
 
     expect(component.tooltipPosition()).toEqual({ x: 160, y: 265 });
@@ -259,11 +262,114 @@ describe('EarningsChart', () => {
     fixture.componentRef.setInput('records', mockRecords);
     fixture.detectChanges();
 
-    component.onBarMouseEnter(mockRecords[1], { clientX: 100, clientY: 200 } as MouseEvent);
+    component.onBarMouseEnter(bucketAt(1), { clientX: 100, clientY: 200 } as MouseEvent);
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
     const tooltip = compiled.querySelector('.chart-tooltip');
     expect(tooltip?.textContent).toContain('No earnings recorded');
+  });
+
+  describe('ranges longer than 90 days', () => {
+    // Every day of the range earns 10 ₴, all of it from goals.
+    const daysFrom = (year: number, monthIndex: number, day: number, count: number): DailyEarningsRecord[] =>
+      Array.from({ length: count }, (_, i) => ({
+        date: new Date(year, monthIndex, day + i).toLocaleDateString(DATE_LOCALE_CA),
+        totalEarned: 10,
+        goalsEarned: 10,
+        dailyTasksEarned: 0,
+        pomodoroEarned: 0,
+        dailyScoresEarned: 0,
+      }));
+
+    const sumOfBars = () => component.bars().reduce((sum, bar) => sum + bar.total, 0);
+
+    it('should still draw one bar per day for exactly 90 days', () => {
+      fixture.componentRef.setInput('records', daysFrom(2026, 0, 1, 90));
+      fixture.detectChanges();
+
+      expect(component.bars()).toHaveLength(90);
+      expect(component.heading()).toBe('Daily earnings');
+    });
+
+    it('should draw one bar per calendar week, cut to the range, past 90 days', () => {
+      // Thursday 1 January to Wednesday 1 April 2026: 91 days.
+      fixture.componentRef.setInput('records', daysFrom(2026, 0, 1, 91));
+      fixture.detectChanges();
+
+      const bars = component.bars();
+      expect(component.heading()).toBe('Weekly earnings');
+      expect(bars).toHaveLength(14);
+      expect(sumOfBars()).toBe(910);
+      expect(bars[0].bucket).toMatchObject({ startDate: '2026-01-01', endDate: '2026-01-04', goalsEarned: 40 });
+      expect(bars[1].bucket).toMatchObject({ startDate: '2026-01-05', endDate: '2026-01-11', totalEarned: 70 });
+      expect(bars.at(-1)?.bucket).toMatchObject({ startDate: '2026-03-30', endDate: '2026-04-01', totalEarned: 30 });
+    });
+
+    it('should name the whole week in the bar label and the tooltip', () => {
+      fixture.componentRef.setInput('records', daysFrom(2026, 0, 1, 91));
+      fixture.detectChanges();
+
+      const firstBar = (fixture.nativeElement as HTMLElement).querySelector('.chart-bar-group');
+      expect(firstBar?.getAttribute('aria-label')).toBe('2026-01-01 – 2026-01-04: 40 ₴');
+
+      component.onBarMouseEnter(bucketAt(1), { clientX: 100, clientY: 200 } as MouseEvent);
+      fixture.detectChanges();
+      const tooltipDate = (fixture.nativeElement as HTMLElement).querySelector('.tooltip-date');
+      expect(tooltipDate?.textContent.trim()).toBe('2026-01-05 – 2026-01-11');
+    });
+
+    it('should draw one bar per calendar month once even weeks would be more than 90 bars', () => {
+      // 15 January 2025 to 31 December 2026: about 103 weeks.
+      fixture.componentRef.setInput('records', daysFrom(2025, 0, 15, 716));
+      fixture.detectChanges();
+
+      const bars = component.bars();
+      expect(component.heading()).toBe('Monthly earnings');
+      expect(bars).toHaveLength(24);
+      expect(sumOfBars()).toBe(7160);
+      expect(bars[0].bucket).toMatchObject({ startDate: '2025-01-15', endDate: '2025-01-31', totalEarned: 170 });
+      expect(bars[1].bucket).toMatchObject({ startDate: '2025-02-01', endDate: '2025-02-28', totalEarned: 280 });
+      expect(bars[0].axisLabel).toBe("Jan '25");
+      expect(bars.at(-1)?.axisLabel).toBe("Dec '26");
+    });
+
+    it('should keep month labels from overlapping on a phone-width chart', () => {
+      component.width.set(280);
+      fixture.componentRef.setInput('records', daysFrom(2025, 0, 15, 716));
+      fixture.detectChanges();
+
+      const centres = component
+        .bars()
+        .filter((bar) => bar.shouldShowLabel)
+        .map((bar) => bar.axisLabelX);
+      const gaps = centres.slice(1).map((centre, i) => centre - centres[i]);
+      // A label such as "Jan '25" is seven 11px Geist Mono glyphs, about 46px wide.
+      expect(Math.min(...gaps)).toBeGreaterThanOrEqual(46);
+    });
+
+    it('should draw one bar per calendar year once even months would be more than 90 bars', () => {
+      // 1 July 2010 to 31 December 2026: 198 months.
+      fixture.componentRef.setInput('records', daysFrom(2010, 6, 1, 6028));
+      fixture.detectChanges();
+
+      const bars = component.bars();
+      expect(component.heading()).toBe('Yearly earnings');
+      expect(bars).toHaveLength(17);
+      expect(sumOfBars()).toBe(60_280);
+      expect(bars[0].bucket).toMatchObject({ startDate: '2010-07-01', endDate: '2010-12-31', totalEarned: 1840 });
+      expect(bars[0].axisLabel).toBe('2010');
+      expect(bars.at(-1)?.bucket).toMatchObject({ startDate: '2026-01-01', endDate: '2026-12-31' });
+    });
+
+    it('should keep the last month label inside a phone-width chart', () => {
+      component.width.set(280);
+      fixture.componentRef.setInput('records', daysFrom(2025, 0, 15, 716));
+      fixture.detectChanges();
+
+      // "Dec '26" is drawn centred on axisLabelX, so half of its width lies to the right.
+      const lastLabelRightEdge = (component.bars().at(-1)?.axisLabelX ?? 0) + (7 * 6.6) / 2;
+      expect(lastLabelRightEdge).toBeLessThanOrEqual(280);
+    });
   });
 });

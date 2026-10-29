@@ -79,4 +79,50 @@ test.describe('Dashboard totals', () => {
     await expect(stat(page, 'Total earned')).toHaveText(/^400\s*₴$/);
     await expect(stat(page, 'Daily average')).toHaveText(/^14\s*₴\/day$/);
   });
+
+  test('should chart a range longer than 90 days week by week, up to its last day', async ({ page }) => {
+    const filter = page.locator('app-period-filter');
+    await filter.getByRole('radio', { name: 'Custom' }).click();
+    await filter.getByPlaceholder('Start date').fill('1/1/2025');
+    await filter.getByPlaceholder('End date').fill('3/10/2026');
+    await filter.getByPlaceholder('End date').blur();
+
+    const chart = page.locator('app-earnings-chart');
+    await expect(chart.getByRole('heading', { name: 'Weekly earnings' })).toBeVisible();
+    // Weeks run Monday to Sunday; the last one stops at the end of the range.
+    await expect(chart.getByLabel(/^2026-02-09 – 2026-02-15: 400\s*₴$/)).toBeVisible();
+    await expect(chart.getByLabel(/^2026-03-02 – 2026-03-08: 150\s*₴$/)).toBeVisible();
+    await expect(chart.getByLabel(/^2026-03-09 – 2026-03-10: 38\s*₴$/)).toBeVisible();
+  });
+});
+
+// In Chile, daylight saving time starts at midnight, so 6 September 2026 has no 00:00. A range that
+// crosses that day must still reach its last day.
+test.describe('Dashboard chart where DST starts at midnight', () => {
+  test.use({ timezoneId: 'America/Santiago' });
+
+  test('should keep the last day of a range that crosses the change', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-09-10T12:00:00-03:00'));
+    await page.goto('/dashboard');
+    await expect(page.locator('app-stat-card').first()).toBeVisible();
+    await putRows(page, {
+      users: [userRow(0)],
+      dailyTaskCompletions: [
+        {
+          id: 'completion-today',
+          taskId: 'daily-gone',
+          date: '2026-09-10',
+          difficultyId: 'easy',
+          rewardEarned: 13,
+          completedAt: new Date('2026-09-10T09:00:00-03:00').getTime(),
+        },
+      ],
+    });
+    await page.reload();
+
+    // The default 7 days: Friday 4 to Thursday 10 September.
+    const chart = page.locator('app-earnings-chart');
+    await expect(chart.locator('.chart-bar-group')).toHaveCount(7);
+    await expect(chart.getByLabel(/^2026-09-10: 13\s*₴$/)).toBeVisible();
+  });
 });

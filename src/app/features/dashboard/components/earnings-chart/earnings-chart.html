@@ -1,4 +1,4 @@
-<app-section-card heading="Daily earnings">
+<app-section-card [heading]="heading()">
   <div class="chart-content">
     <div class="legend-container">
       @for (item of legendItems; track item.source) {
@@ -15,7 +15,7 @@
         class="earnings-svg"
         preserveAspectRatio="xMidYMid meet"
         role="region"
-        aria-label="Daily earnings chart"
+        [attr.aria-label]="heading() + ' chart'"
       >
         <!-- Horizontal Grid Lines and Labels -->
         @for (line of gridLines(); track line.y) {
@@ -46,17 +46,17 @@
         />
 
         <!-- Bars -->
-        @for (bar of bars(); track bar.date) {
+        @for (bar of bars(); track bar.bucket.startDate) {
           <g
             class="chart-bar-group"
-            (mouseenter)="onBarMouseEnter(bar.record, $event)"
+            (mouseenter)="onBarMouseEnter(bar.bucket, $event)"
             (mousemove)="onBarMouseMove($event)"
             (mouseleave)="onBarMouseLeave()"
-            (click)="onBarClick(bar.record, $event)"
-            (focus)="onBarFocus(bar.record, $event)"
+            (click)="onBarClick(bar.bucket, $event)"
+            (focus)="onBarFocus(bar.bucket, $event)"
             (blur)="onBarBlur()"
             tabindex="0"
-            [attr.aria-label]="bar.date + ': ' + (bar.total | money)"
+            [attr.aria-label]="bar.period + ': ' + (bar.total | money)"
           >
             <!-- Invisible hit target for smooth hover/touch -->
             <rect
@@ -92,13 +92,8 @@
 
             <!-- X-Axis Label -->
             @if (bar.shouldShowLabel) {
-              <text
-                [attr.x]="bar.x + bar.width / 2"
-                [attr.y]="axisLabelYPos"
-                class="axis-label pd-num"
-                text-anchor="middle"
-              >
-                {{ bar.formattedDate }}
+              <text [attr.x]="bar.axisLabelX" [attr.y]="axisLabelYPos" class="axis-label pd-num" text-anchor="middle">
+                {{ bar.axisLabel }}
               </text>
             }
           </g>
@@ -107,12 +102,12 @@
     </div>
 
     <!-- Floating Tooltip -->
-    @if (hoveredRecord(); as record) {
+    @if (hoveredBucket(); as bucket) {
       <div class="chart-tooltip" [style.left.px]="tooltipPosition()?.x" [style.top.px]="tooltipPosition()?.y">
-        <div class="tooltip-date pd-num">{{ record.date }}</div>
+        <div class="tooltip-date pd-num">{{ hoveredPeriod() }}</div>
         <div class="tooltip-row tooltip-total">
           <span>Total</span>
-          <app-amount [value]="record.totalEarned" size="sm" tone="inherit" />
+          <app-amount [value]="bucket.totalEarned" size="sm" tone="inherit" />
         </div>
         @for (row of tooltipBreakdown(); track row.source) {
           <div class="tooltip-row">

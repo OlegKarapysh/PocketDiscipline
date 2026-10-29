@@ -222,9 +222,10 @@ describe('DashboardEarningsService', () => {
       expect(records).toEqual([]);
     });
 
-    it('should cap days at 90 days maximum for wide ranges', async () => {
+    it('should build a record for every day of a range longer than 90 days', async () => {
       const records = await firstValueFrom(service.getDailyEarnings('2026-01-01', '2026-12-31'));
-      expect(records.length).toBe(90);
+      expect(records.length).toBe(365);
+      expect(records.at(-1)?.date).toBe('2026-12-31');
     });
 
     it('should ignore goals without completedAt and pomodoro sessions without rewardEarned', async () => {

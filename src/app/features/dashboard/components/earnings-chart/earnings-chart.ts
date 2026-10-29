@@ -4,6 +4,7 @@ import { Amount } from '../../../../shared/components/amount/amount';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
 import type { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
+import type { EarningsBucket } from '../../models/earnings-bucket.model';
 import type { ChartBar } from '../../models/chart-bar.model';
 import type { ChartBarSegment } from '../../models/chart-bar-segment.model';
 import type { ChartGridLine } from '../../models/chart-grid-line.model';
@@ -11,14 +12,21 @@ import type { TooltipPosition } from '../../models/tooltip-position.model';
 import { EarningsSource } from '../../models/earnings-source.enum';
 import { ObserveWidth } from '../../../../shared/directives/observe-width';
 import { AXIS_CHAR_WIDTH } from '../../../../shared/constants/chart-axis.const';
+import {
+  formatPeriodAxisLabel,
+  formatPeriodRange,
+  groupByCalendarPeriod,
+} from '../../../../shared/charts/chart-periods';
+import type { ChartGranularity } from '../../../../shared/models/chart-granularity.type';
+import type { ChartPeriod } from '../../../../shared/models/chart-period.model';
 
 // The chart is drawn at its container's measured width, one user unit per CSS pixel; this is the
 // width it assumes until that first measurement arrives.
 const INITIAL_WIDTH = 600;
 const VIEWBOX_HEIGHT = 260;
 const Y_AXIS_LABEL_GAP = 5;
-// Room one x-axis date label ("09/24") needs, so labels never collide on a narrow screen.
-const MIN_LABEL_SPACING = 44;
+// Space kept between neighbouring x-axis labels, so they never collide on a narrow screen.
+const X_LABEL_GAP = 9;
 // The y-axis tops out at the next multiple of this, and never below it.
 const Y_SCALE_STEP = 500;
 const GRID_DIVISION_COUNT = 4;
@@ -31,11 +39,18 @@ const SOURCE_LABELS: Record<EarningsSource, string> = {
   [EarningsSource.DAILY_SCORES]: 'Daily scores',
 };
 
-const SOURCE_AMOUNT: Record<EarningsSource, (record: DailyEarningsRecord) => number> = {
-  [EarningsSource.GOALS]: (record) => record.goalsEarned,
-  [EarningsSource.DAILY_TASKS]: (record) => record.dailyTasksEarned,
-  [EarningsSource.POMODORO]: (record) => record.pomodoroEarned,
-  [EarningsSource.DAILY_SCORES]: (record) => record.dailyScoresEarned,
+const SOURCE_AMOUNT: Record<EarningsSource, (bucket: EarningsBucket) => number> = {
+  [EarningsSource.GOALS]: (bucket) => bucket.goalsEarned,
+  [EarningsSource.DAILY_TASKS]: (bucket) => bucket.dailyTasksEarned,
+  [EarningsSource.POMODORO]: (bucket) => bucket.pomodoroEarned,
+  [EarningsSource.DAILY_SCORES]: (bucket) => bucket.dailyScoresEarned,
+};
+
+const HEADINGS: Record<ChartGranularity, string> = {
+  day: 'Daily earnings',
+  week: 'Weekly earnings',
+  month: 'Monthly earnings',
+  year: 'Yearly earnings',
 };
 
 const SOURCES = Object.values(EarningsSource);
@@ -49,7 +64,7 @@ const SOURCES = Object.values(EarningsSource);
 export class EarningsChart {
   readonly records = input<DailyEarningsRecord[]>([]);
 
-  readonly hoveredRecord = signal<DailyEarningsRecord | null>(null);
+  readonly hoveredBucket = signal<EarningsBucket | null>(null);
   readonly tooltipPosition = signal<TooltipPosition | null>(null);
 
   readonly width = signal(INITIAL_WIDTH);
@@ -66,13 +81,17 @@ export class EarningsChart {
 
   readonly legendItems = SOURCES.map((source) => ({ source, label: SOURCE_LABELS[source] }));
 
-  readonly maxDailyEarned = computed(() => {
-    const maxVal = this.records().reduce((max, r) => Math.max(max, r.totalEarned), 0);
+  private readonly grouping = computed(() => groupByCalendarPeriod(this.records(), (record) => record.date));
+  private readonly buckets = computed(() => this.grouping().periods.map((period) => this.toBucket(period)));
+  readonly heading = computed(() => HEADINGS[this.grouping().granularity]);
+
+  readonly maxBarTotal = computed(() => {
+    const maxVal = this.buckets().reduce((max, bucket) => Math.max(max, bucket.totalEarned), 0);
     return Math.max(Y_SCALE_STEP, Math.ceil(maxVal / Y_SCALE_STEP) * Y_SCALE_STEP);
   });
 
   readonly gridLines = computed<ChartGridLine[]>(() => {
-    const max = this.maxDailyEarned();
+    const max = this.maxBarTotal();
     const lines: ChartGridLine[] = [];
 
     for (let i = 0; i <= GRID_DIVISION_COUNT; i++) {
@@ -91,19 +110,22 @@ export class EarningsChart {
   readonly yAxisTextX = computed(() => this.chartLeftX() - Y_AXIS_LABEL_GAP);
 
   readonly bars = computed<ChartBar[]>(() => {
-    const recs = this.records();
-    const totalBars = recs.length;
+    const { granularity } = this.grouping();
+    const buckets = this.buckets();
+    const totalBars = buckets.length;
     if (totalBars === 0) {
       return [];
     }
 
-    const max = this.maxDailyEarned();
+    const axisLabels = buckets.map((bucket) => formatPeriodAxisLabel(bucket.startDate, granularity));
+    const longestLabel = Math.max(...axisLabels.map((label) => label.length));
+    const max = this.maxBarTotal();
     const chartLeftX = this.chartLeftX();
     const slotWidth = (this.chartRightX() - chartLeftX) / totalBars;
     const barWidth = Math.max(slotWidth * 0.65, 4);
     const gap = (slotWidth - barWidth) / 2;
 
-    // Thin the x-axis labels as the range grows: every day, every 2nd, every 5th, then about 7 in all.
+    // Thin the x-axis labels as the range grows: every bar, every 2nd, every 5th, then about 7 in all.
     // A narrow chart thins them further, so neighbouring labels never overlap.
     let labelInterval = 1;
     if (totalBars > 31) {
@@ -113,15 +135,20 @@ export class EarningsChart {
     } else if (totalBars > 10) {
       labelInterval = 2;
     }
-    labelInterval = Math.max(labelInterval, Math.ceil(MIN_LABEL_SPACING / slotWidth));
+    const labelSpacing = longestLabel * AXIS_CHAR_WIDTH + X_LABEL_GAP;
+    labelInterval = Math.max(labelInterval, Math.ceil(labelSpacing / slotWidth));
     const lastIndex = totalBars - 1;
+    // A label is centred under its bar, but never so close to an edge that part of it is cut off.
+    const labelHalfWidth = (longestLabel * AXIS_CHAR_WIDTH) / 2;
+    const maxLabelX = this.width() - labelHalfWidth;
 
-    return recs.map((record, index) => {
+    return buckets.map((bucket, index) => {
+      const x = chartLeftX + index * slotWidth + gap;
       const segments: ChartBarSegment[] = [];
       let currentY = this.chartBaselineY;
 
       for (const source of SOURCES) {
-        const amount = SOURCE_AMOUNT[source](record);
+        const amount = SOURCE_AMOUNT[source](bucket);
         if (amount > 0) {
           const height = (amount / max) * this.chartHeight;
           currentY -= height;
@@ -130,59 +157,65 @@ export class EarningsChart {
       }
 
       return {
-        date: record.date,
-        formattedDate: this.formatDateLabel(record.date),
-        total: record.totalEarned,
-        x: chartLeftX + index * slotWidth + gap,
+        period: formatPeriodRange(bucket),
+        axisLabel: axisLabels[index],
+        axisLabelX: Math.min(Math.max(x + barWidth / 2, labelHalfWidth), maxLabelX),
+        total: bucket.totalEarned,
+        x,
         width: barWidth,
         segments,
-        record,
+        bucket,
         shouldShowLabel:
           index === 0 || index === lastIndex || (index % labelInterval === 0 && lastIndex - index >= labelInterval),
       };
     });
   });
 
+  readonly hoveredPeriod = computed(() => {
+    const bucket = this.hoveredBucket();
+    return bucket ? formatPeriodRange(bucket) : '';
+  });
+
   readonly tooltipBreakdown = computed(() => {
-    const record = this.hoveredRecord();
-    if (!record) {
+    const bucket = this.hoveredBucket();
+    if (!bucket) {
       return [];
     }
     return SOURCES.map((source) => ({
       source,
       label: SOURCE_LABELS[source],
-      amount: SOURCE_AMOUNT[source](record),
+      amount: SOURCE_AMOUNT[source](bucket),
     })).filter((row) => row.amount > 0);
   });
 
-  onBarMouseEnter(record: DailyEarningsRecord, event: MouseEvent): void {
-    this.hoveredRecord.set(record);
+  onBarMouseEnter(bucket: EarningsBucket, event: MouseEvent): void {
+    this.hoveredBucket.set(bucket);
     this.placeTooltipAtPointer(event);
   }
 
   onBarMouseMove(event: MouseEvent): void {
-    if (this.hoveredRecord()) {
+    if (this.hoveredBucket()) {
       this.placeTooltipAtPointer(event);
     }
   }
 
   onBarMouseLeave(): void {
-    this.hoveredRecord.set(null);
+    this.hoveredBucket.set(null);
     this.tooltipPosition.set(null);
   }
 
-  onBarClick(record: DailyEarningsRecord, event: MouseEvent): void {
-    if (this.hoveredRecord()?.date === record.date) {
+  onBarClick(bucket: EarningsBucket, event: MouseEvent): void {
+    if (this.hoveredBucket()?.startDate === bucket.startDate) {
       this.onBarMouseLeave();
     } else {
-      this.onBarMouseEnter(record, event);
+      this.onBarMouseEnter(bucket, event);
     }
   }
 
-  onBarFocus(record: DailyEarningsRecord, event: FocusEvent): void {
+  onBarFocus(bucket: EarningsBucket, event: FocusEvent): void {
     const target = event.currentTarget instanceof Element ? event.currentTarget : null;
     const rect = target?.getBoundingClientRect();
-    this.hoveredRecord.set(record);
+    this.hoveredBucket.set(bucket);
     this.tooltipPosition.set({
       x: (rect?.left ?? 0) + (rect?.width ?? 0) / 2,
       y: (rect?.top ?? 0) - 15,
@@ -197,8 +230,17 @@ export class EarningsChart {
     this.tooltipPosition.set({ x: event.clientX + 10, y: event.clientY + 15 });
   }
 
-  private formatDateLabel(dateStr: string): string {
-    const parts = dateStr.split('-');
-    return parts.length === 3 ? `${parts[1]}/${parts[2]}` : dateStr;
+  private toBucket({ startDate, endDate, items }: ChartPeriod<DailyEarningsRecord>): EarningsBucket {
+    const sum = (amount: (record: DailyEarningsRecord) => number) =>
+      items.reduce((total, record) => total + amount(record), 0);
+    return {
+      startDate,
+      endDate,
+      totalEarned: sum((record) => record.totalEarned),
+      goalsEarned: sum((record) => record.goalsEarned),
+      dailyTasksEarned: sum((record) => record.dailyTasksEarned),
+      pomodoroEarned: sum((record) => record.pomodoroEarned),
+      dailyScoresEarned: sum((record) => record.dailyScoresEarned),
+    };
   }
 }
