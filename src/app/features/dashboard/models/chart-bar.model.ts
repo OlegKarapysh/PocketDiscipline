@@ -1,13 +1,14 @@
 import type { ChartBarSegment } from './chart-bar-segment.model';
-import type { DailyEarningsRecord } from './daily-earnings-record.model';
+import type { EarningsBucket } from './earnings-bucket.model';
 
 export interface ChartBar {
-  date: string;
-  formattedDate: string;
+  period: string;
+  axisLabel: string;
+  axisLabelX: number;
   total: number;
   x: number;
   width: number;
   segments: ChartBarSegment[];
-  record: DailyEarningsRecord;
+  bucket: EarningsBucket;
   shouldShowLabel: boolean;
 }

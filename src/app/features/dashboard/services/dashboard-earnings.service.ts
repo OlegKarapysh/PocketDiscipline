@@ -16,9 +16,6 @@ import type { DailyScore } from '../../../core/models/daily-score.model';
 import type { DailyTaskCompletion } from '../../../core/models/daily-task-completion.model';
 import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
 
-// Upper bound on the days one chart query builds, whatever range it is asked for.
-const MAX_ALLOWED_CHART_DAYS = 90;
-
 @Service()
 export class DashboardEarningsService {
   private readonly db = inject(DbService);
@@ -90,9 +87,8 @@ export class DashboardEarningsService {
         ]);
 
       const dateMap = new Map<string, DailyEarningsRecord>();
-      let dayCount = 0;
 
-      while (current <= end && dayCount < MAX_ALLOWED_CHART_DAYS) {
+      while (current <= end) {
         const dateStr = this.formatLocalDate(current);
         dateMap.set(dateStr, {
           date: dateStr,
@@ -103,7 +99,6 @@ export class DashboardEarningsService {
           dailyScoresEarned: 0,
         });
         current.setDate(current.getDate() + 1);
-        dayCount++;
       }
 
       for (const goal of completedGoalsInRange) {
