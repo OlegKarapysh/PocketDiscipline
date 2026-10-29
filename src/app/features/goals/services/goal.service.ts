@@ -65,32 +65,36 @@ export class GoalService {
   async addGoal(rawTitle: string, rewardValue: number): Promise<void> {
     this.assertValidReward(rewardValue);
     const title = rawTitle.trim();
-    if (await this.isTitleActive(title)) {
-      throw new Error(ERROR_DUPLICATE_GOAL_TITLE);
-    }
+    await this.db.transaction('rw', this.db.goals, async () => {
+      if (await this.isTitleActive(title)) {
+        throw new Error(ERROR_DUPLICATE_GOAL_TITLE);
+      }
 
-    const goal: Goal = {
-      id: crypto.randomUUID(),
-      title,
-      rewardValue,
-      status: GOAL_STATUS.ACTIVE,
-      completedAt: null,
-      createdAt: Date.now(),
-    };
-    await this.db.goals.add(goal);
+      const goal: Goal = {
+        id: crypto.randomUUID(),
+        title,
+        rewardValue,
+        status: GOAL_STATUS.ACTIVE,
+        completedAt: null,
+        createdAt: Date.now(),
+      };
+      await this.db.goals.add(goal);
+    });
   }
 
   async updateGoal(id: string, rawTitle: string, rewardValue: number): Promise<void> {
     this.assertValidReward(rewardValue);
     const title = rawTitle.trim();
-    const goal = await this.db.goals.get(id);
-    if (goal?.status !== GOAL_STATUS.ACTIVE) return;
+    await this.db.transaction('rw', this.db.goals, async () => {
+      const goal = await this.db.goals.get(id);
+      if (goal?.status !== GOAL_STATUS.ACTIVE) return;
 
-    if (await this.isTitleActive(title, id)) {
-      throw new Error(ERROR_DUPLICATE_GOAL_TITLE);
-    }
+      if (await this.isTitleActive(title, id)) {
+        throw new Error(ERROR_DUPLICATE_GOAL_TITLE);
+      }
 
-    await this.db.goals.update(id, { title, rewardValue });
+      await this.db.goals.update(id, { title, rewardValue });
+    });
   }
 
   async deleteGoal(id: string): Promise<void> {
