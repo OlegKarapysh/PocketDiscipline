@@ -11,6 +11,7 @@ import {
 } from '../../../../shared/charts/chart-periods';
 import { SectionCard } from '../../../../shared/components/section-card/section-card';
 import { AXIS_CHAR_WIDTH } from '../../../../shared/constants/chart-axis.const';
+import { FloatAt } from '../../../../shared/directives/float-at';
 import { ObserveWidth } from '../../../../shared/directives/observe-width';
 import type { ChartGranularity } from '../../../../shared/models/chart-granularity.type';
 import type { ChartGridLine } from '../../../../shared/models/chart-grid-line.model';
@@ -37,7 +38,7 @@ const AVERAGE_LEGEND = { standard: 'Average below 9', highScore: 'Average 9–10
 
 @Component({
   selector: 'app-scores-chart',
-  imports: [Amount, ObserveWidth, SectionCard],
+  imports: [Amount, FloatAt, ObserveWidth, SectionCard],
   templateUrl: './scores-chart.html',
   styleUrl: './scores-chart.scss',
 })
@@ -49,7 +50,7 @@ export class ScoresChart {
   readonly endDate = input<string>('');
 
   readonly hoveredBar = signal<ScoreBar | null>(null);
-  readonly tooltipPosition = signal<TooltipPosition | null>(null);
+  readonly tooltipAnchor = signal<TooltipPosition>({ x: 0, y: 0 });
 
   readonly width = signal(INITIAL_WIDTH);
   readonly viewBox = computed(() => `0 0 ${this.width()} ${VIEWBOX_HEIGHT}`);
@@ -163,18 +164,17 @@ export class ScoresChart {
 
   onBarMouseEnter(bar: ScoreBar, event: MouseEvent): void {
     this.hoveredBar.set(bar);
-    this.placeTooltipAtPointer(event);
+    this.anchorTooltipAtPointer(event);
   }
 
   onBarMouseMove(event: MouseEvent): void {
     if (this.hoveredBar()) {
-      this.placeTooltipAtPointer(event);
+      this.anchorTooltipAtPointer(event);
     }
   }
 
   onBarMouseLeave(): void {
     this.hoveredBar.set(null);
-    this.tooltipPosition.set(null);
   }
 
   onBarClick(bar: ScoreBar, event: MouseEvent): void {
@@ -189,18 +189,15 @@ export class ScoresChart {
     const target = event.currentTarget instanceof Element ? event.currentTarget : null;
     const rect = target?.getBoundingClientRect();
     this.hoveredBar.set(bar);
-    this.tooltipPosition.set({
-      x: (rect?.left ?? 0) + (rect?.width ?? 0) / 2,
-      y: (rect?.top ?? 0) - 15,
-    });
+    this.tooltipAnchor.set({ x: (rect?.left ?? 0) + (rect?.width ?? 0) / 2, y: rect?.top ?? 0 });
   }
 
   onBarBlur(): void {
     this.onBarMouseLeave();
   }
 
-  private placeTooltipAtPointer(event: MouseEvent): void {
-    this.tooltipPosition.set({ x: event.clientX + 10, y: event.clientY + 15 });
+  private anchorTooltipAtPointer(event: MouseEvent): void {
+    this.tooltipAnchor.set({ x: event.clientX, y: event.clientY });
   }
 
   private weekdayOf(dateStr: string): string {

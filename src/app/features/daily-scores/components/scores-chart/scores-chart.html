@@ -95,7 +95,7 @@
     </div>
 
     @if (hoveredBar(); as bar) {
-      <div class="chart-tooltip" [style.left.px]="tooltipPosition()?.x" [style.top.px]="tooltipPosition()?.y">
+      <div class="chart-tooltip" [appFloatAt]="tooltipAnchor()">
         <div class="tooltip-date pd-num">{{ bar.tooltipTitle }}</div>
         @if (bar.score !== null) {
           <div class="tooltip-row">

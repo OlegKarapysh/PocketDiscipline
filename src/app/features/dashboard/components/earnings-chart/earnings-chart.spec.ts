@@ -89,11 +89,10 @@ describe('EarningsChart', () => {
 
     component.onBarMouseEnter(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
     expect(component.hoveredBucket()).toBe(bucketAt(0));
-    expect(component.tooltipPosition()).toEqual({ x: 110, y: 215 });
+    expect(component.tooltipAnchor()).toEqual({ x: 100, y: 200 });
 
     component.onBarMouseLeave();
     expect(component.hoveredBucket()).toBeNull();
-    expect(component.tooltipPosition()).toBeNull();
   });
 
   it('should correctly stack segment heights and positions from baseline', () => {
@@ -255,7 +254,7 @@ describe('EarningsChart', () => {
     component.onBarMouseEnter(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
     component.onBarMouseMove({ clientX: 150, clientY: 250 } as MouseEvent);
 
-    expect(component.tooltipPosition()).toEqual({ x: 160, y: 265 });
+    expect(component.tooltipAnchor()).toEqual({ x: 150, y: 250 });
   });
 
   it('should display "No earnings recorded" in tooltip when day total is 0', () => {

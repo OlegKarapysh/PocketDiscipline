@@ -156,7 +156,7 @@ describe('ScoresChart', () => {
     fixture.detectChanges();
 
     expect(component.hoveredBar()).toEqual(lastDay);
-    expect(component.tooltipPosition()).toEqual({ x: 110, y: 215 });
+    expect(component.tooltipAnchor()).toEqual({ x: 100, y: 200 });
     const tooltip = (fixture.nativeElement as HTMLElement).querySelector('.chart-tooltip');
     expect(tooltip?.textContent).toContain('9 / 10');
 
