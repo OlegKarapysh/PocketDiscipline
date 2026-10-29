@@ -230,7 +230,10 @@ test.describe('Daily Tasks Flow', () => {
     });
     await page.reload();
 
+    // Completing pays nothing, so no price is shown for it.
+    await expect(taskItem(page, 'Legacy task').locator('.reward')).toHaveCount(0);
     await openTask(page, 'Legacy task');
+    await expect(taskItem(page, 'Legacy task').locator('.pd-difficulty')).toHaveText(/^\s*Easy\s*--\s*₴\s*$/);
     await taskItem(page, 'Legacy task').locator('.pd-difficulty').click();
     await expect(snackBar(page, 'Edit the task')).toBeVisible();
     expect((await readStores(page, ['dailyTaskCompletions']))['dailyTaskCompletions']).toEqual([]);
@@ -266,10 +269,9 @@ test.describe('Daily Tasks Flow', () => {
   });
 
   test('should show the rewards with the streak bonus, and pay what it shows', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-10-29T12:00:00'));
     await page.goto('/tasks');
     await expect(page.locator('app-daily-task-list app-empty-state')).toBeVisible();
-    // Noon, so that a day before is yesterday even across a daylight saving change.
-    const yesterday = await page.evaluate(() => new Date().setHours(12, 0, 0, 0) - 86_400_000);
     await putRow(page, 'dailyTasks', {
       id: 'streaky',
       title: 'Cold water',
@@ -280,7 +282,7 @@ test.describe('Daily Tasks Flow', () => {
         { id: 'hard', name: 'Hard', baseReward: 300 },
       ],
       streak: 5,
-      lastCompletedAt: yesterday,
+      lastCompletedAt: new Date('2026-10-28T12:00:00').getTime(),
     });
     await page.reload();
 
