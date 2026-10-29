@@ -15,6 +15,7 @@ import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-sta
 import type { DailyScore } from '../../../core/models/daily-score.model';
 import type { DailyTaskCompletion } from '../../../core/models/daily-task-completion.model';
 import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { datesInRange } from '../../../shared/charts/chart-periods';
 
 @Service()
 export class DashboardEarningsService {
@@ -44,17 +45,8 @@ export class DashboardEarningsService {
 
   async calculateDailyEarnings(startDate: string, endDate: string): Promise<DailyEarningsRecord[]> {
     try {
-      if (!startDate || !endDate || startDate > endDate) {
-        return [];
-      }
-
-      const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
-      const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
-
-      const current = new Date(startYear, startMonth - 1, startDay);
-      const end = new Date(endYear, endMonth - 1, endDay);
-
-      if (isNaN(current.getTime()) || isNaN(end.getTime())) {
+      const dates = datesInRange(startDate, endDate);
+      if (dates.length === 0) {
         return [];
       }
 
@@ -88,17 +80,15 @@ export class DashboardEarningsService {
 
       const dateMap = new Map<string, DailyEarningsRecord>();
 
-      while (current <= end) {
-        const dateStr = this.formatLocalDate(current);
-        dateMap.set(dateStr, {
-          date: dateStr,
+      for (const date of dates) {
+        dateMap.set(date, {
+          date,
           totalEarned: 0,
           goalsEarned: 0,
           dailyTasksEarned: 0,
           pomodoroEarned: 0,
           dailyScoresEarned: 0,
         });
-        current.setDate(current.getDate() + 1);
       }
 
       for (const goal of completedGoalsInRange) {

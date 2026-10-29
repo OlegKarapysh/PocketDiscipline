@@ -50,6 +50,7 @@ const HEADINGS: Record<ChartGranularity, string> = {
   day: 'Daily earnings',
   week: 'Weekly earnings',
   month: 'Monthly earnings',
+  year: 'Yearly earnings',
 };
 
 const SOURCES = Object.values(EarningsSource);

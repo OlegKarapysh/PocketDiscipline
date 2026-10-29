@@ -243,11 +243,40 @@ describe('ScoresChart', () => {
       expect(bars.at(-1)?.axisLabel).toBe("Dec '26");
     });
 
-    it('should keep the last month label inside a phone-width chart', () => {
-      component.width.set(280);
+    it('should round an average down, so one just under 9 is not shown as a reward-level 9', () => {
       fixture.componentRef.setInput('startDate', '2025-01-15');
       fixture.componentRef.setInput('endDate', '2026-12-31');
+      // February 2025: nineteen 9s and one 8 average 8.95.
+      const february = Array.from({ length: 19 }, (_, i) => scoreOn(`2025-02-${String(i + 1).padStart(2, '0')}`, 9));
+      fixture.componentRef.setInput('scores', [...february, scoreOn('2025-02-20', 8)]);
       fixture.detectChanges();
+
+      const februaryBar = component.chartData()[1];
+      expect(februaryBar).toMatchObject({ startDate: '2025-02-01', score: 8.9, scoredDays: 20 });
+      expect(februaryBar.isHighScore).toBe(false);
+    });
+
+    it('should draw one bar per calendar year once even months would be more than 90 bars', () => {
+      // 1 July 2010 to 31 December 2026: 198 months.
+      fixture.componentRef.setInput('startDate', '2010-07-01');
+      fixture.componentRef.setInput('endDate', '2026-12-31');
+      fixture.componentRef.setInput('scores', [scoreOn('2011-03-01', 10, 500), scoreOn('2011-12-31', 7)]);
+      fixture.detectChanges();
+
+      const bars = component.chartData();
+      expect(component.heading()).toBe('Yearly average scores');
+      expect(bars).toHaveLength(17);
+      expect(bars[0]).toMatchObject({ startDate: '2010-07-01', dayCount: 184, axisLabel: '2010', score: null });
+      expect(bars[1]).toMatchObject({ startDate: '2011-01-01', score: 8.5, scoredDays: 2, rewardEarned: 500 });
+    });
+
+    it('should keep the last month label inside a phone-width chart', () => {
+      component.width.set(280);
+      // 84 months, so the bars are narrow enough that the last label would overhang the right edge.
+      fixture.componentRef.setInput('startDate', '2020-01-01');
+      fixture.componentRef.setInput('endDate', '2026-12-31');
+      fixture.detectChanges();
+      expect(component.heading()).toBe('Monthly average scores');
 
       // "Dec '26" is drawn centred on axisLabelX, so half of its width lies to the right.
       const lastLabelRightEdge = (component.chartData().at(-1)?.axisLabelX ?? 0) + (7 * 6.6) / 2;

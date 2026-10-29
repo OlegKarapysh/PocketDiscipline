@@ -218,7 +218,7 @@ describe('EarningsChart', () => {
       component
         .bars()
         .filter((bar) => bar.shouldShowLabel)
-        .map((bar) => bar.x + bar.width / 2);
+        .map((bar) => bar.axisLabelX);
 
     it('should label every day of a week on a wide chart', () => {
       component.width.set(600);
@@ -342,10 +342,24 @@ describe('EarningsChart', () => {
       const centres = component
         .bars()
         .filter((bar) => bar.shouldShowLabel)
-        .map((bar) => bar.x + bar.width / 2);
+        .map((bar) => bar.axisLabelX);
       const gaps = centres.slice(1).map((centre, i) => centre - centres[i]);
       // A label such as "Jan '25" is seven 11px Geist Mono glyphs, about 46px wide.
       expect(Math.min(...gaps)).toBeGreaterThanOrEqual(46);
+    });
+
+    it('should draw one bar per calendar year once even months would be more than 90 bars', () => {
+      // 1 July 2010 to 31 December 2026: 198 months.
+      fixture.componentRef.setInput('records', daysFrom(2010, 6, 1, 6028));
+      fixture.detectChanges();
+
+      const bars = component.bars();
+      expect(component.heading()).toBe('Yearly earnings');
+      expect(bars).toHaveLength(17);
+      expect(sumOfBars()).toBe(60_280);
+      expect(bars[0].bucket).toMatchObject({ startDate: '2010-07-01', endDate: '2010-12-31', totalEarned: 1840 });
+      expect(bars[0].axisLabel).toBe('2010');
+      expect(bars.at(-1)?.bucket).toMatchObject({ startDate: '2026-01-01', endDate: '2026-12-31' });
     });
 
     it('should keep the last month label inside a phone-width chart', () => {

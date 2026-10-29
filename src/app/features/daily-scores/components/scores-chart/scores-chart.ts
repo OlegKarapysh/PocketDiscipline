@@ -1,10 +1,10 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import type { DailyScore } from '../../../../core/models/daily-score.model';
-import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
 import { ClockService } from '../../../../core/services/clock.service';
 import { Amount } from '../../../../shared/components/amount/amount';
 import { getPresetDateRange } from '../../../../shared/components/period-filter/preset-date-range';
 import {
+  datesInRange,
   formatPeriodAxisLabel,
   formatPeriodRange,
   groupByCalendarPeriod,
@@ -29,6 +29,7 @@ const HEADINGS: Record<ChartGranularity, string> = {
   day: 'Daily scores',
   week: 'Weekly average scores',
   month: 'Monthly average scores',
+  year: 'Yearly average scores',
 };
 
 const DAILY_LEGEND = { standard: 'Score 1–8', highScore: 'Score 9–10 (reward)' };
@@ -85,26 +86,7 @@ export class ScoresChart {
     const range =
       startStr && endStr ? { startDate: startStr, endDate: endStr } : getPresetDateRange('last7', this.clock.today());
 
-    if (!range.startDate || !range.endDate || range.startDate > range.endDate) {
-      return [];
-    }
-
-    const [startYear, startMonth, startDay] = range.startDate.split('-').map(Number);
-    const [endYear, endMonth, endDay] = range.endDate.split('-').map(Number);
-
-    const current = new Date(startYear, startMonth - 1, startDay);
-    const end = new Date(endYear, endMonth - 1, endDay);
-
-    if (isNaN(current.getTime()) || isNaN(end.getTime())) {
-      return [];
-    }
-
-    const dates: string[] = [];
-    while (current <= end) {
-      dates.push(current.toLocaleDateString(DATE_LOCALE_CA));
-      current.setDate(current.getDate() + 1);
-    }
-    return dates;
+    return datesInRange(range.startDate, range.endDate);
   });
 
   // Every date of the range, oldest first, grouped into one bar per day, week or month.
@@ -150,9 +132,10 @@ export class ScoresChart {
 
     return periods.map((period, index) => {
       const scored = period.items.flatMap((date) => scoreMap.get(date) ?? []);
-      // Averaged to one decimal place, so a week of 9s and 10s does not read as a flat 10.
-      const score =
-        scored.length > 0 ? Math.round((scored.reduce((sum, s) => sum + s.score, 0) / scored.length) * 10) / 10 : null;
+      // Averaged to one decimal place, rounded down, so an average just under 9 never shows as 9.
+      // Scores are whole numbers, so the division is exact before it is floored.
+      const scoreSum = scored.reduce((sum, s) => sum + s.score, 0);
+      const score = scored.length > 0 ? Math.floor((scoreSum * 10) / scored.length) / 10 : null;
       const height = score !== null ? (score / SCORE_PERFECT) * this.chartHeight : 0;
       const x = chartLeftX + index * slotWidth + gap;
       const range = formatPeriodRange(period);
