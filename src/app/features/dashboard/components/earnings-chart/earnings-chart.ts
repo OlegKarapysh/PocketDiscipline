@@ -189,38 +189,52 @@ export class EarningsChart {
     })).filter((row) => row.amount > 0);
   });
 
-  onBarMouseEnter(bucket: EarningsBucket, event: MouseEvent): void {
-    this.hoveredBucket.set(bucket);
-    this.anchorTooltipAtPointer(event);
+  // A tap also enters and focuses the bar on its way to the click. So hover opens the tooltip only for
+  // a mouse and focus only for the keyboard, and a tap or a click toggles it.
+  onBarPointerEnter(bucket: EarningsBucket, event: PointerEvent): void {
+    if (event.pointerType === 'mouse') {
+      this.showTooltip(bucket, event);
+    }
   }
 
-  onBarMouseMove(event: MouseEvent): void {
-    if (this.hoveredBucket()) {
+  onBarPointerMove(event: PointerEvent): void {
+    if (event.pointerType === 'mouse' && this.hoveredBucket()) {
       this.anchorTooltipAtPointer(event);
     }
   }
 
-  onBarMouseLeave(): void {
-    this.hoveredBucket.set(null);
+  onBarPointerLeave(event: PointerEvent): void {
+    if (event.pointerType === 'mouse') {
+      this.hoveredBucket.set(null);
+    }
   }
 
   onBarClick(bucket: EarningsBucket, event: MouseEvent): void {
     if (this.hoveredBucket()?.startDate === bucket.startDate) {
-      this.onBarMouseLeave();
+      this.hoveredBucket.set(null);
     } else {
-      this.onBarMouseEnter(bucket, event);
+      this.showTooltip(bucket, event);
     }
   }
 
   onBarFocus(bucket: EarningsBucket, event: FocusEvent): void {
-    const target = event.currentTarget instanceof Element ? event.currentTarget : null;
-    const rect = target?.getBoundingClientRect();
-    this.hoveredBucket.set(bucket);
-    this.tooltipAnchor.set({ x: (rect?.left ?? 0) + (rect?.width ?? 0) / 2, y: rect?.top ?? 0 });
+    const target = event.currentTarget;
+    if (target instanceof Element && target.matches(':focus-visible')) {
+      const rect = target.getBoundingClientRect();
+      this.hoveredBucket.set(bucket);
+      this.tooltipAnchor.set({ x: rect.left + rect.width / 2, y: rect.top });
+    }
   }
 
-  onBarBlur(): void {
-    this.onBarMouseLeave();
+  onBarBlur(bucket: EarningsBucket): void {
+    if (this.hoveredBucket()?.startDate === bucket.startDate) {
+      this.hoveredBucket.set(null);
+    }
+  }
+
+  private showTooltip(bucket: EarningsBucket, event: MouseEvent): void {
+    this.hoveredBucket.set(bucket);
+    this.anchorTooltipAtPointer(event);
   }
 
   private anchorTooltipAtPointer(event: MouseEvent): void {

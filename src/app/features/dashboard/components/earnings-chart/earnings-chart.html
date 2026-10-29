@@ -49,12 +49,12 @@
         @for (bar of bars(); track bar.bucket.startDate) {
           <g
             class="chart-bar-group"
-            (mouseenter)="onBarMouseEnter(bar.bucket, $event)"
-            (mousemove)="onBarMouseMove($event)"
-            (mouseleave)="onBarMouseLeave()"
+            (pointerenter)="onBarPointerEnter(bar.bucket, $event)"
+            (pointermove)="onBarPointerMove($event)"
+            (pointerleave)="onBarPointerLeave($event)"
             (click)="onBarClick(bar.bucket, $event)"
             (focus)="onBarFocus(bar.bucket, $event)"
-            (blur)="onBarBlur()"
+            (blur)="onBarBlur(bar.bucket)"
             tabindex="0"
             [attr.aria-label]="bar.period + ': ' + (bar.total | money)"
           >

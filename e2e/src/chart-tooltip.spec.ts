@@ -3,9 +3,9 @@ import { expect, test } from '@playwright/test';
 import type { Rows } from './indexed-db';
 import { putRows, userRow } from './indexed-db';
 
-// A bar's tooltip opens next to the pointer. On a phone the outermost bars sit at the screen's edges,
-// and a bar low on the screen leaves little room below it, yet the whole tooltip has to stay on screen,
-// also when the window narrows while it is open.
+// A bar's tooltip opens next to the pointer, or on a phone where the bar was tapped. The outermost
+// bars sit at the screen's edges, and a bar low on the screen leaves little room below it, yet the
+// whole tooltip has to stay on screen, also when the window narrows while it is open.
 
 const NOW = new Date('2026-10-29T12:00:00');
 const at = (date: string) => new Date(`${date}T12:00:00`).getTime();
@@ -59,13 +59,12 @@ async function scrollBarToFloor(bar: Locator): Promise<void> {
   });
 }
 
-async function pointAtBarFoot(bar: Locator): Promise<void> {
+// The foot of the bar, relative to its group: the stacked segments cover the hit box above it.
+async function barFoot(bar: Locator): Promise<{ x: number; y: number }> {
   const group = await bar.boundingBox();
   const hitbox = await bar.locator('.bar-hitbox').boundingBox();
   if (!group || !hitbox) throw new Error('the bar is not rendered');
-  await bar.hover({
-    position: { x: hitbox.x - group.x + hitbox.width / 2, y: hitbox.y - group.y + hitbox.height - 4 },
-  });
+  return { x: hitbox.x - group.x + hitbox.width / 2, y: hitbox.y - group.y + hitbox.height - 4 };
 }
 
 async function expectOnScreen(page: Page, element: Locator): Promise<void> {
@@ -88,14 +87,18 @@ const BARS = [
   { name: 'last', index: -1 },
 ];
 
+async function seed(page: Page): Promise<void> {
+  await page.clock.setFixedTime(NOW);
+  await page.goto('/dashboard');
+  await expect(page.locator('app-balance-widget')).toBeVisible();
+  await putRows(page, { users: [userRow(0)], ...ROWS });
+}
+
 test.describe('Chart tooltip on a phone-width screen', () => {
   test.use({ viewport: { width: 360, height: 740 } });
 
   test.beforeEach(async ({ page }) => {
-    await page.clock.setFixedTime(NOW);
-    await page.goto('/dashboard');
-    await expect(page.locator('app-balance-widget')).toBeVisible();
-    await putRows(page, { users: [userRow(0)], ...ROWS });
+    await seed(page);
   });
 
   for (const chart of CHARTS) {
@@ -107,13 +110,40 @@ test.describe('Chart tooltip on a phone-width screen', () => {
         await expect(bars).toHaveCount(7);
 
         await scrollBarToFloor(bars.nth(bar.index));
-        await pointAtBarFoot(bars.nth(bar.index));
+        await bars.nth(bar.index).hover({ position: await barFoot(bars.nth(bar.index)) });
 
         const tooltip = chartElement.locator('.chart-tooltip');
         await expect(tooltip).toBeVisible();
         await expectOnScreen(page, tooltip);
       });
     }
+  }
+});
+
+test.describe('Chart tooltip on a touch screen', () => {
+  test.use({ viewport: { width: 360, height: 740 }, isMobile: true, hasTouch: true });
+
+  test.beforeEach(async ({ page }) => {
+    await seed(page);
+  });
+
+  for (const chart of CHARTS) {
+    test(`should open the ${chart.name} tooltip with one tap and close it with another`, async ({ page }) => {
+      await page.goto(chart.path);
+      const chartElement = page.locator(chart.selector);
+      const bars = chartElement.locator('.chart-bar-group');
+      const tooltip = chartElement.locator('.chart-tooltip');
+      await expect(bars).toHaveCount(7);
+
+      await bars.last().tap({ position: await barFoot(bars.last()) });
+      await expect(tooltip).toContainText(DAYS[1]);
+
+      await bars.first().tap({ position: await barFoot(bars.first()) });
+      await expect(tooltip).toContainText(DAYS[0]);
+
+      await bars.first().tap({ position: await barFoot(bars.first()) });
+      await expect(tooltip).toBeHidden();
+    });
   }
 });
 
@@ -125,7 +155,8 @@ test.describe('Chart tooltip when the window narrows', () => {
     await page.goto('/daily-scores');
     const chart = page.locator('app-scores-chart');
     // Keyboard focus keeps the tooltip open while the window changes under it.
-    await chart.locator('.chart-bar-group').last().focus();
+    await chart.locator('.chart-bar-group').nth(-2).focus();
+    await page.keyboard.press('Tab');
     const tooltip = chart.locator('.chart-tooltip');
     await expect(tooltip).toBeVisible();
 

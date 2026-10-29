@@ -48,12 +48,12 @@
         @for (bar of chartData(); track bar.startDate) {
           <g
             class="chart-bar-group"
-            (mouseenter)="onBarMouseEnter(bar, $event)"
-            (mousemove)="onBarMouseMove($event)"
-            (mouseleave)="onBarMouseLeave()"
+            (pointerenter)="onBarPointerEnter(bar, $event)"
+            (pointermove)="onBarPointerMove($event)"
+            (pointerleave)="onBarPointerLeave($event)"
             (click)="onBarClick(bar, $event)"
             (focus)="onBarFocus(bar, $event)"
-            (blur)="onBarBlur()"
+            (blur)="onBarBlur(bar)"
             tabindex="0"
             [attr.aria-label]="bar.ariaLabel"
           >

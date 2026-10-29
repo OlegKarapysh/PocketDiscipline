@@ -162,38 +162,52 @@ export class ScoresChart {
     });
   });
 
-  onBarMouseEnter(bar: ScoreBar, event: MouseEvent): void {
-    this.hoveredBar.set(bar);
-    this.anchorTooltipAtPointer(event);
+  // A tap also enters and focuses the bar on its way to the click. So hover opens the tooltip only for
+  // a mouse and focus only for the keyboard, and a tap or a click toggles it.
+  onBarPointerEnter(bar: ScoreBar, event: PointerEvent): void {
+    if (event.pointerType === 'mouse') {
+      this.showTooltip(bar, event);
+    }
   }
 
-  onBarMouseMove(event: MouseEvent): void {
-    if (this.hoveredBar()) {
+  onBarPointerMove(event: PointerEvent): void {
+    if (event.pointerType === 'mouse' && this.hoveredBar()) {
       this.anchorTooltipAtPointer(event);
     }
   }
 
-  onBarMouseLeave(): void {
-    this.hoveredBar.set(null);
+  onBarPointerLeave(event: PointerEvent): void {
+    if (event.pointerType === 'mouse') {
+      this.hoveredBar.set(null);
+    }
   }
 
   onBarClick(bar: ScoreBar, event: MouseEvent): void {
     if (this.hoveredBar()?.startDate === bar.startDate) {
-      this.onBarMouseLeave();
+      this.hoveredBar.set(null);
     } else {
-      this.onBarMouseEnter(bar, event);
+      this.showTooltip(bar, event);
     }
   }
 
   onBarFocus(bar: ScoreBar, event: FocusEvent): void {
-    const target = event.currentTarget instanceof Element ? event.currentTarget : null;
-    const rect = target?.getBoundingClientRect();
-    this.hoveredBar.set(bar);
-    this.tooltipAnchor.set({ x: (rect?.left ?? 0) + (rect?.width ?? 0) / 2, y: rect?.top ?? 0 });
+    const target = event.currentTarget;
+    if (target instanceof Element && target.matches(':focus-visible')) {
+      const rect = target.getBoundingClientRect();
+      this.hoveredBar.set(bar);
+      this.tooltipAnchor.set({ x: rect.left + rect.width / 2, y: rect.top });
+    }
   }
 
-  onBarBlur(): void {
-    this.onBarMouseLeave();
+  onBarBlur(bar: ScoreBar): void {
+    if (this.hoveredBar()?.startDate === bar.startDate) {
+      this.hoveredBar.set(null);
+    }
+  }
+
+  private showTooltip(bar: ScoreBar, event: MouseEvent): void {
+    this.hoveredBar.set(bar);
+    this.anchorTooltipAtPointer(event);
   }
 
   private anchorTooltipAtPointer(event: MouseEvent): void {
