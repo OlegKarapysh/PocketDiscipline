@@ -47,6 +47,20 @@ interface Screen {
 const SCREENS: Screen[] = [
   { name: 'dashboard', path: '/dashboard', ready: 'app-stat-card' },
   {
+    // Two years: one bar per month, with the chart's widest axis labels ("Jan '24").
+    name: 'dashboard: earnings over a long range',
+    path: '/dashboard',
+    ready: 'app-stat-card',
+    open: async (page) => {
+      const filter = page.locator('app-period-filter');
+      await filter.getByRole('radio', { name: 'Custom' }).click();
+      await filter.getByPlaceholder('Start date').fill('1/1/2024');
+      await filter.getByPlaceholder('End date').fill('1/1/2026');
+      await filter.getByPlaceholder('End date').blur();
+      await expect(page.getByRole('heading', { name: 'Monthly earnings' })).toBeVisible();
+    },
+  },
+  {
     name: 'dashboard: quick spend dialog',
     path: '/dashboard',
     ready: 'app-stat-card',
@@ -306,6 +320,20 @@ const SCREENS: Screen[] = [
     open: async (page) => {
       await page.locator('app-period-filter').getByRole('radio', { name: 'Custom' }).click();
       await expect(page.locator('app-period-filter .custom-range')).toBeVisible();
+    },
+  },
+  {
+    // Two years: one bar per month, with the chart's widest axis labels ("Jan '24").
+    name: 'daily scores: long range',
+    path: '/daily-scores',
+    ready: '.score-btn',
+    open: async (page) => {
+      const filter = page.locator('app-period-filter');
+      await filter.getByRole('radio', { name: 'Custom' }).click();
+      await filter.getByPlaceholder('Start date').fill('1/1/2024');
+      await filter.getByPlaceholder('End date').fill('1/1/2026');
+      await filter.getByPlaceholder('End date').blur();
+      await expect(page.getByRole('heading', { name: 'Monthly average scores' })).toBeVisible();
     },
   },
   {

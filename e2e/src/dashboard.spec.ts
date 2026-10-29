@@ -79,4 +79,19 @@ test.describe('Dashboard totals', () => {
     await expect(stat(page, 'Total earned')).toHaveText(/^400\s*₴$/);
     await expect(stat(page, 'Daily average')).toHaveText(/^14\s*₴\/day$/);
   });
+
+  test('should chart a range longer than 90 days week by week, up to its last day', async ({ page }) => {
+    const filter = page.locator('app-period-filter');
+    await filter.getByRole('radio', { name: 'Custom' }).click();
+    await filter.getByPlaceholder('Start date').fill('1/1/2025');
+    await filter.getByPlaceholder('End date').fill('3/10/2026');
+    await filter.getByPlaceholder('End date').blur();
+
+    const chart = page.locator('app-earnings-chart');
+    await expect(chart.getByRole('heading', { name: 'Weekly earnings' })).toBeVisible();
+    // Weeks run Monday to Sunday; the last one stops at the end of the range.
+    await expect(chart.getByLabel(/^2026-02-09 – 2026-02-15: 400\s*₴$/)).toBeVisible();
+    await expect(chart.getByLabel(/^2026-03-02 – 2026-03-08: 150\s*₴$/)).toBeVisible();
+    await expect(chart.getByLabel(/^2026-03-09 – 2026-03-10: 38\s*₴$/)).toBeVisible();
+  });
 });

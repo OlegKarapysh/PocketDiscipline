@@ -58,4 +58,19 @@ test.describe('Daily Scores Flow', () => {
     // Verify streak is updated in the stats card
     await expect(page.locator('.stat-value.streak')).toHaveText('1');
   });
+
+  test('should chart a range longer than 90 days week by week', async ({ page }) => {
+    await page.goto('/daily-scores');
+    const filter = page.locator('app-period-filter');
+    await filter.getByRole('radio', { name: 'Custom' }).click();
+    await filter.getByPlaceholder('Start date').fill('1/1/2025');
+    await filter.getByPlaceholder('End date').fill('6/30/2025');
+    await filter.getByPlaceholder('End date').blur();
+
+    const chart = page.locator('app-scores-chart');
+    await expect(chart.getByRole('heading', { name: 'Weekly average scores' })).toBeVisible();
+    // Wednesday 1 January to Sunday 5 January, then 26 weeks from Monday 6 January to Monday 30 June.
+    await expect(chart.locator('.chart-bar-group')).toHaveCount(27);
+    await expect(chart.getByLabel('2025-06-30: No score')).toBeVisible();
+  });
 });
