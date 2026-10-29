@@ -42,8 +42,8 @@ describe('ScoresChart', () => {
     await fixture.whenStable();
 
     expect(component.chartData().length).toBe(14);
-    expect(component.chartData()[0].date).toBe('2026-09-01');
-    expect(component.chartData()[13].date).toBe('2026-09-14');
+    expect(component.chartData()[0].startDate).toBe('2026-09-01');
+    expect(component.chartData()[13].startDate).toBe('2026-09-14');
   });
 
   it('should return empty chartData when startDate is after endDate', async () => {
@@ -70,7 +70,7 @@ describe('ScoresChart', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const todayEntry = component.chartData().find((d) => d.date === '2026-09-07');
+    const todayEntry = component.chartData().find((d) => d.startDate === '2026-09-07');
     expect(todayEntry).toBeDefined();
     expect(todayEntry?.score).toBe(10);
     expect(todayEntry?.rewardEarned).toBe(500);
@@ -155,12 +155,103 @@ describe('ScoresChart', () => {
     component.onBarMouseEnter(lastDay, { clientX: 100, clientY: 200 } as MouseEvent);
     fixture.detectChanges();
 
-    expect(component.hoveredDay()).toEqual(lastDay);
+    expect(component.hoveredBar()).toEqual(lastDay);
     expect(component.tooltipPosition()).toEqual({ x: 110, y: 215 });
     const tooltip = (fixture.nativeElement as HTMLElement).querySelector('.chart-tooltip');
     expect(tooltip?.textContent).toContain('9 / 10');
 
     component.onBarClick(lastDay, { clientX: 100, clientY: 200 } as MouseEvent);
-    expect(component.hoveredDay()).toBeNull();
+    expect(component.hoveredBar()).toBeNull();
+  });
+
+  describe('ranges longer than 90 days', () => {
+    const scoreOn = (date: string, score: number, rewardEarned = 0): DailyScore => ({
+      date,
+      score,
+      rewardEarned,
+      streakAtThisDay: 0,
+      createdAt: Date.now(),
+    });
+
+    // Thursday 1 January to Wednesday 1 April 2026: 91 days.
+    const showQuarter = () => {
+      fixture.componentRef.setInput('startDate', '2026-01-01');
+      fixture.componentRef.setInput('endDate', '2026-04-01');
+      fixture.componentRef.setInput('scores', [
+        scoreOn('2026-01-05', 9, 100),
+        scoreOn('2026-01-06', 10, 500),
+        scoreOn('2026-01-07', 8),
+        scoreOn('2026-01-12', 7),
+        scoreOn('2026-01-13', 8),
+      ]);
+      fixture.detectChanges();
+    };
+
+    it('should still draw one bar per day for exactly 90 days', () => {
+      fixture.componentRef.setInput('startDate', '2026-01-01');
+      fixture.componentRef.setInput('endDate', '2026-03-31');
+      fixture.detectChanges();
+
+      expect(component.chartData()).toHaveLength(90);
+      expect(component.heading()).toBe('Daily scores');
+    });
+
+    it('should draw one bar per calendar week, cut to the range, past 90 days', () => {
+      showQuarter();
+
+      const bars = component.chartData();
+      expect(component.heading()).toBe('Weekly average scores');
+      expect(bars).toHaveLength(14);
+      expect(bars[0]).toMatchObject({ startDate: '2026-01-01', dayCount: 4, score: null });
+      expect(bars.at(-1)).toMatchObject({ startDate: '2026-03-30', dayCount: 3 });
+    });
+
+    it('should show the average of the scored days in a week, and add up their rewards', () => {
+      showQuarter();
+
+      const [, firstFullWeek, secondFullWeek] = component.chartData();
+      expect(firstFullWeek).toMatchObject({ score: 9, scoredDays: 3, dayCount: 7, rewardEarned: 600 });
+      expect(firstFullWeek.isHighScore).toBe(true);
+      expect(secondFullWeek).toMatchObject({ score: 7.5, scoredDays: 2, rewardEarned: 0 });
+      expect(secondFullWeek.isHighScore).toBe(false);
+    });
+
+    it('should name the whole week in the bar label and the tooltip', () => {
+      showQuarter();
+
+      const secondBar = fixture.debugElement.queryAll(By.css('.chart-bar-group'))[1];
+      expect(secondBar.attributes['aria-label']).toBe('2026-01-05 – 2026-01-11: Average score 9');
+
+      component.onBarMouseEnter(component.chartData()[2], { clientX: 100, clientY: 200 } as MouseEvent);
+      fixture.detectChanges();
+      const tooltip = (fixture.nativeElement as HTMLElement).querySelector('.chart-tooltip');
+      expect(tooltip?.querySelector('.tooltip-date')?.textContent.trim()).toBe('2026-01-12 – 2026-01-18');
+      expect(tooltip?.textContent).toContain('7.5 / 10');
+      expect(tooltip?.textContent).toContain('2 / 7');
+    });
+
+    it('should draw one bar per calendar month once even weeks would be more than 90 bars', () => {
+      // 15 January 2025 to 31 December 2026: about 103 weeks.
+      fixture.componentRef.setInput('startDate', '2025-01-15');
+      fixture.componentRef.setInput('endDate', '2026-12-31');
+      fixture.detectChanges();
+
+      const bars = component.chartData();
+      expect(component.heading()).toBe('Monthly average scores');
+      expect(bars).toHaveLength(24);
+      expect(bars[0]).toMatchObject({ startDate: '2025-01-15', dayCount: 17, axisLabel: "Jan '25" });
+      expect(bars.at(-1)?.axisLabel).toBe("Dec '26");
+    });
+
+    it('should keep the last month label inside a phone-width chart', () => {
+      component.width.set(280);
+      fixture.componentRef.setInput('startDate', '2025-01-15');
+      fixture.componentRef.setInput('endDate', '2026-12-31');
+      fixture.detectChanges();
+
+      // "Dec '26" is drawn centred on axisLabelX, so half of its width lies to the right.
+      const lastLabelRightEdge = (component.chartData().at(-1)?.axisLabelX ?? 0) + (7 * 6.6) / 2;
+      expect(lastLabelRightEdge).toBeLessThanOrEqual(280);
+    });
   });
 });

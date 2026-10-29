@@ -1,13 +1,13 @@
-<app-section-card heading="Daily scores">
+<app-section-card [heading]="heading()">
   <div class="chart-content">
     <div class="legend-container">
       <div class="legend-item">
         <span class="swatch standard"></span>
-        <span>Score 1–8</span>
+        <span>{{ legend().standard }}</span>
       </div>
       <div class="legend-item">
         <span class="swatch high-score"></span>
-        <span>Score 9–10 (reward)</span>
+        <span>{{ legend().highScore }}</span>
       </div>
     </div>
 
@@ -17,7 +17,7 @@
         class="scores-svg"
         preserveAspectRatio="xMidYMid meet"
         role="region"
-        aria-label="Daily scores chart"
+        [attr.aria-label]="heading() + ' chart'"
       >
         @for (line of gridLines(); track line.y) {
           <line
@@ -45,7 +45,7 @@
           class="baseline"
         />
 
-        @for (bar of chartData(); track bar.date) {
+        @for (bar of chartData(); track bar.startDate) {
           <g
             class="chart-bar-group"
             (mouseenter)="onBarMouseEnter(bar, $event)"
@@ -55,7 +55,7 @@
             (focus)="onBarFocus(bar, $event)"
             (blur)="onBarBlur()"
             tabindex="0"
-            [attr.aria-label]="bar.date + ': ' + (bar.score !== null ? 'Score ' + bar.score : 'No score')"
+            [attr.aria-label]="bar.ariaLabel"
           >
             <rect
               [attr.x]="bar.x"
@@ -85,13 +85,8 @@
             }
 
             @if (bar.shouldShowLabel) {
-              <text
-                [attr.x]="bar.x + bar.width / 2"
-                [attr.y]="axisLabelYPos"
-                class="axis-label pd-num"
-                text-anchor="middle"
-              >
-                {{ bar.formattedDate }}
+              <text [attr.x]="bar.axisLabelX" [attr.y]="axisLabelYPos" class="axis-label pd-num" text-anchor="middle">
+                {{ bar.axisLabel }}
               </text>
             }
           </g>
@@ -99,18 +94,24 @@
       </svg>
     </div>
 
-    @if (hoveredDay(); as day) {
+    @if (hoveredBar(); as bar) {
       <div class="chart-tooltip" [style.left.px]="tooltipPosition()?.x" [style.top.px]="tooltipPosition()?.y">
-        <div class="tooltip-date pd-num">{{ day.date }} ({{ day.dayOfWeek }})</div>
-        @if (day.score !== null) {
+        <div class="tooltip-date pd-num">{{ bar.tooltipTitle }}</div>
+        @if (bar.score !== null) {
           <div class="tooltip-row">
-            <span>Score</span>
-            <span class="tooltip-score pd-num">{{ day.score }} / 10</span>
+            <span>{{ scoreLabel() }}</span>
+            <span class="tooltip-score pd-num">{{ bar.score }} / 10</span>
           </div>
-          @if (day.rewardEarned > 0) {
+          @if (!isDaily()) {
+            <div class="tooltip-row">
+              <span>Days scored</span>
+              <span class="tooltip-score pd-num">{{ bar.scoredDays }} / {{ bar.dayCount }}</span>
+            </div>
+          }
+          @if (bar.rewardEarned > 0) {
             <div class="tooltip-row">
               <span>Reward</span>
-              <app-amount [value]="day.rewardEarned" size="sm" tone="inherit" [showSign]="true" />
+              <app-amount [value]="bar.rewardEarned" size="sm" tone="inherit" [showSign]="true" />
             </div>
           }
         } @else {
