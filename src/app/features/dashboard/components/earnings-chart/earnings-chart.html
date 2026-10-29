@@ -49,12 +49,12 @@
         @for (bar of bars(); track bar.bucket.startDate) {
           <g
             class="chart-bar-group"
-            (mouseenter)="onBarMouseEnter(bar.bucket, $event)"
-            (mousemove)="onBarMouseMove($event)"
-            (mouseleave)="onBarMouseLeave()"
+            (pointerenter)="onBarPointerEnter(bar.bucket, $event)"
+            (pointermove)="onBarPointerMove($event)"
+            (pointerleave)="onBarPointerLeave($event)"
             (click)="onBarClick(bar.bucket, $event)"
             (focus)="onBarFocus(bar.bucket, $event)"
-            (blur)="onBarBlur()"
+            (blur)="onBarBlur(bar.bucket)"
             tabindex="0"
             [attr.aria-label]="bar.period + ': ' + (bar.total | money)"
           >
@@ -103,7 +103,7 @@
 
     <!-- Floating Tooltip -->
     @if (hoveredBucket(); as bucket) {
-      <div class="chart-tooltip" [style.left.px]="tooltipPosition()?.x" [style.top.px]="tooltipPosition()?.y">
+      <div class="chart-tooltip" [appFloatAt]="tooltipAnchor()">
         <div class="tooltip-date pd-num">{{ hoveredPeriod() }}</div>
         <div class="tooltip-row tooltip-total">
           <span>Total</span>

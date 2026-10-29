@@ -1,6 +1,6 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EarningsChart } from './earnings-chart';
 import type { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
 import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
@@ -37,6 +37,15 @@ describe('EarningsChart', () => {
   ];
 
   const bucketAt = (index: number) => component.bars()[index].bucket;
+
+  const pointer = (pointerType: string, clientX = 100, clientY = 200) =>
+    ({ pointerType, clientX, clientY }) as PointerEvent;
+  // A bar the browser reports as focused from the keyboard, or by a tap or a click.
+  const focusOn = (keyboard: boolean) => {
+    const bar = document.createElement('div');
+    vi.spyOn(bar, 'matches').mockReturnValue(keyboard);
+    return { currentTarget: bar } as unknown as FocusEvent;
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -87,13 +96,12 @@ describe('EarningsChart', () => {
     fixture.componentRef.setInput('records', mockRecords);
     fixture.detectChanges();
 
-    component.onBarMouseEnter(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
+    component.onBarPointerEnter(bucketAt(0), pointer('mouse'));
     expect(component.hoveredBucket()).toBe(bucketAt(0));
-    expect(component.tooltipPosition()).toEqual({ x: 110, y: 215 });
+    expect(component.tooltipAnchor()).toEqual({ x: 100, y: 200 });
 
-    component.onBarMouseLeave();
+    component.onBarPointerLeave(pointer('mouse'));
     expect(component.hoveredBucket()).toBeNull();
-    expect(component.tooltipPosition()).toBeNull();
   });
 
   it('should correctly stack segment heights and positions from baseline', () => {
@@ -116,7 +124,7 @@ describe('EarningsChart', () => {
     fixture.componentRef.setInput('records', mockRecords);
     fixture.detectChanges();
 
-    component.onBarMouseEnter(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
+    component.onBarPointerEnter(bucketAt(0), pointer('mouse'));
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -168,6 +176,35 @@ describe('EarningsChart', () => {
 
     // Second click on same bar dismisses it
     component.onBarClick(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
+    expect(component.hoveredBucket()).toBeNull();
+  });
+
+  it('should open the tooltip with one tap and close it with the next', () => {
+    fixture.componentRef.setInput('records', mockRecords);
+    fixture.detectChanges();
+
+    // A tap enters, leaves and focuses the bar before it clicks it.
+    component.onBarPointerEnter(bucketAt(0), pointer('touch'));
+    component.onBarPointerLeave(pointer('touch'));
+    component.onBarFocus(bucketAt(0), focusOn(false));
+    component.onBarClick(bucketAt(0), pointer('touch'));
+    expect(component.hoveredBucket()).toBe(bucketAt(0));
+
+    component.onBarClick(bucketAt(0), pointer('touch'));
+    expect(component.hoveredBucket()).toBeNull();
+  });
+
+  it('should open the tooltip on keyboard focus and close it when that bar loses focus', () => {
+    fixture.componentRef.setInput('records', mockRecords);
+    fixture.detectChanges();
+
+    component.onBarFocus(bucketAt(0), focusOn(true));
+    expect(component.hoveredBucket()).toBe(bucketAt(0));
+
+    component.onBarBlur(bucketAt(1));
+    expect(component.hoveredBucket()).toBe(bucketAt(0));
+
+    component.onBarBlur(bucketAt(0));
     expect(component.hoveredBucket()).toBeNull();
   });
 
@@ -252,17 +289,17 @@ describe('EarningsChart', () => {
     fixture.componentRef.setInput('records', mockRecords);
     fixture.detectChanges();
 
-    component.onBarMouseEnter(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
-    component.onBarMouseMove({ clientX: 150, clientY: 250 } as MouseEvent);
+    component.onBarPointerEnter(bucketAt(0), pointer('mouse'));
+    component.onBarPointerMove(pointer('mouse', 150, 250));
 
-    expect(component.tooltipPosition()).toEqual({ x: 160, y: 265 });
+    expect(component.tooltipAnchor()).toEqual({ x: 150, y: 250 });
   });
 
   it('should display "No earnings recorded" in tooltip when day total is 0', () => {
     fixture.componentRef.setInput('records', mockRecords);
     fixture.detectChanges();
 
-    component.onBarMouseEnter(bucketAt(1), { clientX: 100, clientY: 200 } as MouseEvent);
+    component.onBarPointerEnter(bucketAt(1), pointer('mouse'));
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -313,7 +350,7 @@ describe('EarningsChart', () => {
       const firstBar = (fixture.nativeElement as HTMLElement).querySelector('.chart-bar-group');
       expect(firstBar?.getAttribute('aria-label')).toBe('2026-01-01 – 2026-01-04: 40 ₴');
 
-      component.onBarMouseEnter(bucketAt(1), { clientX: 100, clientY: 200 } as MouseEvent);
+      component.onBarPointerEnter(bucketAt(1), pointer('mouse'));
       fixture.detectChanges();
       const tooltipDate = (fixture.nativeElement as HTMLElement).querySelector('.tooltip-date');
       expect(tooltipDate?.textContent.trim()).toBe('2026-01-05 – 2026-01-11');

@@ -10,6 +10,7 @@ import type { ChartBarSegment } from '../../models/chart-bar-segment.model';
 import type { ChartGridLine } from '../../models/chart-grid-line.model';
 import type { TooltipPosition } from '../../models/tooltip-position.model';
 import { EarningsSource } from '../../models/earnings-source.enum';
+import { FloatAt } from '../../../../shared/directives/float-at';
 import { ObserveWidth } from '../../../../shared/directives/observe-width';
 import { AXIS_CHAR_WIDTH } from '../../../../shared/constants/chart-axis.const';
 import {
@@ -57,7 +58,7 @@ const SOURCES = Object.values(EarningsSource);
 
 @Component({
   selector: 'app-earnings-chart',
-  imports: [SectionCard, Amount, MoneyPipe, ObserveWidth],
+  imports: [SectionCard, Amount, MoneyPipe, FloatAt, ObserveWidth],
   templateUrl: './earnings-chart.html',
   styleUrl: './earnings-chart.scss',
 })
@@ -65,7 +66,7 @@ export class EarningsChart {
   readonly records = input<DailyEarningsRecord[]>([]);
 
   readonly hoveredBucket = signal<EarningsBucket | null>(null);
-  readonly tooltipPosition = signal<TooltipPosition | null>(null);
+  readonly tooltipAnchor = signal<TooltipPosition>({ x: 0, y: 0 });
 
   readonly width = signal(INITIAL_WIDTH);
   readonly viewBox = computed(() => `0 0 ${this.width()} ${VIEWBOX_HEIGHT}`);
@@ -188,46 +189,56 @@ export class EarningsChart {
     })).filter((row) => row.amount > 0);
   });
 
-  onBarMouseEnter(bucket: EarningsBucket, event: MouseEvent): void {
-    this.hoveredBucket.set(bucket);
-    this.placeTooltipAtPointer(event);
-  }
-
-  onBarMouseMove(event: MouseEvent): void {
-    if (this.hoveredBucket()) {
-      this.placeTooltipAtPointer(event);
+  // A tap also enters and focuses the bar on its way to the click. So hover opens the tooltip only for
+  // a mouse and focus only for the keyboard, and a tap or a click toggles it.
+  onBarPointerEnter(bucket: EarningsBucket, event: PointerEvent): void {
+    if (event.pointerType === 'mouse') {
+      this.showTooltip(bucket, event);
     }
   }
 
-  onBarMouseLeave(): void {
-    this.hoveredBucket.set(null);
-    this.tooltipPosition.set(null);
+  onBarPointerMove(event: PointerEvent): void {
+    if (event.pointerType === 'mouse' && this.hoveredBucket()) {
+      this.anchorTooltipAtPointer(event);
+    }
+  }
+
+  onBarPointerLeave(event: PointerEvent): void {
+    if (event.pointerType === 'mouse') {
+      this.hoveredBucket.set(null);
+    }
   }
 
   onBarClick(bucket: EarningsBucket, event: MouseEvent): void {
     if (this.hoveredBucket()?.startDate === bucket.startDate) {
-      this.onBarMouseLeave();
+      this.hoveredBucket.set(null);
     } else {
-      this.onBarMouseEnter(bucket, event);
+      this.showTooltip(bucket, event);
     }
   }
 
   onBarFocus(bucket: EarningsBucket, event: FocusEvent): void {
-    const target = event.currentTarget instanceof Element ? event.currentTarget : null;
-    const rect = target?.getBoundingClientRect();
+    const target = event.currentTarget;
+    if (target instanceof Element && target.matches(':focus-visible')) {
+      const rect = target.getBoundingClientRect();
+      this.hoveredBucket.set(bucket);
+      this.tooltipAnchor.set({ x: rect.left + rect.width / 2, y: rect.top });
+    }
+  }
+
+  onBarBlur(bucket: EarningsBucket): void {
+    if (this.hoveredBucket()?.startDate === bucket.startDate) {
+      this.hoveredBucket.set(null);
+    }
+  }
+
+  private showTooltip(bucket: EarningsBucket, event: MouseEvent): void {
     this.hoveredBucket.set(bucket);
-    this.tooltipPosition.set({
-      x: (rect?.left ?? 0) + (rect?.width ?? 0) / 2,
-      y: (rect?.top ?? 0) - 15,
-    });
+    this.anchorTooltipAtPointer(event);
   }
 
-  onBarBlur(): void {
-    this.onBarMouseLeave();
-  }
-
-  private placeTooltipAtPointer(event: MouseEvent): void {
-    this.tooltipPosition.set({ x: event.clientX + 10, y: event.clientY + 15 });
+  private anchorTooltipAtPointer(event: MouseEvent): void {
+    this.tooltipAnchor.set({ x: event.clientX, y: event.clientY });
   }
 
   private toBucket({ startDate, endDate, items }: ChartPeriod<DailyEarningsRecord>): EarningsBucket {

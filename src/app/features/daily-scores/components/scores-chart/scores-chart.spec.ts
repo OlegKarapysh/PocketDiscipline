@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { ScoresChart } from './scores-chart';
 import { ClockService } from '../../../../core/services/clock.service';
@@ -11,6 +11,15 @@ describe('ScoresChart', () => {
   let component: ScoresChart;
   let fixture: ComponentFixture<ScoresChart>;
   const today = signal('2026-09-07');
+
+  const pointer = (pointerType: string, clientX = 100, clientY = 200) =>
+    ({ pointerType, clientX, clientY }) as PointerEvent;
+  // A bar the browser reports as focused from the keyboard, or by a tap or a click.
+  const focusOn = (keyboard: boolean) => {
+    const bar = document.createElement('div');
+    vi.spyOn(bar, 'matches').mockReturnValue(keyboard);
+    return { currentTarget: bar } as unknown as FocusEvent;
+  };
 
   beforeEach(async () => {
     today.set('2026-09-07');
@@ -152,15 +161,44 @@ describe('ScoresChart', () => {
     fixture.detectChanges();
 
     const lastDay = component.chartData().at(-1)!;
-    component.onBarMouseEnter(lastDay, { clientX: 100, clientY: 200 } as MouseEvent);
+    component.onBarPointerEnter(lastDay, pointer('mouse'));
     fixture.detectChanges();
 
     expect(component.hoveredBar()).toEqual(lastDay);
-    expect(component.tooltipPosition()).toEqual({ x: 110, y: 215 });
+    expect(component.tooltipAnchor()).toEqual({ x: 100, y: 200 });
     const tooltip = (fixture.nativeElement as HTMLElement).querySelector('.chart-tooltip');
     expect(tooltip?.textContent).toContain('9 / 10');
 
     component.onBarClick(lastDay, { clientX: 100, clientY: 200 } as MouseEvent);
+    expect(component.hoveredBar()).toBeNull();
+  });
+
+  it('should open the tooltip with one tap and close it with the next', () => {
+    fixture.componentRef.setInput('scores', []);
+    fixture.detectChanges();
+
+    // A tap enters, leaves and focuses the bar before it clicks it.
+    component.onBarPointerEnter(component.chartData()[6], pointer('touch'));
+    component.onBarPointerLeave(pointer('touch'));
+    component.onBarFocus(component.chartData()[6], focusOn(false));
+    component.onBarClick(component.chartData()[6], pointer('touch'));
+    expect(component.hoveredBar()).toBe(component.chartData()[6]);
+
+    component.onBarClick(component.chartData()[6], pointer('touch'));
+    expect(component.hoveredBar()).toBeNull();
+  });
+
+  it('should open the tooltip on keyboard focus and close it when that bar loses focus', () => {
+    fixture.componentRef.setInput('scores', []);
+    fixture.detectChanges();
+
+    component.onBarFocus(component.chartData()[6], focusOn(true));
+    expect(component.hoveredBar()).toBe(component.chartData()[6]);
+
+    component.onBarBlur(component.chartData()[5]);
+    expect(component.hoveredBar()).toBe(component.chartData()[6]);
+
+    component.onBarBlur(component.chartData()[6]);
     expect(component.hoveredBar()).toBeNull();
   });
 
@@ -222,7 +260,7 @@ describe('ScoresChart', () => {
       const secondBar = fixture.debugElement.queryAll(By.css('.chart-bar-group'))[1];
       expect(secondBar.attributes['aria-label']).toBe('2026-01-05 – 2026-01-11: Average score 9');
 
-      component.onBarMouseEnter(component.chartData()[2], { clientX: 100, clientY: 200 } as MouseEvent);
+      component.onBarPointerEnter(component.chartData()[2], pointer('mouse'));
       fixture.detectChanges();
       const tooltip = (fixture.nativeElement as HTMLElement).querySelector('.chart-tooltip');
       expect(tooltip?.querySelector('.tooltip-date')?.textContent.trim()).toBe('2026-01-12 – 2026-01-18');

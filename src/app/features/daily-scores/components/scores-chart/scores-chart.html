@@ -48,12 +48,12 @@
         @for (bar of chartData(); track bar.startDate) {
           <g
             class="chart-bar-group"
-            (mouseenter)="onBarMouseEnter(bar, $event)"
-            (mousemove)="onBarMouseMove($event)"
-            (mouseleave)="onBarMouseLeave()"
+            (pointerenter)="onBarPointerEnter(bar, $event)"
+            (pointermove)="onBarPointerMove($event)"
+            (pointerleave)="onBarPointerLeave($event)"
             (click)="onBarClick(bar, $event)"
             (focus)="onBarFocus(bar, $event)"
-            (blur)="onBarBlur()"
+            (blur)="onBarBlur(bar)"
             tabindex="0"
             [attr.aria-label]="bar.ariaLabel"
           >
@@ -95,7 +95,7 @@
     </div>
 
     @if (hoveredBar(); as bar) {
-      <div class="chart-tooltip" [style.left.px]="tooltipPosition()?.x" [style.top.px]="tooltipPosition()?.y">
+      <div class="chart-tooltip" [appFloatAt]="tooltipAnchor()">
         <div class="tooltip-date pd-num">{{ bar.tooltipTitle }}</div>
         @if (bar.score !== null) {
           <div class="tooltip-row">
