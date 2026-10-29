@@ -523,6 +523,55 @@ describe('DailyTasksService', () => {
     });
   });
 
+  describe('rewardsFor', () => {
+    // Noon, so that a day before is yesterday even across a daylight saving change.
+    const yesterday = new Date().setHours(12, 0, 0, 0) - ONE_DAY_MS;
+    const task = (overrides: Partial<DailyTask>): DailyTask => ({
+      id: 'test-daily-task-1',
+      title: 'Morning Workout',
+      difficulties: [easy, hard],
+      createdAt: 0,
+      sortOrder: 0,
+      streak: 0,
+      lastCompletedAt: null,
+      ...overrides,
+    });
+
+    it('should include the streak bonus that completing the task today earns', () => {
+      // The streak goes on to 6, so the multiplier is 1.50.
+      expect(service.rewardsFor(task({ streak: 5, lastCompletedAt: yesterday }))).toEqual([
+        { difficulty: easy, reward: 150 },
+        { difficulty: hard, reward: 450 },
+      ]);
+    });
+
+    it('should offer the base rewards when completing the task starts a new streak', () => {
+      const base = [
+        { difficulty: easy, reward: 100 },
+        { difficulty: hard, reward: 300 },
+      ];
+
+      expect(service.rewardsFor(task({ streak: 0, lastCompletedAt: null }))).toEqual(base);
+      expect(service.rewardsFor(task({ streak: 5, lastCompletedAt: yesterday - ONE_DAY_MS }))).toEqual(base);
+    });
+
+    it('should offer nothing once the task is done today', () => {
+      expect(service.rewardsFor(task({ streak: 5, lastCompletedAt: Date.now() }))).toEqual([]);
+    });
+
+    it('should offer what completing the task then pays', async () => {
+      const quarter: DailyTaskDifficulty = { id: 'quarter', name: 'Quarter', baseReward: 25 };
+      for (const streak of [1, 3, 15]) {
+        const shown = task({ difficulties: [quarter], streak, lastCompletedAt: yesterday });
+        dbMock.dailyTasks.get.mockResolvedValue(shown);
+
+        const [offered] = service.rewardsFor(shown);
+
+        await expect(service.completeTask(shown, quarter)).resolves.toBe(offered.reward);
+      }
+    });
+  });
+
   describe('updateTask', () => {
     const stored: DailyTask = {
       id: 'test-daily-task-1',

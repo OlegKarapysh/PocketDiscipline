@@ -7,6 +7,7 @@ import { Amount } from '../../../../shared/components/amount/amount';
 import { StreakBadge } from '../../../../shared/components/streak-badge/streak-badge';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
+import type { DifficultyReward } from '../../models/difficulty-reward.model';
 
 // One compact row that opens to show the difficulties. The list decides which row is open and
 // whether the task is done today.
@@ -20,6 +21,8 @@ export class DailyTaskItem {
   task = input.required<DailyTask>();
   completed = input(false);
   expanded = input(false);
+  // What each difficulty pays if the task is completed now; only a pending task has any.
+  rewards = input<DifficultyReward[]>([]);
   // What today's completion earned; null while the task is pending, or if no completion was found.
   earned = input<number | null>(null);
   expandedChange = output<boolean>();
@@ -27,7 +30,7 @@ export class DailyTaskItem {
   edit = output<DailyTask>();
 
   rewardRange = computed(() => {
-    const rewards = this.task().difficulties.map((d) => d.baseReward);
+    const rewards = this.rewards().map((r) => r.reward);
     return { min: Math.min(...rewards), max: Math.max(...rewards) };
   });
 

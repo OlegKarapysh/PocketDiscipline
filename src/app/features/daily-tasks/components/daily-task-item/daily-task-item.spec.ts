@@ -5,6 +5,7 @@ import { By } from '@angular/platform-browser';
 import { DailyTaskItem } from './daily-task-item';
 import type { DailyTask } from '../../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../../core/models/daily-task-difficulty.model';
+import type { DifficultyReward } from '../../models/difficulty-reward.model';
 import { Amount } from '../../../../shared/components/amount/amount';
 import { StreakBadge } from '../../../../shared/components/streak-badge/streak-badge';
 
@@ -22,6 +23,7 @@ const task = (overrides: Partial<DailyTask> = {}): DailyTask => ({
   lastCompletedAt: null,
   ...overrides,
 });
+const offer = (difficulty: DailyTaskDifficulty, reward: number): DifficultyReward => ({ difficulty, reward });
 
 describe('DailyTaskItem', () => {
   let component: DailyTaskItem;
@@ -64,17 +66,17 @@ describe('DailyTaskItem', () => {
   });
 
   it('should show the range of rewards on offer while closed, without the difficulties', () => {
-    render({ task: task({ difficulties: [medium, easy, hard] }) });
+    render({ task: task(), rewards: [offer(medium, 300), offer(easy, 150), offer(hard, 450)] });
 
-    expect(amounts()).toEqual([100, 300]);
+    expect(amounts()).toEqual([150, 450]);
     expect(element().querySelectorAll('.pd-difficulty')).toHaveLength(0);
     expect(summary().getAttribute('aria-expanded')).toBe('false');
   });
 
   it('should show a single reward when every difficulty pays the same', () => {
-    render({ task: task({ difficulties: [easy] }) });
+    render({ task: task({ difficulties: [easy] }), rewards: [offer(easy, 150)] });
 
-    expect(amounts()).toEqual([100]);
+    expect(amounts()).toEqual([150]);
     expect(element().querySelector('.range-dash')).toBeNull();
   });
 
@@ -93,7 +95,7 @@ describe('DailyTaskItem', () => {
   });
 
   it('should offer every difficulty with its reward when open, and complete the one tapped', () => {
-    render({ task: task(), expanded: true });
+    render({ task: task(), rewards: [offer(easy, 150), offer(medium, 300), offer(hard, 450)], expanded: true });
     let completed: DailyTaskDifficulty | null = null;
     component.complete.subscribe((difficulty) => {
       completed = difficulty;
@@ -102,9 +104,9 @@ describe('DailyTaskItem', () => {
     const buttons = element().querySelectorAll<HTMLButtonElement>('.pd-difficulty');
     expect(summary().getAttribute('aria-expanded')).toBe('true');
     expect([...buttons].map((button) => button.textContent.replace(/\s+/g, ''))).toEqual([
-      'Easy+100₴',
-      'Medium+200₴',
-      'Hard+300₴',
+      'Easy+150₴',
+      'Medium+300₴',
+      'Hard+450₴',
     ]);
 
     buttons[2].click();

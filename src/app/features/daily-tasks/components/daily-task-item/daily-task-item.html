@@ -40,10 +40,10 @@
     <div class="details" [id]="detailsId()">
       @if (!completed()) {
         <div class="actions">
-          @for (diff of task().difficulties; track diff.id) {
-            <button mat-stroked-button class="pd-difficulty" type="button" (click)="complete.emit(diff)">
-              {{ diff.name }}
-              <app-amount [value]="diff.baseReward" size="sm" tone="reward" [showSign]="true" />
+          @for (option of rewards(); track option.difficulty.id) {
+            <button mat-stroked-button class="pd-difficulty" type="button" (click)="complete.emit(option.difficulty)">
+              {{ option.difficulty.name }}
+              <app-amount [value]="option.reward" size="sm" tone="reward" [showSign]="true" />
             </button>
           }
         </div>

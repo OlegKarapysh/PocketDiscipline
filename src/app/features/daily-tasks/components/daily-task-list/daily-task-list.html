@@ -46,6 +46,7 @@
             } @else {
               <app-daily-task-item
                 [task]="row.task"
+                [rewards]="row.rewards"
                 [expanded]="expandedTaskId() === row.task.id"
                 (expandedChange)="setExpanded(row.task, $event)"
                 (complete)="onCompleteTask(row.task, $event)"
