@@ -265,6 +265,39 @@ test.describe('Daily Tasks Flow', () => {
     await expect(taskItem(page, 'Run').locator('app-amount')).toHaveText(/^\+200\s*₴$/);
   });
 
+  test('should show the rewards with the streak bonus, and pay what it shows', async ({ page }) => {
+    await page.goto('/tasks');
+    await expect(page.locator('app-daily-task-list app-empty-state')).toBeVisible();
+    // Noon, so that a day before is yesterday even across a daylight saving change.
+    const yesterday = await page.evaluate(() => new Date().setHours(12, 0, 0, 0) - 86_400_000);
+    await putRow(page, 'dailyTasks', {
+      id: 'streaky',
+      title: 'Cold water',
+      createdAt: 1,
+      sortOrder: 0,
+      difficulties: [
+        { id: 'easy', name: 'Easy', baseReward: 100 },
+        { id: 'hard', name: 'Hard', baseReward: 300 },
+      ],
+      streak: 5,
+      lastCompletedAt: yesterday,
+    });
+    await page.reload();
+
+    // Today makes a 6-day streak, which pays 50% on top.
+    const item = taskItem(page, 'Cold water');
+    await expect(item.locator('.reward app-amount')).toHaveText([/^\+150\s*₴$/, /^450\s*₴$/]);
+    await openTask(page, 'Cold water');
+    await expect(item.locator('.pd-difficulty')).toHaveText([/Easy\s*\+150\s*₴/, /Hard\s*\+450\s*₴/]);
+
+    await item.locator('.pd-difficulty', { hasText: 'Easy' }).click();
+
+    await expect(snackBar(page, 'Cold water done · +150 ₴')).toBeVisible();
+    const after = await readStores(page, MONEY_STORES);
+    expect(after['dailyTaskCompletions']).toEqual([expect.objectContaining({ taskId: 'streaky', rewardEarned: 150 })]);
+    expect(after['dailyTasks']).toEqual([expect.objectContaining({ id: 'streaky', streak: 6 })]);
+  });
+
   test('should open one task at a time', async ({ page }) => {
     await page.goto('/tasks');
     await createTask(page, 'Run');
