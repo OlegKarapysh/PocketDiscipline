@@ -23,7 +23,7 @@ const task = (overrides: Partial<DailyTask> = {}): DailyTask => ({
   lastCompletedAt: null,
   ...overrides,
 });
-const offer = (difficulty: DailyTaskDifficulty, reward: number): DifficultyReward => ({ difficulty, reward });
+const offer = (difficulty: DailyTaskDifficulty, reward: number | null): DifficultyReward => ({ difficulty, reward });
 
 describe('DailyTaskItem', () => {
   let component: DailyTaskItem;
@@ -78,6 +78,30 @@ describe('DailyTaskItem', () => {
 
     expect(amounts()).toEqual([150]);
     expect(element().querySelector('.range-dash')).toBeNull();
+  });
+
+  it('should show a difficulty that pays nothing as --, and leave it out of the range', () => {
+    const rewards = [offer(easy, null), offer(medium, 300), offer(hard, 450)];
+    render({ task: task(), rewards });
+
+    expect(amounts()).toEqual([300, 450]);
+
+    render({ expanded: true });
+
+    expect(
+      [...element().querySelectorAll('.pd-difficulty')].map((button) => button.textContent.replace(/\s+/g, '')),
+    ).toEqual(['Easy--₴', 'Medium+300₴', 'Hard+450₴']);
+  });
+
+  it('should show no range when nothing is on offer', () => {
+    render({ task: task(), rewards: [offer(easy, null)] });
+
+    expect(element().querySelector('.reward')).toBeNull();
+
+    render({ rewards: [] });
+
+    expect(element().querySelector('.reward')).toBeNull();
+    expect(element().textContent).not.toContain('∞');
   });
 
   it('should ask to open when a closed row is tapped, and to close when an open one is', () => {

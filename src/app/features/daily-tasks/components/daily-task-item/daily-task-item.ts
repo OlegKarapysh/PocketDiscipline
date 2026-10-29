@@ -29,9 +29,12 @@ export class DailyTaskItem {
   complete = output<DailyTaskDifficulty>();
   edit = output<DailyTask>();
 
+  // Null when no difficulty pays anything.
   rewardRange = computed(() => {
-    const rewards = this.rewards().map((r) => r.reward);
-    return { min: Math.min(...rewards), max: Math.max(...rewards) };
+    const rewards = this.rewards()
+      .map((r) => r.reward)
+      .filter((reward) => reward !== null);
+    return rewards.length > 0 ? { min: Math.min(...rewards), max: Math.max(...rewards) } : null;
   });
 
   detailsId = computed(() => `daily-task-${this.task().id}-details`);

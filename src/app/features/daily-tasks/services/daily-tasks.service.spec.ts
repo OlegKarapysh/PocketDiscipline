@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { DailyTasksService } from './daily-tasks.service';
 import { DbService } from '../../../database/db.service';
@@ -524,8 +524,7 @@ describe('DailyTasksService', () => {
   });
 
   describe('rewardsFor', () => {
-    // Noon, so that a day before is yesterday even across a daylight saving change.
-    const yesterday = new Date().setHours(12, 0, 0, 0) - ONE_DAY_MS;
+    const yesterday = new Date(2026, 9, 28, 12, 0).getTime();
     const task = (overrides: Partial<DailyTask>): DailyTask => ({
       id: 'test-daily-task-1',
       title: 'Morning Workout',
@@ -535,6 +534,15 @@ describe('DailyTasksService', () => {
       streak: 0,
       lastCompletedAt: null,
       ...overrides,
+    });
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(2026, 9, 29, 12, 0));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
     });
 
     it('should include the streak bonus that completing the task today earns', () => {
@@ -557,6 +565,20 @@ describe('DailyTasksService', () => {
 
     it('should offer nothing once the task is done today', () => {
       expect(service.rewardsFor(task({ streak: 5, lastCompletedAt: Date.now() }))).toEqual([]);
+    });
+
+    it('should price nothing for a reward that completing refuses to pay', () => {
+      const legacy = [NaN, 0, -500, '100' as unknown as number].map((baseReward, i) => ({
+        id: `legacy-${i}`,
+        name: 'Legacy',
+        baseReward,
+      }));
+
+      const rewards = service.rewardsFor(
+        task({ difficulties: [easy, ...legacy], streak: 5, lastCompletedAt: yesterday }),
+      );
+
+      expect(rewards.map((r) => r.reward)).toEqual([150, null, null, null, null]);
     });
 
     it('should offer what completing the task then pays', async () => {

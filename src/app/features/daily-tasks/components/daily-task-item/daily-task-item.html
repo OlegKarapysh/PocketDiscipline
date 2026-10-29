@@ -22,12 +22,12 @@
           @if (earned() !== null) {
             <app-amount class="reward" [value]="earned()" size="sm" tone="reward" [showSign]="true" />
           }
-        } @else {
+        } @else if (rewardRange(); as range) {
           <span class="reward">
-            <app-amount [value]="rewardRange().min" size="sm" tone="reward" [showSign]="true" />
-            @if (rewardRange().max !== rewardRange().min) {
+            <app-amount [value]="range.min" size="sm" tone="reward" [showSign]="true" />
+            @if (range.max !== range.min) {
               <span class="range-dash" aria-hidden="true">–</span>
-              <app-amount [value]="rewardRange().max" size="sm" tone="reward" />
+              <app-amount [value]="range.max" size="sm" tone="reward" />
             }
           </span>
         }

@@ -132,8 +132,14 @@ export class DailyTasksService {
     if (streak === null) return [];
     return task.difficulties.map((difficulty) => ({
       difficulty,
-      reward: this.withStreakBonus(difficulty.baseReward, streak),
+      reward: this.isPayable(difficulty.baseReward) ? this.withStreakBonus(difficulty.baseReward, streak) : null,
     }));
+  }
+
+  // Rows saved before rewards were validated can hold a reward of zero or less, or one that is not a number at
+  // all. Completing refuses those until the task is edited.
+  private isPayable(baseReward: number): boolean {
+    return Number.isFinite(baseReward) && baseReward > 0;
   }
 
   // The streak a completion at `now` makes, or null when the task was already completed that day.
@@ -165,8 +171,7 @@ export class DailyTasksService {
       if (!freshDifficulty) {
         throw new Error(`"${difficulty.name}" is no longer a difficulty of this task.`);
       }
-      // Rows saved before rewards were validated can hold a reward of zero or less; editing the task fixes it.
-      if (!Number.isFinite(freshDifficulty.baseReward) || freshDifficulty.baseReward <= 0) {
+      if (!this.isPayable(freshDifficulty.baseReward)) {
         throw new Error(`"${freshDifficulty.name}" has no valid reward. Edit the task to set one above zero.`);
       }
 
