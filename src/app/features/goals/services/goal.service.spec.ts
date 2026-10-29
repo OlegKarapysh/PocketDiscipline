@@ -113,6 +113,32 @@ describe('GoalService', () => {
     });
   }
 
+  // Backs reads and writes with rows that change as the service writes them.
+  function useGoalRows(initial: Goal[]): Goal[] {
+    const rows = initial.map((goal) => ({ ...goal }));
+    dbMock.goals.get.mockImplementation((id: string) => {
+      const row = rows.find((goal) => goal.id === id);
+      return row && { ...row };
+    });
+    dbMock.goals.toArray.mockImplementation(() =>
+      rows.filter((goal) => goal.status === GOAL_STATUS.ACTIVE).map((goal) => ({ ...goal })),
+    );
+    dbMock.goals.add.mockImplementation((goal: Goal) => {
+      rows.push({ ...goal });
+      return goal.id;
+    });
+    dbMock.goals.update.mockImplementation((id: string, changes: Partial<Goal>) => {
+      const row = rows.find((goal) => goal.id === id);
+      if (row) Object.assign(row, changes);
+      return row ? 1 : 0;
+    });
+    return rows;
+  }
+
+  function activeGoal(id: string, title: string, rewardValue: number): Goal {
+    return { id, title, rewardValue, status: GOAL_STATUS.ACTIVE, completedAt: null, createdAt: Date.now() };
+  }
+
   describe('Live Queries', () => {
     it('should return live query and emit active goals filtered by status', async () => {
       const mockActiveGoals: Goal[] = [
@@ -277,6 +303,15 @@ describe('GoalService', () => {
       }
       expect(dbMock.goals.add).not.toHaveBeenCalled();
     });
+
+    it('should store only one of two goals added at the same time with the same title', async () => {
+      const rows = useGoalRows([]);
+
+      const results = await Promise.allSettled([service.addGoal('Run 5 km', 300), service.addGoal('run 5 km ', 400)]);
+
+      expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+      expect(rows).toHaveLength(1);
+    });
   });
 
   describe('updateGoal', () => {
@@ -340,6 +375,28 @@ describe('GoalService', () => {
         'Goal reward must be a whole number of hryvnias, at least 1.',
       );
       expect(dbMock.goals.update).not.toHaveBeenCalled();
+    });
+
+    it('should let only one of two goals renamed at the same time take the same title', async () => {
+      const rows = useGoalRows([activeGoal('a', 'Squats', 100), activeGoal('b', 'Push-ups', 200)]);
+
+      const results = await Promise.allSettled([
+        service.updateGoal('a', 'Morning workout', 100),
+        service.updateGoal('b', 'morning workout', 200),
+      ]);
+
+      expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+      expect(rows.filter((goal) => goal.title.toLowerCase() === 'morning workout')).toHaveLength(1);
+    });
+
+    it('should credit and later debit the reward the completed goal keeps when an edit races its completion', async () => {
+      const rows = useGoalRows([activeGoal('goal-123', 'Squats', 1500)]);
+
+      await Promise.all([service.updateGoal('goal-123', 'More squats', 6500), service.completeGoal('goal-123')]);
+      await service.undoCompleteGoal('goal-123');
+
+      const credited = userMock.addBalance.mock.calls.map(([amount]) => amount as number);
+      expect(credited).toEqual([rows[0].rewardValue, -rows[0].rewardValue]);
     });
   });
 
