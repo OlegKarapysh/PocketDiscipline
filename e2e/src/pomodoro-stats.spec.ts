@@ -30,7 +30,9 @@ async function openWith(page: Page, sessions: Row[]): Promise<void> {
   await expect(page.getByRole('button', { name: /^Start/ })).toBeEnabled();
   await putRows(page, { pomodoroSessions: sessions });
   await page.reload();
-  await expect(page.getByRole('button', { name: /^Start|^Stop/ })).toBeVisible();
+  // Not by role: a session whose time ran out completes on load, and its celebration dialog hides the
+  // rest of the page from role queries.
+  await expect(page.locator('app-timer-controls button')).toBeVisible();
 }
 
 const todayCard = (page: Page) => page.locator('app-pomodoro-today');
@@ -109,6 +111,7 @@ test.describe('Pomodoro stats', () => {
         session('2026-10-28T22:00:00', null, { status: 'active', rewardEarned: undefined }),
       ]);
 
+      await expect(page.locator('app-celebration-dialog')).toContainText('Pomodoro complete');
       await expectFigures(todayCard(page), [/^2 pomodoros/, /Work 2/]);
       await expect(bars(page).last()).toHaveAttribute('aria-label', '2026-10-30: 2 pomodoros');
       await expect(bars(page).nth(-2)).toHaveAttribute('aria-label', '2026-10-29: 0 pomodoros');
