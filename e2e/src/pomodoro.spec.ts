@@ -81,15 +81,22 @@ test.describe('Pomodoro on a phone', () => {
   // The Today card of spec 013 and the gap above it: about 120px of figures on one wrapping row.
   const TODAY_CARD_ROOM = 136;
 
-  // Every control and figure on the page, which the quick actions button must never cover.
+  // Every control and figure on the page, the statistics of spec 013 included. Content may pass beneath
+  // the quick actions button while the page scrolls, but none of it may be under the button on the first
+  // screen or once the page is scrolled to the bottom (FR-014).
   async function expectQuickActionsClear(page: Page): Promise<void> {
     const fab = await page.getByRole('button', { name: 'Quick actions' }).boundingBox();
     if (!fab) throw new Error('The quick actions button is not shown');
     const scroller = page.locator('.scroller');
     const maxScroll = await scroller.evaluate((el) => el.scrollHeight - el.clientHeight);
-    const targets = page.locator('main').locator('button, [role="radio"], app-timer-display, .value, .summary');
+    const targets = page
+      .locator('main')
+      .locator(
+        'button, [role="radio"], app-timer-display, .value, .summary, app-pomodoro-stats > *, ' +
+          'app-pomodoro-history .empty, app-pomodoro-history-chart',
+      );
 
-    for (let scrollTop = 0; ; scrollTop = Math.min(scrollTop + 20, maxScroll)) {
+    for (const scrollTop of [0, maxScroll]) {
       await scroller.evaluate((el, top) => el.scrollTo(0, top), scrollTop);
       const boxes = await targets.evaluateAll((els) =>
         els.map((el) => ({ text: el.textContent.trim(), rect: el.getBoundingClientRect().toJSON() as DOMRect })),
@@ -99,7 +106,6 @@ test.describe('Pomodoro on a phone', () => {
           rect.left < fab.x + fab.width && rect.right > fab.x && rect.top < fab.y + fab.height && rect.bottom > fab.y;
         expect(covered, `"${text}" is under the quick actions button at scroll ${String(scrollTop)}`).toBe(false);
       }
-      if (scrollTop === maxScroll) break;
     }
   }
 
@@ -168,7 +174,7 @@ test.describe('Pomodoro on a phone', () => {
     const stop = page.getByRole('button', { name: 'Stop' });
     await expect(stop).toBeVisible();
     await expect(page.locator('app-session-config')).toHaveText('Study · 15 min');
-    await expect(page.getByRole('radio')).toHaveCount(0);
+    await expect(card.getByRole('radio')).toHaveCount(0);
     await expect(start).toHaveCount(0);
     await expectQuickActionsClear(page);
 

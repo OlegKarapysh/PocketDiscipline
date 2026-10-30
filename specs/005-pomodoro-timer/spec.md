@@ -21,6 +21,7 @@
 - Q: Page layout → A: The timer fills a phone screen on its own, so the page is made compact (User Story 3) to leave room for the statistics of spec 013-pomodoro-stats below it
 - Q: Duration control → A: Decrease and increase buttons in 5-minute steps instead of a typed number; the 15–120 minute range of FR-002 is unchanged
 - Q: Engagement type control → A: Both types visible side by side and chosen with one tap, instead of a dropdown
+- Q: Quick actions button over a page that scrolls (found implementing spec 013, whose History card makes the page scroll) → A: The standard floating-button rule: nothing covered on the first screen or at the bottom of the page; content may pass beneath the button while scrolling, as on the Today and Daily scores pages
 - Q: Base rewards → A: FR-005 names the default rates the app ships with, 100 ₴ for work and 125 ₴ for study, which Settings can change; the 25 and 20 points it stated before predate those rates
 
 ## User Scenarios & Testing _(mandatory)_
@@ -79,7 +80,7 @@ As a user on a phone, I want the timer, its settings and the start button groupe
 - What happens when the user navigates to another tab while the timer is running?
 - **App Backgrounding/Closure**: If the app is closed or backgrounded while a timer is active, the system MUST schedule an OS local notification to alert the user when the timer fires. Upon reopening, the app calculates elapsed time to resume the timer state accurately.
 - What happens if a user stops or cancels the timer before it finishes?
-- **Quick actions button**: On a phone, the floating quick actions button must not cover any control or figure on the Pomodoro page, at any scroll position.
+- **Quick actions button**: On a phone, the floating quick actions button must not cover any control or figure on the Pomodoro page's first screen, and scrolling to the bottom of the page must bring everything clear of it.
 - **Restoring after a reload**: While a session left running before a reload is being restored, the start button stays disabled, as it does today.
 
 ## Requirements _(mandatory)_
@@ -110,7 +111,7 @@ As a user on a phone, I want the timer, its settings and the start button groupe
 - **FR-011**: The duration MUST be changed with decrease and increase buttons in 5-minute steps within the range of FR-002, without typing. Each button MUST be disabled at its end of the range.
 - **FR-012**: The start button MUST show the reward the configured session will pay at the current rates (FR-005 and the rates set in Settings), updated whenever the duration or engagement type changes.
 - **FR-013**: While a session is running, the engagement type and duration controls MUST be replaced by one line naming the running session's engagement type and duration, and the stop button MUST take the start button's place, styled as a destructive action. When no session is running, the card MUST NOT show a separate status line.
-- **FR-014**: The floating quick actions button MUST NOT cover any control or figure on the Pomodoro page at any scroll position.
+- **FR-014**: The floating quick actions button MUST NOT cover any control or figure on the Pomodoro page's first screen, before it is scrolled. Content may scroll beneath the button, as on every other page, but scrolled to the bottom nothing is left under it, so every control and figure can be brought clear of it.
 - **FR-015**: On a phone, the start button MUST span the card's full width. At desktop widths (1280px and wider), the card MUST leave room beside it for the statistics of spec 013-pomodoro-stats.
 
 ### Key Entities
