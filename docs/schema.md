@@ -159,6 +159,8 @@ export interface DailyScore {
 **Primary Key**: `id`  
 **Indexed Properties**: `id`, `startTime`, `status`  
 **Description**: Tracks Pomodoro focus sessions, duration, engagement type, completion status, and rewards earned.
+A completed session is credited on the local day of its `endTime`, or of its `startTime` when it has none;
+`DashboardEarningsService` and `PomodoroStatsService` both rely on this.
 
 ```typescript
 export type PomodoroSessionStatus = 'active' | 'completed' | 'cancelled';
