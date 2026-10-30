@@ -1,16 +1,35 @@
-@if (!isActive()) {
-  <div class="config-container">
-    <mat-form-field appearance="outline">
-      <mat-label>Duration (minutes)</mat-label>
-      <input matInput type="number" step="5" [formField]="configForm.durationMinutes" />
-      <mat-error>{{ durationRangeHint }}</mat-error>
-    </mat-form-field>
-    <mat-form-field appearance="outline">
-      <mat-label>Engagement type</mat-label>
-      <mat-select [formField]="configForm.engagementType">
-        <mat-option [value]="engagementTypeWork">Work</mat-option>
-        <mat-option [value]="engagementTypeStudy">Study</mat-option>
-      </mat-select>
-    </mat-form-field>
+@if (isActive()) {
+  <p class="summary">{{ runningSummary() }}</p>
+} @else {
+  <app-segmented-control
+    ariaLabel="Engagement type"
+    [fullWidth]="true"
+    [options]="engagementOptions"
+    [value]="engagementType()"
+    (valueChange)="selectEngagement($event)"
+  />
+  <div class="duration" role="group" aria-label="Duration">
+    <span class="label">Duration</span>
+    <div class="stepper">
+      <button
+        mat-icon-button
+        type="button"
+        aria-label="Decrease duration"
+        [disabled]="!canDecrease()"
+        (click)="decrease()"
+      >
+        <mat-icon>remove</mat-icon>
+      </button>
+      <span class="value pd-num" aria-live="polite">{{ durationMinutes() }} min</span>
+      <button
+        mat-icon-button
+        type="button"
+        aria-label="Increase duration"
+        [disabled]="!canIncrease()"
+        (click)="increase()"
+      >
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
   </div>
 }

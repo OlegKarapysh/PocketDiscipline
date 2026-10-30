@@ -10,13 +10,6 @@ import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
 export class TimerDisplay {
   private timerService = inject(PomodoroTimerService);
 
-  isActive = this.timerService.isActive;
-  engagementType = this.timerService.engagementType;
-
-  statusText = computed(() => {
-    return this.isActive() ? `Focusing on ${this.engagementType()}` : 'Ready to start';
-  });
-
   formattedTime = computed(() => {
     const totalSeconds = this.timerService.timeRemaining();
     const minutes = Math.floor(totalSeconds / 60);

@@ -11,6 +11,7 @@ import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { moneyAmount } from '../../../../shared/validators/money-amount';
 import type { PomodoroRewardRates } from '../../models/pomodoro-reward-rates.type';
 import { DEFAULT_RATES, PomodoroRewardRateService } from '../../services/pomodoro-reward-rate.service';
+import { ENGAGEMENT_TYPE_LABELS } from '../../constants/engagement-type-labels.const';
 
 type RewardRatesModel = Record<EngagementType, number | null>;
 
@@ -26,6 +27,7 @@ export class PomodoroRewardSettings {
   private readonly rewardRates = inject(PomodoroRewardRateService);
   private readonly snackBar = inject(SnackBarService);
 
+  readonly labels = ENGAGEMENT_TYPE_LABELS;
   readonly isSaving = signal(false);
 
   readonly rates = toSignal(

@@ -1,22 +1,42 @@
 @use '../../../../../styles/tokens' as t;
 
 :host {
-  display: block;
-  width: 100%;
-  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: t.space(3);
 }
 
-// The two fields share a row where each gets 200px, and stack anywhere narrower.
-.config-container {
+.summary {
+  margin: 0;
+  text-align: center;
+  font: var(--mat-sys-title-medium);
+  font-weight: 600;
+  color: var(--mat-sys-primary);
+}
+
+.duration {
   display: flex;
   flex-wrap: wrap;
-  gap: t.space(4);
-  margin-top: t.space(8);
-  width: 100%;
-  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  gap: t.space(2);
+}
 
-  mat-form-field {
-    flex: 1 1 200px;
-    min-width: 0;
-  }
+.label {
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: t.space(1);
+}
+
+// Wide enough for "120 min" in mono, so the buttons do not shift as the value changes.
+.value {
+  min-width: 7ch;
+  text-align: center;
+  font-size: var(--mat-sys-title-medium-size);
+  font-weight: 600;
 }

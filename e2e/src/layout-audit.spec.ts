@@ -311,7 +311,76 @@ const SCREENS: Screen[] = [
       await expect(page.locator('app-confirm-dialog')).toBeVisible();
     },
   },
-  { name: 'pomodoro', path: '/pomodoro', ready: 'app-session-config' },
+  // The reward badge on Start appears once the seeded rates have loaded, and the history chart once the
+  // seeded sessions have; Today counts them in the same read.
+  {
+    name: 'pomodoro',
+    path: '/pomodoro',
+    ready: 'app-timer-controls app-badge',
+    open: async (page) => {
+      await expect(page.locator('app-pomodoro-today')).toContainText(`${String(POMODOROS_TODAY)} pomodoros`);
+      await expect(page.locator('app-pomodoro-history-chart')).toBeVisible();
+    },
+  },
+  {
+    name: 'pomodoro: custom range',
+    path: '/pomodoro',
+    ready: 'app-pomodoro-history-chart',
+    open: async (page) => {
+      await page.locator('app-pomodoro-history').getByRole('radio', { name: 'Custom' }).click();
+      await expect(page.locator('app-pomodoro-history .custom-range')).toBeVisible();
+    },
+  },
+  {
+    // Two years: one bar per month, with the chart's widest axis labels ("Jan '24").
+    name: 'pomodoro: long range',
+    path: '/pomodoro',
+    ready: 'app-pomodoro-history-chart',
+    open: async (page) => {
+      const filter = page.locator('app-pomodoro-history app-period-filter');
+      await filter.getByRole('radio', { name: 'Custom' }).click();
+      await filter.getByPlaceholder('Start date').fill('1/1/2024');
+      await filter.getByPlaceholder('End date').fill('1/1/2026');
+      await filter.getByPlaceholder('End date').blur();
+      await expect(page.getByRole('region', { name: 'Monthly pomodoros chart' })).toBeVisible();
+    },
+  },
+  {
+    name: 'pomodoro: empty period',
+    path: '/pomodoro',
+    ready: 'app-pomodoro-history-chart',
+    open: async (page) => {
+      const filter = page.locator('app-pomodoro-history app-period-filter');
+      await filter.getByRole('radio', { name: 'Custom' }).click();
+      await filter.getByPlaceholder('Start date').fill('1/1/2024');
+      await filter.getByPlaceholder('End date').fill('1/31/2024');
+      await filter.getByPlaceholder('End date').blur();
+      await expect(page.locator('app-pomodoro-history .empty')).toBeVisible();
+    },
+  },
+  {
+    // 120 minutes pays three times the rate: the widest reward Start shows.
+    name: 'pomodoro: longest session',
+    path: '/pomodoro',
+    ready: 'app-timer-controls app-badge',
+    open: async (page) => {
+      const increase = page.getByRole('button', { name: 'Increase duration' });
+      for (let minutes = 25; minutes < 120; minutes += 5) {
+        await increase.click();
+      }
+      await expect(increase).toBeDisabled();
+    },
+  },
+  {
+    // Last of the pomodoro screens: the session it starts stays running.
+    name: 'pomodoro: running',
+    path: '/pomodoro',
+    ready: 'app-timer-controls app-badge',
+    open: async (page) => {
+      await page.getByRole('button', { name: /^Start/ }).click();
+      await expect(page.getByRole('button', { name: 'Stop' })).toBeVisible();
+    },
+  },
   { name: 'daily scores', path: '/daily-scores', ready: '.score-btn' },
   {
     name: 'daily scores: custom range',
@@ -471,6 +540,7 @@ const EMPTY_SCREENS: Screen[] = [
     },
   },
   { name: 'goals: nothing yet', path: '/goals', ready: 'app-empty-state' },
+  { name: 'pomodoro: nothing yet', path: '/pomodoro', ready: 'app-pomodoro-history .empty' },
   { name: 'rewards: empty store', path: '/rewards', ready: 'app-reward-store app-empty-state' },
   {
     name: 'rewards: empty history',
@@ -547,10 +617,29 @@ const url = (length: number) => ('https://example.com/a/very/long/path/' + 'segm
 const prose = (length: number) =>
   'Supercalifragilistic expialidocious antidisestablishmentarianism '.repeat(20).slice(0, length);
 
+// The most pomodoros a day: twenty of the longest session, every day for the last 30 days. Today's
+// rewards add up to seven digits, and so do the 30 days'.
+const POMODOROS_TODAY = 20;
+const POMODORO_DAYS = 30;
+
 function worstCaseRows(): Rows {
   // The page's clock is fixed at NOW, so these are the app's "now" and "today" too.
   const now = NOW.getTime();
   const today = NOW.toLocaleDateString('en-CA');
+
+  const pomodoroSessions = Array.from({ length: POMODORO_DAYS * POMODOROS_TODAY }, (_, i) => {
+    const daysAgo = Math.floor(i / POMODOROS_TODAY);
+    const endTime = now - daysAgo * 86_400_000 - (i % POMODOROS_TODAY) * 60_000;
+    return {
+      id: `pomodoro-${String(i)}`,
+      durationMinutes: 120,
+      engagementType: i % 2 === 0 ? 'work' : 'study',
+      startTime: endTime - 120 * 60_000,
+      endTime,
+      status: 'completed',
+      rewardEarned: daysAgo === 0 ? 249_999 : 8_620,
+    };
+  });
 
   const goal = (id: string, text: string, extra: object = {}) => ({
     id,
@@ -625,6 +714,7 @@ function worstCaseRows(): Rows {
 
   return {
     users: [{ id: CURRENT_USER_ID, name: CURRENT_USER_NAME, balance: 1_234_567, createdAt: now, updatedAt: now }],
+    pomodoroSessions,
     pomodoroRewardRates: [
       { engagementType: 'work', baseReward: 10_000_000 },
       { engagementType: 'study', baseReward: 10_000_000 },

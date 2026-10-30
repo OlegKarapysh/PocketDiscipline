@@ -14,12 +14,12 @@ Represents a focused block of time completed by the user.
 - `startTime` (timestamp): When the timer started.
 - `endTime` (timestamp): When the timer was completed.
 - `status` (enum: `'active' | 'completed' | 'cancelled'`): Current state of the session.
-- `rewardEarned` (number): The calculated reward points earned (if completed).
+- `rewardEarned` (number): The calculated reward earned, in whole hryvnias (if completed).
 
 **Validation Rules**:
 
 - `durationMinutes` must be between 15 and 120 (inclusive) and a multiple of 5.
-- `rewardEarned` is calculated based on duration: 15-24 mins = 0.5x, 25-45 mins = 1x, 50-75 mins = 2x, 80-120 mins = 3x (base is 25 for work, 20 for study). No reward is granted if the status is `'cancelled'`.
+- `rewardEarned` is calculated based on duration: 15-24 mins = 0.5x, 25-45 mins = 1x, 50-75 mins = 2x, 80-120 mins = 3x (base is the rate set in Settings, by default 100 ₴ for work and 125 ₴ for study). No reward is granted if the status is `'cancelled'`.
 
 **State Transitions**:
 

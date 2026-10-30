@@ -1,7 +1,11 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import type { DailyScore } from '../../../../core/models/daily-score.model';
 import { ClockService } from '../../../../core/services/clock.service';
-import { Amount } from '../../../../shared/components/amount/amount';
+import { BarChart } from '../../../../shared/components/bar-chart/bar-chart';
+import type { BarChartBar } from '../../../../shared/components/bar-chart/bar-chart-bar.model';
+import type { BarChartLegendItem } from '../../../../shared/components/bar-chart/bar-chart-legend-item.model';
+import type { BarChartScale } from '../../../../shared/components/bar-chart/bar-chart-scale.model';
+import type { BarChartTooltipRow } from '../../../../shared/components/bar-chart/bar-chart-tooltip-row.model';
 import { getPresetDateRange } from '../../../../shared/components/period-filter/preset-date-range';
 import {
   datesInRange,
@@ -10,21 +14,17 @@ import {
   groupByCalendarPeriod,
 } from '../../../../shared/charts/chart-periods';
 import { SectionCard } from '../../../../shared/components/section-card/section-card';
-import { AXIS_CHAR_WIDTH } from '../../../../shared/constants/chart-axis.const';
-import { FloatAt } from '../../../../shared/directives/float-at';
-import { ObserveWidth } from '../../../../shared/directives/observe-width';
 import type { ChartGranularity } from '../../../../shared/models/chart-granularity.type';
-import type { ChartGridLine } from '../../../../shared/models/chart-grid-line.model';
-import type { TooltipPosition } from '../../../../shared/models/tooltip-position.model';
 import { SCORE_GOOD, SCORE_PERFECT } from '../../constants/daily-score-reward.const';
-import type { ScoreBar } from '../../models/score-bar.model';
 
-const INITIAL_WIDTH = 600;
-const VIEWBOX_HEIGHT = 240;
-const Y_AXIS_LABEL_GAP = 5;
-// Space kept between neighbouring x-axis labels, so they never collide on a narrow screen.
-const X_LABEL_GAP = 9;
 const GRID_DIVISION_COUNT = 5;
+
+const SCALE: BarChartScale = {
+  max: SCORE_PERFECT,
+  tickLabels: Array.from({ length: GRID_DIVISION_COUNT + 1 }, (_, i) =>
+    String(Math.round((SCORE_PERFECT / GRID_DIVISION_COUNT) * i)),
+  ),
+};
 
 const HEADINGS: Record<ChartGranularity, string> = {
   day: 'Daily scores',
@@ -33,12 +33,18 @@ const HEADINGS: Record<ChartGranularity, string> = {
   year: 'Yearly average scores',
 };
 
-const DAILY_LEGEND = { standard: 'Score 1–8', highScore: 'Score 9–10 (reward)' };
-const AVERAGE_LEGEND = { standard: 'Average below 9', highScore: 'Average 9–10' };
+const DAILY_LEGEND: BarChartLegendItem[] = [
+  { label: 'Score 1–8', tone: 'primary' },
+  { label: 'Score 9–10 (reward)', tone: 'reward' },
+];
+const AVERAGE_LEGEND: BarChartLegendItem[] = [
+  { label: 'Average below 9', tone: 'primary' },
+  { label: 'Average 9–10', tone: 'reward' },
+];
 
 @Component({
   selector: 'app-scores-chart',
-  imports: [Amount, FloatAt, ObserveWidth, SectionCard],
+  imports: [BarChart, SectionCard],
   templateUrl: './scores-chart.html',
   styleUrl: './scores-chart.scss',
 })
@@ -49,37 +55,7 @@ export class ScoresChart {
   readonly startDate = input<string>('');
   readonly endDate = input<string>('');
 
-  readonly hoveredBar = signal<ScoreBar | null>(null);
-  readonly tooltipAnchor = signal<TooltipPosition>({ x: 0, y: 0 });
-
-  readonly width = signal(INITIAL_WIDTH);
-  readonly viewBox = computed(() => `0 0 ${this.width()} ${VIEWBOX_HEIGHT}`);
-
-  readonly chartBaselineY = VIEWBOX_HEIGHT - 35;
-  readonly chartTopY = 20;
-  readonly chartHeight = this.chartBaselineY - this.chartTopY;
-  readonly chartRightX = computed(() => this.width() - 20);
-  readonly axisLabelYOffset = 4;
-  readonly axisLabelYPos = this.chartBaselineY + 20;
-  readonly zeroBarHeight = 2;
-  readonly zeroBarY = this.chartBaselineY - this.zeroBarHeight;
-
-  readonly gridLines = computed<ChartGridLine[]>(() => {
-    const lines: ChartGridLine[] = [];
-
-    for (let i = 0; i <= GRID_DIVISION_COUNT; i++) {
-      const value = Math.round((SCORE_PERFECT / GRID_DIVISION_COUNT) * i);
-      const y = this.chartBaselineY - (this.chartHeight / GRID_DIVISION_COUNT) * i;
-      lines.push({ y, label: String(value) });
-    }
-    return lines;
-  });
-
-  readonly chartLeftX = computed(() => {
-    const longest = Math.max(...this.gridLines().map((line) => line.label.length));
-    return Math.ceil(longest * AXIS_CHAR_WIDTH) + Y_AXIS_LABEL_GAP;
-  });
-  readonly yAxisTextX = computed(() => this.chartLeftX() - Y_AXIS_LABEL_GAP);
+  readonly scale = SCALE;
 
   private readonly rangeDates = computed<string[]>(() => {
     const startStr = this.startDate();
@@ -92,127 +68,54 @@ export class ScoresChart {
 
   // Every date of the range, oldest first, grouped into one bar per day, week or month.
   private readonly grouping = computed(() => groupByCalendarPeriod(this.rangeDates(), (date) => date));
-  readonly isDaily = computed(() => this.grouping().granularity === 'day');
+  private readonly isDaily = computed(() => this.grouping().granularity === 'day');
   readonly heading = computed(() => HEADINGS[this.grouping().granularity]);
-  readonly scoreLabel = computed(() => (this.isDaily() ? 'Score' : 'Average score'));
   readonly legend = computed(() => (this.isDaily() ? DAILY_LEGEND : AVERAGE_LEGEND));
 
-  readonly chartData = computed<ScoreBar[]>(() => {
+  readonly bars = computed<BarChartBar[]>(() => {
     const { granularity, periods } = this.grouping();
-    const totalBars = periods.length;
-    if (totalBars === 0) {
-      return [];
-    }
+    const isDaily = this.isDaily();
+    const scoreLabel = isDaily ? 'Score' : 'Average score';
+    const scoreMap = new Map(this.scores().map((score) => [score.date, score]));
 
-    const scoreMap = new Map<string, DailyScore>();
-    for (const score of this.scores()) {
-      scoreMap.set(score.date, score);
-    }
-
-    const axisLabels = periods.map((period) => formatPeriodAxisLabel(period.startDate, granularity));
-    const longestLabel = Math.max(...axisLabels.map((label) => label.length));
-    const chartLeftX = this.chartLeftX();
-    const slotWidth = (this.chartRightX() - chartLeftX) / totalBars;
-    const barWidth = Math.max(slotWidth * 0.65, 4);
-    const gap = (slotWidth - barWidth) / 2;
-
-    let labelInterval = 1;
-    if (totalBars > 31) {
-      labelInterval = Math.ceil(totalBars / 7);
-    } else if (totalBars > 16) {
-      labelInterval = 5;
-    } else if (totalBars > 10) {
-      labelInterval = 2;
-    }
-    const labelSpacing = longestLabel * AXIS_CHAR_WIDTH + X_LABEL_GAP;
-    labelInterval = Math.max(labelInterval, Math.ceil(labelSpacing / slotWidth));
-    const lastIndex = totalBars - 1;
-    // A label is centred under its bar, but never so close to an edge that part of it is cut off.
-    const labelHalfWidth = (longestLabel * AXIS_CHAR_WIDTH) / 2;
-    const maxLabelX = this.width() - labelHalfWidth;
-
-    return periods.map((period, index) => {
+    return periods.map((period): BarChartBar => {
       const scored = period.items.flatMap((date) => scoreMap.get(date) ?? []);
       // Averaged to one decimal place, rounded down, so an average just under 9 never shows as 9.
       // Scores are whole numbers, so the division is exact before it is floored.
       const scoreSum = scored.reduce((sum, s) => sum + s.score, 0);
       const score = scored.length > 0 ? Math.floor((scoreSum * 10) / scored.length) / 10 : null;
-      const height = score !== null ? (score / SCORE_PERFECT) * this.chartHeight : 0;
-      const x = chartLeftX + index * slotWidth + gap;
+      const rewardEarned = scored.reduce((sum, s) => sum + s.rewardEarned, 0);
       const range = formatPeriodRange(period);
+      const title = isDaily ? `${range} (${this.weekdayOf(period.startDate)})` : range;
+      const bar = {
+        key: period.startDate,
+        axisLabel: formatPeriodAxisLabel(period.startDate, granularity),
+      };
 
+      if (score === null) {
+        return {
+          ...bar,
+          ariaLabel: `${range}: No score`,
+          segments: [],
+          tooltip: { title, rows: [], note: 'No score recorded' },
+        };
+      }
+
+      const rows: BarChartTooltipRow[] = [{ label: scoreLabel, text: `${score} / ${SCORE_PERFECT}` }];
+      if (!isDaily) {
+        rows.push({ label: 'Days scored', text: `${scored.length} / ${period.items.length}` });
+      }
+      if (rewardEarned > 0) {
+        rows.push({ label: 'Reward', amount: rewardEarned, signedAmount: true });
+      }
       return {
-        startDate: period.startDate,
-        tooltipTitle: this.isDaily() ? `${range} (${this.weekdayOf(period.startDate)})` : range,
-        ariaLabel: `${range}: ${score !== null ? `${this.scoreLabel()} ${score}` : 'No score'}`,
-        axisLabel: axisLabels[index],
-        axisLabelX: Math.min(Math.max(x + barWidth / 2, labelHalfWidth), maxLabelX),
-        score,
-        scoredDays: scored.length,
-        dayCount: period.items.length,
-        rewardEarned: scored.reduce((sum, s) => sum + s.rewardEarned, 0),
-        x,
-        y: this.chartBaselineY - height,
-        width: barWidth,
-        height,
-        isHighScore: score !== null && score >= SCORE_GOOD,
-        shouldShowLabel:
-          index === 0 || index === lastIndex || (index % labelInterval === 0 && lastIndex - index >= labelInterval),
+        ...bar,
+        ariaLabel: `${range}: ${scoreLabel} ${score}`,
+        segments: [{ value: score, tone: score >= SCORE_GOOD ? 'reward' : 'primary' }],
+        tooltip: { title, rows },
       };
     });
   });
-
-  // A tap also enters and focuses the bar on its way to the click. So hover opens the tooltip only for
-  // a mouse and focus only for the keyboard, and a tap or a click toggles it.
-  onBarPointerEnter(bar: ScoreBar, event: PointerEvent): void {
-    if (event.pointerType === 'mouse') {
-      this.showTooltip(bar, event);
-    }
-  }
-
-  onBarPointerMove(event: PointerEvent): void {
-    if (event.pointerType === 'mouse' && this.hoveredBar()) {
-      this.anchorTooltipAtPointer(event);
-    }
-  }
-
-  onBarPointerLeave(event: PointerEvent): void {
-    if (event.pointerType === 'mouse') {
-      this.hoveredBar.set(null);
-    }
-  }
-
-  onBarClick(bar: ScoreBar, event: MouseEvent): void {
-    if (this.hoveredBar()?.startDate === bar.startDate) {
-      this.hoveredBar.set(null);
-    } else {
-      this.showTooltip(bar, event);
-    }
-  }
-
-  onBarFocus(bar: ScoreBar, event: FocusEvent): void {
-    const target = event.currentTarget;
-    if (target instanceof Element && target.matches(':focus-visible')) {
-      const rect = target.getBoundingClientRect();
-      this.hoveredBar.set(bar);
-      this.tooltipAnchor.set({ x: rect.left + rect.width / 2, y: rect.top });
-    }
-  }
-
-  onBarBlur(bar: ScoreBar): void {
-    if (this.hoveredBar()?.startDate === bar.startDate) {
-      this.hoveredBar.set(null);
-    }
-  }
-
-  private showTooltip(bar: ScoreBar, event: MouseEvent): void {
-    this.hoveredBar.set(bar);
-    this.anchorTooltipAtPointer(event);
-  }
-
-  private anchorTooltipAtPointer(event: MouseEvent): void {
-    this.tooltipAnchor.set({ x: event.clientX, y: event.clientY });
-  }
 
   private weekdayOf(dateStr: string): string {
     const [year, month, day] = dateStr.split('-').map(Number);

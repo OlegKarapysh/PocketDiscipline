@@ -1,0 +1,15 @@
+<p class="figure">
+  <span class="count pd-num">{{ tally().pomodoros }}</span> {{ countUnit() }}
+</p>
+<div class="split">
+  @for (row of split(); track row.type) {
+    <app-badge>
+      {{ row.label }}
+      <span class="pd-num">{{ row.count }}</span>
+    </app-badge>
+  }
+</div>
+<p class="figure">
+  <span class="focus pd-num">{{ focusTime() }}</span> focus
+</p>
+<app-amount [value]="tally().rewardEarned" tone="reward" [showSign]="true" />

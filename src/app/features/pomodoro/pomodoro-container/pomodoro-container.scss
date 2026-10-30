@@ -1,14 +1,22 @@
+@use '../../../../styles/tokens' as t;
+
 :host {
   display: block;
-  width: 100%;
 }
 
-.container {
+// Two columns, timer and Today, then History, side by side wherever both fit; on a phone they stack in
+// that order. Each column wraps on its own width, not the viewport's.
+.columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: t.space(4);
+}
+
+.column {
+  flex: 1 1 min(100%, 360px);
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 80vh;
-  width: 100%;
-  box-sizing: border-box;
+  gap: t.space(4);
 }

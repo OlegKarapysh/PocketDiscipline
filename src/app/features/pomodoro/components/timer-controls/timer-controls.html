@@ -1,11 +1,16 @@
-<div class="controls">
-  @if (!isActive()) {
-    <button mat-fab type="button" [disabled]="isRestoring()" (click)="start()" aria-label="Start Timer">
-      <mat-icon>play_arrow</mat-icon>
-    </button>
-  } @else {
-    <button mat-fab class="stop" type="button" (click)="stop()" aria-label="Stop Timer">
-      <mat-icon>stop</mat-icon>
-    </button>
-  }
-</div>
+@if (isActive()) {
+  <button mat-flat-button class="stop" type="button" (click)="stop()">
+    <mat-icon>stop</mat-icon>
+    Stop
+  </button>
+} @else {
+  <button mat-flat-button class="start" type="button" [disabled]="isRestoring()" (click)="start()">
+    <mat-icon>play_arrow</mat-icon>
+    Start
+    @if (reward() !== undefined) {
+      <app-badge class="reward" tone="reward">
+        <app-amount [value]="reward()" size="sm" tone="inherit" [showSign]="true" />
+      </app-badge>
+    }
+  </button>
+}

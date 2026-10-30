@@ -45,6 +45,7 @@ If this skill and `docs/design_system.md` disagree, the doc wins. Fix the skill 
    | 2–4 option filter          | `app-segmented-control`                       |
    | Date range period filter   | `app-period-filter`                           |
    | Ring progress              | `app-progress-ring`                           |
+   | Bar chart                  | `app-bar-chart`                               |
    | Empty list                 | `app-empty-state`                             |
    | Earning moment             | `CelebrationService.show()`                   |
    | Destructive confirm        | `ConfirmService.ask({ isDestructive: true })` |
@@ -70,7 +71,7 @@ The app is used on phones and on wide desktop windows alike, and every screen ha
 - **Hierarchy on a card:** title (`title-medium`, weight 600), then meta (`label-large`, `on-surface-variant`), then actions last and full width on mobile.
 - **Hero:** only the balance card uses the primary-filled treatment. Don't add a second hero on the same screen.
 - **Lists of completed items:** compact rows with a success icon tile (`--pd-sys-success-container`), placed after the pending items.
-- **Charts:** bars use `--mat-sys-primary` (tasks and focus) and `--pd-sys-reward` (goals). Axes and labels use `.pd-num` in `on-surface-variant`. No gridline colours outside the tokens.
+- **Charts:** draw them with `app-bar-chart`, which owns the axes, labels and tooltip. Bars use `--mat-sys-primary` (tasks and focus) and `--pd-sys-reward` (goals). Axes and labels use `.pd-num` in `on-surface-variant`. No gridline colours outside the tokens.
 - **Mascot** (`icons/icon-192x192.png`): only in `app-empty-state` and the celebration dialog.
 
 ## Copy

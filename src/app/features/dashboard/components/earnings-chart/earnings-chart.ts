@@ -1,18 +1,14 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { SectionCard } from '../../../../shared/components/section-card/section-card';
-import { Amount } from '../../../../shared/components/amount/amount';
-import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { BarChart } from '../../../../shared/components/bar-chart/bar-chart';
+import type { BarChartBar } from '../../../../shared/components/bar-chart/bar-chart-bar.model';
+import type { BarChartLegendItem } from '../../../../shared/components/bar-chart/bar-chart-legend-item.model';
+import type { BarChartScale } from '../../../../shared/components/bar-chart/bar-chart-scale.model';
+import type { ChartTone } from '../../../../shared/components/bar-chart/chart-tone.type';
 import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
 import type { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
 import type { EarningsBucket } from '../../models/earnings-bucket.model';
-import type { ChartBar } from '../../models/chart-bar.model';
-import type { ChartBarSegment } from '../../models/chart-bar-segment.model';
-import type { ChartGridLine } from '../../models/chart-grid-line.model';
-import type { TooltipPosition } from '../../models/tooltip-position.model';
 import { EarningsSource } from '../../models/earnings-source.enum';
-import { FloatAt } from '../../../../shared/directives/float-at';
-import { ObserveWidth } from '../../../../shared/directives/observe-width';
-import { AXIS_CHAR_WIDTH } from '../../../../shared/constants/chart-axis.const';
 import {
   formatPeriodAxisLabel,
   formatPeriodRange,
@@ -21,13 +17,6 @@ import {
 import type { ChartGranularity } from '../../../../shared/models/chart-granularity.type';
 import type { ChartPeriod } from '../../../../shared/models/chart-period.model';
 
-// The chart is drawn at its container's measured width, one user unit per CSS pixel; this is the
-// width it assumes until that first measurement arrives.
-const INITIAL_WIDTH = 600;
-const VIEWBOX_HEIGHT = 260;
-const Y_AXIS_LABEL_GAP = 5;
-// Space kept between neighbouring x-axis labels, so they never collide on a narrow screen.
-const X_LABEL_GAP = 9;
 // The y-axis tops out at the next multiple of this, and never below it.
 const Y_SCALE_STEP = 500;
 const GRID_DIVISION_COUNT = 4;
@@ -47,6 +36,14 @@ const SOURCE_AMOUNT: Record<EarningsSource, (bucket: EarningsBucket) => number> 
   [EarningsSource.DAILY_SCORES]: (bucket) => bucket.dailyScoresEarned,
 };
 
+// Goals are earned rewards (amber); tasks and focus share the primary family.
+const SOURCE_TONES: Record<EarningsSource, ChartTone> = {
+  [EarningsSource.GOALS]: 'reward',
+  [EarningsSource.DAILY_TASKS]: 'primary',
+  [EarningsSource.POMODORO]: 'inverse-primary',
+  [EarningsSource.DAILY_SCORES]: 'secondary',
+};
+
 const HEADINGS: Record<ChartGranularity, string> = {
   day: 'Daily earnings',
   week: 'Weekly earnings',
@@ -56,190 +53,58 @@ const HEADINGS: Record<ChartGranularity, string> = {
 
 const SOURCES = Object.values(EarningsSource);
 
+const LEGEND: BarChartLegendItem[] = SOURCES.map((source) => ({
+  label: SOURCE_LABELS[source],
+  tone: SOURCE_TONES[source],
+}));
+
 @Component({
   selector: 'app-earnings-chart',
-  imports: [SectionCard, Amount, MoneyPipe, FloatAt, ObserveWidth],
+  imports: [SectionCard, BarChart],
   templateUrl: './earnings-chart.html',
   styleUrl: './earnings-chart.scss',
 })
 export class EarningsChart {
   readonly records = input<DailyEarningsRecord[]>([]);
 
-  readonly hoveredBucket = signal<EarningsBucket | null>(null);
-  readonly tooltipAnchor = signal<TooltipPosition>({ x: 0, y: 0 });
-
-  readonly width = signal(INITIAL_WIDTH);
-  readonly viewBox = computed(() => `0 0 ${this.width()} ${VIEWBOX_HEIGHT}`);
-
-  readonly chartBaselineY = VIEWBOX_HEIGHT - 35;
-  readonly chartTopY = 20;
-  readonly chartHeight = this.chartBaselineY - this.chartTopY;
-  readonly chartRightX = computed(() => this.width() - 15);
-  readonly axisLabelYOffset = 4;
-  readonly axisLabelYPos = this.chartBaselineY + 20;
-  readonly zeroBarHeight = 2;
-  readonly zeroBarY = this.chartBaselineY - this.zeroBarHeight;
-
-  readonly legendItems = SOURCES.map((source) => ({ source, label: SOURCE_LABELS[source] }));
+  readonly legend = LEGEND;
 
   private readonly grouping = computed(() => groupByCalendarPeriod(this.records(), (record) => record.date));
   private readonly buckets = computed(() => this.grouping().periods.map((period) => this.toBucket(period)));
   readonly heading = computed(() => HEADINGS[this.grouping().granularity]);
 
-  readonly maxBarTotal = computed(() => {
-    const maxVal = this.buckets().reduce((max, bucket) => Math.max(max, bucket.totalEarned), 0);
-    return Math.max(Y_SCALE_STEP, Math.ceil(maxVal / Y_SCALE_STEP) * Y_SCALE_STEP);
+  readonly scale = computed<BarChartScale>(() => {
+    const maxTotal = this.buckets().reduce((max, bucket) => Math.max(max, bucket.totalEarned), 0);
+    const max = Math.max(Y_SCALE_STEP, Math.ceil(maxTotal / Y_SCALE_STEP) * Y_SCALE_STEP);
+    const tickLabels = Array.from({ length: GRID_DIVISION_COUNT + 1 }, (_, i) =>
+      MONEY_FORMAT.format(Math.round((max / GRID_DIVISION_COUNT) * i)),
+    );
+    return { max, tickLabels };
   });
 
-  readonly gridLines = computed<ChartGridLine[]>(() => {
-    const max = this.maxBarTotal();
-    const lines: ChartGridLine[] = [];
-
-    for (let i = 0; i <= GRID_DIVISION_COUNT; i++) {
-      const value = Math.round((max / GRID_DIVISION_COUNT) * i);
-      const y = this.chartBaselineY - (this.chartHeight / GRID_DIVISION_COUNT) * i;
-      lines.push({ y, label: MONEY_FORMAT.format(value) });
-    }
-    return lines;
-  });
-
-  // The plot starts after the widest y-axis label, so a six-digit day total is never clipped.
-  readonly chartLeftX = computed(() => {
-    const longest = Math.max(...this.gridLines().map((line) => line.label.length));
-    return Math.ceil(longest * AXIS_CHAR_WIDTH) + Y_AXIS_LABEL_GAP;
-  });
-  readonly yAxisTextX = computed(() => this.chartLeftX() - Y_AXIS_LABEL_GAP);
-
-  readonly bars = computed<ChartBar[]>(() => {
+  readonly bars = computed<BarChartBar[]>(() => {
     const { granularity } = this.grouping();
-    const buckets = this.buckets();
-    const totalBars = buckets.length;
-    if (totalBars === 0) {
-      return [];
-    }
-
-    const axisLabels = buckets.map((bucket) => formatPeriodAxisLabel(bucket.startDate, granularity));
-    const longestLabel = Math.max(...axisLabels.map((label) => label.length));
-    const max = this.maxBarTotal();
-    const chartLeftX = this.chartLeftX();
-    const slotWidth = (this.chartRightX() - chartLeftX) / totalBars;
-    const barWidth = Math.max(slotWidth * 0.65, 4);
-    const gap = (slotWidth - barWidth) / 2;
-
-    // Thin the x-axis labels as the range grows: every bar, every 2nd, every 5th, then about 7 in all.
-    // A narrow chart thins them further, so neighbouring labels never overlap.
-    let labelInterval = 1;
-    if (totalBars > 31) {
-      labelInterval = Math.ceil(totalBars / 7);
-    } else if (totalBars > 16) {
-      labelInterval = 5;
-    } else if (totalBars > 10) {
-      labelInterval = 2;
-    }
-    const labelSpacing = longestLabel * AXIS_CHAR_WIDTH + X_LABEL_GAP;
-    labelInterval = Math.max(labelInterval, Math.ceil(labelSpacing / slotWidth));
-    const lastIndex = totalBars - 1;
-    // A label is centred under its bar, but never so close to an edge that part of it is cut off.
-    const labelHalfWidth = (longestLabel * AXIS_CHAR_WIDTH) / 2;
-    const maxLabelX = this.width() - labelHalfWidth;
-
-    return buckets.map((bucket, index) => {
-      const x = chartLeftX + index * slotWidth + gap;
-      const segments: ChartBarSegment[] = [];
-      let currentY = this.chartBaselineY;
-
-      for (const source of SOURCES) {
-        const amount = SOURCE_AMOUNT[source](bucket);
-        if (amount > 0) {
-          const height = (amount / max) * this.chartHeight;
-          currentY -= height;
-          segments.push({ source, amount, y: currentY, height });
-        }
-      }
+    return this.buckets().map((bucket) => {
+      const period = formatPeriodRange(bucket);
+      const breakdown = SOURCES.map((source) => ({
+        label: SOURCE_LABELS[source],
+        amount: SOURCE_AMOUNT[source](bucket),
+        swatch: SOURCE_TONES[source],
+      })).filter((row) => row.amount > 0);
 
       return {
-        period: formatPeriodRange(bucket),
-        axisLabel: axisLabels[index],
-        axisLabelX: Math.min(Math.max(x + barWidth / 2, labelHalfWidth), maxLabelX),
-        total: bucket.totalEarned,
-        x,
-        width: barWidth,
-        segments,
-        bucket,
-        shouldShowLabel:
-          index === 0 || index === lastIndex || (index % labelInterval === 0 && lastIndex - index >= labelInterval),
+        key: bucket.startDate,
+        axisLabel: formatPeriodAxisLabel(bucket.startDate, granularity),
+        ariaLabel: `${period}: ${MONEY_FORMAT.format(bucket.totalEarned)} ₴`,
+        segments: SOURCES.map((source) => ({ value: SOURCE_AMOUNT[source](bucket), tone: SOURCE_TONES[source] })),
+        tooltip: {
+          title: period,
+          rows: [{ label: 'Total', amount: bucket.totalEarned, emphasis: true }, ...breakdown],
+          note: breakdown.length === 0 ? 'No earnings recorded' : undefined,
+        },
       };
     });
   });
-
-  readonly hoveredPeriod = computed(() => {
-    const bucket = this.hoveredBucket();
-    return bucket ? formatPeriodRange(bucket) : '';
-  });
-
-  readonly tooltipBreakdown = computed(() => {
-    const bucket = this.hoveredBucket();
-    if (!bucket) {
-      return [];
-    }
-    return SOURCES.map((source) => ({
-      source,
-      label: SOURCE_LABELS[source],
-      amount: SOURCE_AMOUNT[source](bucket),
-    })).filter((row) => row.amount > 0);
-  });
-
-  // A tap also enters and focuses the bar on its way to the click. So hover opens the tooltip only for
-  // a mouse and focus only for the keyboard, and a tap or a click toggles it.
-  onBarPointerEnter(bucket: EarningsBucket, event: PointerEvent): void {
-    if (event.pointerType === 'mouse') {
-      this.showTooltip(bucket, event);
-    }
-  }
-
-  onBarPointerMove(event: PointerEvent): void {
-    if (event.pointerType === 'mouse' && this.hoveredBucket()) {
-      this.anchorTooltipAtPointer(event);
-    }
-  }
-
-  onBarPointerLeave(event: PointerEvent): void {
-    if (event.pointerType === 'mouse') {
-      this.hoveredBucket.set(null);
-    }
-  }
-
-  onBarClick(bucket: EarningsBucket, event: MouseEvent): void {
-    if (this.hoveredBucket()?.startDate === bucket.startDate) {
-      this.hoveredBucket.set(null);
-    } else {
-      this.showTooltip(bucket, event);
-    }
-  }
-
-  onBarFocus(bucket: EarningsBucket, event: FocusEvent): void {
-    const target = event.currentTarget;
-    if (target instanceof Element && target.matches(':focus-visible')) {
-      const rect = target.getBoundingClientRect();
-      this.hoveredBucket.set(bucket);
-      this.tooltipAnchor.set({ x: rect.left + rect.width / 2, y: rect.top });
-    }
-  }
-
-  onBarBlur(bucket: EarningsBucket): void {
-    if (this.hoveredBucket()?.startDate === bucket.startDate) {
-      this.hoveredBucket.set(null);
-    }
-  }
-
-  private showTooltip(bucket: EarningsBucket, event: MouseEvent): void {
-    this.hoveredBucket.set(bucket);
-    this.anchorTooltipAtPointer(event);
-  }
-
-  private anchorTooltipAtPointer(event: MouseEvent): void {
-    this.tooltipAnchor.set({ x: event.clientX, y: event.clientY });
-  }
 
   private toBucket({ startDate, endDate, items }: ChartPeriod<DailyEarningsRecord>): EarningsBucket {
     const sum = (amount: (record: DailyEarningsRecord) => number) =>

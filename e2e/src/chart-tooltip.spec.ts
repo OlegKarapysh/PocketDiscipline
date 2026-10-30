@@ -80,6 +80,7 @@ async function expectOnScreen(page: Page, element: Locator): Promise<void> {
 const CHARTS = [
   { name: 'earnings', path: '/dashboard', selector: 'app-earnings-chart' },
   { name: 'scores', path: '/daily-scores', selector: 'app-scores-chart' },
+  { name: 'pomodoro', path: '/pomodoro', selector: 'app-pomodoro-history-chart' },
 ];
 
 const BARS = [

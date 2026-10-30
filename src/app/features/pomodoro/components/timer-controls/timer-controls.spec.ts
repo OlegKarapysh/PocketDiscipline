@@ -13,6 +13,7 @@ describe('TimerControls', () => {
   let timerServiceMock: {
     isActive: ReturnType<typeof signal<boolean>>;
     isRestoring: ReturnType<typeof signal<boolean>>;
+    reward: ReturnType<typeof signal<number | undefined>>;
     startTimer: ReturnType<typeof vi.fn>;
     stopTimer: ReturnType<typeof vi.fn>;
   };
@@ -22,6 +23,7 @@ describe('TimerControls', () => {
     timerServiceMock = {
       isActive: signal(false),
       isRestoring: signal(false),
+      reward: signal<number | undefined>(100),
       startTimer: vi.fn().mockResolvedValue(undefined),
       stopTimer: vi.fn().mockResolvedValue(undefined),
     };
@@ -43,11 +45,43 @@ describe('TimerControls', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const startBtn = fixture.debugElement.query(By.css('button[aria-label="Start Timer"]'));
+    const startBtn = fixture.debugElement.query(By.css('button.start'));
     expect(startBtn).toBeTruthy();
 
     (startBtn.nativeElement as HTMLButtonElement).click();
     expect(timerServiceMock.startTimer).toHaveBeenCalled();
+  });
+
+  it('should show on Start the reward the configured session pays, and follow it as it changes', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const startBtn = fixture.debugElement.query(By.css('button.start')).nativeElement as HTMLButtonElement;
+    expect(startBtn.textContent).toMatch(/Start\s+\+100\s*₴/);
+
+    timerServiceMock.reward.set(250);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(startBtn.textContent).toMatch(/Start\s+\+250\s*₴/);
+  });
+
+  it('should leave the reward off Start until the rates have loaded', async () => {
+    timerServiceMock.reward.set(undefined);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const startBtn = fixture.debugElement.query(By.css('button.start')).nativeElement as HTMLButtonElement;
+    expect(startBtn.textContent).not.toContain('₴');
+  });
+
+  it('should put Stop in the place of Start while a session runs', async () => {
+    timerServiceMock.isActive.set(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.debugElement.query(By.css('button.start'))).toBeNull();
+    expect(fixture.debugElement.queryAll(By.css('button')).length).toBe(1);
   });
 
   it('should disable Start while the running session is being restored', async () => {
@@ -55,8 +89,7 @@ describe('TimerControls', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const startBtn = fixture.debugElement.query(By.css('button[aria-label="Start Timer"]'))
-      .nativeElement as HTMLButtonElement;
+    const startBtn = fixture.debugElement.query(By.css('button.start')).nativeElement as HTMLButtonElement;
     expect(startBtn.disabled).toBe(true);
 
     timerServiceMock.isRestoring.set(false);
@@ -75,7 +108,7 @@ describe('TimerControls', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const startBtn = fixture.debugElement.query(By.css('button[aria-label="Start Timer"]'));
+    const startBtn = fixture.debugElement.query(By.css('button.start'));
     (startBtn.nativeElement as HTMLButtonElement).click();
     await fixture.whenStable();
 
@@ -90,7 +123,7 @@ describe('TimerControls', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const stopBtn = fixture.debugElement.query(By.css('button[aria-label="Stop Timer"]'));
+    const stopBtn = fixture.debugElement.query(By.css('button.stop'));
     (stopBtn.nativeElement as HTMLButtonElement).click();
     await fixture.whenStable();
 
@@ -103,7 +136,7 @@ describe('TimerControls', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const stopBtn = fixture.debugElement.query(By.css('button[aria-label="Stop Timer"]'));
+    const stopBtn = fixture.debugElement.query(By.css('button.stop'));
     expect(stopBtn).toBeTruthy();
 
     (stopBtn.nativeElement as HTMLButtonElement).click();
@@ -119,7 +152,7 @@ describe('TimerControls', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const stopBtn = fixture.debugElement.query(By.css('button[aria-label="Stop Timer"]'));
+    const stopBtn = fixture.debugElement.query(By.css('button.stop'));
     (stopBtn.nativeElement as HTMLButtonElement).click();
     await fixture.whenStable();
 

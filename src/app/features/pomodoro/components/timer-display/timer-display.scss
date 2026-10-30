@@ -1,8 +1,8 @@
 @use '../../../../../styles/tokens' as t;
 
-.timer-display {
+:host {
+  display: block;
   text-align: center;
-  padding: t.space(8) t.space(4);
 }
 
 .time {
@@ -10,15 +10,4 @@
   font-size: t.numeric-size(display);
   font-weight: 700;
   line-height: 1;
-}
-
-.status {
-  margin-top: t.space(4);
-  font: var(--mat-sys-title-medium);
-  color: var(--mat-sys-on-surface-variant);
-
-  &.active {
-    color: var(--mat-sys-primary);
-    font-weight: 700;
-  }
 }

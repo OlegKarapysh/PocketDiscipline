@@ -1,0 +1,155 @@
+@use '../../../../styles/tokens' as t;
+
+// Amber (reward) is for earned amounts only; the other tones are the primary family.
+@each $tone,
+  $color
+    in (
+      primary: var(--mat-sys-primary),
+      secondary: var(--mat-sys-secondary),
+      inverse-primary: var(--mat-sys-inverse-primary),
+      reward: var(--pd-sys-reward)
+    )
+{
+  .bar-segment[data-tone='#{$tone}'] {
+    fill: $color;
+  }
+
+  .swatch[data-tone='#{$tone}'] {
+    background-color: $color;
+  }
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(3);
+}
+
+.legend-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.space(2) t.space(4);
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: t.space(2);
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: t.radius(pill);
+}
+
+.svg-container {
+  width: 100%;
+}
+
+.chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 220px;
+  max-height: 300px;
+}
+
+.grid-line {
+  stroke: var(--mat-sys-outline-variant);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.baseline {
+  stroke: var(--mat-sys-outline-variant);
+  stroke-width: 1.5;
+}
+
+.axis-label {
+  font-size: var(--mat-sys-label-small-size);
+  fill: var(--mat-sys-on-surface-variant);
+}
+
+.chart-bar-group {
+  cursor: pointer;
+  outline: none;
+
+  &:hover,
+  &:focus-visible {
+    .bar-hitbox {
+      fill: var(--mat-sys-surface-container);
+    }
+  }
+}
+
+.bar-hitbox {
+  fill: transparent;
+  transition: fill 0.15s ease-in-out;
+}
+
+.bar-segment {
+  rx: 2;
+  ry: 2;
+  transition: opacity 0.15s ease-in-out;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.zero-bar {
+  fill: var(--mat-sys-outline-variant);
+}
+
+.chart-tooltip {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: t.space(1);
+  width: max-content;
+  min-width: 160px;
+  max-width: 240px;
+  padding: t.space(2) t.space(3);
+  border-radius: t.radius(md);
+  background-color: var(--mat-sys-inverse-surface);
+  color: var(--mat-sys-inverse-on-surface);
+  font: var(--mat-sys-body-small);
+  box-shadow: var(--pd-sys-elevation-2);
+}
+
+.tooltip-title {
+  padding-bottom: t.space(1);
+  border-bottom: 1px solid var(--mat-sys-outline);
+  font-weight: 600;
+}
+
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: t.space(2);
+
+  &.emphasis {
+    font-weight: 600;
+  }
+
+  .row-value,
+  app-amount {
+    margin-left: auto;
+  }
+}
+
+.row-text {
+  font-weight: 600;
+}
+
+.tooltip-note {
+  font-style: italic;
+  opacity: 0.8;
+}

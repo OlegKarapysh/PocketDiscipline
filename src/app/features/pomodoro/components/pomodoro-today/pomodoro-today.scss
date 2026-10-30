@@ -1,0 +1,17 @@
+@use '../../../../../styles/tokens' as t;
+
+:host {
+  display: block;
+}
+
+.today {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(3);
+}
+
+.invitation {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}

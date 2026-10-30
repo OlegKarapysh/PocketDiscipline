@@ -41,7 +41,7 @@ export function datesInRange(startDate: string, endDate: string): string[] {
 
 // Groups one item per consecutive day, oldest first, into the finest calendar unit that keeps the
 // chart within MAX_BARS bars. A period the range only partly covers starts or ends where the range does.
-export function groupByCalendarPeriod<T>(items: T[], dateOf: (item: T) => string): ChartPeriodGrouping<T> {
+export function groupByCalendarPeriod<T>(items: readonly T[], dateOf: (item: T) => string): ChartPeriodGrouping<T> {
   for (const granularity of ['day', 'week', 'month'] as const) {
     const periods = groupBy(items, dateOf, PERIOD_START[granularity]);
     if (periods.length <= MAX_BARS) {
@@ -70,7 +70,11 @@ export function formatPeriodAxisLabel(startDate: string, granularity: ChartGranu
   return `${month}/${day}`;
 }
 
-function groupBy<T>(items: T[], dateOf: (item: T) => string, periodStart: (date: string) => string): ChartPeriod<T>[] {
+function groupBy<T>(
+  items: readonly T[],
+  dateOf: (item: T) => string,
+  periodStart: (date: string) => string,
+): ChartPeriod<T>[] {
   const periods: ChartPeriod<T>[] = [];
   let currentStart = '';
 
