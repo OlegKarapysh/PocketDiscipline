@@ -1,18 +1,23 @@
 @use '@angular/material' as mat;
 @use '../../../../../styles/tokens' as t;
 
-.controls {
-  display: flex;
-  justify-content: center;
-  gap: t.space(4);
-  padding: t.space(4);
+:host {
+  display: block;
+}
+
+button {
+  width: 100%;
+}
+
+.reward {
+  margin-left: t.space(2);
 }
 
 .stop {
-  @include mat.fab-overrides(
+  @include mat.button-overrides(
     (
-      container-color: var(--mat-sys-error),
-      foreground-color: var(--mat-sys-on-error),
+      filled-container-color: var(--mat-sys-error),
+      filled-label-text-color: var(--mat-sys-on-error),
     )
   );
 }

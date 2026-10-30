@@ -1,14 +1,8 @@
 :host {
   display: block;
-  width: 100%;
 }
 
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 80vh;
-  width: 100%;
-  box-sizing: border-box;
+// Capped so that from 1280px the statistics of spec 013 fit beside the card.
+.timer-card {
+  max-width: 560px;
 }

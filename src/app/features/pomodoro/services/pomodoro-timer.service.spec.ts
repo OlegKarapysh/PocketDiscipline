@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { of } from 'rxjs';
+import { BehaviorSubject, Subject, of } from 'rxjs';
 import type { TimerConfig } from './pomodoro-timer.service';
 import { PomodoroTimerService } from './pomodoro-timer.service';
 import { PomodoroStorageService } from './pomodoro-storage.service';
@@ -8,6 +8,7 @@ import { PomodoroRewardRateService } from './pomodoro-reward-rate.service';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
+import type { PomodoroRewardRates } from '../models/pomodoro-reward-rates.type';
 import { CelebrationService } from '../../../shared/services/celebration.service';
 import { SnackBarService } from '../../../shared/services/snack-bar.service';
 
@@ -20,7 +21,7 @@ describe('PomodoroTimerService', () => {
     getAllSessions: ReturnType<typeof vi.fn>;
   };
   let celebrationMock: { show: ReturnType<typeof vi.fn> };
-  let rewardRatesMock: { getRates: ReturnType<typeof vi.fn> };
+  let rewardRatesMock: { getRates: ReturnType<typeof vi.fn>; rates$: Subject<PomodoroRewardRates> };
   let snackBarMock: { show: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
 
   const createService = (sessions: PomodoroSession[] | Promise<PomodoroSession[]> = []) => {
@@ -56,6 +57,7 @@ describe('PomodoroTimerService', () => {
 
     rewardRatesMock = {
       getRates: vi.fn().mockResolvedValue({ [EngagementType.WORK]: 100, [EngagementType.STUDY]: 125 }),
+      rates$: new BehaviorSubject<PomodoroRewardRates>({ [EngagementType.WORK]: 100, [EngagementType.STUDY]: 125 }),
     };
 
     snackBarMock = {
@@ -351,6 +353,44 @@ describe('PomodoroTimerService', () => {
 
       // Math.trunc(125 * 3.0) = 375
       expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 375);
+    });
+  });
+
+  describe('Reward of the configured session', () => {
+    it('should follow the duration and engagement type before Start', () => {
+      expect(service.reward()).toBe(100);
+
+      service.setConfig({ durationMinutes: 50, engagementType: EngagementType.WORK });
+      expect(service.reward()).toBe(200);
+
+      service.setConfig({ durationMinutes: 50, engagementType: EngagementType.STUDY });
+      expect(service.reward()).toBe(250);
+    });
+
+    it('should follow a rate changed in Settings', () => {
+      rewardRatesMock.rates$.next({ [EngagementType.WORK]: 40, [EngagementType.STUDY]: 125 });
+
+      expect(service.reward()).toBe(40);
+    });
+
+    it('should stay undefined until the rates have loaded', () => {
+      rewardRatesMock.rates$ = new Subject<PomodoroRewardRates>();
+      service = createService([]);
+
+      expect(service.reward()).toBeUndefined();
+
+      rewardRatesMock.rates$.next({ [EngagementType.WORK]: 100, [EngagementType.STUDY]: 125 });
+      expect(service.reward()).toBe(100);
+    });
+
+    it('should match what the session pays when it completes', async () => {
+      service.setConfig({ durationMinutes: 15, engagementType: EngagementType.STUDY });
+      const shown = service.reward();
+
+      await service.startTimer();
+      await vi.advanceTimersByTimeAsync(15 * 60 * 1000);
+
+      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', shown);
     });
   });
 

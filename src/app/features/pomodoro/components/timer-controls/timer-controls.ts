@@ -5,10 +5,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { EMPTY, catchError, from, switchMap } from 'rxjs';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
 import { ConfirmService } from '../../../../shared/services/confirm.service';
+import { Amount } from '../../../../shared/components/amount/amount';
+import { Badge } from '../../../../shared/components/badge/badge';
 
 @Component({
   selector: 'app-timer-controls',
-  imports: [MatButtonModule, MatIconModule],
+  imports: [Amount, Badge, MatButtonModule, MatIconModule],
   templateUrl: './timer-controls.html',
   styleUrl: './timer-controls.scss',
 })
@@ -19,6 +21,7 @@ export class TimerControls {
 
   isActive = this.timerService.isActive;
   isRestoring = this.timerService.isRestoring;
+  reward = this.timerService.reward;
 
   async start(): Promise<void> {
     try {

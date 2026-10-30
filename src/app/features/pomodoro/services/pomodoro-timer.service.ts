@@ -1,5 +1,7 @@
 import type { OnDestroy } from '@angular/core';
-import { Service, signal, inject, DestroyRef } from '@angular/core';
+import { Service, computed, signal, inject, DestroyRef } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, from, of } from 'rxjs';
 import { PomodoroStorageService } from './pomodoro-storage.service';
 import { DEFAULT_RATES, PomodoroRewardRateService } from './pomodoro-reward-rate.service';
 import type { PomodoroRewardRates } from '../models/pomodoro-reward-rates.type';
@@ -48,6 +50,22 @@ export class PomodoroTimerService implements OnDestroy {
   private notifications = inject(BrowserNotificationService);
   private snackBar = inject(SnackBarService);
   private destroyRef = inject(DestroyRef);
+
+  private readonly rates = toSignal(
+    from(this.rewardRates.rates$).pipe(
+      catchError((err: unknown) => {
+        console.error('Failed to watch pomodoro reward rates:', err);
+        return of(DEFAULT_RATES);
+      }),
+    ),
+    { initialValue: undefined },
+  );
+
+  // What the configured (or running) session pays at the current rates; undefined until the rates load.
+  readonly reward = computed(() => {
+    const rates = this.rates();
+    return rates === undefined ? undefined : this.rewardAt(rates, this.durationMinutes(), this.engagementType());
+  });
 
   constructor() {
     void this.restoreActiveSession();
@@ -219,7 +237,10 @@ export class PomodoroTimerService implements OnDestroy {
   }
 
   private async calculateReward(duration: number, type: EngagementType): Promise<number> {
-    const rates: Partial<PomodoroRewardRates> = await this.rewardRates.getRates();
+    return this.rewardAt(await this.rewardRates.getRates(), duration, type);
+  }
+
+  private rewardAt(rates: Partial<PomodoroRewardRates>, duration: number, type: EngagementType): number {
     const multiplier = REWARD_TIERS.find((tier) => duration >= tier.minMinutes)?.multiplier ?? 0;
     const base = rates[type] ?? DEFAULT_RATES[type];
     const reward = Math.trunc(base * multiplier);

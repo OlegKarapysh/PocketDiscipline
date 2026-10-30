@@ -7,6 +7,7 @@ import { PomodoroContainer } from './pomodoro-container';
 import { TimerDisplay } from '../components/timer-display/timer-display';
 import { TimerControls } from '../components/timer-controls/timer-controls';
 import { SessionConfig } from '../components/session-config/session-config';
+import { SectionCard } from '../../../shared/components/section-card/section-card';
 import { PomodoroTimerService } from '../services/pomodoro-timer.service';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 
@@ -18,6 +19,7 @@ describe('PomodoroContainer', () => {
     durationMinutes: ReturnType<typeof signal<number>>;
     engagementType: ReturnType<typeof signal<string>>;
     timeRemaining: ReturnType<typeof signal<number>>;
+    reward: ReturnType<typeof signal<number | undefined>>;
     startTimer: ReturnType<typeof vi.fn>;
     stopTimer: ReturnType<typeof vi.fn>;
     setConfig: ReturnType<typeof vi.fn>;
@@ -30,6 +32,7 @@ describe('PomodoroContainer', () => {
       durationMinutes: signal(25),
       engagementType: signal(EngagementType.WORK),
       timeRemaining: signal(1500),
+      reward: signal<number | undefined>(100),
       startTimer: vi.fn(),
       stopTimer: vi.fn(),
       setConfig: vi.fn(),
@@ -43,17 +46,19 @@ describe('PomodoroContainer', () => {
     fixture = TestBed.createComponent(PomodoroContainer);
   });
 
-  it('should render child components: TimerDisplay, TimerControls, and SessionConfig', async () => {
+  it('should group the timer, its settings and the start button in one card right below the page header', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const display = fixture.debugElement.query(By.directive(TimerDisplay));
-    const controls = fixture.debugElement.query(By.directive(TimerControls));
-    const config = fixture.debugElement.query(By.directive(SessionConfig));
+    const cards = fixture.debugElement.queryAll(By.directive(SectionCard));
+    expect(cards.length).toBe(1);
+    const card = cards[0];
+    expect(card.query(By.directive(TimerDisplay))).toBeTruthy();
+    expect(card.query(By.directive(SessionConfig))).toBeTruthy();
+    expect(card.query(By.directive(TimerControls))).toBeTruthy();
 
-    expect(display).toBeTruthy();
-    expect(controls).toBeTruthy();
-    expect(config).toBeTruthy();
+    const header = fixture.debugElement.query(By.css('app-page-header')).nativeElement as HTMLElement;
+    expect(header.nextElementSibling).toBe(card.nativeElement);
   });
 
   it('should render a single page header titled Pomodoro', async () => {

@@ -3,7 +3,7 @@
   @if (rates()) {
     <div class="fields">
       <mat-form-field appearance="outline">
-        <mat-label>Work</mat-label>
+        <mat-label>{{ labels.work }}</mat-label>
         <input matInput type="number" class="pd-num" step="1" [formField]="ratesForm.work" />
         <span matTextSuffix>₴</span>
         @for (error of ratesForm.work().errors(); track error.kind) {
@@ -11,7 +11,7 @@
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>Study</mat-label>
+        <mat-label>{{ labels.study }}</mat-label>
         <input matInput type="number" class="pd-num" step="1" [formField]="ratesForm.study" />
         <span matTextSuffix>₴</span>
         @for (error of ratesForm.study().errors(); track error.kind) {
