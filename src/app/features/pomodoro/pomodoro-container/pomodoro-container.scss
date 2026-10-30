@@ -1,8 +1,22 @@
+@use '../../../../styles/tokens' as t;
+
 :host {
   display: block;
 }
 
-// Capped so that from 1280px the statistics of spec 013 fit beside the card.
-.timer-card {
-  max-width: 560px;
+// Two columns, timer and Today, then History, side by side wherever both fit; on a phone they stack in
+// that order. Each column wraps on its own width, not the viewport's.
+.columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: t.space(4);
+}
+
+.column {
+  flex: 1 1 min(100%, 360px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: t.space(4);
 }

@@ -1,0 +1,32 @@
+@use '../../../../../styles/tokens' as t;
+
+:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.space(3) t.space(5);
+}
+
+.figure {
+  margin: 0;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.count {
+  font-size: t.numeric-size(md);
+  font-weight: 700;
+  color: var(--mat-sys-primary);
+}
+
+.focus {
+  font-size: var(--mat-sys-title-medium-size);
+  font-weight: 600;
+  color: var(--mat-sys-on-surface);
+}
+
+.split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.space(2);
+}

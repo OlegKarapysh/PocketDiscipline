@@ -1,6 +1,11 @@
 <app-page-header title="Pomodoro" />
-<app-section-card class="timer-card">
-  <app-timer-display />
-  <app-session-config />
-  <app-timer-controls />
-</app-section-card>
+<div class="columns">
+  <div class="column">
+    <app-section-card>
+      <app-timer-display />
+      <app-session-config />
+      <app-timer-controls />
+    </app-section-card>
+    <app-pomodoro-today [tally]="todaySummary().total" />
+  </div>
+</div>

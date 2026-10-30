@@ -3,13 +3,33 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { signal } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import { PomodoroContainer } from './pomodoro-container';
 import { TimerDisplay } from '../components/timer-display/timer-display';
 import { TimerControls } from '../components/timer-controls/timer-controls';
 import { SessionConfig } from '../components/session-config/session-config';
 import { SectionCard } from '../../../shared/components/section-card/section-card';
 import { PomodoroTimerService } from '../services/pomodoro-timer.service';
+import { PomodoroStatsService } from '../services/pomodoro-stats.service';
+import { ClockService } from '../../../core/services/clock.service';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
+import type { PomodoroPeriodSummary } from '../models/pomodoro-period-summary.model';
+import type { PomodoroTally } from '../models/pomodoro-tally.model';
+
+const tally = (pomodoros: number, overrides: Partial<PomodoroTally> = {}): PomodoroTally => ({
+  pomodoros,
+  byType: { [EngagementType.WORK]: pomodoros, [EngagementType.STUDY]: 0 },
+  focusMinutes: pomodoros * 25,
+  rewardEarned: pomodoros * 25,
+  ...overrides,
+});
+
+const summary = (startDate: string, endDate: string, total: PomodoroTally): PomodoroPeriodSummary => ({
+  startDate,
+  endDate,
+  days: [],
+  total,
+});
 
 describe('PomodoroContainer', () => {
   let fixture: ComponentFixture<PomodoroContainer>;
@@ -24,6 +44,28 @@ describe('PomodoroContainer', () => {
     stopTimer: ReturnType<typeof vi.fn>;
     setConfig: ReturnType<typeof vi.fn>;
   };
+  const today = signal('2026-10-30');
+  // One live stream per requested range, so a spec can push a new reading into it.
+  let streams: Map<string, BehaviorSubject<PomodoroPeriodSummary>>;
+  let statsMock: { getPeriodSummary: ReturnType<typeof vi.fn> };
+
+  const stream = (startDate: string, endDate = startDate) => {
+    const key = `${startDate}..${endDate}`;
+    let subject = streams.get(key);
+    if (!subject) {
+      subject = new BehaviorSubject(summary(startDate, endDate, tally(0)));
+      streams.set(key, subject);
+    }
+    return subject;
+  };
+
+  const host = () => fixture.nativeElement as HTMLElement;
+  const todayText = () => host().querySelector('app-pomodoro-today')?.textContent.replace(/\s+/g, ' ').trim() ?? '';
+  const settle = async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
 
   beforeEach(async () => {
     timerServiceMock = {
@@ -37,36 +79,91 @@ describe('PomodoroContainer', () => {
       stopTimer: vi.fn(),
       setConfig: vi.fn(),
     };
+    today.set('2026-10-30');
+    streams = new Map();
+    statsMock = {
+      getPeriodSummary: vi.fn((startDate: string, endDate: string) => stream(startDate, endDate)),
+    };
 
     await TestBed.configureTestingModule({
       imports: [PomodoroContainer],
-      providers: [{ provide: PomodoroTimerService, useValue: timerServiceMock }],
+      providers: [
+        { provide: PomodoroTimerService, useValue: timerServiceMock },
+        { provide: PomodoroStatsService, useValue: statsMock },
+        { provide: ClockService, useValue: { today } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PomodoroContainer);
   });
 
-  it('should group the timer, its settings and the start button in one card right below the page header', async () => {
-    fixture.detectChanges();
-    await fixture.whenStable();
+  it('should group the timer, its settings and the start button in the first card below the page header', async () => {
+    await settle();
 
     const cards = fixture.debugElement.queryAll(By.directive(SectionCard));
-    expect(cards.length).toBe(1);
     const card = cards[0];
     expect(card.query(By.directive(TimerDisplay))).toBeTruthy();
     expect(card.query(By.directive(SessionConfig))).toBeTruthy();
     expect(card.query(By.directive(TimerControls))).toBeTruthy();
+    expect(cards.slice(1).flatMap((other) => other.queryAll(By.directive(TimerDisplay)))).toEqual([]);
 
+    // Only layout wrappers stand between the header and the card.
     const header = fixture.debugElement.query(By.css('app-page-header')).nativeElement as HTMLElement;
-    expect(header.nextElementSibling).toBe(card.nativeElement);
+    const cardElement = card.nativeElement as HTMLElement;
+    expect(header.nextElementSibling?.contains(cardElement)).toBe(true);
+    expect(cardElement.previousElementSibling).toBeNull();
   });
 
   it('should render a single page header titled Pomodoro', async () => {
-    fixture.detectChanges();
-    await fixture.whenStable();
+    await settle();
 
     const headers = fixture.debugElement.queryAll(By.css('app-page-header'));
     expect(headers.length).toBe(1);
     expect((headers[0].nativeElement as HTMLElement).textContent).toContain('Pomodoro');
+  });
+
+  describe('Today card', () => {
+    it("should show today's tally from the stats service, right below the timer card", async () => {
+      stream('2026-10-30').next(summary('2026-10-30', '2026-10-30', tally(3)));
+      await settle();
+
+      expect(statsMock.getPeriodSummary).toHaveBeenCalledWith('2026-10-30', '2026-10-30');
+      expect(todayText()).toContain('3 pomodoros');
+      const timerCard = fixture.debugElement.queryAll(By.directive(SectionCard))[0].nativeElement as HTMLElement;
+      expect(timerCard.nextElementSibling?.tagName).toBe('APP-POMODORO-TODAY');
+    });
+
+    it('should count a session that completes while the page is open', async () => {
+      await settle();
+      expect(todayText()).toContain('0 pomodoros');
+
+      stream('2026-10-30').next(summary('2026-10-30', '2026-10-30', tally(1)));
+      await settle();
+
+      expect(todayText()).toContain('1 pomodoro');
+    });
+
+    it('should switch to the new day when the date changes', async () => {
+      stream('2026-10-30').next(summary('2026-10-30', '2026-10-30', tally(5)));
+      await settle();
+      expect(todayText()).toContain('5 pomodoros');
+
+      today.set('2026-10-31');
+      await settle();
+
+      expect(statsMock.getPeriodSummary).toHaveBeenCalledWith('2026-10-31', '2026-10-31');
+      expect(todayText()).toContain('0 pomodoros');
+      // The previous day's stream no longer reaches the card.
+      stream('2026-10-30').next(summary('2026-10-30', '2026-10-30', tally(6)));
+      await settle();
+      expect(todayText()).toContain('0 pomodoros');
+    });
+
+    it('should stay visible while a session runs', async () => {
+      timerServiceMock.isActive.set(true);
+      await settle();
+
+      expect(host().querySelector('app-pomodoro-today')).not.toBeNull();
+    });
   });
 });
