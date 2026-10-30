@@ -311,7 +311,31 @@ const SCREENS: Screen[] = [
       await expect(page.locator('app-confirm-dialog')).toBeVisible();
     },
   },
-  { name: 'pomodoro', path: '/pomodoro', ready: 'app-session-config' },
+  // The reward badge on Start appears once the seeded rates have loaded.
+  { name: 'pomodoro', path: '/pomodoro', ready: 'app-timer-controls app-badge' },
+  {
+    // 120 minutes pays three times the rate: the widest reward Start shows.
+    name: 'pomodoro: longest session',
+    path: '/pomodoro',
+    ready: 'app-timer-controls app-badge',
+    open: async (page) => {
+      const increase = page.getByRole('button', { name: 'Increase duration' });
+      for (let minutes = 25; minutes < 120; minutes += 5) {
+        await increase.click();
+      }
+      await expect(increase).toBeDisabled();
+    },
+  },
+  {
+    // Last of the pomodoro screens: the session it starts stays running.
+    name: 'pomodoro: running',
+    path: '/pomodoro',
+    ready: 'app-timer-controls app-badge',
+    open: async (page) => {
+      await page.getByRole('button', { name: /^Start/ }).click();
+      await expect(page.getByRole('button', { name: 'Stop' })).toBeVisible();
+    },
+  },
   { name: 'daily scores', path: '/daily-scores', ready: '.score-btn' },
   {
     name: 'daily scores: custom range',
