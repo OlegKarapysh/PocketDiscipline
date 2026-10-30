@@ -74,6 +74,10 @@
     <mat-progress-bar mode="determinate" [value]="60" />
   </app-section-card>
 
+  <app-section-card heading="Bar chart">
+    <app-bar-chart [bars]="chartBars" [scale]="chartScale" [legend]="chartLegend" ariaLabel="Daily focus chart" />
+  </app-section-card>
+
   <div class="stats">
     <app-stat-card label="Daily average" hint="Based on 29 elapsed days">
       <app-amount [value]="166" />

@@ -1,0 +1,111 @@
+@if (legend().length > 0) {
+  <div class="legend-container">
+    @for (item of legend(); track item.label) {
+      <div class="legend-item">
+        <span class="swatch" [attr.data-tone]="item.tone"></span>
+        <span>{{ item.label }}</span>
+      </div>
+    }
+  </div>
+}
+
+<div class="svg-container" (appObserveWidth)="width.set($event)">
+  <svg
+    [attr.viewBox]="viewBox()"
+    class="chart-svg"
+    preserveAspectRatio="xMidYMid meet"
+    role="region"
+    [attr.aria-label]="ariaLabel()"
+  >
+    @for (line of gridLines(); track line.y) {
+      <line
+        [attr.x1]="chartLeftX()"
+        [attr.y1]="line.y"
+        [attr.x2]="chartRightX()"
+        [attr.y2]="line.y"
+        class="grid-line"
+      />
+      <text [attr.x]="yAxisTextX()" [attr.y]="line.y + axisLabelYOffset" class="axis-label pd-num" text-anchor="end">
+        {{ line.label }}
+      </text>
+    }
+
+    <line
+      [attr.x1]="chartLeftX()"
+      [attr.y1]="chartBaselineY"
+      [attr.x2]="chartRightX()"
+      [attr.y2]="chartBaselineY"
+      class="baseline"
+    />
+
+    @for (bar of plottedBars(); track bar.key) {
+      <g
+        class="chart-bar-group"
+        (pointerenter)="onBarPointerEnter(bar.key, $event)"
+        (pointermove)="onBarPointerMove($event)"
+        (pointerleave)="onBarPointerLeave($event)"
+        (click)="onBarClick(bar.key, $event)"
+        (focus)="onBarFocus(bar.key, $event)"
+        (blur)="onBarBlur(bar.key)"
+        tabindex="0"
+        [attr.aria-label]="bar.ariaLabel"
+      >
+        <!-- Invisible hit target for smooth hover/touch -->
+        <rect
+          [attr.x]="bar.x"
+          [attr.y]="chartTopY"
+          [attr.width]="bar.width"
+          [attr.height]="chartHeight"
+          class="bar-hitbox"
+        />
+
+        @for (segment of bar.segments; track $index) {
+          <rect
+            [attr.x]="bar.x"
+            [attr.y]="segment.y"
+            [attr.width]="bar.width"
+            [attr.height]="segment.height"
+            [attr.data-tone]="segment.tone"
+            class="bar-segment"
+          />
+        } @empty {
+          <rect
+            [attr.x]="bar.x"
+            [attr.y]="zeroBarY"
+            [attr.width]="bar.width"
+            [attr.height]="zeroBarHeight"
+            class="zero-bar"
+          />
+        }
+
+        @if (bar.showLabel) {
+          <text [attr.x]="bar.axisLabelX" [attr.y]="axisLabelYPos" class="axis-label pd-num" text-anchor="middle">
+            {{ bar.axisLabel }}
+          </text>
+        }
+      </g>
+    }
+  </svg>
+</div>
+
+@if (tooltip(); as tip) {
+  <div class="chart-tooltip" [appFloatAt]="tooltipAnchor()">
+    <div class="tooltip-title pd-num">{{ tip.title }}</div>
+    @for (row of tip.rows; track row.label) {
+      <div class="tooltip-row" [class.emphasis]="row.emphasis">
+        @if (row.swatch) {
+          <span class="swatch" [attr.data-tone]="row.swatch"></span>
+        }
+        <span class="row-label">{{ row.label }}</span>
+        @if (row.amount !== undefined) {
+          <app-amount [value]="row.amount" size="sm" tone="inherit" [showSign]="row.signedAmount ?? false" />
+        } @else {
+          <span class="row-value row-text pd-num">{{ row.text }}</span>
+        }
+      </div>
+    }
+    @if (tip.note) {
+      <div class="tooltip-note">{{ tip.note }}</div>
+    }
+  </div>
+}

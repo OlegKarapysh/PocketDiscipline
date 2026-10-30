@@ -90,7 +90,7 @@ To refresh or add a font, request its css2 URL from Google Fonts with a current 
 | Toast              | `MatSnackBar` via `SnackBarService`                                                                                  |
 | Switch             | `mat-slide-toggle`                                                                                                   |
 | Icons              | `mat-icon` with Material Symbols Rounded (registered in `app.config.ts`); add `.pd-icon-filled` for active/filled    |
-| Charts             | existing SVG components; bars `--mat-sys-primary` + `--pd-sys-reward`, axes `.pd-num` in `on-surface-variant`        |
+| Charts             | `app-bar-chart`; tones `primary`, `secondary`, `inverse-primary` and `reward` (earned only), axes `.pd-num`          |
 
 An SVG chart draws at its container's measured width, one user unit per pixel, via `(appObserveWidth)` (`shared/directives/observe-width.ts`). A fixed `viewBox` shrinks axis text to about 5px on a phone.
 
@@ -126,6 +126,7 @@ Use these before reaching for raw Material in a feature. A live gallery is at `/
 | StreakBadge           | `app-streak-badge`                  | `days`, `compact`                                                       | Streaks; shows "Start a streak today" at 0        |
 | SegmentedControl      | `app-segmented-control`             | `options`, `[(value)]`, `ariaLabel`, `fullWidth`                        | Period and view filters (2–4 options)             |
 | PeriodFilter          | `app-period-filter`                 | `filter`, `ariaLabel?`, `(filterChange)`                                | 7/14/30-day presets with custom date range picker |
+| BarChart              | `app-bar-chart`                     | `bars`, `scale`, `ariaLabel`, `legend?`                                 | Bar charts; the consumer aggregates and frames it |
 | ProgressRing          | `app-progress-ring`                 | `value` 0–100, `diameter`, `strokeWidth`; project the label             | Daily habit completion, focus progress            |
 | EmptyState            | `app-empty-state`                   | `heading`, `message?`, `actionLabel?`, `actionIcon`, `(action)`         | Empty lists, with the mascot                      |
 | CelebrationDialog     | via `CelebrationService.show(data)` | `title`, `subtitle?`, `amount?`, `canUndo?` → `'dismissed' \| 'undo'`   | Goal completed, streak milestones                 |
