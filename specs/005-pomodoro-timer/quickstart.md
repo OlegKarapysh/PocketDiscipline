@@ -13,7 +13,7 @@
 3. Start the timer.
 4. _For testing purposes, manually adjust the timer service's remaining time to 1 second via browser console or temporary debug button._
 5. Wait for the timer to hit zero.
-6. Verify that a pop-up dialog appears announcing completion and the reward earned (25 points).
+6. Verify that a pop-up dialog appears announcing completion and the reward earned (+100 ₴ at the default work rate).
 7. Dismiss the dialog and check the user balance to confirm the reward was added.
 
 ## Scenario 2: Cancel a session
@@ -21,7 +21,7 @@
 1. Start a new timer with duration 15 mins.
 2. Click the "Cancel" or "Stop" button.
 3. Verify the timer resets to the default configuration state.
-4. Check the user balance and verify no points were added.
+4. Check the user balance and verify nothing was added.
 
 ## Scenario 3: Background Notification
 

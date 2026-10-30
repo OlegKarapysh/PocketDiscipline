@@ -16,6 +16,13 @@
 - Q: Background Behavior → A: Use OS local notifications to alert the user when the timer fires if the app is backgrounded/closed, calculating elapsed time upon reopen
 - Q: Timer Limits → A: Minimum 15 minutes, Maximum 120 minutes, Step 5 minutes
 
+### Session 2026-10-30
+
+- Q: Page layout → A: The timer fills a phone screen on its own, so the page is made compact (User Story 3) to leave room for the statistics of spec 013-pomodoro-stats below it
+- Q: Duration control → A: Decrease and increase buttons in 5-minute steps instead of a typed number; the 15–120 minute range of FR-002 is unchanged
+- Q: Engagement type control → A: Both types visible side by side and chosen with one tap, instead of a dropdown
+- Q: Base rewards → A: FR-005 names the default rates the app ships with, 100 ₴ for work and 125 ₴ for study, which Settings can change; the 25 and 20 points it stated before predate those rates
+
 ## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Start and Complete a Pomodoro (Priority: P1)
@@ -48,11 +55,32 @@ As a user, I want to select different durations and engagement types before star
 
 ---
 
+### User Story 3 - Compact Pomodoro Page (Priority: P2)
+
+As a user on a phone, I want the timer, its settings and the start button grouped together at the top of the Pomodoro page, so that I can set up and start a session in a few taps and still see my pomodoro statistics on the same screen.
+
+**Why this priority**: The original layout centres the timer, the start button and two stacked form fields in the middle of the screen, which fills a phone on its own. Typing the duration also opens the keyboard. The statistics of spec 013-pomodoro-stats need the space this frees.
+
+**Independent Test**: On a 360 × 640 px phone screen, open the Pomodoro page, change the engagement type and the duration with taps only, check the reward shown on the start button, start a session, check the running state, then stop it.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user opens the Pomodoro page, **When** it loads, **Then** the timer, the engagement type, the duration and the start button are grouped in one card directly below the page title, with no empty band above them.
+2. **Given** no session is running, **When** the user taps "study", **Then** study is selected in one tap, with "work" visible beside it, and no list opens.
+3. **Given** the duration is 25 minutes, **When** the user taps the increase button, **Then** the duration becomes 30 minutes and the timer shows 30:00, without the keyboard opening.
+4. **Given** the duration is 120 minutes, **When** the user looks at the increase button, **Then** it is disabled; likewise the decrease button at 15 minutes.
+5. **Given** a work session of 50 minutes is configured, **When** the user looks at the start button, **Then** it shows the reward that session will pay at the current rates, and the reward changes as soon as the duration or engagement type changes.
+6. **Given** a session is running, **When** the user looks at the card, **Then** the settings are replaced by a single line naming the running session's engagement type and duration, and the stop button is in the start button's place, styled as a destructive action.
+
+---
+
 ### Edge Cases
 
 - What happens when the user navigates to another tab while the timer is running?
 - **App Backgrounding/Closure**: If the app is closed or backgrounded while a timer is active, the system MUST schedule an OS local notification to alert the user when the timer fires. Upon reopening, the app calculates elapsed time to resume the timer state accurately.
 - What happens if a user stops or cancels the timer before it finishes?
+- **Quick actions button**: On a phone, the floating quick actions button must not cover any control or figure on the Pomodoro page, at any scroll position.
+- **Restoring after a reload**: While a session left running before a reload is being restored, the start button stays disabled, as it does today.
 
 ## Requirements _(mandatory)_
 
@@ -61,6 +89,7 @@ As a user, I want to select different durations and engagement types before star
 - **AC-001**: Feature MUST be structured as a Vertical Slice, keeping all related concerns together.
 - **AC-002**: Feature MUST NOT introduce unnecessary external dependencies.
 - **AC-003**: Code design MUST adhere to SOLID principles and established developer best practices.
+- **AC-004**: Any UI MUST follow `docs/design_system.md`: shared components first, theme and token layer only.
 
 ### Functional Requirements
 
@@ -68,7 +97,7 @@ As a user, I want to select different durations and engagement types before star
 - **FR-002**: The system MUST allow users to start a timer with a configurable duration (minimum 15 minutes, maximum 120 minutes, in 5-minute increments), defaulting to 25 minutes.
 - **FR-003**: The system MUST allow users to select an engagement type (e.g., "work", "study") before starting the timer.
 - **FR-004**: The system MUST visually display the remaining time while the timer is active.
-- **FR-005**: The system MUST calculate a reward for fully completed timer sessions based on duration. The base reward is 25 points for work and 20 points for study. The final reward scales as follows (rounding drops any decimal part):
+- **FR-005**: The system MUST calculate a reward for fully completed timer sessions based on duration. The base reward is the rate set in Settings for the session's engagement type, by default 100 ₴ for work and 125 ₴ for study. The final reward scales as follows (rounding drops any decimal part):
   - 15 to 24 minutes: 0.5x base reward
   - 25 to 45 minutes: 1x base reward
   - 50 to 75 minutes: 2x base reward
@@ -76,6 +105,13 @@ As a user, I want to select different durations and engagement types before star
 - **FR-006**: The system MUST display a pop-up dialog when the timer completes, informing the user of the successful Pomodoro and the earned reward.
 - **FR-007**: The system MUST add the earned reward to the user's current balance upon completion.
 - **FR-008**: The system MUST NOT grant any reward if the user cancels a running timer before completion; the timer state resets entirely.
+- **FR-009**: The Pomodoro page MUST group the timer, the engagement type, the duration and the start or stop button in one card that starts directly below the page title.
+- **FR-010**: The engagement type MUST be chosen with one tap from options that are all visible at once.
+- **FR-011**: The duration MUST be changed with decrease and increase buttons in 5-minute steps within the range of FR-002, without typing. Each button MUST be disabled at its end of the range.
+- **FR-012**: The start button MUST show the reward the configured session will pay at the current rates (FR-005 and the rates set in Settings), updated whenever the duration or engagement type changes.
+- **FR-013**: While a session is running, the engagement type and duration controls MUST be replaced by one line naming the running session's engagement type and duration, and the stop button MUST take the start button's place, styled as a destructive action. When no session is running, the card MUST NOT show a separate status line.
+- **FR-014**: The floating quick actions button MUST NOT cover any control or figure on the Pomodoro page at any scroll position.
+- **FR-015**: On a phone, the start button MUST span the card's full width. At desktop widths (1280px and wider), the card MUST leave room beside it for the statistics of spec 013-pomodoro-stats.
 
 ### Key Entities
 
@@ -88,6 +124,9 @@ As a user, I want to select different durations and engagement types before star
 - **SC-001**: Users can successfully start, run, and complete a Pomodoro timer without errors.
 - **SC-002**: Reward balance correctly increases by the exact calculated amount upon timer completion.
 - **SC-003**: The timer runs accurately in relation to real-world time.
+- **SC-004**: On a 360 × 640 px phone screen, the timer card fits on the first screen of the Pomodoro page with room left below it for the Today card of spec 013-pomodoro-stats.
+- **SC-005**: Any duration in the range can be configured with taps only, and the keyboard never opens on the Pomodoro page.
+- **SC-006**: The Pomodoro page passes the responsive layout audit at every reference width from 360px to 1920px, in light and dark themes.
 
 ## Assumptions
 
