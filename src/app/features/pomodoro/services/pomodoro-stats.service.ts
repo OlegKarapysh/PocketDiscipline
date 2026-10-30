@@ -12,8 +12,6 @@ import { datesInRange } from '../../../shared/charts/chart-periods';
 import type { PomodoroPeriodSummary } from '../models/pomodoro-period-summary.model';
 import type { PomodoroTally } from '../models/pomodoro-tally.model';
 
-const ENGAGEMENT_TYPES = Object.values(EngagementType);
-
 @Service()
 export class PomodoroStatsService {
   private readonly db = inject(DbService);
@@ -72,7 +70,7 @@ export class PomodoroStatsService {
       pomodoros += tally.pomodoros;
       focusMinutes += tally.focusMinutes;
       rewardEarned += tally.rewardEarned;
-      for (const type of ENGAGEMENT_TYPES) {
+      for (const type of Object.values(EngagementType)) {
         byType[type] += tally.byType[type];
       }
     }

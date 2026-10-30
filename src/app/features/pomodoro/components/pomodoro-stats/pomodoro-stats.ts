@@ -5,8 +5,6 @@ import { Badge } from '../../../../shared/components/badge/badge';
 import { ENGAGEMENT_TYPE_LABELS } from '../../constants/engagement-type-labels.const';
 import type { PomodoroTally } from '../../models/pomodoro-tally.model';
 
-const ENGAGEMENT_TYPES = Object.values(EngagementType);
-
 @Component({
   selector: 'app-pomodoro-stats',
   imports: [Amount, Badge],
@@ -19,7 +17,11 @@ export class PomodoroStats {
   readonly countUnit = computed(() => (this.tally().pomodoros === 1 ? 'pomodoro' : 'pomodoros'));
 
   readonly split = computed(() =>
-    ENGAGEMENT_TYPES.map((type) => ({ type, label: ENGAGEMENT_TYPE_LABELS[type], count: this.tally().byType[type] })),
+    Object.values(EngagementType).map((type) => ({
+      type,
+      label: ENGAGEMENT_TYPE_LABELS[type],
+      count: this.tally().byType[type],
+    })),
   );
 
   readonly focusTime = computed(() => {

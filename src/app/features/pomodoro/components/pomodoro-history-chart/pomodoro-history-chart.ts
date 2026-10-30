@@ -15,8 +15,6 @@ import type { DailyPomodoroTally } from '../../models/daily-pomodoro-tally.model
 // The y-axis tops out at the next multiple of this, in as many steps, so every tick is a whole number.
 const Y_SCALE_STEP = 4;
 
-const ENGAGEMENT_TYPES = Object.values(EngagementType);
-
 const ARIA_LABELS: Record<ChartGranularity, string> = {
   day: 'Daily pomodoros chart',
   week: 'Weekly pomodoros chart',
@@ -42,7 +40,7 @@ export class PomodoroHistoryChart {
       startDate: period.startDate,
       endDate: period.endDate,
       pomodoros: period.items.reduce((sum, day) => sum + day.pomodoros, 0),
-      byType: ENGAGEMENT_TYPES.map((type) => ({
+      byType: Object.values(EngagementType).map((type) => ({
         type,
         count: period.items.reduce((sum, day) => sum + day.byType[type], 0),
       })),
