@@ -29,7 +29,7 @@ description: "Task list for Pomodoro Stats"
 
 **Purpose**: Load the conventions every later task must follow (`AC-003`, `AC-004`).
 
-- [ ] T001 Load the Angular v22 coding standards through the `angular-cli` MCP server (`list_projects`, then `get_best_practices` with the workspace path), and read `docs/code_style.md`, `docs/design_system.md` and `.agents/skills/pocketdiscipline-ui/SKILL.md` before writing code. If the MCP server is not running, ask the user to start it with `ng mcp` (`AC-003`, `AC-004`)
+- [X] T001 Load the Angular v22 coding standards through the `angular-cli` MCP server (`list_projects`, then `get_best_practices` with the workspace path), and read `docs/code_style.md`, `docs/design_system.md` and `.agents/skills/pocketdiscipline-ui/SKILL.md` before writing code. If the MCP server is not running, ask the user to start it with `ng mcp` (`AC-003`, `AC-004`)
 
 ---
 
@@ -39,7 +39,7 @@ description: "Task list for Pomodoro Stats"
 
 **⚠️ CRITICAL**: Blocks User Story 2 (from T025). Lands as its own commit before any pomodoro code. Hand it to the user to review and commit; never commit automatically (`AGENTS.md`).
 
-- [ ] T002 Create the bar chart models in `src/app/shared/components/bar-chart/`, one per file, as specified in the contract's Models table:
+- [X] T002 Create the bar chart models in `src/app/shared/components/bar-chart/`, one per file, as specified in the contract's Models table:
   - `ChartTone` in `src/app/shared/components/bar-chart/chart-tone.type.ts`
   - `BarChartSegment` in `src/app/shared/components/bar-chart/bar-chart-segment.model.ts`
   - `BarChartScale` in `src/app/shared/components/bar-chart/bar-chart-scale.model.ts`
@@ -49,7 +49,7 @@ description: "Task list for Pomodoro Stats"
   - `BarChartBar` in `src/app/shared/components/bar-chart/bar-chart-bar.model.ts`
 
   (`AC-003`)
-- [ ] T003 Implement the `BarChart` component (selector `app-bar-chart`) in `src/app/shared/components/bar-chart/bar-chart.ts`, `bar-chart.html` and `bar-chart.scss`, following the contract's Behaviour section:
+- [X] T003 Implement the `BarChart` component (selector `app-bar-chart`) in `src/app/shared/components/bar-chart/bar-chart.ts`, `bar-chart.html` and `bar-chart.scss`, following the contract's Behaviour section:
   - **Inputs**: `bars`, `scale`, `ariaLabel` and `legend` (default `[]`).
   - **Size**: width measured with `(appObserveWidth)`; a 260-unit viewBox shown 220–300px high.
   - **Plot area**: left edge from the widest tick label (`AXIS_CHAR_WIDTH`) plus 5px. Bars take 65% of their slot, at least 4px. Segments stack from the baseline at `value / scale.max` of the plot height. Draw the zero bar when there are no segments or every segment is 0.
@@ -61,7 +61,7 @@ description: "Task list for Pomodoro Stats"
   - **Keep the DOM hooks** `.chart-bar-group`, `.bar-hitbox`, `.zero-bar`, `.chart-tooltip`, `.legend-item` and `.axis-label`.
 
   Template bindings read `computed()` values only (code style rule 7). (`AC-002`, `AC-003`, `AC-004`)
-- [ ] T004 Write `src/app/shared/components/bar-chart/bar-chart.spec.ts` by moving the geometry and interaction tests out of `src/app/features/dashboard/components/earnings-chart/earnings-chart.spec.ts` and `src/app/features/daily-scores/components/scores-chart/scores-chart.spec.ts`, de-duplicated. Cover:
+- [X] T004 Write `src/app/shared/components/bar-chart/bar-chart.spec.ts` by moving the geometry and interaction tests out of `src/app/features/dashboard/components/earnings-chart/earnings-chart.spec.ts` and `src/app/features/daily-scores/components/scores-chart/scores-chart.spec.ts`, de-duplicated. Cover:
   - the plot starting after the widest tick label;
   - stacked segment heights from the baseline;
   - the zero bar;
@@ -75,7 +75,7 @@ description: "Task list for Pomodoro Stats"
   - the legend hidden when empty.
 
   Break each behaviour on purpose once to confirm its test fails, then revert. (`AC-003`)
-- [ ] T005 Migrate `EarningsChart` onto `app-bar-chart` in `src/app/features/dashboard/components/earnings-chart/earnings-chart.ts`, `earnings-chart.html` and `earnings-chart.scss`, keeping:
+- [X] T005 Migrate `EarningsChart` onto `app-bar-chart` in `src/app/features/dashboard/components/earnings-chart/earnings-chart.ts`, `earnings-chart.html` and `earnings-chart.scss`, keeping:
   - the `app-section-card` wrapper with its granularity heading;
   - grouping with `groupByCalendarPeriod` and summing each source per period;
   - a scale topping out at the next multiple of 500 (at least 500), with 4 divisions labelled with `MONEY_FORMAT`;
@@ -85,9 +85,9 @@ description: "Task list for Pomodoro Stats"
   - bar aria labels of the form `period: money`.
 
   Delete the geometry, interaction and frame code and styles it no longer needs. (`AC-003`)
-- [ ] T006 Delete `src/app/features/dashboard/models/chart-bar.model.ts`, `chart-bar-segment.model.ts`, `chart-grid-line.model.ts` and `tooltip-position.model.ts` once nothing imports them (the last two duplicate `src/app/shared/models/`) (`AC-003`)
-- [ ] T007 Rewrite `src/app/features/dashboard/components/earnings-chart/earnings-chart.spec.ts` to assert the dashboard's own rules through the rendered chart: stacking and tone per source, the 500-step scale, the Total and per-source tooltip rows after a tap, "No earnings recorded", screen-reader labels, and week/month/year bars past 90 days. Do not assert the shared chart's geometry again (`AC-003`)
-- [ ] T008 [P] Migrate `ScoresChart` onto `app-bar-chart` in `src/app/features/daily-scores/components/scores-chart/scores-chart.ts`, `scores-chart.html` and `scores-chart.scss`, keeping:
+- [X] T006 Delete `src/app/features/dashboard/models/chart-bar.model.ts`, `chart-bar-segment.model.ts`, `chart-grid-line.model.ts` and `tooltip-position.model.ts` once nothing imports them (the last two duplicate `src/app/shared/models/`) (`AC-003`)
+- [X] T007 Rewrite `src/app/features/dashboard/components/earnings-chart/earnings-chart.spec.ts` to assert the dashboard's own rules through the rendered chart: stacking and tone per source, the 500-step scale, the Total and per-source tooltip rows after a tap, "No earnings recorded", screen-reader labels, and week/month/year bars past 90 days. Do not assert the shared chart's geometry again (`AC-003`)
+- [X] T008 [P] Migrate `ScoresChart` onto `app-bar-chart` in `src/app/features/daily-scores/components/scores-chart/scores-chart.ts`, `scores-chart.html` and `scores-chart.scss`, keeping:
   - the `app-section-card` wrapper and its heading;
   - the default 7-day range from `ClockService.today` when no dates are given;
   - grouping with `groupByCalendarPeriod`;
@@ -98,7 +98,7 @@ description: "Task list for Pomodoro Stats"
   - tooltip rows: **Score** or **Average score** as `x / 10`, **Days scored** for a week or longer, and **Reward** as a signed amount when above 0, with the note "No score recorded" and a weekday in the title for a single day.
 
   Delete `src/app/features/daily-scores/models/score-bar.model.ts`, and the geometry, interaction and frame code it no longer needs. (`AC-003`)
-- [ ] T009 [P] Rewrite `src/app/features/daily-scores/components/scores-chart/scores-chart.spec.ts` to assert the scores rules through the rendered chart:
+- [X] T009 [P] Rewrite `src/app/features/daily-scores/components/scores-chart/scores-chart.spec.ts` to assert the scores rules through the rendered chart:
   - the default and given ranges;
   - an empty chart for an inverted range;
   - zero bars for unscored days;
@@ -108,9 +108,9 @@ description: "Task list for Pomodoro Stats"
   - week, month and year bars past 90 days.
 
   (`AC-003`)
-- [ ] T010 [P] Add a live `app-bar-chart` example with a legend, a stacked bar, a zero bar and tooltip rows to `src/app/features/design-system/design-system-page.html` and `src/app/features/design-system/design-system-page.ts` (`AC-004`)
-- [ ] T011 [P] Document `BarChart` in `docs/design_system.md` (a catalogue row in "Core components", and the "Charts" row of "Component mapping" changed to `app-bar-chart` with its tones). Add a "Bar chart → `app-bar-chart`" row to the component table in `.agents/skills/pocketdiscipline-ui/SKILL.md`, so the skill and the doc agree (`AC-004`)
-- [ ] T012 Verify the refactor against `specs/013-pomodoro-stats/quickstart.md` scenario 0:
+- [X] T010 [P] Add a live `app-bar-chart` example with a legend, a stacked bar, a zero bar and tooltip rows to `src/app/features/design-system/design-system-page.html` and `src/app/features/design-system/design-system-page.ts` (`AC-004`)
+- [X] T011 [P] Document `BarChart` in `docs/design_system.md` (a catalogue row in "Core components", and the "Charts" row of "Component mapping" changed to `app-bar-chart` with its tones). Add a "Bar chart → `app-bar-chart`" row to the component table in `.agents/skills/pocketdiscipline-ui/SKILL.md`, so the skill and the doc agree (`AC-004`)
+- [X] T012 Verify the refactor against `specs/013-pomodoro-stats/quickstart.md` scenario 0:
   1. Run `npm run lint && npm run typecheck && npm test -- --watch=false && npm run e2e`.
   2. Confirm that `e2e/src/chart-tooltip.spec.ts`, `e2e/src/dashboard.spec.ts`, `e2e/src/daily-scores.spec.ts` and the layout audit's dashboard and daily scores entries pass unchanged.
   3. Run `LAYOUT_AUDIT_SCREENSHOTS=1 npx playwright test layout-audit` and compare `/` and `/daily-scores` at 360px and 1280px, in light and dark, against `quickstart.md` scenario 0.
@@ -128,9 +128,9 @@ description: "Task list for Pomodoro Stats"
 
 **⚠️ CRITICAL**: Blocks User Stories 1 and 2.
 
-- [ ] T013 [P] Create `PomodoroTally` (`pomodoros`, `byType: Record<EngagementType, number>`, `focusMinutes`, `rewardEarned`) in `src/app/features/pomodoro/models/pomodoro-tally.model.ts`, `DailyPomodoroTally extends PomodoroTally` (`date`) in `src/app/features/pomodoro/models/daily-pomodoro-tally.model.ts`, and `PomodoroPeriodSummary` (`startDate`, `endDate`, `days`, `total`) in `src/app/features/pomodoro/models/pomodoro-period-summary.model.ts`, per `data-model.md` (`AC-001`, `AC-003`)
-- [ ] T014 [P] Create `ENGAGEMENT_TYPE_LABELS: Record<EngagementType, string>` (`work` → "Work", `study` → "Study") in `src/app/features/pomodoro/constants/engagement-type-labels.const.ts` (`AC-003`)
-- [ ] T015 Generate `PomodoroStatsService` with the Angular CLI through the `angular-cli` MCP server, as a concrete `@Service()` class with no interface. Implement `getPeriodSummary(startDate, endDate): Observable<PomodoroPeriodSummary>` in `src/app/features/pomodoro/services/pomodoro-stats.service.ts`:
+- [X] T013 [P] Create `PomodoroTally` (`pomodoros`, `byType: Record<EngagementType, number>`, `focusMinutes`, `rewardEarned`) in `src/app/features/pomodoro/models/pomodoro-tally.model.ts`, `DailyPomodoroTally extends PomodoroTally` (`date`) in `src/app/features/pomodoro/models/daily-pomodoro-tally.model.ts`, and `PomodoroPeriodSummary` (`startDate`, `endDate`, `days`, `total`) in `src/app/features/pomodoro/models/pomodoro-period-summary.model.ts`, per `data-model.md` (`AC-001`, `AC-003`)
+- [X] T014 [P] Create `ENGAGEMENT_TYPE_LABELS: Record<EngagementType, string>` (`work` → "Work", `study` → "Study") in `src/app/features/pomodoro/constants/engagement-type-labels.const.ts` (`AC-003`)
+- [X] T015 Generate `PomodoroStatsService` with the Angular CLI through the `angular-cli` MCP server, as a concrete `@Service()` class with no interface. Implement `getPeriodSummary(startDate, endDate): Observable<PomodoroPeriodSummary>` in `src/app/features/pomodoro/services/pomodoro-stats.service.ts`:
   - wrap the read in `liveQuery` via `from()`, guarded by `catchError`, which logs the error and emits an empty, zero-filled summary;
   - read `db.pomodoroSessions.where('status').equals(PomodoroSessionStatus.COMPLETED)`;
   - keep the sessions whose credited time (`endTime ?? startTime`) lies between the local start of `startDate` and the local end of `endDate`;
@@ -139,7 +139,7 @@ description: "Task list for Pomodoro Stats"
   - make `total` the sum of the days.
 
   Explain with a comment why the `status` index is used, not `startTime` (research §1). (`AC-001`, `AC-003`, `FR-001`–`FR-004`, `FR-006`, `FR-010`, `FR-016`)
-- [ ] T016 Add unit tests in `src/app/features/pomodoro/services/pomodoro-stats.service.spec.ts`, using the `dexie` mock (`liveQuery` calls its function) and an index-agnostic `pomodoroTable` fake like `dashboard-earnings.service.spec.ts`. Cover:
+- [X] T016 Add unit tests in `src/app/features/pomodoro/services/pomodoro-stats.service.spec.ts`, using the `dexie` mock (`liveQuery` calls its function) and an index-agnostic `pomodoroTable` fake like `dashboard-earnings.service.spec.ts`. Cover:
   - completed sessions only, with `active` and `cancelled` ignored;
   - crediting on `endTime`, falling back to `startTime` when it is missing;
   - a session crossing midnight counting on its end day;
@@ -153,7 +153,7 @@ description: "Task list for Pomodoro Stats"
   - an empty summary when the read fails.
 
   Break the crediting rule on purpose once to confirm a test fails. (`FR-001`–`FR-004`, `FR-010`, `SC-002`)
-- [ ] T017 [P] Add one sentence to the `pomodoroSessions` description in `docs/schema.md`: a completed session is credited on the local day of its `endTime` (or `startTime` when it has none), which both `DashboardEarningsService` and `PomodoroStatsService` rely on (`FR-002`)
+- [X] T017 [P] Add one sentence to the `pomodoroSessions` description in `docs/schema.md`: a completed session is credited on the local day of its `endTime` (or `startTime` when it has none), which both `DashboardEarningsService` and `PomodoroStatsService` rely on (`FR-002`)
 
 **Checkpoint**: `PomodoroStatsService` returns correct, live, zero-filled summaries. The user stories can begin.
 
@@ -170,17 +170,17 @@ description: "Task list for Pomodoro Stats"
 
 ### Implementation for User Story 1
 
-- [ ] T018 [P] [US1] Implement `PomodoroStats` (selector `app-pomodoro-stats`, input `tally: PomodoroTally`) in `src/app/features/pomodoro/components/pomodoro-stats/pomodoro-stats.ts`, `pomodoro-stats.html` and `pomodoro-stats.scss`, laid out as one `flex-wrap` row with gaps from `t.space()`:
+- [X] T018 [P] [US1] Implement `PomodoroStats` (selector `app-pomodoro-stats`, input `tally: PomodoroTally`) in `src/app/features/pomodoro/components/pomodoro-stats/pomodoro-stats.ts`, `pomodoro-stats.html` and `pomodoro-stats.scss`, laid out as one `flex-wrap` row with gaps from `t.space()`:
   - the count in mono (`t.numeric`) with "pomodoro" or "pomodoros";
   - one `app-badge` per engagement type, labelled from `ENGAGEMENT_TYPE_LABELS` ("Work 3");
   - focus time from a `computed()`: "45 min" below 60, "2 h 5 min" from 60, "3 h" at whole hours;
   - `<app-amount [value]="tally().rewardEarned" tone="reward" [showSign]="true">`.
 
   Precompute the badge rows in a `computed()` (rule 7). (`AC-004`, `FR-001`, `FR-004`, `FR-005`)
-- [ ] T019 [P] [US1] Add unit tests in `src/app/features/pomodoro/components/pomodoro-stats/pomodoro-stats.spec.ts`: singular and plural count; focus time at 0, 45, 60, 125 and 6,000 minutes; a badge for every engagement type including 0; the earned amount rendered as a signed reward (`FR-001`, `FR-004`, `FR-005`)
-- [ ] T020 [US1] Implement `PomodoroToday` (selector `app-pomodoro-today`, input `tally: PomodoroTally`) in `src/app/features/pomodoro/components/pomodoro-today/pomodoro-today.ts`, `pomodoro-today.html` and `pomodoro-today.scss`. It is an `app-section-card` with the heading "Today" containing `app-pomodoro-stats`; when `tally().pomodoros === 0` it also shows a short line inviting the user to start their first pomodoro of the day (`AC-004`, `FR-001`, `FR-008`)
-- [ ] T021 [P] [US1] Add unit tests in `src/app/features/pomodoro/components/pomodoro-today/pomodoro-today.spec.ts`: the figures for a non-empty tally, and zero figures plus the invitation for an empty one (`FR-001`, `FR-008`)
-- [ ] T022 [US1] Wire the Today card into `PomodoroContainer` in `src/app/features/pomodoro/pomodoro-container/pomodoro-container.ts`, `pomodoro-container.html` and `pomodoro-container.scss`:
+- [X] T019 [P] [US1] Add unit tests in `src/app/features/pomodoro/components/pomodoro-stats/pomodoro-stats.spec.ts`: singular and plural count; focus time at 0, 45, 60, 125 and 6,000 minutes; a badge for every engagement type including 0; the earned amount rendered as a signed reward (`FR-001`, `FR-004`, `FR-005`)
+- [X] T020 [US1] Implement `PomodoroToday` (selector `app-pomodoro-today`, input `tally: PomodoroTally`) in `src/app/features/pomodoro/components/pomodoro-today/pomodoro-today.ts`, `pomodoro-today.html` and `pomodoro-today.scss`. It is an `app-section-card` with the heading "Today" containing `app-pomodoro-stats`; when `tally().pomodoros === 0` it also shows a short line inviting the user to start their first pomodoro of the day (`AC-004`, `FR-001`, `FR-008`)
+- [X] T021 [P] [US1] Add unit tests in `src/app/features/pomodoro/components/pomodoro-today/pomodoro-today.spec.ts`: the figures for a non-empty tally, and zero figures plus the invitation for an empty one (`FR-001`, `FR-008`)
+- [X] T022 [US1] Wire the Today card into `PomodoroContainer` in `src/app/features/pomodoro/pomodoro-container/pomodoro-container.ts`, `pomodoro-container.html` and `pomodoro-container.scss`:
   - inject `ClockService` and `PomodoroStatsService`;
   - add `todaySummary = toSignal(toObservable(clock.today).pipe(switchMap((today) => stats.getPeriodSummary(today, today))), { initialValue })`, where `initialValue` is a zero summary;
   - render `<app-pomodoro-today [tally]="todaySummary().total" />` under the timer card in the first column;
@@ -188,14 +188,14 @@ description: "Task list for Pomodoro Stats"
   - keep the cards rendered while a session runs.
 
   Coordinate with the spec 005 container changes (External Dependency). (`AC-004`, `FR-006`, `FR-007`, `FR-014`, `FR-015`)
-- [ ] T023 [US1] Add unit tests in `src/app/features/pomodoro/pomodoro-container/pomodoro-container.spec.ts`, with a stubbed `PomodoroStatsService` and `ClockService`:
+- [X] T023 [US1] Add unit tests in `src/app/features/pomodoro/pomodoro-container/pomodoro-container.spec.ts`, with a stubbed `PomodoroStatsService` and `ClockService`:
   - the Today card shows the service's tally;
   - a new emission (a completion) updates it;
   - a change of `ClockService.today` re-queries for the new day;
   - the card stays visible while the timer is active.
 
   (`FR-006`, `FR-007`, `FR-014`)
-- [ ] T024 [US1] Create `e2e/src/pomodoro-stats.spec.ts` (real IndexedDB through `putRows` from `e2e/src/indexed-db.ts`, with `page.clock.install` as in `e2e/src/pomodoro.spec.ts`). Cover:
+- [X] T024 [US1] Create `e2e/src/pomodoro-stats.spec.ts` (real IndexedDB through `putRows` from `e2e/src/indexed-db.ts`, with `page.clock.install` as in `e2e/src/pomodoro.spec.ts`). Cover:
   - the Today figures for US1 scenario 1: 4 pomodoros, Work 3, Study 1, 2 h 5 min, summed reward;
   - the empty day (scenario 2);
   - cancelled and active sessions excluded (scenario 4);
@@ -221,7 +221,7 @@ description: "Task list for Pomodoro Stats"
 
 ### Implementation for User Story 2
 
-- [ ] T025 [P] [US2] Implement `PomodoroHistoryChart` (selector `app-pomodoro-history-chart`, input `days: DailyPomodoroTally[]`) as an `app-bar-chart` consumer, without its own card, in `src/app/features/pomodoro/components/pomodoro-history-chart/pomodoro-history-chart.ts`, `pomodoro-history-chart.html` and `pomodoro-history-chart.scss`:
+- [X] T025 [P] [US2] Implement `PomodoroHistoryChart` (selector `app-pomodoro-history-chart`, input `days: DailyPomodoroTally[]`) as an `app-bar-chart` consumer, without its own card, in `src/app/features/pomodoro/components/pomodoro-history-chart/pomodoro-history-chart.ts`, `pomodoro-history-chart.html` and `pomodoro-history-chart.scss`:
   - group the days with `groupByCalendarPeriod` and sum each period's tallies;
   - give each bar one `primary` segment of the period's pomodoros;
   - use a scale whose `max` is the next multiple of 4 (at least 4), with 4 whole-number tick labels;
@@ -232,7 +232,7 @@ description: "Task list for Pomodoro Stats"
   - no legend.
 
   (`AC-004`, `FR-011`, `FR-012`)
-- [ ] T026 [P] [US2] Add unit tests in `src/app/features/pomodoro/components/pomodoro-history-chart/pomodoro-history-chart.spec.ts`:
+- [X] T026 [P] [US2] Add unit tests in `src/app/features/pomodoro/components/pomodoro-history-chart/pomodoro-history-chart.spec.ts`:
   - one bar per day for 7 days, with zero days drawn as zero bars in their positions;
   - whole-number tick labels for maxima of 0, 3, 5 and 17;
   - the tooltip after a tap showing the count and the Work/Study rows;
@@ -240,22 +240,22 @@ description: "Task list for Pomodoro Stats"
   - month bars once weeks exceed 90.
 
   (`FR-011`, `FR-012`)
-- [ ] T027 [US2] Implement `PomodoroHistory` (selector `app-pomodoro-history`; inputs `summary: PomodoroPeriodSummary` and `filter: PeriodFilterValue`; output `filterChange`) in `src/app/features/pomodoro/components/pomodoro-history/pomodoro-history.ts`, `pomodoro-history.html` and `pomodoro-history.scss`. It is an `app-section-card` with the heading "History", containing:
+- [X] T027 [US2] Implement `PomodoroHistory` (selector `app-pomodoro-history`; inputs `summary: PomodoroPeriodSummary` and `filter: PeriodFilterValue`; output `filterChange`) in `src/app/features/pomodoro/components/pomodoro-history/pomodoro-history.ts`, `pomodoro-history.html` and `pomodoro-history.scss`. It is an `app-section-card` with the heading "History", containing:
   - `<app-period-filter ariaLabel="Pomodoro history period" [filter]="filter()" (filterChange)="filterChange.emit($event)" />`;
   - `app-pomodoro-stats` with `summary().total`;
   - `app-pomodoro-history-chart` with `summary().days`, or, when `summary().total.pomodoros === 0`, a message that no pomodoros were completed in this period in place of the chart.
 
   (`AC-004`, `FR-009`, `FR-010`, `FR-013`)
-- [ ] T028 [P] [US2] Add unit tests in `src/app/features/pomodoro/components/pomodoro-history/pomodoro-history.spec.ts`: the totals from `summary.total`; the chart receives `summary.days`; the empty-period message replaces the chart; a period filter change is re-emitted as `filterChange` (`FR-009`, `FR-010`, `FR-013`)
-- [ ] T029 [US2] Wire History into `PomodoroContainer` in `src/app/features/pomodoro/pomodoro-container/pomodoro-container.ts` and `pomodoro-container.html`:
+- [X] T028 [P] [US2] Add unit tests in `src/app/features/pomodoro/components/pomodoro-history/pomodoro-history.spec.ts`: the totals from `summary.total`; the chart receives `summary.days`; the empty-period message replaces the chart; a period filter change is re-emitted as `filterChange` (`FR-009`, `FR-010`, `FR-013`)
+- [X] T029 [US2] Wire History into `PomodoroContainer` in `src/app/features/pomodoro/pomodoro-container/pomodoro-container.ts` and `pomodoro-container.html`:
   - `selectedFilter = signal<PeriodFilterValue>({ preset: 'last7', startDate: '', endDate: '' })`;
   - `currentFilter = computed(...)`, which recomputes a preset with `getPresetDateRange(preset, clock.today())` and keeps a custom range as chosen, as in `src/app/features/daily-scores/pages/daily-scores-page.ts`;
   - `historySummary = toSignal(toObservable(currentFilter).pipe(switchMap(...)), { initialValue })`;
   - render `<app-pomodoro-history [summary]="historySummary()" [filter]="currentFilter()" (filterChange)="onFilterChange($event)" />` as the second column.
 
   (`FR-006`, `FR-009`, `FR-010`, `FR-015`)
-- [ ] T030 [US2] Extend `src/app/features/pomodoro/pomodoro-container/pomodoro-container.spec.ts`: the default 7-day query ending today; a 30-day preset and a custom range re-query; a preset range moves forward when `ClockService.today` changes; a custom range stays fixed (`FR-007`, `FR-009`)
-- [ ] T031 [US2] Extend `e2e/src/pomodoro-stats.spec.ts` (needs Phase 2 complete). Cover US2 scenarios 1–7:
+- [X] T030 [US2] Extend `src/app/features/pomodoro/pomodoro-container/pomodoro-container.spec.ts`: the default 7-day query ending today; a 30-day preset and a custom range re-query; a preset range moves forward when `ClockService.today` changes; a custom range stays fixed (`FR-007`, `FR-009`)
+- [X] T031 [US2] Extend `e2e/src/pomodoro-stats.spec.ts` (needs Phase 2 complete). Cover US2 scenarios 1–7:
   - default 7-day totals and bars, with zero days keeping their positions;
   - 30 days, and a custom range including both ends;
   - the tooltip on tap showing the count and split;
@@ -273,17 +273,17 @@ description: "Task list for Pomodoro Stats"
 
 **Purpose**: Layout audit, tooltip placement and the end-to-end gates (`FR-015`, `SC-001`, `SC-006`).
 
-- [ ] T032 [P] Extend `e2e/src/layout-audit.spec.ts`:
+- [X] T032 [P] Extend `e2e/src/layout-audit.spec.ts`:
   1. Add worst-case pomodoro sessions to `worstCaseRows()`: 20 completed sessions of 120 minutes today, and 600 over the last 30 days, with rewards summing to seven digits.
   2. Point the `pomodoro` entry's `ready` selector at `app-pomodoro-today`.
   3. Register `pomodoro: custom range`, `pomodoro: long range` (more than 90 days, week bars) and `pomodoro: empty period`.
   4. Keep `KNOWN_GAPS` from growing.
 
   (`FR-015`, `SC-006`)
-- [ ] T033 [P] Extend `e2e/src/chart-tooltip.spec.ts`, reusing the `pomodoroSessions` rows it already seeds on the first and last days of the default range, and check that the pomodoro chart's outermost bars keep their tooltip on screen at 360px, as for the other two charts (`FR-012`, `SC-006`)
-- [ ] T034 Check `SC-001` once the spec 005 compact layout is in: at 360 × 640, today's pomodoro count and split are visible on opening `/pomodoro` without scrolling. Add this check to `e2e/src/pomodoro-stats.spec.ts`, comparing the Today card's bounding box with the viewport (`SC-001`)
-- [ ] T035 Run `LAYOUT_AUDIT_SCREENSHOTS=1 npx playwright test layout-audit` and review `/pomodoro` in `test-results/layout-audit/` at 360px and 1280px, in light and dark, with worst-case content. Check that the History column sits beside the timer at 1280px and that the quick-actions button covers no figure (`FR-015`, `SC-006`)
-- [ ] T036 Run the `quickstart.md` manual scenarios 0–5 and all four gates: `npm run lint && npm run typecheck && npm test -- --watch=false && npm run e2e`. Fix anything they report without `eslint-disable` and without editing `scripts/ui-baseline.json` by hand (`AGENTS.md`)
+- [X] T033 [P] Extend `e2e/src/chart-tooltip.spec.ts`, reusing the `pomodoroSessions` rows it already seeds on the first and last days of the default range, and check that the pomodoro chart's outermost bars keep their tooltip on screen at 360px, as for the other two charts (`FR-012`, `SC-006`)
+- [X] T034 Check `SC-001` once the spec 005 compact layout is in: at 360 × 640, today's pomodoro count and split are visible on opening `/pomodoro` without scrolling. Add this check to `e2e/src/pomodoro-stats.spec.ts`, comparing the Today card's bounding box with the viewport (`SC-001`)
+- [X] T035 Run `LAYOUT_AUDIT_SCREENSHOTS=1 npx playwright test layout-audit` and review `/pomodoro` in `test-results/layout-audit/` at 360px and 1280px, in light and dark, with worst-case content. Check that the History column sits beside the timer at 1280px and that the quick-actions button covers no figure (`FR-015`, `SC-006`)
+- [X] T036 Run the `quickstart.md` manual scenarios 0–5 and all four gates: `npm run lint && npm run typecheck && npm test -- --watch=false && npm run e2e`. Fix anything they report without `eslint-disable` and without editing `scripts/ui-baseline.json` by hand (`AGENTS.md`)
 
 ---
 
