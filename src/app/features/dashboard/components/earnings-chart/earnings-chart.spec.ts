@@ -1,12 +1,11 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { EarningsChart } from './earnings-chart';
 import type { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
 import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
 
 describe('EarningsChart', () => {
-  let component: EarningsChart;
   let fixture: ComponentFixture<EarningsChart>;
 
   const mockRecords: DailyEarningsRecord[] = [
@@ -36,15 +35,31 @@ describe('EarningsChart', () => {
     },
   ];
 
-  const bucketAt = (index: number) => component.bars()[index].bucket;
+  const money = (value: number) => value.toLocaleString('uk-UA');
+  const host = () => fixture.nativeElement as HTMLElement;
+  const groups = () => Array.from(host().querySelectorAll('.chart-bar-group'));
+  const ariaLabels = () => groups().map((group) => group.getAttribute('aria-label'));
+  const heading = () => host().querySelector('app-section-card h2')?.textContent.trim();
+  const tickLabels = () =>
+    Array.from(host().querySelectorAll('.axis-label[text-anchor="end"]'), (label) => label.textContent.trim());
+  const tooltip = () => host().querySelector('.chart-tooltip');
+  // Each row is a label followed by an <app-amount>, which owns number formatting and the ₴ unit.
+  const tooltipRows = () =>
+    Array.from(tooltip()?.querySelectorAll('.tooltip-row') ?? [], (row) => [
+      row.querySelector('.row-label')?.textContent.trim(),
+      row.querySelector('app-amount')?.textContent,
+      row.querySelector('.swatch')?.getAttribute('data-tone') ?? null,
+    ]);
 
-  const pointer = (pointerType: string, clientX = 100, clientY = 200) =>
-    ({ pointerType, clientX, clientY }) as PointerEvent;
-  // A bar the browser reports as focused from the keyboard, or by a tap or a click.
-  const focusOn = (keyboard: boolean) => {
-    const bar = document.createElement('div');
-    vi.spyOn(bar, 'matches').mockReturnValue(keyboard);
-    return { currentTarget: bar } as unknown as FocusEvent;
+  const render = (records: DailyEarningsRecord[]) => {
+    fixture.componentRef.setInput('records', records);
+    fixture.detectChanges();
+  };
+  const tap = (index: number) => {
+    groups()
+      .at(index)
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
   };
 
   beforeEach(async () => {
@@ -53,258 +68,82 @@ describe('EarningsChart', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(EarningsChart);
-    component = fixture.componentInstance;
   });
 
-  it('should create the component', () => {
-    expect(component).toBeTruthy();
-  });
+  it('should draw one bar per day, stacking each source in its tone', () => {
+    render(mockRecords);
 
-  it('should compute bars corresponding to records input', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
-
-    const bars = component.bars();
-    expect(bars.length).toBe(3);
-    expect(bars[0].total).toBe(1000);
-    expect(bars[1].total).toBe(0);
-    expect(bars[2].total).toBe(1500);
-  });
-
-  it('should render svg element with bars in template', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
-
-    const compiled = fixture.nativeElement as HTMLElement;
-    const svg = compiled.querySelector('svg');
-    expect(svg).toBeTruthy();
-
-    const barGroups = compiled.querySelectorAll('.chart-bar-group');
-    expect(barGroups.length).toBe(3);
-  });
-
-  it('should compute stacked segments for multi-source earnings', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
-
-    const day1Bars = component.bars()[0];
-    expect(day1Bars.segments.length).toBe(3); // goals (500), tasks (200), pomodoro (300)
-    expect(day1Bars.segments.map((s) => s.source)).toEqual(['goals', 'dailyTasks', 'pomodoro']);
-  });
-
-  it('should update hover state on mouse enter and clear on mouse leave', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
-
-    component.onBarPointerEnter(bucketAt(0), pointer('mouse'));
-    expect(component.hoveredBucket()).toBe(bucketAt(0));
-    expect(component.tooltipAnchor()).toEqual({ x: 100, y: 200 });
-
-    component.onBarPointerLeave(pointer('mouse'));
-    expect(component.hoveredBucket()).toBeNull();
-  });
-
-  it('should correctly stack segment heights and positions from baseline', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
-
-    const day1Bars = component.bars()[0];
-    // Baseline is 225
-    // Each segment must stack above the previous
-    expect(day1Bars.segments.length).toBe(3);
-    const goalsSeg = day1Bars.segments[0];
-    const tasksSeg = day1Bars.segments[1];
-    const pomodoroSeg = day1Bars.segments[2];
-
-    expect(goalsSeg.y).toBeGreaterThan(tasksSeg.y);
-    expect(tasksSeg.y).toBeGreaterThan(pomodoroSeg.y);
-  });
-
-  it('should render tooltip breakdown when hovered', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
-
-    component.onBarPointerEnter(bucketAt(0), pointer('mouse'));
-    fixture.detectChanges();
-
-    const compiled = fixture.nativeElement as HTMLElement;
-    const tooltip = compiled.querySelector('.chart-tooltip');
-    expect(tooltip).toBeTruthy();
-    // Each row is a label followed by an <app-amount>, which owns number formatting and the ₴ unit.
-    const rows = Array.from(tooltip?.querySelectorAll('.tooltip-row') ?? [], (row) => [
-      row.querySelector('span:not(.swatch)')?.textContent.trim(),
-      row.querySelector('app-amount')?.textContent,
-    ]);
-    const amount = (value: number) => `${value.toLocaleString('uk-UA')}₴`;
-    expect(rows).toHaveLength(4);
-    expect(rows).toEqual(
-      expect.arrayContaining([
-        ['Total', amount(1000)],
-        ['Goals', amount(500)],
-        ['Daily tasks', amount(200)],
-        ['Pomodoro', amount(300)],
-      ]),
+    expect(groups()).toHaveLength(3);
+    const tones = groups().map((group) =>
+      Array.from(group.querySelectorAll('.bar-segment'), (segment) => segment.getAttribute('data-tone')),
     );
+    // Goals, daily tasks, pomodoro, daily scores, bottom to top; a source that earned nothing is left out.
+    expect(tones).toEqual([['reward', 'primary', 'inverse-primary'], [], ['reward']]);
+    expect(groups().map((group) => group.querySelector('.zero-bar') !== null)).toEqual([false, true, false]);
+  });
+
+  it('should name the chart after its granularity', () => {
+    render(mockRecords);
+
+    expect(heading()).toBe('Daily earnings');
+    expect(host().querySelector('svg')?.getAttribute('aria-label')).toBe('Daily earnings chart');
+  });
+
+  it('should list all four sources in the legend', () => {
+    render(mockRecords);
+
+    const items = Array.from(host().querySelectorAll('.legend-item'));
+    expect(items.map((item) => item.textContent.trim())).toEqual(['Goals', 'Daily tasks', 'Pomodoro', 'Daily scores']);
+    expect(items.map((item) => item.querySelector('.swatch')?.getAttribute('data-tone'))).toEqual([
+      'reward',
+      'primary',
+      'inverse-primary',
+      'secondary',
+    ]);
+  });
+
+  it('should top the scale at the next multiple of 500, in four steps', () => {
+    render(mockRecords);
+    expect(tickLabels()).toEqual(['0', '375', '750', money(1125), money(1500)]);
+
+    render([{ ...mockRecords[0], totalEarned: 1501 }]);
+    expect(tickLabels().at(-1)).toBe(money(2000));
+  });
+
+  it('should keep the scale at 500 when nothing was earned', () => {
+    render([]);
+
+    expect(groups()).toHaveLength(0);
+    expect(tickLabels().at(-1)).toBe('500');
   });
 
   it('should label each bar with its date and formatted total for screen readers', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
+    render(mockRecords);
 
-    const firstBar = (fixture.nativeElement as HTMLElement).querySelector('.chart-bar-group');
-    expect(firstBar?.getAttribute('aria-label')).toBe(`2026-08-27: ${(1000).toLocaleString('uk-UA')} ₴`);
+    expect(ariaLabels()).toEqual([`2026-08-27: ${money(1000)} ₴`, '2026-08-28: 0 ₴', `2026-08-29: ${money(1500)} ₴`]);
   });
 
-  it('should round the y-axis scale up to the next 500', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
+  it('should show the total and each earning source in the tooltip of a tapped bar', () => {
+    render(mockRecords);
+    tap(0);
 
-    expect(component.maxBarTotal()).toBe(1500);
-    expect(component.gridLines().at(-1)?.label).toBe((1500).toLocaleString('uk-UA'));
-
-    fixture.componentRef.setInput('records', [{ ...mockRecords[0], totalEarned: 1501 }]);
-    fixture.detectChanges();
-    expect(component.maxBarTotal()).toBe(2000);
+    expect(tooltip()?.querySelector('.tooltip-title')?.textContent.trim()).toBe('2026-08-27');
+    expect(tooltipRows()).toEqual([
+      ['Total', `${money(1000)}₴`, null],
+      ['Goals', '500₴', 'reward'],
+      ['Daily tasks', '200₴', 'primary'],
+      ['Pomodoro', '300₴', 'inverse-primary'],
+    ]);
+    expect(tooltip()?.querySelector('.tooltip-row.emphasis .row-label')?.textContent.trim()).toBe('Total');
+    expect(tooltip()?.querySelector('.tooltip-note')).toBeNull();
   });
 
-  it('should toggle tooltip on bar click', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
+  it('should say "No earnings recorded" in the tooltip of a day that earned nothing', () => {
+    render(mockRecords);
+    tap(1);
 
-    component.onBarClick(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
-    expect(component.hoveredBucket()).toBe(bucketAt(0));
-
-    // Second click on same bar dismisses it
-    component.onBarClick(bucketAt(0), { clientX: 100, clientY: 200 } as MouseEvent);
-    expect(component.hoveredBucket()).toBeNull();
-  });
-
-  it('should open the tooltip with one tap and close it with the next', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
-
-    // A tap enters, leaves and focuses the bar before it clicks it.
-    component.onBarPointerEnter(bucketAt(0), pointer('touch'));
-    component.onBarPointerLeave(pointer('touch'));
-    component.onBarFocus(bucketAt(0), focusOn(false));
-    component.onBarClick(bucketAt(0), pointer('touch'));
-    expect(component.hoveredBucket()).toBe(bucketAt(0));
-
-    component.onBarClick(bucketAt(0), pointer('touch'));
-    expect(component.hoveredBucket()).toBeNull();
-  });
-
-  it('should open the tooltip on keyboard focus and close it when that bar loses focus', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
-
-    component.onBarFocus(bucketAt(0), focusOn(true));
-    expect(component.hoveredBucket()).toBe(bucketAt(0));
-
-    component.onBarBlur(bucketAt(1));
-    expect(component.hoveredBucket()).toBe(bucketAt(0));
-
-    component.onBarBlur(bucketAt(0));
-    expect(component.hoveredBucket()).toBeNull();
-  });
-
-  it('should thin labels when record count exceeds 16', () => {
-    const manyRecords: DailyEarningsRecord[] = Array.from({ length: 30 }, (_, i) => ({
-      date: `2026-09-${String(i + 1).padStart(2, '0')}`,
-      totalEarned: 100,
-      goalsEarned: 100,
-      dailyTasksEarned: 0,
-      pomodoroEarned: 0,
-      dailyScoresEarned: 0,
-    }));
-
-    fixture.componentRef.setInput('records', manyRecords);
-    fixture.detectChanges();
-
-    const bars = component.bars();
-    expect(bars.length).toBe(30);
-    const visibleLabels = bars.filter((b) => b.shouldShowLabel);
-    expect(visibleLabels.length).toBeLessThan(30);
-    expect(visibleLabels.length).toBeGreaterThan(0);
-    expect(bars[0].shouldShowLabel).toBe(true);
-    expect(bars[29].shouldShowLabel).toBe(true);
-  });
-
-  it('should leave room for the widest y-axis total before the plot starts', () => {
-    fixture.componentRef.setInput('records', [{ ...mockRecords[0], totalEarned: 138_700, goalsEarned: 138_700 }]);
-    fixture.detectChanges();
-
-    // The top label is "139 000": seven 11px Geist Mono glyphs, about 44.7px wide, drawn
-    // right-aligned at yAxisTextX, so it needs that much room to its left.
-    expect(component.gridLines().at(-1)?.label.replace(/\s/g, ' ')).toBe('139 000');
-    expect(component.yAxisTextX()).toBeGreaterThanOrEqual(45);
-    expect(component.bars()[0].x).toBeGreaterThan(component.yAxisTextX());
-  });
-
-  describe('date labels by chart width', () => {
-    const week: DailyEarningsRecord[] = Array.from({ length: 7 }, (_, i) => ({
-      date: `2026-09-${String(i + 1).padStart(2, '0')}`,
-      totalEarned: 100,
-      goalsEarned: 100,
-      dailyTasksEarned: 0,
-      pomodoroEarned: 0,
-      dailyScoresEarned: 0,
-    }));
-
-    const labelCentres = () =>
-      component
-        .bars()
-        .filter((bar) => bar.shouldShowLabel)
-        .map((bar) => bar.axisLabelX);
-
-    it('should label every day of a week on a wide chart', () => {
-      component.width.set(600);
-      fixture.componentRef.setInput('records', week);
-      fixture.detectChanges();
-
-      expect(labelCentres()).toHaveLength(7);
-    });
-
-    it('should keep neighbouring labels from overlapping on a phone-width chart', () => {
-      component.width.set(280);
-      fixture.componentRef.setInput('records', week);
-      fixture.detectChanges();
-
-      const centres = labelCentres();
-      const gaps = centres.slice(1).map((centre, i) => centre - centres[i]);
-      // A label such as "09/24" is five 11px Geist Mono glyphs, about 32px wide.
-      expect(Math.min(...gaps)).toBeGreaterThanOrEqual(32);
-    });
-  });
-
-  it('should handle empty records gracefully', () => {
-    fixture.componentRef.setInput('records', []);
-    fixture.detectChanges();
-
-    expect(component.bars().length).toBe(0);
-    expect(component.maxBarTotal()).toBe(500);
-  });
-
-  it('should update tooltip position on mouse move if bar is hovered', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
-
-    component.onBarPointerEnter(bucketAt(0), pointer('mouse'));
-    component.onBarPointerMove(pointer('mouse', 150, 250));
-
-    expect(component.tooltipAnchor()).toEqual({ x: 150, y: 250 });
-  });
-
-  it('should display "No earnings recorded" in tooltip when day total is 0', () => {
-    fixture.componentRef.setInput('records', mockRecords);
-    fixture.detectChanges();
-
-    component.onBarPointerEnter(bucketAt(1), pointer('mouse'));
-    fixture.detectChanges();
-
-    const compiled = fixture.nativeElement as HTMLElement;
-    const tooltip = compiled.querySelector('.chart-tooltip');
-    expect(tooltip?.textContent).toContain('No earnings recorded');
+    expect(tooltipRows()).toEqual([['Total', '0₴', null]]);
+    expect(tooltip()?.querySelector('.tooltip-note')?.textContent.trim()).toBe('No earnings recorded');
   });
 
   describe('ranges longer than 90 days', () => {
@@ -319,94 +158,60 @@ describe('EarningsChart', () => {
         dailyScoresEarned: 0,
       }));
 
-    const sumOfBars = () => component.bars().reduce((sum, bar) => sum + bar.total, 0);
+    const sumOfBars = () =>
+      ariaLabels().reduce((sum, label) => sum + Number(label?.split(': ')[1].replace(/\D/g, '')), 0);
+    const axisLabels = () =>
+      Array.from(host().querySelectorAll('.chart-bar-group .axis-label'), (label) => label.textContent.trim());
 
     it('should still draw one bar per day for exactly 90 days', () => {
-      fixture.componentRef.setInput('records', daysFrom(2026, 0, 1, 90));
-      fixture.detectChanges();
+      render(daysFrom(2026, 0, 1, 90));
 
-      expect(component.bars()).toHaveLength(90);
-      expect(component.heading()).toBe('Daily earnings');
+      expect(groups()).toHaveLength(90);
+      expect(heading()).toBe('Daily earnings');
     });
 
     it('should draw one bar per calendar week, cut to the range, past 90 days', () => {
       // Thursday 1 January to Wednesday 1 April 2026: 91 days.
-      fixture.componentRef.setInput('records', daysFrom(2026, 0, 1, 91));
-      fixture.detectChanges();
+      render(daysFrom(2026, 0, 1, 91));
 
-      const bars = component.bars();
-      expect(component.heading()).toBe('Weekly earnings');
-      expect(bars).toHaveLength(14);
+      expect(heading()).toBe('Weekly earnings');
+      expect(groups()).toHaveLength(14);
       expect(sumOfBars()).toBe(910);
-      expect(bars[0].bucket).toMatchObject({ startDate: '2026-01-01', endDate: '2026-01-04', goalsEarned: 40 });
-      expect(bars[1].bucket).toMatchObject({ startDate: '2026-01-05', endDate: '2026-01-11', totalEarned: 70 });
-      expect(bars.at(-1)?.bucket).toMatchObject({ startDate: '2026-03-30', endDate: '2026-04-01', totalEarned: 30 });
+      expect(ariaLabels()[0]).toBe('2026-01-01 – 2026-01-04: 40 ₴');
+      expect(ariaLabels()[1]).toBe('2026-01-05 – 2026-01-11: 70 ₴');
+      expect(ariaLabels().at(-1)).toBe('2026-03-30 – 2026-04-01: 30 ₴');
     });
 
-    it('should name the whole week in the bar label and the tooltip', () => {
-      fixture.componentRef.setInput('records', daysFrom(2026, 0, 1, 91));
-      fixture.detectChanges();
+    it('should name the whole week in the tooltip', () => {
+      render(daysFrom(2026, 0, 1, 91));
+      tap(1);
 
-      const firstBar = (fixture.nativeElement as HTMLElement).querySelector('.chart-bar-group');
-      expect(firstBar?.getAttribute('aria-label')).toBe('2026-01-01 – 2026-01-04: 40 ₴');
-
-      component.onBarPointerEnter(bucketAt(1), pointer('mouse'));
-      fixture.detectChanges();
-      const tooltipDate = (fixture.nativeElement as HTMLElement).querySelector('.tooltip-date');
-      expect(tooltipDate?.textContent.trim()).toBe('2026-01-05 – 2026-01-11');
+      expect(tooltip()?.querySelector('.tooltip-title')?.textContent.trim()).toBe('2026-01-05 – 2026-01-11');
     });
 
     it('should draw one bar per calendar month once even weeks would be more than 90 bars', () => {
       // 15 January 2025 to 31 December 2026: about 103 weeks.
-      fixture.componentRef.setInput('records', daysFrom(2025, 0, 15, 716));
-      fixture.detectChanges();
+      render(daysFrom(2025, 0, 15, 716));
 
-      const bars = component.bars();
-      expect(component.heading()).toBe('Monthly earnings');
-      expect(bars).toHaveLength(24);
+      expect(heading()).toBe('Monthly earnings');
+      expect(groups()).toHaveLength(24);
       expect(sumOfBars()).toBe(7160);
-      expect(bars[0].bucket).toMatchObject({ startDate: '2025-01-15', endDate: '2025-01-31', totalEarned: 170 });
-      expect(bars[1].bucket).toMatchObject({ startDate: '2025-02-01', endDate: '2025-02-28', totalEarned: 280 });
-      expect(bars[0].axisLabel).toBe("Jan '25");
-      expect(bars.at(-1)?.axisLabel).toBe("Dec '26");
-    });
-
-    it('should keep month labels from overlapping on a phone-width chart', () => {
-      component.width.set(280);
-      fixture.componentRef.setInput('records', daysFrom(2025, 0, 15, 716));
-      fixture.detectChanges();
-
-      const centres = component
-        .bars()
-        .filter((bar) => bar.shouldShowLabel)
-        .map((bar) => bar.axisLabelX);
-      const gaps = centres.slice(1).map((centre, i) => centre - centres[i]);
-      // A label such as "Jan '25" is seven 11px Geist Mono glyphs, about 46px wide.
-      expect(Math.min(...gaps)).toBeGreaterThanOrEqual(46);
+      expect(ariaLabels()[0]).toBe('2025-01-15 – 2025-01-31: 170 ₴');
+      expect(ariaLabels()[1]).toBe('2025-02-01 – 2025-02-28: 280 ₴');
+      expect(axisLabels()[0]).toBe("Jan '25");
+      expect(axisLabels().at(-1)).toBe("Dec '26");
     });
 
     it('should draw one bar per calendar year once even months would be more than 90 bars', () => {
       // 1 July 2010 to 31 December 2026: 198 months.
-      fixture.componentRef.setInput('records', daysFrom(2010, 6, 1, 6028));
-      fixture.detectChanges();
+      render(daysFrom(2010, 6, 1, 6028));
 
-      const bars = component.bars();
-      expect(component.heading()).toBe('Yearly earnings');
-      expect(bars).toHaveLength(17);
+      expect(heading()).toBe('Yearly earnings');
+      expect(groups()).toHaveLength(17);
       expect(sumOfBars()).toBe(60_280);
-      expect(bars[0].bucket).toMatchObject({ startDate: '2010-07-01', endDate: '2010-12-31', totalEarned: 1840 });
-      expect(bars[0].axisLabel).toBe('2010');
-      expect(bars.at(-1)?.bucket).toMatchObject({ startDate: '2026-01-01', endDate: '2026-12-31' });
-    });
-
-    it('should keep the last month label inside a phone-width chart', () => {
-      component.width.set(280);
-      fixture.componentRef.setInput('records', daysFrom(2025, 0, 15, 716));
-      fixture.detectChanges();
-
-      // "Dec '26" is drawn centred on axisLabelX, so half of its width lies to the right.
-      const lastLabelRightEdge = (component.bars().at(-1)?.axisLabelX ?? 0) + (7 * 6.6) / 2;
-      expect(lastLabelRightEdge).toBeLessThanOrEqual(280);
+      expect(ariaLabels()[0]).toBe(`2010-07-01 – 2010-12-31: ${money(1840)} ₴`);
+      expect(ariaLabels().at(-1)).toMatch(/^2026-01-01 – 2026-12-31: /);
+      expect(axisLabels()[0]).toBe('2010');
     });
   });
 });
