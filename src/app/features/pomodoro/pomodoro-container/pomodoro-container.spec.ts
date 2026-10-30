@@ -15,6 +15,8 @@ import { ClockService } from '../../../core/services/clock.service';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import type { PomodoroPeriodSummary } from '../models/pomodoro-period-summary.model';
 import type { PomodoroTally } from '../models/pomodoro-tally.model';
+import { PomodoroHistory } from '../components/pomodoro-history/pomodoro-history';
+import type { PeriodFilterValue } from '../../../shared/components/period-filter/period-filter-value.model';
 
 const tally = (pomodoros: number, overrides: Partial<PomodoroTally> = {}): PomodoroTally => ({
   pomodoros,
@@ -164,6 +166,69 @@ describe('PomodoroContainer', () => {
       await settle();
 
       expect(host().querySelector('app-pomodoro-today')).not.toBeNull();
+    });
+  });
+
+  describe('History card', () => {
+    const historyText = () =>
+      host().querySelector('app-pomodoro-history')?.textContent.replace(/\s+/g, ' ').trim() ?? '';
+    const chooseFilter = (filter: PeriodFilterValue) => {
+      const history = fixture.debugElement.query(By.directive(PomodoroHistory)).componentInstance as PomodoroHistory;
+      history.filterChange.emit(filter);
+    };
+    const historyRanges = () =>
+      statsMock.getPeriodSummary.mock.calls
+        .map(([startDate, endDate]) => `${String(startDate)}..${String(endDate)}`)
+        .filter((range) => range.split('..')[0] !== range.split('..')[1]);
+
+    it('should show the last 7 days, ending today, by default', async () => {
+      stream('2026-10-24', '2026-10-30').next(summary('2026-10-24', '2026-10-30', tally(9)));
+      await settle();
+
+      expect(statsMock.getPeriodSummary).toHaveBeenCalledWith('2026-10-24', '2026-10-30');
+      expect(historyText()).toContain('9 pomodoros');
+    });
+
+    it('should sit beside the timer column, not inside it', async () => {
+      await settle();
+
+      const history = host().querySelector('app-pomodoro-history');
+      const today = host().querySelector('app-pomodoro-today');
+      expect(history?.parentElement).toBe(today?.parentElement?.parentElement);
+    });
+
+    it('should query the chosen preset or custom range', async () => {
+      await settle();
+
+      chooseFilter({ preset: 'last30', startDate: '', endDate: '' });
+      await settle();
+      expect(statsMock.getPeriodSummary).toHaveBeenLastCalledWith('2026-10-01', '2026-10-30');
+
+      stream('2026-09-01', '2026-09-15').next(summary('2026-09-01', '2026-09-15', tally(12)));
+      chooseFilter({ preset: 'custom', startDate: '2026-09-01', endDate: '2026-09-15' });
+      await settle();
+      expect(statsMock.getPeriodSummary).toHaveBeenLastCalledWith('2026-09-01', '2026-09-15');
+      expect(historyText()).toContain('12 pomodoros');
+    });
+
+    it('should move a preset range forward when the day changes', async () => {
+      await settle();
+
+      today.set('2026-10-31');
+      await settle();
+
+      expect(historyRanges().at(-1)).toBe('2026-10-25..2026-10-31');
+    });
+
+    it('should keep a custom range as chosen when the day changes', async () => {
+      await settle();
+      chooseFilter({ preset: 'custom', startDate: '2026-09-01', endDate: '2026-09-15' });
+      await settle();
+
+      today.set('2026-10-31');
+      await settle();
+
+      expect(historyRanges().at(-1)).toBe('2026-09-01..2026-09-15');
     });
   });
 });

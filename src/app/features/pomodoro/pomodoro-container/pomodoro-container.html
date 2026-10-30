@@ -8,4 +8,10 @@
     </app-section-card>
     <app-pomodoro-today [tally]="todaySummary().total" />
   </div>
+  <app-pomodoro-history
+    class="column"
+    [summary]="historySummary()"
+    [filter]="currentFilter()"
+    (filterChange)="onFilterChange($event)"
+  />
 </div>
