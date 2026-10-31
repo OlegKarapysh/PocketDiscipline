@@ -576,6 +576,55 @@ zero violations. Keep it that way: it is no longer a budget to spend.
 
 ---
 
+## Tests
+
+Not one of the eight swept rules: these are the testing conventions every agent follows.
+
+**Where tests live.**
+
+- Unit specs (Vitest via `@angular/build:unit-test`, jsdom) sit next to the file they cover as
+  `<file>.spec.ts`. `npm test -- --watch=false` runs them; CI runs them on every push.
+- End-to-end specs (Playwright) live in `e2e/src/<feature>.spec.ts`, one file per feature, plus
+  regression files named for the bug they guard (`goal-concurrency`, `long-text`, …).
+- Test-only helpers go in a `testing/` folder: `src/app/shared/testing/` when shared,
+  `features/<slice>/testing/` when only one slice needs them (`jar-statement.fixture.ts`). Coverage
+  excludes `testing/` folders and `*.fixture.ts`.
+
+**Unit tests run on a real database — do not mock Dexie.** `src/test-setup.ts` gives every test its
+own in-memory IndexedDB (`fake-indexeddb`), so the real `DbService` schema, indexes, transactions,
+upgrades and live queries all run. Call `openEmptyDb()` from `src/app/shared/testing/empty-db.ts` for
+empty tables, seed the rows the test needs through it, and assert on what is stored afterwards — not
+on which table method was called. Prefer the real services over stubs of them (`UserService` balance
+included); stub only what the test cannot run, such as a dialog or the clock. A schema upgrade is
+tested by building the previous version's database and opening `DbService` on it
+(`db.service.spec.ts`).
+
+**Unit or e2e.** Logic, data rules and service behaviour are unit-tested. Use e2e for what needs a
+real browser: a user flow end to end, routing, dialogs, layout, and anything across a reload or two
+pages. Every new screen or dialog is registered in the layout audit (see "Verifying" in
+`docs/design_system.md`); a screen routed only in dev mode gets `devOnly: true` there.
+
+**E2E helpers.** Open a dialog with `openDialog` from `e2e/src/dialog.ts`, never by clicking and
+filling straight away (the form binds and the focus trap settles after the dialog appears). Read and
+seed IndexedDB with `e2e/src/indexed-db.ts` (`readStores`, `putRows`, `readBalance`).
+
+**Smoke subset.** One happy path per feature spec, plus the whole layout audit, carries
+`{ tag: '@smoke' }`. CI runs only those, against the production build
+(`npm run e2e:smoke` locally); the full suite (`npm run e2e`) stays a local gate. When adding a
+feature spec, tag its most representative happy path.
+
+**Assert the spec, not the implementation.** Do not pin ordering, call counts, transaction shape or
+exception types the specification does not require; they turn refactors into failures.
+
+**A test must be able to fail.** When covering code that already works, break the behaviour on
+purpose, confirm the test fails, and revert. An assertion that cannot fail is worse than none.
+
+**Coverage is a map, not a target.** `npm run test:coverage` writes a report to
+`coverage/pocket-discipline/` (`index.html`). Use it to find untested logic; there is no threshold,
+and a test written only to raise the number is not wanted.
+
+---
+
 ## Lint config notes
 
 Two entries in `eslint.config.js` exist to serve rules in this document, and should not be removed
