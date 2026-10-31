@@ -12,6 +12,7 @@ import {
   NOTES_MAX_LENGTH,
   TITLE_MAX_LENGTH,
 } from '../../src/app/shared/constants/text-length.const';
+import { openDialog } from './dialog';
 
 // The layout audit: every screen, at every supported width, filled with the worst content the forms
 // allow, must keep all of its text inside its box and must not scroll sideways.
@@ -66,7 +67,10 @@ const SCREENS: Screen[] = [
     ready: 'app-stat-card',
     root: OVERLAY,
     open: async (page) => {
-      await page.getByRole('button', { name: 'Quick spend' }).first().click();
+      await openDialog(
+        page.getByRole('button', { name: 'Quick spend' }).first(),
+        page.locator('app-quick-spend-dialog').getByLabel('Amount'),
+      );
       await page.locator('app-quick-spend-dialog mat-select').click();
       await page.getByRole('option').filter({ hasText: 'WWWW' }).click();
     },
@@ -77,7 +81,10 @@ const SCREENS: Screen[] = [
     ready: 'app-stat-card',
     root: OVERLAY,
     open: async (page) => {
-      await page.getByRole('button', { name: 'Quick spend' }).first().click();
+      await openDialog(
+        page.getByRole('button', { name: 'Quick spend' }).first(),
+        page.locator('app-quick-spend-dialog').getByLabel('Amount'),
+      );
       await page.locator('app-quick-spend-dialog').getByLabel('Amount').fill('12.5');
       await page.locator('app-quick-spend-dialog').getByLabel('Amount').blur();
       await expect(page.locator('app-quick-spend-dialog mat-error')).toBeVisible();
@@ -443,7 +450,10 @@ const SCREENS: Screen[] = [
     ready: '.settings-link',
     root: OVERLAY,
     open: async (page) => {
-      await page.getByRole('button', { name: 'Set up balance' }).click();
+      await openDialog(
+        page.getByRole('button', { name: 'Set up balance' }),
+        page.locator('app-balance-setup-dialog').getByLabel('Balance'),
+      );
       await page.locator('app-balance-setup-dialog').getByLabel('Balance').fill('12.5');
       await page.locator('app-balance-setup-dialog').getByLabel('Balance').blur();
       await expect(page.locator('app-balance-setup-dialog mat-error')).toBeVisible();
@@ -455,7 +465,10 @@ const SCREENS: Screen[] = [
     ready: '.settings-link',
     root: OVERLAY,
     open: async (page) => {
-      await page.getByRole('button', { name: 'Set up balance' }).click();
+      await openDialog(
+        page.getByRole('button', { name: 'Set up balance' }),
+        page.locator('app-balance-setup-dialog').getByLabel('Balance'),
+      );
       await page.locator('app-balance-setup-dialog').getByLabel('Balance').fill('9999999');
       await page.getByRole('button', { name: 'Continue' }).click();
       await expect(page.locator('app-confirm-dialog')).toBeVisible();
