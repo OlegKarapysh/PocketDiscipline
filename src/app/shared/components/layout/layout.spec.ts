@@ -5,18 +5,21 @@ import { Router, provideRouter } from '@angular/router';
 import type { BreakpointState } from '@angular/cdk/layout';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatSidenav } from '@angular/material/sidenav';
+import { signal } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Layout } from './layout';
 import { BottomNav } from '../bottom-nav/bottom-nav';
 import { SpeedDial } from '../speed-dial/speed-dial';
 import { Badge } from '../badge/badge';
+import { SnackBarService } from '../../services/snack-bar.service';
 
 const SECTION_PATHS = ['/dashboard', '/tasks', '/goals', '/pomodoro', '/daily-scores', '/rewards', '/settings'];
 
 describe('Layout', () => {
   let fixture: ComponentFixture<Layout>;
   let compactSubject: BehaviorSubject<BreakpointState>;
+  const toastHeight = signal(0);
 
   const setCompact = async (matches: boolean) => {
     compactSubject.next({ matches, breakpoints: {} });
@@ -31,6 +34,7 @@ describe('Layout', () => {
 
   beforeEach(async () => {
     compactSubject = new BehaviorSubject<BreakpointState>({ matches: false, breakpoints: {} });
+    toastHeight.set(0);
 
     await TestBed.configureTestingModule({
       imports: [Layout],
@@ -38,6 +42,7 @@ describe('Layout', () => {
         // Any standalone component without required inputs will do as the routed page.
         provideRouter(SECTION_PATHS.map((path) => ({ path: path.slice(1), component: Badge }))),
         { provide: BreakpointObserver, useValue: { observe: () => compactSubject.asObservable() } },
+        { provide: SnackBarService, useValue: { height: toastHeight.asReadonly() } },
       ],
     }).compileComponents();
 
@@ -69,6 +74,25 @@ describe('Layout', () => {
     expect(isRailOpen()).toBe(false);
     expect(fixture.debugElement.query(By.directive(BottomNav))).toBeTruthy();
     expect(fixture.debugElement.query(By.directive(SpeedDial))).toBeTruthy();
+  });
+
+  it('should lift the speed dial above an open toast and lower it once the toast is gone', async () => {
+    await setCompact(true);
+    const speedDial = () => (fixture.debugElement.query(By.directive(SpeedDial)).nativeElement as HTMLElement).style;
+
+    expect(speedDial().translate).toBe('');
+
+    toastHeight.set(60);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(speedDial().translate).toBe('0 -72px');
+
+    toastHeight.set(0);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(speedDial().translate).toBe('');
   });
 
   it('should reach every section from the bottom nav or its More menu', async () => {

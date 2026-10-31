@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { fakeSnackBarRef } from '../../../../shared/testing/snack-bar-ref.fake';
 import { ClockService } from '../../../../core/services/clock.service';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -62,7 +63,7 @@ describe('SpendingAnalytics', () => {
       spendingTrend: [],
     };
 
-    snackBarMock = { open: vi.fn() };
+    snackBarMock = { open: vi.fn(fakeSnackBarRef) };
     today.set('2026-09-30');
     mockAnalyticsService = {
       getAnalytics: vi.fn().mockReturnValue(of(mockSummaryWithData)),

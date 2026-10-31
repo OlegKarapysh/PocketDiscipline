@@ -8,6 +8,7 @@ import type { Observable } from 'rxjs';
 import { signal } from '@angular/core';
 import { EMPTY, of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { fakeSnackBarRef } from '../../../../shared/testing/snack-bar-ref.fake';
 import { ClockService } from '../../../../core/services/clock.service';
 import { DailyTaskList } from './daily-task-list';
 import { DailyTasksService } from '../../services/daily-tasks.service';
@@ -63,7 +64,7 @@ describe('DailyTaskList', () => {
       resetBrokenStreaks: vi.fn().mockResolvedValue(undefined),
       rewardsFor: vi.fn().mockReturnValue([{ difficulty: easy, reward: 100 }]),
     };
-    snackBarMock = { open: vi.fn() };
+    snackBarMock = { open: vi.fn(fakeSnackBarRef) };
     confirmMock = { ask: vi.fn().mockReturnValue(of(true)) };
     today.set('2026-09-30');
 

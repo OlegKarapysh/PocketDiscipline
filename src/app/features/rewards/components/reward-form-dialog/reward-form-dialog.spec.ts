@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { fakeSnackBarRef } from '../../../../shared/testing/snack-bar-ref.fake';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import type { RewardFormDialogData } from './reward-form-dialog';
@@ -37,7 +38,7 @@ describe('RewardFormDialog', () => {
       isTypeLocked: vi.fn().mockReturnValue(typeLocked),
     };
     mockCategoryService = { getCategories: vi.fn().mockReturnValue(of(mockCategories)) };
-    mockSnackBar = { open: vi.fn() };
+    mockSnackBar = { open: vi.fn(fakeSnackBarRef) };
 
     await TestBed.configureTestingModule({
       imports: [RewardFormDialog],

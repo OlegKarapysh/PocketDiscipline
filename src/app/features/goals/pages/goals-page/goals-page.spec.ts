@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EMPTY, of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { fakeSnackBarRef } from '../../../../shared/testing/snack-bar-ref.fake';
 import { By } from '@angular/platform-browser';
 import { GoalsPage } from './goals-page';
 import { GoalService } from '../../services/goal.service';
@@ -54,7 +55,7 @@ describe('GoalsPage', () => {
     };
 
     snackBarMock = {
-      open: vi.fn(),
+      open: vi.fn(fakeSnackBarRef),
     };
 
     celebrationMock = {

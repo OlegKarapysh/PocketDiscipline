@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { fakeSnackBarRef } from '../../../../shared/testing/snack-bar-ref.fake';
 import { By } from '@angular/platform-browser';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CategoryManagement } from './category-management';
@@ -65,7 +66,7 @@ describe('CategoryManagement', () => {
     };
 
     mockSnackBar = {
-      open: vi.fn(),
+      open: vi.fn(fakeSnackBarRef),
     };
 
     await TestBed.configureTestingModule({

@@ -281,6 +281,25 @@ body {
 }
 
 // A snackbar quotes user-entered titles ("Deleted …"); one long word must wrap, not run off a phone.
+// A sideways swipe dismisses a toast (SnackBarService), so the browser keeps only vertical panning.
+// The container and the message both need it: the message scrolls, and touch-action stops there.
 .mat-mdc-snack-bar-label {
   overflow-wrap: anywhere;
+  touch-action: pan-y;
+}
+
+// Material hard-codes an M2 black shadow on the surface and has no token for it; toasts take elevation 2.
+.mat-mdc-snack-bar-container .mat-mdc-snackbar-surface {
+  box-shadow: var(--pd-sys-elevation-2);
+}
+
+// Below 840px the toast sits above the bottom nav, as far up as the speed dial normally sits, so the
+// tabs stay usable while it shows; the shell lifts the speed dial above it. The overlay pane in the
+// selector outranks Material's own margin, whose styles load after these.
+.cdk-overlay-pane .mat-mdc-snack-bar-container {
+  touch-action: pan-y;
+
+  @include t.down(expanded) {
+    margin-bottom: calc(t.$bottom-nav-height + t.space(3) + env(safe-area-inset-bottom));
+  }
 }

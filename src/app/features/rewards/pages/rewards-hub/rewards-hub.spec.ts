@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { fakeSnackBarRef } from '../../../../shared/testing/snack-bar-ref.fake';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { RewardsHub } from './rewards-hub';
 import { RewardsService } from '../../services/rewards.service';
@@ -32,7 +33,7 @@ describe('RewardsHub', () => {
     };
 
     mockSnackBar = {
-      open: vi.fn(),
+      open: vi.fn(fakeSnackBarRef),
     };
 
     const mockRewardsService = {
