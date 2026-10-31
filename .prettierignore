@@ -6,6 +6,9 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
+# Agent worktrees: whole checkouts of the repo, ignored by git only through .git/info/exclude.
+.claude/worktrees/
+
 # Vendored spec-kit tooling: overwritten on upgrade, so keep it byte-identical to upstream.
 .agents/skills/speckit-*/
 .claude/skills/speckit-*/
