@@ -5,11 +5,13 @@
       [filter]="filter()"
       (filterChange)="filterChange.emit($event)"
     />
-    <app-pomodoro-stats [tally]="summary().total" />
-    @if (summary().total.pomodoros === 0) {
-      <p class="empty">No pomodoros were completed in this period.</p>
-    } @else {
-      <app-pomodoro-history-chart [days]="summary().days" />
+    @if (summary(); as summary) {
+      <app-pomodoro-stats [tally]="summary.total" />
+      @if (summary.total.pomodoros === 0) {
+        <p class="empty">No pomodoros were completed in this period.</p>
+      } @else {
+        <app-pomodoro-history-chart [days]="summary.days" />
+      }
     }
   </div>
 </app-section-card>

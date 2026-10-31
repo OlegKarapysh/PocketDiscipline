@@ -1,10 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { openDialog } from './dialog';
 
 test.describe('Purge database', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/goals');
-    await page.getByRole('button', { name: /Add Goal/i }).click();
-    await page.getByPlaceholder('e.g. Read a book').fill('Goal to be purged');
+    const title = page.getByPlaceholder('e.g. Read a book');
+    await openDialog(page.getByRole('button', { name: /Add Goal/i }), title);
+    await title.fill('Goal to be purged');
     await page.locator('input[type="number"]').fill('500');
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Goal to be purged')).toBeVisible();

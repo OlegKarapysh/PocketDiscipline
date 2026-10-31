@@ -2,13 +2,14 @@ import { signal } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { Observable, of } from 'rxjs';
+import { Observable, Subject, of } from 'rxjs';
 import { Dashboard } from './dashboard';
 import { DashboardEarningsService } from './services/dashboard-earnings.service';
 import { UserService } from '../../core/services/user.service';
 import { ClockService } from '../../core/services/clock.service';
 import type { EarningsPeriodFilter } from './models/earnings-period-filter.model';
 import type { MonthChangeEvent } from './models/month-change-event.model';
+import type { MonthlyEarningsSummary } from './models/monthly-earnings-summary.model';
 
 describe('Dashboard', () => {
   let component: Dashboard;
@@ -77,6 +78,31 @@ describe('Dashboard', () => {
   it('should contain the daily earnings chart', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('app-earnings-chart')).toBeTruthy();
+  });
+
+  it('should not report a month without earnings before the summary is read', async () => {
+    const summary = new Subject<MonthlyEarningsSummary>();
+    earningsServiceMock.getMonthlyEarningsSummary.mockReturnValue(summary);
+    fixture = TestBed.createComponent(Dashboard);
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(compiled.querySelector('.empty-earnings-indicator')).toBeNull();
+    expect(compiled.querySelector('app-earnings-stats app-stat-card')).toBeNull();
+
+    summary.next({
+      year: 2026,
+      month: 9,
+      monthLabel: 'September 2026',
+      totalEarned: 0,
+      daysCount: 2,
+      averageEarnedPerDay: 0,
+      isCurrentMonth: true,
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(compiled.querySelector('.empty-earnings-indicator')).not.toBeNull();
   });
 
   it('should keep a custom range exactly as chosen', () => {
@@ -172,7 +198,7 @@ describe('Dashboard', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.monthlySummary()).toBeNull();
+    expect(component.monthlySummary()).toBeUndefined();
     expect(consoleSpy).toHaveBeenCalled();
     consoleSpy.mockRestore();
   });

@@ -65,11 +65,12 @@ const LEGEND: BarChartLegendItem[] = SOURCES.map((source) => ({
   styleUrl: './earnings-chart.scss',
 })
 export class EarningsChart {
-  readonly records = input<DailyEarningsRecord[]>([]);
+  // Until the records are read the chart keeps its axes and draws no bars, so the card does not resize.
+  readonly records = input<DailyEarningsRecord[]>();
 
   readonly legend = LEGEND;
 
-  private readonly grouping = computed(() => groupByCalendarPeriod(this.records(), (record) => record.date));
+  private readonly grouping = computed(() => groupByCalendarPeriod(this.records() ?? [], (record) => record.date));
   private readonly buckets = computed(() => this.grouping().periods.map((period) => this.toBucket(period)));
   readonly heading = computed(() => HEADINGS[this.grouping().granularity]);
 

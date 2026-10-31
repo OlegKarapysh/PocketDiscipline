@@ -50,7 +50,6 @@ export class DailyTaskList {
         this.dailyTasksService.completionsOn(date).pipe(catchError(() => of([] as DailyTaskCompletion[]))),
       ),
     ),
-    { initialValue: [] as DailyTaskCompletion[] },
   );
 
   readonly showForm = signal(false);
@@ -63,7 +62,7 @@ export class DailyTaskList {
   readonly rows = computed(() => {
     const today = this.clock.today();
     const earned = new Map<string, number>();
-    for (const completion of this.todayCompletions()) {
+    for (const completion of this.todayCompletions() ?? []) {
       earned.set(completion.taskId, (earned.get(completion.taskId) ?? 0) + completion.rewardEarned);
     }
     return (this.tasks() ?? []).map((task) => ({

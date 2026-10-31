@@ -50,8 +50,9 @@ Treat all four as the definition of done:
 npm run lint && npm run typecheck && npm test -- --watch=false && npm run e2e
 ```
 
-The e2e suite is too slow for the pre-commit hook and for CI, which run lint and the unit tests only.
-Run `npm run e2e` locally, always for UI changes (it holds the layout audit).
+The e2e suite is too slow for CI, which runs lint, typecheck and the unit tests only. A local, unversioned
+pre-push hook (`.git/hooks/pre-push`) runs `npm run lint`; committing runs no checks, so lint before
+you commit. Run `npm run e2e` locally, always for UI changes (it holds the layout audit).
 
 ## Angular version
 

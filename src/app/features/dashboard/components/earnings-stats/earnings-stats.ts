@@ -17,7 +17,7 @@ import type { MonthChangeEvent } from '../../models/month-change-event.model';
 export class EarningsStats {
   private readonly clock = inject(ClockService);
 
-  readonly summary = input<MonthlyEarningsSummary | null>(null);
+  readonly summary = input<MonthlyEarningsSummary>();
 
   readonly monthChange = output<MonthChangeEvent>();
 
@@ -36,10 +36,7 @@ export class EarningsStats {
     return false;
   });
 
-  readonly hasNoEarnings = computed(() => {
-    const currentSummary = this.summary();
-    return currentSummary !== null && currentSummary.totalEarned === 0;
-  });
+  readonly hasNoEarnings = computed(() => this.summary()?.totalEarned === 0);
 
   readonly averageHint = computed(() => {
     const currentSummary = this.summary();

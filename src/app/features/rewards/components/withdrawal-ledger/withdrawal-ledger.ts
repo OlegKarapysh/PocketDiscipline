@@ -83,7 +83,6 @@ export class WithdrawalLedger {
         ),
       ),
     ),
-    { initialValue: [] as WithdrawalRecord[] },
   );
 
   readonly categories = toSignal(
@@ -93,16 +92,20 @@ export class WithdrawalLedger {
         return EMPTY;
       }),
     ),
-    { initialValue: [] as RewardCategory[] },
   );
 
-  private readonly categoryMap = computed(
-    () => new Map<string, RewardCategory>(this.categories().map((c) => [c.id, c])),
-  );
+  private readonly categoryMap = computed(() => {
+    const categories = this.categories();
+    return categories ? new Map<string, RewardCategory>(categories.map((c) => [c.id, c])) : undefined;
+  });
 
+  // A row names its category, so it waits for the categories as well as the withdrawals.
   readonly rows = computed(() => {
+    const withdrawals = this.withdrawals();
     const categories = this.categoryMap();
-    return this.withdrawals().map((withdrawal) => {
+    if (!withdrawals || !categories) return undefined;
+
+    return withdrawals.map((withdrawal) => {
       const category = categories.get(withdrawal.categoryId);
       return {
         withdrawal,

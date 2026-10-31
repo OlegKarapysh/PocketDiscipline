@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import type { Observable } from 'rxjs';
-import { EMPTY, of, throwError } from 'rxjs';
+import { EMPTY, Subject, of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { fakeSnackBarRef } from '../../../../shared/testing/snack-bar-ref.fake';
 import { TaskList } from './task-list';
@@ -75,6 +75,22 @@ describe('TaskList', () => {
 
     fixture = TestBed.createComponent(TaskList);
     component = fixture.componentInstance;
+  });
+
+  it('should not show the empty state before the first read of the tasks arrives', async () => {
+    const tasks = new Subject<DisciplineItem[]>();
+    taskServiceMock.tasks$ = tasks;
+    fixture = TestBed.createComponent(TaskList);
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.debugElement.query(By.directive(EmptyState))).toBeNull();
+    expect(fixture.debugElement.query(By.css('.all-done'))).toBeNull();
+
+    tasks.next([]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.debugElement.query(By.directive(EmptyState))).not.toBeNull();
   });
 
   it('should render empty state without any "Add initial tasks" button when tasks stream is empty', async () => {

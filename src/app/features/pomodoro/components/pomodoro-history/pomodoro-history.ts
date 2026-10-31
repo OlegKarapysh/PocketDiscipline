@@ -13,7 +13,7 @@ import { PomodoroStats } from '../pomodoro-stats/pomodoro-stats';
   styleUrl: './pomodoro-history.scss',
 })
 export class PomodoroHistory {
-  readonly summary = input.required<PomodoroPeriodSummary>();
+  readonly summary = input.required<PomodoroPeriodSummary | undefined>();
   readonly filter = input.required<PeriodFilterValue>();
   readonly filterChange = output<PeriodFilterValue>();
 }

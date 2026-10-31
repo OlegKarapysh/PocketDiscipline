@@ -139,6 +139,7 @@ Rules:
 - Money is always `app-amount`. Never interpolate `{{ x }} ₴` by hand. Where a component cannot render (SVG `<text>`, attribute bindings, aria labels) use the `money` pipe (`MoneyPipe`, `shared/pipes/money.pipe.ts`); in TypeScript strings such as snackbar messages use `MONEY_FORMAT` from `shared/constants/money-format.const.ts`. All three show the stored whole hryvnias with no decimals (see Money in [schema.md](./schema.md#money)).
 - Use `CelebrationService` for earning moments, and `SnackBarService` for everything else ("Morning run done · +200 ₴").
 - One `app-page-header` per routed page.
+- An empty state, a zero or a "None" appears only once the data has been read. Until then the frame (header, filters, card headings) stays and the data's place is blank. How to wire it: [code_style.md, Not loaded is not empty](./code_style.md#not-loaded-is-not-empty).
 
 ## Responsive layout
 
