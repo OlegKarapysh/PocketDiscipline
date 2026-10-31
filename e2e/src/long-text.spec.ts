@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from '@playwright/test';
 import { DIFFICULTY_NAME_MAX_LENGTH, TITLE_MAX_LENGTH } from '../../src/app/shared/constants/text-length.const';
+import { openDialog } from './dialog';
 
 const PASTED = 'W'.repeat(3 * TITLE_MAX_LENGTH);
 
@@ -12,9 +13,9 @@ test.describe('Long text on a phone', () => {
 
   test('should cut a pasted goal title at the limit and wrap it inside the card', async ({ page }) => {
     await page.goto('/goals');
-    await page.getByRole('button', { name: /Add Goal/i }).click();
-
     const title = page.getByPlaceholder('e.g. Read a book');
+    await openDialog(page.getByRole('button', { name: /Add Goal/i }), title);
+
     await title.fill(PASTED);
     await expect(title).toHaveValue('W'.repeat(TITLE_MAX_LENGTH));
 

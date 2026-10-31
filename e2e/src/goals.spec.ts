@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { openDialog } from './dialog';
 import { readBalance, readStores } from './indexed-db';
 
 test.describe('Goals Flow', () => {
@@ -18,10 +19,11 @@ test.describe('Goals Flow', () => {
     await page.goto('/goals');
 
     // Click Add Goal
-    await page.getByRole('button', { name: /Add Goal/i }).click();
+    const title = page.getByPlaceholder('e.g. Read a book');
+    await openDialog(page.getByRole('button', { name: /Add Goal/i }), title);
 
     // Fill the form
-    await page.getByPlaceholder('e.g. Read a book').fill('Playwright Test Goal');
+    await title.fill('Playwright Test Goal');
     await page.locator('input[type="number"]').fill('500');
 
     // Save
