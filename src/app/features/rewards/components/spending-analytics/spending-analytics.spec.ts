@@ -1,7 +1,7 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ClockService } from '../../../../core/services/clock.service';
 import { By } from '@angular/platform-browser';
@@ -87,7 +87,7 @@ describe('SpendingAnalytics', () => {
     expect(component.selectedPeriod()).toBe('thisMonth');
     expect(mockAnalyticsService.getAnalytics).toHaveBeenCalledWith('thisMonth');
 
-    expect(component.analytics().totalSpent).toBe(1000);
+    expect(component.analytics()?.totalSpent).toBe(1000);
     expect(component.topCategory()?.categoryName).toBe('Food & Treats');
     expect(component.averagePerWithdrawal()).toBe(250);
   });
@@ -121,6 +121,23 @@ describe('SpendingAnalytics', () => {
     expect(compiled.querySelector('app-spending-donut-chart')).toBeTruthy();
     expect(compiled.querySelector('app-spending-trend-chart')).toBeTruthy();
     expect(compiled.querySelector('app-empty-state')).toBeFalsy();
+  });
+
+  it('should show no figures and no empty state before the first read arrives', async () => {
+    const analytics = new Subject<SpendingAnalyticsSummary>();
+    mockAnalyticsService.getAnalytics.mockReturnValue(analytics);
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(compiled.querySelector('app-stat-card')).toBeNull();
+    expect(compiled.querySelector('app-empty-state')).toBeNull();
+
+    analytics.next(mockEmptySummary);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(compiled.querySelectorAll('app-stat-card')).toHaveLength(4);
+    expect(compiled.querySelector('app-empty-state')).not.toBeNull();
   });
 
   it('should render empty state when totalSpent is zero', () => {
@@ -174,7 +191,7 @@ describe('SpendingAnalytics', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.analytics().totalSpent).toBe(0);
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-empty-state')).toBeNull();
     expect(snackBarMock.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });

@@ -6,44 +6,46 @@
     ariaLabel="Select analytics timeframe"
   />
 
-  <div class="metrics-grid">
-    <div class="metric-pair">
-      <app-stat-card label="Total spent">
-        <app-amount [value]="analytics().totalSpent" />
-      </app-stat-card>
+  @if (analytics(); as data) {
+    <div class="metrics-grid">
+      <div class="metric-pair">
+        <app-stat-card label="Total spent">
+          <app-amount [value]="data.totalSpent" />
+        </app-stat-card>
 
-      <app-stat-card label="Withdrawals">
-        <span class="metric-count">{{ analytics().withdrawalCount }}</span>
-      </app-stat-card>
+        <app-stat-card label="Withdrawals">
+          <span class="metric-count">{{ data.withdrawalCount }}</span>
+        </app-stat-card>
+      </div>
+
+      <div class="metric-pair">
+        <app-stat-card label="Top category" [hint]="topCategoryShare()">
+          <span class="metric-text">{{ topCategory()?.categoryName ?? 'None' }}</span>
+        </app-stat-card>
+
+        <app-stat-card label="Average per spend">
+          <app-amount [value]="averagePerWithdrawal()" />
+        </app-stat-card>
+      </div>
     </div>
 
-    <div class="metric-pair">
-      <app-stat-card label="Top category" [hint]="topCategoryShare()">
-        <span class="metric-text">{{ topCategory()?.categoryName ?? 'None' }}</span>
-      </app-stat-card>
+    @if (data.totalSpent === 0) {
+      <app-empty-state
+        heading="No spending data in this period"
+        message="Log a quick spend or claim a reward in the store to see where your balance goes."
+      />
+    } @else {
+      <div class="charts-grid">
+        <app-section-card heading="Category breakdown">
+          <p class="chart-subtitle">Withdrawals by category</p>
+          <app-spending-donut-chart [data]="data.categoryBreakdown" [totalSpent]="data.totalSpent" />
+        </app-section-card>
 
-      <app-stat-card label="Average per spend">
-        <app-amount [value]="averagePerWithdrawal()" />
-      </app-stat-card>
-    </div>
-  </div>
-
-  @if (analytics().totalSpent === 0) {
-    <app-empty-state
-      heading="No spending data in this period"
-      message="Log a quick spend or claim a reward in the store to see where your balance goes."
-    />
-  } @else {
-    <div class="charts-grid">
-      <app-section-card heading="Category breakdown">
-        <p class="chart-subtitle">Withdrawals by category</p>
-        <app-spending-donut-chart [data]="analytics().categoryBreakdown" [totalSpent]="analytics().totalSpent" />
-      </app-section-card>
-
-      <app-section-card heading="Spending trend">
-        <p class="chart-subtitle">{{ trendSubtitle() }}</p>
-        <app-spending-trend-chart [data]="analytics().spendingTrend" [granularity]="analytics().granularity" />
-      </app-section-card>
-    </div>
+        <app-section-card heading="Spending trend">
+          <p class="chart-subtitle">{{ trendSubtitle() }}</p>
+          <app-spending-trend-chart [data]="data.spendingTrend" [granularity]="data.granularity" />
+        </app-section-card>
+      </div>
+    }
   }
 </div>

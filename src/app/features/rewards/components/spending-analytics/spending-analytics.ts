@@ -7,7 +7,6 @@ import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 
 import { SpendingAnalyticsService } from '../../services/spending-analytics.service';
 import type { AnalyticsPeriod } from '../../models/analytics-period.type';
-import type { SpendingAnalyticsSummary } from '../../models/spending-analytics.model';
 import { SpendingDonutChart } from '../spending-donut-chart/spending-donut-chart';
 import { SpendingTrendChart } from '../spending-trend-chart/spending-trend-chart';
 import { Amount } from '../../../../shared/components/amount/amount';
@@ -51,20 +50,11 @@ export class SpendingAnalytics {
         ),
       ),
     ),
-    {
-      initialValue: {
-        period: 'thisMonth',
-        granularity: 'daily',
-        totalSpent: 0,
-        withdrawalCount: 0,
-        categoryBreakdown: [],
-        spendingTrend: [],
-      } satisfies SpendingAnalyticsSummary,
-    },
+    { initialValue: undefined },
   );
 
   readonly topCategory = computed(() => {
-    const breakdown = this.analytics().categoryBreakdown;
+    const breakdown = this.analytics()?.categoryBreakdown ?? [];
     return breakdown.length > 0 ? breakdown[0] : null;
   });
 
@@ -75,11 +65,11 @@ export class SpendingAnalytics {
 
   readonly averagePerWithdrawal = computed(() => {
     const data = this.analytics();
-    if (data.withdrawalCount === 0) return 0;
+    if (!data || data.withdrawalCount === 0) return 0;
     return Math.round(data.totalSpent / data.withdrawalCount);
   });
 
   readonly trendSubtitle = computed(() =>
-    this.analytics().granularity === 'daily' ? 'Daily spending' : 'Monthly spending',
+    this.analytics()?.granularity === 'daily' ? 'Daily spending' : 'Monthly spending',
   );
 }
