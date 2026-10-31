@@ -126,8 +126,8 @@ describe('WithdrawalLedger', () => {
     expect(component).toBeTruthy();
     expect(mockCategoryService.getCategories).toHaveBeenCalled();
     expect(mockWithdrawalService.getWithdrawals).toHaveBeenCalled();
-    expect(component.withdrawals().length).toBe(2);
-    expect(component.categories().length).toBe(2);
+    expect(component.withdrawals()?.length).toBe(2);
+    expect(component.categories()?.length).toBe(2);
   });
 
   it('should render withdrawal items with titles, amounts, and category info', () => {
@@ -161,6 +161,40 @@ describe('WithdrawalLedger', () => {
     expect(unknown?.style.backgroundColor).toBe('');
     expect(unknown?.textContent).toContain('category');
     expect(items[1].textContent).toContain('Uncategorized');
+  });
+
+  it('should not show the empty state before the first read of the withdrawals arrives', async () => {
+    const withdrawals = new Subject<WithdrawalRecord[]>();
+    mockWithdrawalService.getWithdrawals.mockReturnValue(withdrawals);
+    const f = TestBed.createComponent(WithdrawalLedger);
+    const compiled = f.nativeElement as HTMLElement;
+
+    f.detectChanges();
+    await f.whenStable();
+    expect(compiled.querySelector('app-empty-state')).toBeNull();
+
+    withdrawals.next([]);
+    f.detectChanges();
+    await f.whenStable();
+    expect(compiled.querySelector('app-empty-state')).not.toBeNull();
+  });
+
+  it('should not list a withdrawal as Uncategorized before the categories are read', async () => {
+    const categories = new Subject<RewardCategory[]>();
+    mockCategoryService.getCategories.mockReturnValue(categories);
+    const f = TestBed.createComponent(WithdrawalLedger);
+    const compiled = f.nativeElement as HTMLElement;
+
+    f.detectChanges();
+    await f.whenStable();
+    expect(compiled.querySelectorAll('.ledger-item')).toHaveLength(0);
+    expect(compiled.textContent).not.toContain('Uncategorized');
+    expect(compiled.querySelector('app-empty-state')).toBeNull();
+
+    categories.next(mockCategories);
+    f.detectChanges();
+    await f.whenStable();
+    expect(compiled.querySelectorAll('.ledger-item')).toHaveLength(2);
   });
 
   it('should show empty state when there are no withdrawals', async () => {
@@ -226,7 +260,7 @@ describe('WithdrawalLedger', () => {
     await typeInto('.start-date-field input', '2026-09-10');
 
     expect(mockWithdrawalService.getWithdrawals).not.toHaveBeenCalled();
-    expect(component.withdrawals().length).toBe(2);
+    expect(component.withdrawals()?.length).toBe(2);
     const error = (fixture.nativeElement as HTMLElement).querySelector('.range-error');
     expect(error?.textContent).toContain('Start date cannot be after end date');
   });
@@ -299,10 +333,10 @@ describe('WithdrawalLedger', () => {
     const c = f.componentInstance;
 
     live.next(mockWithdrawals);
-    expect(c.withdrawals().length).toBe(2);
+    expect(c.withdrawals()?.length).toBe(2);
 
     live.next([mockWithdrawals[0]]);
-    expect(c.withdrawals().length).toBe(1);
+    expect(c.withdrawals()?.length).toBe(1);
     expect(mockWithdrawalService.getWithdrawals).toHaveBeenCalledTimes(1);
   });
 

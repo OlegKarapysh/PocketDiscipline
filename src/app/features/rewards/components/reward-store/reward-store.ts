@@ -68,7 +68,7 @@ export class RewardStore {
         return EMPTY;
       }),
     ),
-    { initialValue: [] as RewardItem[] },
+    { initialValue: undefined },
   );
   readonly categories = toSignal(
     this.categoryService.getCategories().pipe(
@@ -77,7 +77,7 @@ export class RewardStore {
         return EMPTY;
       }),
     ),
-    { initialValue: [] as RewardCategory[] },
+    { initialValue: undefined },
   );
 
   readonly claimingRewardId = signal<string | null>(null);
@@ -88,32 +88,32 @@ export class RewardStore {
   readonly balance = computed(() => this.user()?.balance ?? 0);
 
   readonly categoriesMap = computed(() => {
+    const categories = this.categories();
+    if (!categories) return undefined;
+
     const map = new Map<string, RewardCategory>();
-    for (const cat of this.categories()) {
+    for (const cat of categories) {
       map.set(cat.id, cat);
     }
     return map;
   });
 
-  readonly activeRewardsCount = computed(() => {
-    return this.rewards().filter((r) => r.status === 'active').length;
+  // The counts are left off until the rewards are read, rather than claiming there are none.
+  readonly statusOptions = computed<SegmentOption<RewardStatus>[]>(() => {
+    const rewards = this.rewards();
+    const count = (status: RewardStatus) => (rewards ? ` (${rewards.filter((r) => r.status === status).length})` : '');
+    return [
+      { value: 'active', label: `Active wishlist${count('active')}` },
+      { value: 'claimed', label: `Claimed${count('claimed')}` },
+    ];
   });
-
-  readonly claimedRewardsCount = computed(() => {
-    return this.rewards().filter((r) => r.status === 'claimed').length;
-  });
-
-  readonly statusOptions = computed<SegmentOption<RewardStatus>[]>(() => [
-    { value: 'active', label: `Active wishlist (${this.activeRewardsCount()})` },
-    { value: 'claimed', label: `Claimed (${this.claimedRewardsCount()})` },
-  ]);
 
   readonly filteredRewards = computed(() => {
     const status = this.statusFilter();
     const { categoryId, query } = this.filters();
     const needle = query.toLowerCase().trim();
 
-    return this.rewards().filter((reward) => {
+    return this.rewards()?.filter((reward) => {
       if (reward.status !== status) {
         return false;
       }
@@ -127,10 +127,14 @@ export class RewardStore {
     });
   });
 
+  // A card names its category and measures the balance against the cost, so it waits for both.
   readonly rewardRows = computed(() => {
+    const rewards = this.filteredRewards();
     const categories = this.categoriesMap();
+    if (!rewards || !categories || !this.user()) return undefined;
+
     const claimingId = this.claimingRewardId();
-    return this.filteredRewards().map((reward) => ({
+    return rewards.map((reward) => ({
       reward,
       category: categories.get(reward.categoryId),
       isClaiming: reward.id === claimingId,

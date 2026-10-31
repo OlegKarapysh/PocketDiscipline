@@ -40,47 +40,49 @@
     }
   </div>
 
-  @if (rows().length === 0) {
-    <app-empty-state heading="No withdrawals found" message="No transactions match your current filter criteria." />
-  } @else {
-    <div class="ledger-list">
-      @for (row of rows(); track row.withdrawal.id) {
-        <div class="ledger-item">
-          <div class="item-left">
-            <div class="category-indicator" [style.backgroundColor]="row.color">
-              <mat-icon aria-hidden="true">{{ row.icon }}</mat-icon>
-            </div>
-            <div class="item-details">
-              <span class="item-title">{{ row.withdrawal.title }}</span>
-              <div class="item-meta">
-                <span class="item-category">{{ row.categoryName }}</span>
-                <span class="meta-dot">&bull;</span>
-                <span class="item-date pd-num">{{ row.withdrawal.date }}</span>
-                @if (row.withdrawal.rewardId) {
-                  <app-badge tone="primary" icon="storefront">Store reward</app-badge>
+  @if (rows(); as rows) {
+    @if (rows.length === 0) {
+      <app-empty-state heading="No withdrawals found" message="No transactions match your current filter criteria." />
+    } @else {
+      <div class="ledger-list">
+        @for (row of rows; track row.withdrawal.id) {
+          <div class="ledger-item">
+            <div class="item-left">
+              <div class="category-indicator" [style.backgroundColor]="row.color">
+                <mat-icon aria-hidden="true">{{ row.icon }}</mat-icon>
+              </div>
+              <div class="item-details">
+                <span class="item-title">{{ row.withdrawal.title }}</span>
+                <div class="item-meta">
+                  <span class="item-category">{{ row.categoryName }}</span>
+                  <span class="meta-dot">&bull;</span>
+                  <span class="item-date pd-num">{{ row.withdrawal.date }}</span>
+                  @if (row.withdrawal.rewardId) {
+                    <app-badge tone="primary" icon="storefront">Store reward</app-badge>
+                  }
+                </div>
+                @if (row.withdrawal.notes) {
+                  <span class="item-notes">{{ row.withdrawal.notes }}</span>
                 }
               </div>
-              @if (row.withdrawal.notes) {
-                <span class="item-notes">{{ row.withdrawal.notes }}</span>
-              }
+            </div>
+
+            <div class="item-right">
+              <app-amount class="item-amount" tone="danger" [value]="-row.withdrawal.amount" />
+              <button
+                mat-icon-button
+                type="button"
+                matTooltip="Revert withdrawal and refund balance"
+                aria-label="Revert withdrawal and refund balance"
+                (click)="confirmRevert(row.withdrawal)"
+                class="revert-button"
+              >
+                <mat-icon>undo</mat-icon>
+              </button>
             </div>
           </div>
-
-          <div class="item-right">
-            <app-amount class="item-amount" tone="danger" [value]="-row.withdrawal.amount" />
-            <button
-              mat-icon-button
-              type="button"
-              matTooltip="Revert withdrawal and refund balance"
-              aria-label="Revert withdrawal and refund balance"
-              (click)="confirmRevert(row.withdrawal)"
-              class="revert-button"
-            >
-              <mat-icon>undo</mat-icon>
-            </button>
-          </div>
-        </div>
-      }
-    </div>
+        }
+      </div>
+    }
   }
 </div>

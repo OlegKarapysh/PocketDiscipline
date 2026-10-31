@@ -33,33 +33,35 @@
     </div>
   </div>
 
-  @if (rewardRows().length > 0) {
-    <div class="rewards-grid">
-      @for (row of rewardRows(); track row.reward.id) {
-        <app-reward-card
-          [reward]="row.reward"
-          [category]="row.category"
-          [currentBalance]="balance()"
-          [claiming]="row.isClaiming"
-          (claim)="onClaimReward($event)"
-          (edit)="onEditReward($event)"
-          (delete)="onDeleteReward($event)"
-        />
-      }
-    </div>
-  } @else if (statusFilter() === 'active') {
-    <app-empty-state
-      class="empty-state"
-      heading="No rewards found"
-      message="Create a custom reward to start saving toward milestones and treats."
-      actionLabel="Create first reward"
-      (action)="openAddReward()"
-    />
-  } @else {
-    <app-empty-state
-      class="empty-state"
-      heading="No rewards found"
-      message="You haven't claimed any milestone rewards yet. Keep building discipline."
-    />
+  @if (rewardRows(); as rows) {
+    @if (rows.length > 0) {
+      <div class="rewards-grid">
+        @for (row of rows; track row.reward.id) {
+          <app-reward-card
+            [reward]="row.reward"
+            [category]="row.category"
+            [currentBalance]="balance()"
+            [claiming]="row.isClaiming"
+            (claim)="onClaimReward($event)"
+            (edit)="onEditReward($event)"
+            (delete)="onDeleteReward($event)"
+          />
+        }
+      </div>
+    } @else if (statusFilter() === 'active') {
+      <app-empty-state
+        class="empty-state"
+        heading="No rewards found"
+        message="Create a custom reward to start saving toward milestones and treats."
+        actionLabel="Create first reward"
+        (action)="openAddReward()"
+      />
+    } @else {
+      <app-empty-state
+        class="empty-state"
+        heading="No rewards found"
+        message="You haven't claimed any milestone rewards yet. Keep building discipline."
+      />
+    }
   }
 </div>
