@@ -10,5 +10,5 @@ import { PomodoroStats } from '../pomodoro-stats/pomodoro-stats';
   styleUrl: './pomodoro-today.scss',
 })
 export class PomodoroToday {
-  readonly tally = input.required<PomodoroTally>();
+  readonly tally = input.required<PomodoroTally | undefined>();
 }

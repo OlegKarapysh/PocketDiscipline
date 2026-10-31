@@ -6,7 +6,7 @@
       <app-session-config />
       <app-timer-controls />
     </app-section-card>
-    <app-pomodoro-today [tally]="todaySummary().total" />
+    <app-pomodoro-today [tally]="todaySummary()?.total" />
   </div>
   <app-pomodoro-history
     class="column"

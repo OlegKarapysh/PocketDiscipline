@@ -1,8 +1,10 @@
 <app-section-card heading="Today">
-  <div class="today">
-    <app-pomodoro-stats [tally]="tally()" />
-    @if (tally().pomodoros === 0) {
-      <p class="invitation">No pomodoros yet today. Start one to get the day going.</p>
-    }
-  </div>
+  @if (tally(); as tally) {
+    <div class="today">
+      <app-pomodoro-stats [tally]="tally" />
+      @if (tally.pomodoros === 0) {
+        <p class="invitation">No pomodoros yet today. Start one to get the day going.</p>
+      }
+    </div>
+  }
 </app-section-card>

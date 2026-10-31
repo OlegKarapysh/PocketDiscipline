@@ -37,7 +37,7 @@ describe('PomodoroHistory', () => {
     };
   };
 
-  const render = (summary: PomodoroPeriodSummary) => {
+  const render = (summary: PomodoroPeriodSummary | undefined) => {
     fixture.componentRef.setInput('summary', summary);
     fixture.componentRef.setInput('filter', FILTER);
     fixture.detectChanges();
@@ -62,6 +62,15 @@ describe('PomodoroHistory', () => {
     expect(shown()).toContain('Work 5');
     expect(shown()).toContain('Study 1');
     expect(shown()).toContain('2 h 30 min focus');
+  });
+
+  it('should keep the period filter but show no totals and no empty message before the summary is read', () => {
+    render(undefined);
+
+    expect(fixture.debugElement.query(By.directive(PeriodFilter))).not.toBeNull();
+    expect(host().querySelector('app-pomodoro-stats')).toBeNull();
+    expect(host().querySelector('.empty')).toBeNull();
+    expect(fixture.debugElement.query(By.directive(PomodoroHistoryChart))).toBeNull();
   });
 
   it('should chart the days of the summary', () => {
