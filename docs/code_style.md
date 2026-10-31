@@ -46,6 +46,7 @@ agent that "restores" them is working from a pre-v22 memory:
 | `standalone: true`                                | Default since v20.                                                                                                                                |
 | `provideZonelessChangeDetection()`                | Zoneless is the default; `zone.js` is not installed.                                                                                              |
 | `@Injectable({ providedIn: 'root' })`             | Use `@Service()` for singleton services (v22+). All 20 services do; there are no holdouts left.                                                   |
+| `toSignal(x$, { initialValue: undefined })`       | `toSignal` without options already starts `undefined`. See [Not loaded is not empty](#not-loaded-is-not-empty).                                   |
 
 Also standing Angular rules: `inject()` over constructor injection, `input()` / `output()` /
 `model()` over decorators, native control flow (`@if` / `@for` / `@switch`), the `host` object over
@@ -167,7 +168,9 @@ moved to signal forms under [rule 4](#4-forms).
 
 **Rule.** There are exactly two ways to consume an observable in a component or service:
 
-- **Display streams** (a value the template reads) → `toSignal(stream$, { initialValue })`.
+- **Display streams** (a value the template reads) → `toSignal(stream$, { initialValue })`. Over a
+  Dexie read pass no `initialValue`, so the signal starts `undefined`; see
+  [Not loaded is not empty](#not-loaded-is-not-empty).
 - **Side-effecting streams** (subscribed for their effect) → `.pipe(takeUntilDestroyed())`, passing
   a `DestroyRef` only when outside an injection context.
 
@@ -216,7 +219,6 @@ private readonly filters = signal<WithdrawalFilter>({});
 
 readonly withdrawals = toSignal(
   toObservable(this.filters).pipe(switchMap((f) => this.withdrawalService.getWithdrawals(f))),
-  { initialValue: [] as WithdrawalRecord[] }
 );
 ```
 
@@ -224,6 +226,50 @@ readonly withdrawals = toSignal(
 stream is torn down once — not zero times, not twice. Repo-wide now: 9 files use `toSignal`, 8 use
 `takeUntilDestroyed`, none store a `Subscription`, and one `ngOnDestroy` remains for the
 non-Angular-owned resources described above.
+
+### Not loaded is not empty
+
+**Rule.** A Dexie read arrives after the first render, and whatever the signal holds until then is
+on screen. It must not be an answer the database could give.
+
+- A display stream over a Dexie read starts `undefined`: pass `toSignal` no `initialValue`, which
+  is its default (see the [v22 defaults](#angular-v22-defaults--do-not-write-these-out)). Never `[]`,
+  `0`, `null` or a zero-filled object. Only a value that is known before the first emission, such as
+  the router's current URL or a media query's current match, may be a real initial value.
+- `undefined` travels as far as the template that decides what "empty" looks like, through
+  `computed()` rows and component inputs (`input<Goal[]>()`), and that template gates on it. An
+  empty array is truthy, so the inner branch still renders a real empty list:
+
+  ```angular
+  @if (rows(); as rows) {
+    @if (rows.length === 0) {
+      <app-empty-state heading="No withdrawals found" />
+    } @else {
+      ...
+    }
+  }
+  ```
+
+- Rows built from several reads stay `undefined` until every read has arrived. Otherwise a
+  withdrawal says "Uncategorized" and a reward says "Need 500 ₴ more" until the categories and the
+  balance land.
+- Until then, show nothing in the data's place, but keep what does not depend on it: the page
+  header, the filters, a section card and its heading. The content then fills in rather than
+  pushing the page down.
+- The component's spec holds the stream back with a `Subject` and asserts that no empty state, zero
+  or "None" renders before the first emission.
+
+**Status: swept 2026-10-30.** Every `toSignal` over a Dexie read starts `undefined`. The two other
+initial values are not Dexie reads: `bottom-nav.ts` (the router's URL) and `layout.ts` (a
+breakpoint match). `daily-scores-page.ts` does not use `toSignal`: it loads with `forkJoin` and
+gates on a `loading` signal, which keeps the same promise.
+
+**What it looked like.** `goals-page.ts` fed `{ initialValue: [] }` into `goal-list.html`, two files
+away, which showed `app-empty-state` for any empty list. Every visit opened on "No active goals
+right now" until the goals replaced it. The Pomodoro page did the same with a zero-filled
+`NO_POMODOROS` summary ("No pomodoros yet today"), and the reward store showed "No rewards found"
+and "Active wishlist (0)". The empty value and the empty state lived in different files, so neither
+looked wrong on its own.
 
 ---
 

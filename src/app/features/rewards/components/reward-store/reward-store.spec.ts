@@ -2,7 +2,7 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Observable } from 'rxjs';
-import { EMPTY, of, throwError } from 'rxjs';
+import { EMPTY, Subject, of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { By } from '@angular/platform-browser';
@@ -116,7 +116,7 @@ describe('RewardStore', () => {
     expect(component).toBeTruthy();
     expect(component.statusFilter()).toBe('active');
     expect(component.filteredRewards()).toHaveLength(1);
-    expect(component.filteredRewards()[0].title).toBe('Mechanical Keyboard');
+    expect(component.filteredRewards()?.[0].title).toBe('Mechanical Keyboard');
   });
 
   it('should filter rewards by category', () => {
@@ -139,7 +139,7 @@ describe('RewardStore', () => {
     fixture.detectChanges();
 
     expect(component.statusFilter()).toBe('claimed');
-    expect(component.filteredRewards()[0].title).toBe('Wireless Mouse');
+    expect(component.filteredRewards()?.[0].title).toBe('Wireless Mouse');
   });
 
   it('should pass each reward its own category', () => {
@@ -152,7 +152,7 @@ describe('RewardStore', () => {
     fixture.detectChanges();
 
     expect(component.filteredRewards()).toHaveLength(1);
-    expect(component.filteredRewards()[0].title).toBe('Wireless Mouse');
+    expect(component.filteredRewards()?.[0].title).toBe('Wireless Mouse');
   });
 
   it('should filter rewards by search query when typing into search input in DOM', () => {
@@ -283,6 +283,51 @@ describe('RewardStore', () => {
     });
   });
 
+  it('should not claim there are no rewards before the first read of the rewards arrives', async () => {
+    const rewards = new Subject<RewardItem[]>();
+    mockRewardsService.getRewards.mockReturnValue(rewards);
+    fixture = TestBed.createComponent(RewardStore);
+    const toggleLabels = () =>
+      fixture.debugElement
+        .queryAll(By.css('.status-toggle button'))
+        .map((toggle) => (toggle.nativeElement as HTMLElement).textContent.trim());
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.debugElement.query(By.css('.empty-state'))).toBeNull();
+    expect(toggleLabels()).toEqual(['Active wishlist', 'Claimed']);
+
+    rewards.next([]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.debugElement.query(By.css('.empty-state'))).not.toBeNull();
+    expect(toggleLabels()).toEqual(['Active wishlist (0)', 'Claimed (0)']);
+  });
+
+  it('should show the cards only once their categories and the balance are read', async () => {
+    const categories = new Subject<RewardCategory[]>();
+    const user = new Subject<User>();
+    mockCategoryService.getCategories.mockReturnValue(categories);
+    mockUserService.user$ = user;
+    fixture = TestBed.createComponent(RewardStore);
+    const cards = () => fixture.debugElement.queryAll(By.directive(RewardCard));
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(cards()).toHaveLength(0);
+
+    categories.next(mockCategories);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(cards()).toHaveLength(0);
+    expect(fixture.debugElement.query(By.css('.empty-state'))).toBeNull();
+
+    user.next({ id: 1, name: 'Current', balance: 3000, createdAt: 0, updatedAt: 0 });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(cards()).toHaveLength(1);
+  });
+
   it('should display empty state when no rewards match', () => {
     component.filters.update((f) => ({ ...f, query: 'Unknown Query' }));
     fixture.detectChanges();
@@ -300,7 +345,7 @@ describe('RewardStore', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.rewards()).toEqual([]);
+    expect(fixture.debugElement.query(By.css('.empty-state'))).toBeNull();
     expect(mockSnackBar.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });

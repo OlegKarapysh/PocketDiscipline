@@ -36,7 +36,6 @@ export class GoalsPage {
         return EMPTY;
       }),
     ),
-    { initialValue: [] },
   );
   readonly completedGoals = toSignal(
     this.goalService.getCompletedGoals().pipe(
@@ -45,11 +44,10 @@ export class GoalsPage {
         return EMPTY;
       }),
     ),
-    { initialValue: [] },
   );
 
   async completeGoal(id: string): Promise<void> {
-    const goal = this.activeGoals().find((g) => g.id === id);
+    const goal = this.activeGoals()?.find((g) => g.id === id);
     let completed: boolean;
     try {
       completed = await this.goalService.completeGoal(id);
@@ -79,7 +77,7 @@ export class GoalsPage {
   }
 
   confirmDeleteGoal(id: string): void {
-    const goal = this.activeGoals().find((g) => g.id === id);
+    const goal = this.activeGoals()?.find((g) => g.id === id);
     if (!goal) return;
 
     this.confirmService

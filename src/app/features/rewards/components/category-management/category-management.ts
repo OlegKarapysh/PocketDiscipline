@@ -34,7 +34,6 @@ export class CategoryManagement {
         return EMPTY;
       }),
     ),
-    { initialValue: [] as RewardCategory[] },
   );
 
   openAddCategoryDialog(): void {

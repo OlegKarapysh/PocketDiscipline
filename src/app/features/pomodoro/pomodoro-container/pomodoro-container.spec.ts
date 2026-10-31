@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { signal } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { PomodoroContainer } from './pomodoro-container';
 import { TimerDisplay } from '../components/timer-display/timer-display';
 import { TimerControls } from '../components/timer-controls/timer-controls';
@@ -122,6 +122,30 @@ describe('PomodoroContainer', () => {
     const headers = fixture.debugElement.queryAll(By.css('app-page-header'));
     expect(headers.length).toBe(1);
     expect((headers[0].nativeElement as HTMLElement).textContent).toContain('Pomodoro');
+  });
+
+  it('should show no tallies and no "no pomodoros" message before the sessions are read', async () => {
+    const readings = new Map<string, Subject<PomodoroPeriodSummary>>();
+    statsMock.getPeriodSummary.mockImplementation((startDate: string, endDate: string) => {
+      const reading = new Subject<PomodoroPeriodSummary>();
+      readings.set(`${startDate}..${endDate}`, reading);
+      return reading;
+    });
+    await settle();
+
+    expect(host().querySelector('app-pomodoro-stats')).toBeNull();
+    expect(host().querySelector('app-pomodoro-today .invitation')).toBeNull();
+    expect(host().querySelector('app-pomodoro-history .empty')).toBeNull();
+
+    for (const [range, reading] of readings) {
+      const [startDate, endDate] = range.split('..');
+      reading.next(summary(startDate, endDate, tally(0)));
+    }
+    await settle();
+
+    expect(host().querySelectorAll('app-pomodoro-stats')).toHaveLength(2);
+    expect(host().querySelector('app-pomodoro-today .invitation')).not.toBeNull();
+    expect(host().querySelector('app-pomodoro-history .empty')).not.toBeNull();
   });
 
   describe('Today card', () => {

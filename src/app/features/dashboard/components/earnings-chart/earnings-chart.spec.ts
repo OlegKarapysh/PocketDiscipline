@@ -51,7 +51,7 @@ describe('EarningsChart', () => {
       row.querySelector('.swatch')?.getAttribute('data-tone') ?? null,
     ]);
 
-  const render = (records: DailyEarningsRecord[]) => {
+  const render = (records: DailyEarningsRecord[] | undefined) => {
     fixture.componentRef.setInput('records', records);
     fixture.detectChanges();
   };
@@ -80,6 +80,14 @@ describe('EarningsChart', () => {
     // Goals, daily tasks, pomodoro, daily scores, bottom to top; a source that earned nothing is left out.
     expect(tones).toEqual([['reward', 'primary', 'inverse-primary'], [], ['reward']]);
     expect(groups().map((group) => group.querySelector('.zero-bar') !== null)).toEqual([false, true, false]);
+  });
+
+  it('should keep its frame but draw no bars, not even zero bars, before the records are read', () => {
+    render(undefined);
+
+    expect(heading()).toBe('Daily earnings');
+    expect(host().querySelector('svg')).not.toBeNull();
+    expect(groups()).toHaveLength(0);
   });
 
   it('should name the chart after its granularity', () => {

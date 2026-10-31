@@ -12,8 +12,8 @@ import type { MonthGoalGroup } from '../../models/month-goal-group.model';
   templateUrl: './goal-list.html',
 })
 export class GoalList {
-  activeGoals = input<Goal[]>([]);
-  completedGoals = input<Goal[]>([]);
+  activeGoals = input<Goal[]>();
+  completedGoals = input<Goal[]>();
 
   complete = output<string>();
   undo = output<string>();
@@ -21,7 +21,7 @@ export class GoalList {
   delete = output<string>();
 
   groupedCompletedGoals = computed(() => {
-    const goals = this.completedGoals();
+    const goals = this.completedGoals() ?? [];
     const groups: MonthGoalGroup[] = [];
     const map = new Map<string, Goal[]>();
 

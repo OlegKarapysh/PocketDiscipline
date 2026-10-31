@@ -13,7 +13,6 @@ import { WithdrawalService } from '../../services/withdrawal.service';
 import { CategoryService } from '../../services/category.service';
 import { UserService } from '../../../../core/services/user.service';
 import type { User } from '../../../../core/models/user.model';
-import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import { FALLBACK_CATEGORY_ID } from '../../../../core/constants/initial-reward-categories.const';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
@@ -61,7 +60,6 @@ export class QuickSpendDialog {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
   readonly categories = toSignal(
     this.categoryService.getCategories().pipe(
@@ -70,7 +68,6 @@ export class QuickSpendDialog {
         return EMPTY;
       }),
     ),
-    { initialValue: [] as RewardCategory[] },
   );
 
   readonly model = signal<QuickSpendModel>({ amount: null, title: '', categoryId: FALLBACK_CATEGORY_ID, notes: '' });

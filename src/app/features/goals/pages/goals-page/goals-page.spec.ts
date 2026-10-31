@@ -1,7 +1,7 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EMPTY, of, throwError } from 'rxjs';
+import { EMPTY, Subject, of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { By } from '@angular/platform-browser';
@@ -9,6 +9,7 @@ import { GoalsPage } from './goals-page';
 import { GoalService } from '../../services/goal.service';
 import { CelebrationService } from '../../../../shared/services/celebration.service';
 import { ConfirmService } from '../../../../shared/services/confirm.service';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import type { Goal } from '../../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../../core/models/goal.model';
 
@@ -102,6 +103,21 @@ describe('GoalsPage', () => {
     expect(dialogMock.open).toHaveBeenCalled();
   });
 
+  it('should not show the empty state before the first read of the goals arrives', async () => {
+    const activeGoals = new Subject<Goal[]>();
+    goalServiceMock.getActiveGoals.mockReturnValue(activeGoals);
+    fixture = TestBed.createComponent(GoalsPage);
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.debugElement.query(By.directive(EmptyState))).toBeNull();
+
+    activeGoals.next([]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.debugElement.query(By.directive(EmptyState))).not.toBeNull();
+  });
+
   it('should complete goal and celebrate it with its title and reward', async () => {
     fixture.detectChanges();
 
@@ -155,7 +171,7 @@ describe('GoalsPage', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.activeGoals()).toEqual([]);
+    expect(fixture.debugElement.query(By.directive(EmptyState))).toBeNull();
     expect(snackBarMock.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 

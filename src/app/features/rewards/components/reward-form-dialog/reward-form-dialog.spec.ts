@@ -252,7 +252,7 @@ describe('RewardFormDialog', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.categories()).toEqual([]);
+    expect((fixture.nativeElement as HTMLElement).querySelector('mat-select')).not.toBeNull();
     expect(mockSnackBar.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });

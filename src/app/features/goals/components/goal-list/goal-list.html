@@ -1,18 +1,20 @@
 <div class="goals-container">
-  @if (activeGoals().length > 0) {
-    <section class="active-section">
-      <h2>Active goals</h2>
-      @for (goal of activeGoals(); track goal.id) {
-        <app-goal-item
-          [goal]="goal"
-          (complete)="complete.emit($event)"
-          (edit)="edit.emit($event)"
-          (delete)="delete.emit($event)"
-        />
-      }
-    </section>
-  } @else {
-    <app-empty-state class="empty-state" heading="No active goals right now" message="Add a goal to work towards." />
+  @if (activeGoals(); as activeGoals) {
+    @if (activeGoals.length > 0) {
+      <section class="active-section">
+        <h2>Active goals</h2>
+        @for (goal of activeGoals; track goal.id) {
+          <app-goal-item
+            [goal]="goal"
+            (complete)="complete.emit($event)"
+            (edit)="edit.emit($event)"
+            (delete)="delete.emit($event)"
+          />
+        }
+      </section>
+    } @else {
+      <app-empty-state class="empty-state" heading="No active goals right now" message="Add a goal to work towards." />
+    }
   }
 
   @if (groupedCompletedGoals().length > 0) {
