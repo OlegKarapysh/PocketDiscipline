@@ -15,7 +15,6 @@ import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { TITLE_MAX_LENGTH } from '../../../../shared/constants/text-length.const';
 import { moneyAmount } from '../../../../shared/validators/money-amount';
 
-import type { RewardCategory } from '../../../../core/models/reward-category.model';
 import type { RewardType } from '../../../../core/models/reward-type.type';
 import { FALLBACK_CATEGORY_ID } from '../../../../core/constants/initial-reward-categories.const';
 import type { RewardFormDialogData } from './reward-form-dialog-data.model';
@@ -61,7 +60,7 @@ export class RewardFormDialog {
         return EMPTY;
       }),
     ),
-    { initialValue: [] as RewardCategory[] },
+    { initialValue: undefined },
   );
 
   private readonly isTypeLocked = !!this.data?.reward && this.rewardsService.isTypeLocked(this.data.reward);

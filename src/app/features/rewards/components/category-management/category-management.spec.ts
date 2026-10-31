@@ -85,7 +85,7 @@ describe('CategoryManagement', () => {
   it('should initialize and load categories', () => {
     expect(component).toBeTruthy();
     expect(mockCategoryService.getCategories).toHaveBeenCalled();
-    expect(component.categories().length).toBe(2);
+    expect(component.categories()?.length).toBe(2);
   });
 
   it('should render a single page header holding the Add category action', () => {
@@ -272,7 +272,9 @@ describe('CategoryManagement', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.categories()).toEqual([]);
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-page-header')).not.toBeNull();
+    expect(compiled.querySelectorAll('.category-row')).toHaveLength(0);
     expect(mockSnackBar.open).toHaveBeenCalledWith('Database connection lost', 'Close', expect.any(Object));
   });
 });
