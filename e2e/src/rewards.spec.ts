@@ -47,7 +47,7 @@ test.describe('Rewards: money out and back', () => {
     await expect(rewardCard(page)).toBeVisible();
   });
 
-  test('should take the cost off the balance when a reward is claimed', async ({ page }) => {
+  test('should take the cost off the balance when a reward is claimed', { tag: '@smoke' }, async ({ page }) => {
     await rewardCard(page).getByRole('button', { name: 'Claim reward' }).click();
 
     await expect(rewardCard(page).getByText('Claimed 1x')).toBeVisible();

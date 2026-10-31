@@ -24,7 +24,7 @@ test.describe('Pomodoro', () => {
     await page.clock.install({ time: new Date('2026-03-10T09:00:00') });
   });
 
-  test('should pay a completed session into the balance', async ({ page }) => {
+  test('should pay a completed session into the balance', { tag: '@smoke' }, async ({ page }) => {
     await page.goto('/pomodoro');
     await expect(page.getByRole('button', { name: /^Start/ })).toBeEnabled();
     const balance = await readBalance(page);

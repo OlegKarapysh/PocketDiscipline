@@ -22,21 +22,25 @@ test.describe('Purge database', () => {
     await expect(page.getByText('Goal to be purged')).toBeVisible();
   });
 
-  test('should delete user data, restore the defaults and go home without reloading', async ({ page }) => {
-    await page.evaluate(() => {
-      (window as unknown as { survivesNavigation: boolean }).survivesNavigation = true;
-    });
+  test(
+    'should delete user data, restore the defaults and go home without reloading',
+    { tag: '@smoke' },
+    async ({ page }) => {
+      await page.evaluate(() => {
+        (window as unknown as { survivesNavigation: boolean }).survivesNavigation = true;
+      });
 
-    await page.getByRole('button', { name: 'Purge database' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Purge' }).click();
+      await page.getByRole('button', { name: 'Purge database' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Purge' }).click();
 
-    await expect(page).toHaveURL(/\/dashboard$/);
-    expect(await page.evaluate(() => (window as unknown as { survivesNavigation?: boolean }).survivesNavigation)).toBe(
-      true,
-    );
+      await expect(page).toHaveURL(/\/dashboard$/);
+      expect(
+        await page.evaluate(() => (window as unknown as { survivesNavigation?: boolean }).survivesNavigation),
+      ).toBe(true);
 
-    await page.getByRole('link', { name: /Goals/i }).first().click();
-    await expect(page.getByText('do 100 squats')).toBeVisible();
-    await expect(page.getByText('Goal to be purged')).toHaveCount(0);
-  });
+      await page.getByRole('link', { name: /Goals/i }).first().click();
+      await expect(page.getByText('do 100 squats')).toBeVisible();
+      await expect(page.getByText('Goal to be purged')).toHaveCount(0);
+    },
+  );
 });

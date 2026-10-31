@@ -133,41 +133,45 @@ test.describe('One-Off Tasks Flow', () => {
     await expect(updatedItem.locator('app-amount')).toHaveText(/^\+200\s*₴$/);
   });
 
-  test('should complete a one-off task to credit balance and move to Completed, then undo to revert and debit balance', async ({
-    page,
-  }) => {
-    await openOneOffTab(page);
-    await createOneOffTask(page, 'Pay internet bill', '150');
+  test(
+    'should complete a one-off task to credit balance and move to Completed, then undo to revert and debit balance',
+    { tag: '@smoke' },
+    async ({ page }) => {
+      await openOneOffTab(page);
+      await createOneOffTask(page, 'Pay internet bill', '150');
 
-    const beforeStores = await readStores(page, ['users']);
-    const initialBalance = Number(beforeStores['users'][0]?.['balance'] ?? 0);
+      const beforeStores = await readStores(page, ['users']);
+      const initialBalance = Number(beforeStores['users'][0]?.['balance'] ?? 0);
 
-    // Complete task
-    await taskItem(page, 'Pay internet bill').getByRole('button', { name: 'Complete' }).click();
-    await expect(snackBar(page, 'Pay internet bill done · +150 ₴')).toBeVisible();
-    await expect(page.locator('app-task-list .all-done')).toContainText('Everything is done.');
+      // Complete task
+      await taskItem(page, 'Pay internet bill').getByRole('button', { name: 'Complete' }).click();
+      await expect(snackBar(page, 'Pay internet bill done · +150 ₴')).toBeVisible();
+      await expect(page.locator('app-task-list .all-done')).toContainText('Everything is done.');
 
-    const afterCompleteStores = await readStores(page, ['users']);
-    expect(afterCompleteStores['users'][0]?.['balance']).toBe(initialBalance + 150);
+      const afterCompleteStores = await readStores(page, ['users']);
+      expect(afterCompleteStores['users'][0]?.['balance']).toBe(initialBalance + 150);
 
-    // Expand Completed section and verify no Edit/Delete actions on completed task
-    const completedToggle = page.getByRole('button', { name: 'Completed (1)' });
-    await completedToggle.click();
-    await expect(completedToggle).toHaveAttribute('aria-expanded', 'true');
+      // Expand Completed section and verify no Edit/Delete actions on completed task
+      const completedToggle = page.getByRole('button', { name: 'Completed (1)' });
+      await completedToggle.click();
+      await expect(completedToggle).toHaveAttribute('aria-expanded', 'true');
 
-    const completedItem = page.locator('#oneoff-tasks-done').locator('app-task-item', { hasText: 'Pay internet bill' });
-    await expect(completedItem).toBeVisible();
-    await expect(completedItem.getByRole('button', { name: 'Edit one-off task' })).toHaveCount(0);
-    await expect(completedItem.getByRole('button', { name: 'Delete one-off task' })).toHaveCount(0);
+      const completedItem = page
+        .locator('#oneoff-tasks-done')
+        .locator('app-task-item', { hasText: 'Pay internet bill' });
+      await expect(completedItem).toBeVisible();
+      await expect(completedItem.getByRole('button', { name: 'Edit one-off task' })).toHaveCount(0);
+      await expect(completedItem.getByRole('button', { name: 'Delete one-off task' })).toHaveCount(0);
 
-    // Undo completion
-    await completedItem.getByRole('button', { name: 'Undo' }).click();
-    await expect(snackBar(page, 'Completion undone')).toBeVisible();
-    await expect(taskItem(page, 'Pay internet bill').getByRole('button', { name: 'Complete' })).toBeVisible();
+      // Undo completion
+      await completedItem.getByRole('button', { name: 'Undo' }).click();
+      await expect(snackBar(page, 'Completion undone')).toBeVisible();
+      await expect(taskItem(page, 'Pay internet bill').getByRole('button', { name: 'Complete' })).toBeVisible();
 
-    const afterUndoStores = await readStores(page, ['users']);
-    expect(afterUndoStores['users'][0]?.['balance']).toBe(initialBalance);
-  });
+      const afterUndoStores = await readStores(page, ['users']);
+      expect(afterUndoStores['users'][0]?.['balance']).toBe(initialBalance);
+    },
+  );
 
   test('should ask before deleting a pending one-off task and keep the user balance unchanged', async ({ page }) => {
     await openOneOffTab(page);

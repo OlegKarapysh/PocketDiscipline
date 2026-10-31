@@ -15,7 +15,7 @@ test.describe('Goals Flow', () => {
     await expect(page.getByText('do 12 pomodoro a day')).toBeVisible();
   });
 
-  test('should add a new goal', async ({ page }) => {
+  test('should add a new goal', { tag: '@smoke' }, async ({ page }) => {
     await page.goto('/goals');
 
     // Click Add Goal

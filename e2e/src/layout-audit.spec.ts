@@ -42,6 +42,8 @@ interface Screen {
   open?: (page: Page) => Promise<void>;
   // What to measure; the whole page unless the screen is an overlay on top of one.
   root?: string;
+  // Routed only in a dev build (isDevMode() in app.routes.ts), so not audited against the production one.
+  devOnly?: boolean;
 }
 
 // Add a screen here whenever you add a route, a tab, a dialog or any other state with its own layout.
@@ -535,7 +537,7 @@ const SCREENS: Screen[] = [
       await expect(page.locator('.import-button')).toBeVisible();
     },
   },
-  { name: 'design system gallery', path: '/design-system', ready: 'app-stat-card' },
+  { name: 'design system gallery', path: '/design-system', ready: 'app-stat-card', devOnly: true },
 ];
 
 // The lists again with nothing in them: an empty state is a layout of its own. Audited before the
@@ -975,7 +977,7 @@ async function audit(page: Page, screen: Screen, width: number, testInfo: TestIn
   expect.soft(findings, `"${screen.name}" does not fit at ${String(width)}px`).toEqual([]);
 }
 
-test.describe('Layout audit', () => {
+test.describe('Layout audit', { tag: '@smoke' }, () => {
   for (const width of WIDTHS) {
     test.describe(`at ${String(width)}px`, () => {
       const touch = width < RAIL_FROM;
@@ -1000,7 +1002,9 @@ test.describe('Layout audit', () => {
         }
 
         await replaceLists(page, worstCaseRows());
-        for (const screen of SCREENS) {
+        // e2e/playwright.smoke.config.ts runs against the production build and says so in its metadata.
+        const production = testInfo.config.metadata['production'] === true;
+        for (const screen of SCREENS.filter((candidate) => !(production && candidate.devOnly))) {
           await test.step(screen.name, () => audit(page, screen, width, testInfo));
         }
       });

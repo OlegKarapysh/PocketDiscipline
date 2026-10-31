@@ -63,7 +63,7 @@ test.describe('Dashboard totals', () => {
     await page.reload();
   });
 
-  test('should show the balance and add up every source of this month', async ({ page }) => {
+  test('should show the balance and add up every source of this month', { tag: '@smoke' }, async ({ page }) => {
     await expect(page.locator('app-balance-widget app-amount')).toHaveText(/^12\s345\s*₴$/);
     await expect(page.locator('app-earnings-stats .month-label')).toHaveText('March 2026');
     // 100 + 50 + 25 + 13 ₴, over the 10 days so far: 18,8 rounds to 19.

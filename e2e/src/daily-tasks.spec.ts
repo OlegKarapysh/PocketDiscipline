@@ -268,7 +268,7 @@ test.describe('Daily Tasks Flow', () => {
     await expect(taskItem(page, 'Run').locator('app-amount')).toHaveText(/^\+200\s*₴$/);
   });
 
-  test('should show the rewards with the streak bonus, and pay what it shows', async ({ page }) => {
+  test('should show the rewards with the streak bonus, and pay what it shows', { tag: '@smoke' }, async ({ page }) => {
     await page.clock.setFixedTime(new Date('2026-10-29T12:00:00'));
     await page.goto('/tasks');
     await expect(page.locator('app-daily-task-list app-empty-state')).toBeVisible();

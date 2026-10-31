@@ -66,24 +66,28 @@ test.describe('Pomodoro stats', () => {
   });
 
   test.describe('Today card', () => {
-    test("should count today's completed sessions by type, with focus time and reward", async ({ page }) => {
-      await openWith(page, [
-        session('2026-10-30T08:00:00', '2026-10-30T08:25:00'),
-        session('2026-10-30T09:00:00', '2026-10-30T09:25:00'),
-        session('2026-10-30T10:00:00', '2026-10-30T10:25:00'),
-        session('2026-10-30T10:30:00', '2026-10-30T11:20:00', {
-          durationMinutes: 50,
-          engagementType: 'study',
-          rewardEarned: 250,
-        }),
-        // Not counted: completed yesterday, and stopped today.
-        session('2026-10-29T09:00:00', '2026-10-29T09:25:00'),
-        session('2026-10-30T11:30:00', '2026-10-30T11:35:00', { status: 'cancelled', rewardEarned: undefined }),
-      ]);
+    test(
+      "should count today's completed sessions by type, with focus time and reward",
+      { tag: '@smoke' },
+      async ({ page }) => {
+        await openWith(page, [
+          session('2026-10-30T08:00:00', '2026-10-30T08:25:00'),
+          session('2026-10-30T09:00:00', '2026-10-30T09:25:00'),
+          session('2026-10-30T10:00:00', '2026-10-30T10:25:00'),
+          session('2026-10-30T10:30:00', '2026-10-30T11:20:00', {
+            durationMinutes: 50,
+            engagementType: 'study',
+            rewardEarned: 250,
+          }),
+          // Not counted: completed yesterday, and stopped today.
+          session('2026-10-29T09:00:00', '2026-10-29T09:25:00'),
+          session('2026-10-30T11:30:00', '2026-10-30T11:35:00', { status: 'cancelled', rewardEarned: undefined }),
+        ]);
 
-      await expectFigures(todayCard(page), [/^4 pomodoros/, /Work 3/, /Study 1/, /2 h 5 min focus/, /\+550\s*₴/]);
-      await expect(todayCard(page).locator('.invitation')).toHaveCount(0);
-    });
+        await expectFigures(todayCard(page), [/^4 pomodoros/, /Work 3/, /Study 1/, /2 h 5 min focus/, /\+550\s*₴/]);
+        await expect(todayCard(page).locator('.invitation')).toHaveCount(0);
+      },
+    );
 
     test('should show zero figures and an invitation on a day without pomodoros', async ({ page }) => {
       await openWith(page, [session('2026-10-29T09:00:00', '2026-10-29T09:25:00')]);
