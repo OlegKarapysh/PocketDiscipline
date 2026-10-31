@@ -139,8 +139,8 @@ describe('EarningsStats', () => {
     expect(emptyIndicator).toBeFalsy();
   });
 
-  it('should not render stat content when summary is null', () => {
-    fixture.componentRef.setInput('summary', null);
+  it('should show no figures and no "no earnings" badge before the summary is read', () => {
+    fixture.componentRef.setInput('summary', undefined);
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;

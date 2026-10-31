@@ -55,24 +55,24 @@ export class Dashboard {
         );
       }),
     ),
-    { initialValue: [] },
+    { initialValue: undefined },
   );
 
   readonly monthlySummary = toSignal(
     toObservable(this.monthQuery).pipe(
       switchMap(({ year, month }) => {
         if (!year || !month) {
-          return of(null);
+          return of(undefined);
         }
         return defer(() => this.earningsService.getMonthlyEarningsSummary(year, month)).pipe(
           catchError((error) => {
             console.error('Failed to load monthly summary:', error);
-            return of(null);
+            return of(undefined);
           }),
         );
       }),
     ),
-    { initialValue: null },
+    { initialValue: undefined },
   );
 
   onFilterChange(filter: EarningsPeriodFilter): void {
