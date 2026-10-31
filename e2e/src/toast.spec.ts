@@ -24,7 +24,9 @@ async function showToast(page: Page): Promise<void> {
   await form.getByRole('button', { name: 'Save task' }).click();
   await expect(page.locator('simple-snack-bar', { hasText: 'One-off task added' })).toBeVisible();
   // The toast takes gestures once it has finished opening, which is also when the speed dial moves up.
-  await expect(page.locator('app-speed-dial')).toHaveAttribute('style', /translate/);
+  await expect
+    .poll(async () => (await rect(page.locator('app-speed-dial'))).bottom)
+    .toBeLessThanOrEqual((await rect(toast(page))).top);
 }
 
 // Playwright can tap but not drag a finger, so the swipe goes through CDP as raw touch events.
@@ -50,6 +52,28 @@ test.describe('Toast on a phone', () => {
     const surface = await rect(toast(page));
     expect(surface.bottom).toBeLessThanOrEqual(nav.top);
     await expect.poll(async () => (await rect(page.locator('app-speed-dial'))).bottom).toBeLessThanOrEqual(surface.top);
+  });
+
+  test('should keep the Quick actions backdrop fullscreen and close on an outside tap while a toast shows', async ({
+    page,
+  }) => {
+    await showToast(page);
+    const quickActions = page.getByRole('button', { name: 'Quick actions', exact: true });
+    await quickActions.tap();
+
+    const viewport = page.viewportSize()!;
+    expect(await rect(page.locator('app-speed-dial .scrim'))).toEqual({
+      top: 0,
+      bottom: viewport.height,
+      left: 0,
+      right: viewport.width,
+    });
+
+    await page.touchscreen.tap(20, 100);
+
+    await expect(quickActions).toHaveAttribute('aria-expanded', 'false');
+    await expect(page.locator('app-speed-dial .scrim')).toHaveCount(0);
+    await expect(toast(page)).toBeVisible();
   });
 
   test('should leave the bottom nav usable while it shows', async ({ page }) => {

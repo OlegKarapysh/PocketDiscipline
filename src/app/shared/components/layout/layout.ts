@@ -65,6 +65,6 @@ export class Layout {
   // A toast takes the speed dial's place above the bottom nav (styles.scss), so the dial moves up out of its way.
   readonly speedDialLift = computed(() => {
     const height = this.snackBar.height();
-    return height > 0 ? `0 ${-(height + TOAST_GAP_PX)}px` : null;
+    return height > 0 ? height + TOAST_GAP_PX : null;
   });
 }

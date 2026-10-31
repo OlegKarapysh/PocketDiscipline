@@ -80,19 +80,19 @@ describe('Layout', () => {
     await setCompact(true);
     const speedDial = () => (fixture.debugElement.query(By.directive(SpeedDial)).nativeElement as HTMLElement).style;
 
-    expect(speedDial().translate).toBe('');
+    expect(speedDial().marginBottom).toBe('');
 
     toastHeight.set(60);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(speedDial().translate).toBe('0 -72px');
+    expect(speedDial().marginBottom).toBe('72px');
 
     toastHeight.set(0);
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(speedDial().translate).toBe('');
+    expect(speedDial().marginBottom).toBe('');
   });
 
   it('should reach every section from the bottom nav or its More menu', async () => {
