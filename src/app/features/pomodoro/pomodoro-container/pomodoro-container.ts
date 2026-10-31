@@ -25,7 +25,6 @@ export class PomodoroContainer {
 
   readonly todaySummary = toSignal(
     toObservable(this.clock.today).pipe(switchMap((today) => this.stats.getPeriodSummary(today, today))),
-    { initialValue: undefined },
   );
 
   private readonly selectedFilter = signal<PeriodFilterValue>({ preset: 'last7', startDate: '', endDate: '' });
@@ -43,7 +42,6 @@ export class PomodoroContainer {
     toObservable(this.currentFilter).pipe(
       switchMap((filter) => this.stats.getPeriodSummary(filter.startDate, filter.endDate)),
     ),
-    { initialValue: undefined },
   );
 
   onFilterChange(filter: PeriodFilterValue): void {

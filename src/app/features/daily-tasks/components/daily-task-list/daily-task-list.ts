@@ -42,7 +42,6 @@ export class DailyTaskList {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
   // Only to show what each task done today earned: a failed query leaves the amounts out, nothing more.
   private readonly todayCompletions = toSignal(
@@ -51,7 +50,6 @@ export class DailyTaskList {
         this.dailyTasksService.completionsOn(date).pipe(catchError(() => of([] as DailyTaskCompletion[]))),
       ),
     ),
-    { initialValue: undefined },
   );
 
   readonly showForm = signal(false);

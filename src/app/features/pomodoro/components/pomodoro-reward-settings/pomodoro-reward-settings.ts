@@ -37,7 +37,6 @@ export class PomodoroRewardSettings {
         return of(DEFAULT_RATES);
       }),
     ),
-    { initialValue: undefined },
   );
 
   // A change made elsewhere (another tab, a purge) replaces the fields unless the user is editing them.

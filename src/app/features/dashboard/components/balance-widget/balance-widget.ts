@@ -26,7 +26,6 @@ export class BalanceWidget {
         return of(undefined);
       }),
     ),
-    { initialValue: undefined },
   );
 
   openQuickSpend(): void {

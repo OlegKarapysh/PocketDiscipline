@@ -60,7 +60,6 @@ export class QuickSpendDialog {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
   readonly categories = toSignal(
     this.categoryService.getCategories().pipe(
@@ -69,7 +68,6 @@ export class QuickSpendDialog {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
 
   readonly model = signal<QuickSpendModel>({ amount: null, title: '', categoryId: FALLBACK_CATEGORY_ID, notes: '' });

@@ -38,7 +38,6 @@ export class Settings {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
 
   readonly canSetUpBalance = computed(() => {

@@ -60,7 +60,6 @@ export class RewardFormDialog {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
 
   private readonly isTypeLocked = !!this.data?.reward && this.rewardsService.isTypeLocked(this.data.reward);

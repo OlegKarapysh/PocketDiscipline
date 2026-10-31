@@ -34,7 +34,6 @@ export class CategoryManagement {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
 
   openAddCategoryDialog(): void {

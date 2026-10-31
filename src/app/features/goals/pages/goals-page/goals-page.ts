@@ -36,7 +36,6 @@ export class GoalsPage {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
   readonly completedGoals = toSignal(
     this.goalService.getCompletedGoals().pipe(
@@ -45,7 +44,6 @@ export class GoalsPage {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
 
   async completeGoal(id: string): Promise<void> {

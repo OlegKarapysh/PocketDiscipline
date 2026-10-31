@@ -46,6 +46,7 @@ agent that "restores" them is working from a pre-v22 memory:
 | `standalone: true`                                | Default since v20.                                                                                                                                |
 | `provideZonelessChangeDetection()`                | Zoneless is the default; `zone.js` is not installed.                                                                                              |
 | `@Injectable({ providedIn: 'root' })`             | Use `@Service()` for singleton services (v22+). All 20 services do; there are no holdouts left.                                                   |
+| `toSignal(x$, { initialValue: undefined })`       | `toSignal` without options already starts `undefined`. See [Not loaded is not empty](#not-loaded-is-not-empty).                                   |
 
 Also standing Angular rules: `inject()` over constructor injection, `input()` / `output()` /
 `model()` over decorators, native control flow (`@if` / `@for` / `@switch`), the `host` object over
@@ -168,7 +169,8 @@ moved to signal forms under [rule 4](#4-forms).
 **Rule.** There are exactly two ways to consume an observable in a component or service:
 
 - **Display streams** (a value the template reads) → `toSignal(stream$, { initialValue })`. Over a
-  Dexie read the initial value is `undefined`; see [Not loaded is not empty](#not-loaded-is-not-empty).
+  Dexie read pass no `initialValue`, so the signal starts `undefined`; see
+  [Not loaded is not empty](#not-loaded-is-not-empty).
 - **Side-effecting streams** (subscribed for their effect) → `.pipe(takeUntilDestroyed())`, passing
   a `DestroyRef` only when outside an injection context.
 
@@ -217,7 +219,6 @@ private readonly filters = signal<WithdrawalFilter>({});
 
 readonly withdrawals = toSignal(
   toObservable(this.filters).pipe(switchMap((f) => this.withdrawalService.getWithdrawals(f))),
-  { initialValue: undefined }
 );
 ```
 
@@ -231,7 +232,8 @@ non-Angular-owned resources described above.
 **Rule.** A Dexie read arrives after the first render, and whatever the signal holds until then is
 on screen. It must not be an answer the database could give.
 
-- A display stream over a Dexie read starts `undefined`: `{ initialValue: undefined }`. Never `[]`,
+- A display stream over a Dexie read starts `undefined`: pass `toSignal` no `initialValue`, which
+  is its default (see the [v22 defaults](#angular-v22-defaults--do-not-write-these-out)). Never `[]`,
   `0`, `null` or a zero-filled object. Only a value that is known before the first emission, such as
   the router's current URL or a media query's current match, may be a real initial value.
 - `undefined` travels as far as the template that decides what "empty" looks like, through

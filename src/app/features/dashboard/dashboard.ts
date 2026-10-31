@@ -55,7 +55,6 @@ export class Dashboard {
         );
       }),
     ),
-    { initialValue: undefined },
   );
 
   readonly monthlySummary = toSignal(
@@ -72,7 +71,6 @@ export class Dashboard {
         );
       }),
     ),
-    { initialValue: undefined },
   );
 
   onFilterChange(filter: EarningsPeriodFilter): void {

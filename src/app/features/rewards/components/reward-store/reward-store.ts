@@ -58,7 +58,6 @@ export class RewardStore {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
 
   readonly rewards = toSignal(
@@ -68,7 +67,6 @@ export class RewardStore {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
   readonly categories = toSignal(
     this.categoryService.getCategories().pipe(
@@ -77,7 +75,6 @@ export class RewardStore {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
 
   readonly claimingRewardId = signal<string | null>(null);

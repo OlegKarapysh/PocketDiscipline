@@ -83,7 +83,6 @@ export class WithdrawalLedger {
         ),
       ),
     ),
-    { initialValue: undefined },
   );
 
   readonly categories = toSignal(
@@ -93,7 +92,6 @@ export class WithdrawalLedger {
         return EMPTY;
       }),
     ),
-    { initialValue: undefined },
   );
 
   private readonly categoryMap = computed(() => {

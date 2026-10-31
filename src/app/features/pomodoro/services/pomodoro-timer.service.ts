@@ -58,7 +58,6 @@ export class PomodoroTimerService implements OnDestroy {
         return of(DEFAULT_RATES);
       }),
     ),
-    { initialValue: undefined },
   );
 
   // What the configured (or running) session pays at the current rates; undefined until the rates load.

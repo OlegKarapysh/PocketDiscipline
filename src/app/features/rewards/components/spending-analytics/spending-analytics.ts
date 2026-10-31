@@ -50,7 +50,6 @@ export class SpendingAnalytics {
         ),
       ),
     ),
-    { initialValue: undefined },
   );
 
   readonly topCategory = computed(() => {
