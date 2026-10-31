@@ -6,7 +6,7 @@ import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import type { Observable } from 'rxjs';
 import { signal } from '@angular/core';
-import { EMPTY, of, throwError } from 'rxjs';
+import { EMPTY, Subject, of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ClockService } from '../../../../core/services/clock.service';
 import { DailyTaskList } from './daily-task-list';
@@ -112,6 +112,22 @@ describe('DailyTaskList', () => {
 
     const items = fixture.debugElement.queryAll(By.directive(DailyTaskItem));
     expect(items.length).toBe(1);
+  });
+
+  it('should not show the empty state before the first read of the tasks arrives', async () => {
+    const tasks = new Subject<DailyTask[]>();
+    dailyTasksServiceMock.tasks$ = tasks;
+    fixture = TestBed.createComponent(DailyTaskList);
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.debugElement.query(By.directive(EmptyState))).toBeNull();
+    expect(fixture.debugElement.query(By.css('.all-done'))).toBeNull();
+
+    tasks.next([]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.debugElement.query(By.directive(EmptyState))).not.toBeNull();
   });
 
   it('should render empty state when task stream is empty', async () => {

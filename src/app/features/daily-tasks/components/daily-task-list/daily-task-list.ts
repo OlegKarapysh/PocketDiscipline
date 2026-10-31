@@ -42,6 +42,7 @@ export class DailyTaskList {
         return EMPTY;
       }),
     ),
+    { initialValue: undefined },
   );
   // Only to show what each task done today earned: a failed query leaves the amounts out, nothing more.
   private readonly todayCompletions = toSignal(
@@ -50,7 +51,7 @@ export class DailyTaskList {
         this.dailyTasksService.completionsOn(date).pipe(catchError(() => of([] as DailyTaskCompletion[]))),
       ),
     ),
-    { initialValue: [] as DailyTaskCompletion[] },
+    { initialValue: undefined },
   );
 
   readonly showForm = signal(false);
@@ -63,7 +64,7 @@ export class DailyTaskList {
   readonly rows = computed(() => {
     const today = this.clock.today();
     const earned = new Map<string, number>();
-    for (const completion of this.todayCompletions()) {
+    for (const completion of this.todayCompletions() ?? []) {
       earned.set(completion.taskId, (earned.get(completion.taskId) ?? 0) + completion.rewardEarned);
     }
     return (this.tasks() ?? []).map((task) => ({

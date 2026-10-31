@@ -32,6 +32,7 @@ export class TaskList {
         return EMPTY;
       }),
     ),
+    { initialValue: undefined },
   );
 
   readonly showForm = signal(false);
