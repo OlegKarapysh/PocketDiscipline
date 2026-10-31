@@ -5,6 +5,7 @@ import type { Observable } from 'rxjs';
 import { EMPTY, Subject, of, throwError } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { fakeSnackBarRef } from '../../../../shared/testing/snack-bar-ref.fake';
 import { By } from '@angular/platform-browser';
 import { RewardStore } from './reward-store';
 import { RewardsService } from '../../services/rewards.service';
@@ -92,7 +93,7 @@ describe('RewardStore', () => {
       user$: of({ id: 1, name: 'Current', balance: 3000, createdAt: 0, updatedAt: 0 }),
     };
     mockDialog = { open: vi.fn() };
-    mockSnackBar = { open: vi.fn() };
+    mockSnackBar = { open: vi.fn(fakeSnackBarRef) };
     mockConfirm = { ask: vi.fn().mockReturnValue(of(true)) };
 
     await TestBed.configureTestingModule({

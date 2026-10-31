@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { fakeSnackBarRef } from '../../../../shared/testing/snack-bar-ref.fake';
 import type { Observable } from 'rxjs';
 import { of, throwError } from 'rxjs';
 import { By } from '@angular/platform-browser';
@@ -64,7 +65,7 @@ describe('QuickSpendDialog', () => {
     mockUserService = {
       user$: of({ id: 1, name: 'Current', balance: 500, createdAt: 0, updatedAt: 0 }),
     };
-    mockSnackBar = { open: vi.fn() };
+    mockSnackBar = { open: vi.fn(fakeSnackBarRef) };
 
     await TestBed.configureTestingModule({
       imports: [QuickSpendDialog],
