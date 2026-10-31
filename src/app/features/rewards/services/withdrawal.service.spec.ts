@@ -1,120 +1,43 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { WithdrawalService } from './withdrawal.service';
-import { DbService } from '../../../database/db.service';
-import type { User } from '../../../core/models/user.model';
+import type { DbService } from '../../../database/db.service';
+import { openEmptyDb } from '../../../shared/testing/empty-db';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
+import type { User } from '../../../core/models/user.model';
 import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 import type { RewardItem } from '../../../core/models/reward.model';
 
-vi.mock('dexie', () => {
-  class MockDexie {
-    version = vi.fn();
-  }
-  return {
-    default: MockDexie,
-    Dexie: MockDexie,
-    liveQuery: (fn: () => unknown) => ({
-      '@@observable'() {
-        return {
-          subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
-            Promise.resolve()
-              .then(fn)
-              .then(
-                (val) => {
-                  subscriber.next(val);
-                  subscriber.complete();
-                },
-                (err: unknown) => {
-                  subscriber.error(err);
-                },
-              );
-            return {
-              unsubscribe() {
-                // no-op for mock
-              },
-            };
-          },
-        };
-      },
-    }),
-  };
-});
-
 describe('WithdrawalService', () => {
   let service: WithdrawalService;
-  let dbMock: {
-    users: {
-      get: ReturnType<typeof vi.fn>;
-      update: ReturnType<typeof vi.fn>;
-    };
-    withdrawals: {
-      get: ReturnType<typeof vi.fn>;
-      add: ReturnType<typeof vi.fn>;
-      delete: ReturnType<typeof vi.fn>;
-      orderBy: ReturnType<typeof vi.fn>;
-    };
-    rewards: {
-      get: ReturnType<typeof vi.fn>;
-      update: ReturnType<typeof vi.fn>;
-    };
-    transaction: ReturnType<typeof vi.fn>;
+  let db: DbService;
+
+  const mockUser: User = {
+    id: CURRENT_USER_ID,
+    name: 'Current',
+    balance: 500,
+    createdAt: 1000,
+    updatedAt: 1000,
   };
 
-  let mockUser: User;
-  let mockWithdrawal: WithdrawalRecord;
+  const mockWithdrawal: WithdrawalRecord = {
+    id: 'w-1',
+    amount: 100,
+    title: 'Protein Bar',
+    categoryId: 'cat-food',
+    notes: 'Tasty snack',
+    date: '2026-09-05',
+    timestamp: 1700000000000,
+    rewardId: null,
+  };
 
-  beforeEach(() => {
-    mockUser = {
-      id: CURRENT_USER_ID,
-      name: 'Current',
-      balance: 500,
-      createdAt: 1000,
-      updatedAt: 1000,
-    };
+  const balance = async () => (await db.users.get(CURRENT_USER_ID))?.balance;
 
-    mockWithdrawal = {
-      id: 'w-1',
-      amount: 100,
-      title: 'Protein Bar',
-      categoryId: 'cat-food',
-      notes: 'Tasty snack',
-      date: '2026-09-05',
-      timestamp: 1700000000000,
-      rewardId: null,
-    };
-
-    dbMock = {
-      users: {
-        get: vi.fn().mockResolvedValue({ ...mockUser }),
-        update: vi.fn().mockResolvedValue(1),
-      },
-      withdrawals: {
-        get: vi.fn().mockResolvedValue(mockWithdrawal),
-        add: vi.fn().mockResolvedValue('w-1'),
-        delete: vi.fn().mockResolvedValue(undefined),
-        orderBy: vi.fn().mockReturnValue({
-          reverse: vi.fn().mockReturnValue({
-            toArray: vi.fn().mockResolvedValue([mockWithdrawal]),
-          }),
-        }),
-      },
-      rewards: {
-        get: vi.fn().mockResolvedValue(undefined),
-        update: vi.fn().mockResolvedValue(1),
-      },
-      transaction: vi.fn().mockImplementation(async (...args: unknown[]) => {
-        const fn = args.find((arg): arg is () => Promise<unknown> => typeof arg === 'function');
-        if (fn) return await fn();
-        return undefined;
-      }),
-    };
-
-    TestBed.configureTestingModule({
-      providers: [WithdrawalService, { provide: DbService, useValue: dbMock }],
-    });
-
+  beforeEach(async () => {
+    db = await openEmptyDb();
+    await db.users.add(mockUser);
+    await db.withdrawals.add(mockWithdrawal);
     service = TestBed.inject(WithdrawalService);
   });
 
@@ -133,12 +56,8 @@ describe('WithdrawalService', () => {
     expect(record.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(record.timestamp).toBeGreaterThan(0);
 
-    expect(dbMock.transaction).toHaveBeenCalled();
-    expect(dbMock.users.update).toHaveBeenCalledWith(CURRENT_USER_ID, {
-      balance: 380,
-      updatedAt: expect.any(Number) as number,
-    });
-    expect(dbMock.withdrawals.add).toHaveBeenCalledWith(record);
+    expect(await balance()).toBe(380);
+    expect(await db.withdrawals.get(record.id)).toEqual(record);
   });
 
   it('should trim title and trim optional notes or set to undefined when blank', async () => {
@@ -169,6 +88,7 @@ describe('WithdrawalService', () => {
         categoryId: 'cat-food',
       }),
     ).rejects.toThrow('Amount must be greater than zero');
+    expect(await balance()).toBe(500);
   });
 
   it('should reject non-finite amounts (NaN, Infinity)', async () => {
@@ -200,18 +120,12 @@ describe('WithdrawalService', () => {
   });
 
   it('should spend a 100 ₴ balance down to exactly zero: 99 ₴, then 1 ₴', async () => {
-    let stored: User = { ...mockUser, balance: 100 };
-    // The service awaits these, so plain values stand in for the resolved promises.
-    dbMock.users.get.mockImplementation(() => ({ ...stored }));
-    dbMock.users.update.mockImplementation((_id: number, changes: Partial<User>) => {
-      stored = { ...stored, ...changes };
-      return 1;
-    });
+    await db.users.update(CURRENT_USER_ID, { balance: 100 });
 
     await service.withdraw({ amount: 99, title: 'Dinner', categoryId: 'cat-food' });
     await service.withdraw({ amount: 1, title: 'Gum', categoryId: 'cat-food' });
 
-    expect(stored.balance).toBe(0);
+    expect(await balance()).toBe(0);
   });
 
   it('should reject empty title or whitespace-only title', async () => {
@@ -225,7 +139,7 @@ describe('WithdrawalService', () => {
   });
 
   it('should reject withdrawal when balance is insufficient', async () => {
-    dbMock.users.get.mockResolvedValueOnce({ ...mockUser, balance: 50 });
+    await db.users.update(CURRENT_USER_ID, { balance: 50 });
 
     await expect(
       service.withdraw({
@@ -234,10 +148,12 @@ describe('WithdrawalService', () => {
         categoryId: 'cat-tech',
       }),
     ).rejects.toThrow('Insufficient balance');
+    expect(await balance()).toBe(50);
+    expect(await db.withdrawals.count()).toBe(1);
   });
 
   it('should reject withdrawal when user record is not found in database', async () => {
-    dbMock.users.get.mockResolvedValueOnce(undefined);
+    await db.users.clear();
 
     await expect(
       service.withdraw({
@@ -251,27 +167,18 @@ describe('WithdrawalService', () => {
   it('should revert a withdrawal, refund balance, and delete record', async () => {
     await service.revertWithdrawal('w-1');
 
-    expect(dbMock.transaction).toHaveBeenCalled();
-    expect(dbMock.users.update).toHaveBeenCalledWith(CURRENT_USER_ID, {
-      balance: 600,
-      updatedAt: expect.any(Number) as number,
-    });
-    expect(dbMock.withdrawals.delete).toHaveBeenCalledWith('w-1');
+    expect(await balance()).toBe(600);
+    expect(await db.withdrawals.get('w-1')).toBeUndefined();
   });
 
   it('should throw error when reverting a non-existent withdrawal', async () => {
-    dbMock.withdrawals.get.mockResolvedValueOnce(undefined);
     await expect(service.revertWithdrawal('unknown')).rejects.toThrow('Withdrawal record not found');
+    expect(await balance()).toBe(500);
   });
 
   it('should reset one-time reward status to active when reverting linked withdrawal', async () => {
-    const linkedRecord: WithdrawalRecord = {
-      ...mockWithdrawal,
-      rewardId: 'rew-1',
-    };
-    dbMock.withdrawals.get.mockResolvedValueOnce(linkedRecord);
-
-    const linkedReward: RewardItem = {
+    await db.withdrawals.update('w-1', { rewardId: 'rew-1' });
+    await db.rewards.add({
       id: 'rew-1',
       title: 'Headphones',
       cost: 1500,
@@ -281,25 +188,21 @@ describe('WithdrawalService', () => {
       claimedAt: 123456,
       claimCount: 1,
       createdAt: 1000,
-    };
-    dbMock.rewards.get.mockResolvedValueOnce(linkedReward);
+    });
 
     await service.revertWithdrawal('w-1');
 
-    expect(dbMock.rewards.update).toHaveBeenCalledWith('rew-1', {
-      status: 'active',
-      claimedAt: null,
-      updatedAt: expect.any(Number) as number,
-    });
+    expect(await db.rewards.get('rew-1')).toEqual(
+      expect.objectContaining({
+        status: 'active',
+        claimedAt: null,
+        updatedAt: expect.any(Number) as number,
+      }),
+    );
   });
 
   it('should decrement repeatable reward claimCount when reverting linked withdrawal', async () => {
-    const linkedRecord: WithdrawalRecord = {
-      ...mockWithdrawal,
-      rewardId: 'rew-2',
-    };
-    dbMock.withdrawals.get.mockResolvedValueOnce(linkedRecord);
-
+    await db.withdrawals.update('w-1', { rewardId: 'rew-2' });
     const repeatableReward: RewardItem = {
       id: 'rew-2',
       title: 'Coffee',
@@ -310,24 +213,16 @@ describe('WithdrawalService', () => {
       claimCount: 3,
       createdAt: 1000,
     };
-    dbMock.rewards.get.mockResolvedValueOnce(repeatableReward);
+    await db.rewards.add(repeatableReward);
 
     await service.revertWithdrawal('w-1');
 
-    expect(dbMock.rewards.update).toHaveBeenCalledWith('rew-2', {
-      claimCount: 2,
-      updatedAt: expect.any(Number) as number,
-    });
+    expect((await db.rewards.get('rew-2'))?.claimCount).toBe(2);
   });
 
   it('should not decrement repeatable claimCount below zero when reverting', async () => {
-    const linkedRecord: WithdrawalRecord = {
-      ...mockWithdrawal,
-      rewardId: 'rew-zero',
-    };
-    dbMock.withdrawals.get.mockResolvedValueOnce(linkedRecord);
-
-    const zeroCountReward: RewardItem = {
+    await db.withdrawals.update('w-1', { rewardId: 'rew-zero' });
+    await db.rewards.add({
       id: 'rew-zero',
       title: 'Coffee',
       cost: 80,
@@ -336,38 +231,43 @@ describe('WithdrawalService', () => {
       status: 'active',
       claimCount: 0,
       createdAt: 1000,
-    };
-    dbMock.rewards.get.mockResolvedValueOnce(zeroCountReward);
+    });
 
     await service.revertWithdrawal('w-1');
 
-    expect(dbMock.rewards.update).toHaveBeenCalledWith('rew-zero', {
-      claimCount: 0,
-      updatedAt: expect.any(Number) as number,
-    });
+    expect((await db.rewards.get('rew-zero'))?.claimCount).toBe(0);
   });
 
   it('should safely complete reversion when linked reward was deleted', async () => {
-    const linkedRecord: WithdrawalRecord = {
-      ...mockWithdrawal,
-      rewardId: 'deleted-rew',
-    };
-    dbMock.withdrawals.get.mockResolvedValueOnce(linkedRecord);
-    dbMock.rewards.get.mockResolvedValueOnce(undefined);
+    await db.withdrawals.update('w-1', { rewardId: 'deleted-rew' });
 
     await service.revertWithdrawal('w-1');
 
-    expect(dbMock.users.update).toHaveBeenCalled();
-    expect(dbMock.withdrawals.delete).toHaveBeenCalledWith('w-1');
+    expect(await balance()).toBe(600);
+    expect(await db.withdrawals.get('w-1')).toBeUndefined();
   });
 
   it('should query and filter withdrawals', async () => {
+    await db.withdrawals.add({ ...mockWithdrawal, id: 'w-2', categoryId: 'cat-tech' });
+
     const records = await firstValueFrom(service.getWithdrawals({ categoryId: 'cat-food' }));
-    expect(records).toHaveLength(1);
-    expect(records[0].categoryId).toBe('cat-food');
+    expect(records.map((record) => record.id)).toEqual(['w-1']);
+  });
+
+  it('should list the latest withdrawal first', async () => {
+    await db.withdrawals.add({ ...mockWithdrawal, id: 'w-earlier', timestamp: mockWithdrawal.timestamp - 1 });
+    await db.withdrawals.add({ ...mockWithdrawal, id: 'w-later', timestamp: mockWithdrawal.timestamp + 1 });
+
+    const records = await firstValueFrom(service.getWithdrawals());
+    expect(records.map((record) => record.id)).toEqual(['w-later', 'w-1', 'w-earlier']);
   });
 
   it('should filter withdrawals by date and search query', async () => {
+    await db.withdrawals.bulkAdd([
+      { ...mockWithdrawal, id: 'w-august', date: '2026-08-31' },
+      { ...mockWithdrawal, id: 'w-other', title: 'Cinema', notes: undefined },
+    ]);
+
     const list = await firstValueFrom(
       service.getWithdrawals({
         startDate: '2026-09-01',
@@ -375,7 +275,7 @@ describe('WithdrawalService', () => {
         searchQuery: 'protein',
       }),
     );
-    expect(list).toHaveLength(1);
+    expect(list.map((record) => record.id)).toEqual(['w-1']);
 
     const empty = await firstValueFrom(service.getWithdrawals({ searchQuery: 'nonexistent' }));
     expect(empty).toHaveLength(0);

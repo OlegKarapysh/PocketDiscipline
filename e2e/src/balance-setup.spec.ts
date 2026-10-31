@@ -17,7 +17,7 @@ test.describe('Balance setup', () => {
     await page.goto('/settings');
   });
 
-  test('should replace the balance once and then no longer be offered', async ({ page }) => {
+  test('should replace the balance once and then no longer be offered', { tag: '@smoke' }, async ({ page }) => {
     await setUpBalance(page, '4321');
 
     await expect(page.locator('simple-snack-bar', { hasText: /Balance set to 4\s321/ })).toBeVisible();

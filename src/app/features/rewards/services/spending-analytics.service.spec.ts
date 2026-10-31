@@ -2,59 +2,17 @@ import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { SpendingAnalyticsService } from './spending-analytics.service';
-import { DbService } from '../../../database/db.service';
+import type { DbService } from '../../../database/db.service';
+import { openEmptyDb } from '../../../shared/testing/empty-db';
 import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 import type { RewardCategory } from '../../../core/models/reward-category.model';
 
-vi.mock('dexie', () => {
-  class MockDexie {
-    version = vi.fn();
-  }
-  return {
-    default: MockDexie,
-    Dexie: MockDexie,
-    liveQuery: (fn: () => unknown) => ({
-      '@@observable'() {
-        return {
-          subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
-            Promise.resolve()
-              .then(fn)
-              .then(
-                (val) => {
-                  subscriber.next(val);
-                  subscriber.complete();
-                },
-                (err: unknown) => {
-                  subscriber.error(err);
-                },
-              );
-            return {
-              unsubscribe() {
-                // no-op for mock
-              },
-            };
-          },
-        };
-      },
-    }),
-  };
-});
-
 describe('SpendingAnalyticsService', () => {
   let service: SpendingAnalyticsService;
+  let db: DbService;
   let mockCategories: RewardCategory[];
 
-  let mockDb: {
-    withdrawals: {
-      toArray: ReturnType<typeof vi.fn>;
-      where: ReturnType<typeof vi.fn>;
-    };
-    rewardCategories: {
-      toArray: ReturnType<typeof vi.fn>;
-    };
-  };
-
-  beforeEach(() => {
+  beforeEach(async () => {
     mockCategories = [
       {
         id: 'cat-food',
@@ -76,26 +34,8 @@ describe('SpendingAnalyticsService', () => {
       },
     ];
 
-    const toArrayFn = vi.fn().mockResolvedValue([]);
-    const chain = { toArray: toArrayFn };
-    mockDb = {
-      withdrawals: {
-        where: vi.fn().mockReturnValue({
-          between: vi.fn().mockReturnValue(chain),
-          aboveOrEqual: vi.fn().mockReturnValue(chain),
-          belowOrEqual: vi.fn().mockReturnValue(chain),
-        }),
-        toArray: toArrayFn,
-      },
-      rewardCategories: {
-        toArray: vi.fn().mockResolvedValue(mockCategories),
-      },
-    };
-
-    TestBed.configureTestingModule({
-      providers: [SpendingAnalyticsService, { provide: DbService, useValue: mockDb }],
-    });
-
+    db = await openEmptyDb();
+    await db.rewardCategories.bulkAdd(mockCategories);
     service = TestBed.inject(SpendingAnalyticsService);
   });
 
@@ -110,16 +50,14 @@ describe('SpendingAnalyticsService', () => {
     const day = String(today.getDate()).padStart(2, '0');
     const todayStr = `${year}-${month}-${day}`;
 
-    mockDb.withdrawals.toArray.mockResolvedValueOnce([
-      {
-        id: 'w1',
-        title: 'Snack',
-        amount: 50,
-        categoryId: 'cat-food',
-        date: todayStr,
-        timestamp: Date.now(),
-      },
-    ]);
+    await db.withdrawals.add({
+      id: 'w1',
+      title: 'Snack',
+      amount: 50,
+      categoryId: 'cat-food',
+      date: todayStr,
+      timestamp: Date.now(),
+    });
 
     const summary = await firstValueFrom(service.getAnalytics('thisMonth'));
     expect(summary.totalSpent).toBe(50);
@@ -349,12 +287,7 @@ describe('SpendingAnalyticsService', () => {
         date,
         timestamp: 0,
       });
-      const stored = [spentOn('too-old', '2026-03-11'), spentOn('first-day', '2026-03-12')];
-      mockDb.withdrawals.where.mockReturnValue({
-        between: (lower: string, upper: string) => ({
-          toArray: () => Promise.resolve(stored.filter((w) => w.date >= lower && w.date <= upper)),
-        }),
-      });
+      await db.withdrawals.bulkAdd([spentOn('too-old', '2026-03-11'), spentOn('first-day', '2026-03-12')]);
 
       const summary = await firstValueFrom(service.getAnalytics('last30'));
 

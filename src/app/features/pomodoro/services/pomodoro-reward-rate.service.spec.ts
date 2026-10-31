@@ -1,35 +1,24 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PomodoroRewardRateService } from './pomodoro-reward-rate.service';
-import { DbService } from '../../../database/db.service';
+import type { DbService } from '../../../database/db.service';
+import { openEmptyDb } from '../../../shared/testing/empty-db';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import type { PomodoroRewardRate } from '../../../core/models/pomodoro-reward-rate.model';
 
 describe('PomodoroRewardRateService', () => {
   let service: PomodoroRewardRateService;
-  let dbMock: {
-    pomodoroRewardRates: {
-      toArray: ReturnType<typeof vi.fn>;
-      bulkPut: ReturnType<typeof vi.fn>;
-    };
-  };
+  let db: DbService;
 
-  const stored = (rows: PomodoroRewardRate[]) => {
-    dbMock.pomodoroRewardRates.toArray.mockResolvedValue(rows);
-  };
+  const stored = (rows: PomodoroRewardRate[]) => db.pomodoroRewardRates.bulkPut(rows);
 
-  beforeEach(() => {
-    dbMock = {
-      pomodoroRewardRates: {
-        toArray: vi.fn().mockResolvedValue([]),
-        bulkPut: vi.fn().mockResolvedValue(undefined),
-      },
-    };
-
-    TestBed.configureTestingModule({
-      providers: [PomodoroRewardRateService, { provide: DbService, useValue: dbMock }],
-    });
+  beforeEach(async () => {
+    db = await openEmptyDb();
     service = TestBed.inject(PomodoroRewardRateService);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('getRates', () => {
@@ -41,7 +30,7 @@ describe('PomodoroRewardRateService', () => {
     });
 
     it('should use the stored rate and keep the default for a type without one', async () => {
-      stored([{ engagementType: EngagementType.STUDY, baseReward: 300 }]);
+      await stored([{ engagementType: EngagementType.STUDY, baseReward: 300 }]);
 
       await expect(service.getRates()).resolves.toEqual({
         [EngagementType.WORK]: 100,
@@ -50,7 +39,7 @@ describe('PomodoroRewardRateService', () => {
     });
 
     it('should keep the default for a stored rate that is not a valid amount', async () => {
-      stored([
+      await stored([
         { engagementType: EngagementType.WORK, baseReward: null as unknown as number },
         { engagementType: EngagementType.STUDY, baseReward: 12.5 },
         { engagementType: 'sleep' as EngagementType, baseReward: 50 },
@@ -63,7 +52,7 @@ describe('PomodoroRewardRateService', () => {
     });
 
     it('should ignore prototype property names in stored rows', async () => {
-      stored([
+      await stored([
         { engagementType: 'toString' as unknown as EngagementType, baseReward: 500 },
         { engagementType: 'valueOf' as unknown as EngagementType, baseReward: 500 },
       ]);
@@ -75,7 +64,8 @@ describe('PomodoroRewardRateService', () => {
     });
 
     it('should fall back to default rates when database read fails', async () => {
-      dbMock.pomodoroRewardRates.toArray.mockRejectedValue(new Error('IndexedDB connection lost'));
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      db.close();
 
       await expect(service.getRates()).resolves.toEqual({
         [EngagementType.WORK]: 100,
@@ -88,7 +78,7 @@ describe('PomodoroRewardRateService', () => {
     it('should store a rate for every engagement type', async () => {
       await service.saveRates({ [EngagementType.WORK]: 80, [EngagementType.STUDY]: 90 });
 
-      const [rows] = dbMock.pomodoroRewardRates.bulkPut.mock.calls[0] as [PomodoroRewardRate[]];
+      const rows = await db.pomodoroRewardRates.toArray();
       expect(rows).toHaveLength(2);
       expect(rows).toEqual(
         expect.arrayContaining([
@@ -98,20 +88,35 @@ describe('PomodoroRewardRateService', () => {
       );
     });
 
+    it('should replace the rates stored before', async () => {
+      await stored([{ engagementType: EngagementType.WORK, baseReward: 300 }]);
+
+      await service.saveRates({ [EngagementType.WORK]: 80, [EngagementType.STUDY]: 90 });
+
+      await expect(service.getRates()).resolves.toEqual({
+        [EngagementType.WORK]: 80,
+        [EngagementType.STUDY]: 90,
+      });
+    });
+
     it.each([0, -5, 12.5, Number.NaN, 10_000_001])('should reject a rate of %s', async (rate) => {
+      await stored([{ engagementType: EngagementType.STUDY, baseReward: 300 }]);
+
       await expect(service.saveRates({ [EngagementType.WORK]: rate, [EngagementType.STUDY]: 90 })).rejects.toThrow(
         'whole number of hryvnias',
       );
-      expect(dbMock.pomodoroRewardRates.bulkPut).not.toHaveBeenCalled();
+      await expect(db.pomodoroRewardRates.toArray()).resolves.toEqual([
+        { engagementType: EngagementType.STUDY, baseReward: 300 },
+      ]);
     });
 
     it.each([1, 10_000_000])('should accept boundary rate of %s', async (rate) => {
       await service.saveRates({ [EngagementType.WORK]: rate, [EngagementType.STUDY]: rate });
 
-      expect(dbMock.pomodoroRewardRates.bulkPut).toHaveBeenCalledWith([
-        { engagementType: EngagementType.WORK, baseReward: rate },
-        { engagementType: EngagementType.STUDY, baseReward: rate },
-      ]);
+      await expect(service.getRates()).resolves.toEqual({
+        [EngagementType.WORK]: rate,
+        [EngagementType.STUDY]: rate,
+      });
     });
   });
 });

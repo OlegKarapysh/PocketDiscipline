@@ -36,7 +36,7 @@ test.describe('Jar import', () => {
     await expect(page.locator('app-jar-review-list')).toHaveCount(0);
   });
 
-  test('should import the history, keep the balance and carry the streaks on', async ({ page }) => {
+  test('should import the history, keep the balance and carry the streaks on', { tag: '@smoke' }, async ({ page }) => {
     await pickStatement(page, JAR_STATEMENT_FIXTURE);
     await expect(page.locator('app-jar-statement-summary')).toContainText('56 rows');
     await expect(page.locator('.review-row')).toHaveCount(15);

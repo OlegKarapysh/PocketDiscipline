@@ -75,6 +75,14 @@
           "options": {
             "setupFiles": ["src/test-setup.ts"],
             "splitting": false
+          },
+          "configurations": {
+            "coverage": {
+              "coverage": true,
+              "coverageInclude": ["src/app/**/*.ts"],
+              "coverageExclude": ["src/app/**/*.spec.ts", "src/app/**/testing/**", "src/app/**/*.fixture.ts"],
+              "coverageReporters": ["text-summary", "html", "lcov"]
+            }
           }
         },
         "lint": {

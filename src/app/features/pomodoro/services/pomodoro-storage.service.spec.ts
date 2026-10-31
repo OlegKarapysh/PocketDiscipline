@@ -1,111 +1,88 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PomodoroStorageService } from './pomodoro-storage.service';
-import { DbService } from '../../../database/db.service';
-import { UserService } from '../../../core/services/user.service';
+import type { DbService } from '../../../database/db.service';
+import { openEmptyDb } from '../../../shared/testing/empty-db';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
+import { CURRENT_USER_ID, CURRENT_USER_NAME } from '../../../core/models/user.model';
+
+const INITIAL_BALANCE = 10;
+
+const session = (overrides: Partial<PomodoroSession> = {}): PomodoroSession => ({
+  id: 'session-123',
+  durationMinutes: 25,
+  engagementType: EngagementType.WORK,
+  startTime: 1000000,
+  status: PomodoroSessionStatus.ACTIVE,
+  ...overrides,
+});
 
 describe('PomodoroStorageService', () => {
   let service: PomodoroStorageService;
-  let dbMock: {
-    pomodoroSessions: {
-      put: ReturnType<typeof vi.fn>;
-      get: ReturnType<typeof vi.fn>;
-      update: ReturnType<typeof vi.fn>;
-      delete: ReturnType<typeof vi.fn>;
-      orderBy: ReturnType<typeof vi.fn>;
-    };
-    users: unknown;
-    transaction: ReturnType<typeof vi.fn>;
+  let db: DbService;
+
+  const storedSession = () => db.pomodoroSessions.get('session-123');
+  const balance = async () => (await db.users.get(CURRENT_USER_ID))?.balance;
+
+  // A failing database: every operation on a closed Dexie database rejects.
+  const breakDatabase = () => {
+    db.close();
+    return vi.spyOn(console, 'error').mockImplementation(() => undefined);
   };
-  let userMock: { addBalance: ReturnType<typeof vi.fn> };
 
-  beforeEach(() => {
-    // IndexedDB runs overlapping read-write transactions on the same tables one after another.
-    let queue: Promise<unknown> = Promise.resolve();
-    dbMock = {
-      pomodoroSessions: {
-        put: vi.fn().mockResolvedValue('session-123'),
-        get: vi.fn().mockResolvedValue(undefined),
-        update: vi.fn().mockResolvedValue(1),
-        delete: vi.fn().mockResolvedValue(undefined),
-        orderBy: vi.fn(),
+  // Resolves to what `promise` rejects with, and fails the test if it resolves instead.
+  const rejectionOf = (promise: Promise<unknown>): Promise<unknown> =>
+    promise.then(
+      () => {
+        throw new Error('Expected a rejection');
       },
-      users: {},
-      transaction: vi.fn((...args: unknown[]) => {
-        const callback = args[args.length - 1] as () => Promise<unknown>;
-        const run = queue.then(callback);
-        queue = run.catch(() => undefined);
-        return run;
-      }),
-    };
-    userMock = { addBalance: vi.fn().mockResolvedValue(undefined) };
+      (error: unknown) => error,
+    );
 
-    TestBed.configureTestingModule({
-      providers: [
-        PomodoroStorageService,
-        { provide: DbService, useValue: dbMock },
-        { provide: UserService, useValue: userMock },
-      ],
+  beforeEach(async () => {
+    db = await openEmptyDb();
+    await db.users.add({
+      id: CURRENT_USER_ID,
+      name: CURRENT_USER_NAME,
+      balance: INITIAL_BALANCE,
+      createdAt: 0,
+      updatedAt: 0,
     });
     service = TestBed.inject(PomodoroStorageService);
   });
 
-  function useStoredSession(status: PomodoroSessionStatus): () => PomodoroSession {
-    let stored: PomodoroSession = {
-      id: 'session-123',
-      durationMinutes: 25,
-      engagementType: EngagementType.WORK,
-      startTime: 1000000,
-      status,
-    };
-    dbMock.pomodoroSessions.get.mockImplementation(() => ({ ...stored }));
-    dbMock.pomodoroSessions.update.mockImplementation((_id: string, changes: Partial<PomodoroSession>) => {
-      stored = { ...stored, ...changes };
-      return 1;
-    });
-    return () => stored;
-  }
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
   it('should save and retrieve a session', async () => {
-    const session: PomodoroSession = {
-      id: 'session-123',
-      durationMinutes: 25,
-      engagementType: EngagementType.WORK,
-      startTime: 1000000,
-      status: PomodoroSessionStatus.ACTIVE,
-    };
+    await service.saveSession(session());
 
-    dbMock.pomodoroSessions.put.mockResolvedValue('session-123');
-    dbMock.pomodoroSessions.get.mockResolvedValue(session);
-
-    await service.saveSession(session);
-    expect(dbMock.pomodoroSessions.put).toHaveBeenCalledWith(session);
-
-    const retrieved = await service.getSession('session-123');
-    expect(dbMock.pomodoroSessions.get).toHaveBeenCalledWith('session-123');
-    expect(retrieved).toEqual(session);
+    await expect(storedSession()).resolves.toEqual(session());
+    await expect(service.getSession('session-123')).resolves.toEqual(session());
   });
 
   describe('completeSession', () => {
     it('should mark an active session completed and credit its reward', async () => {
-      const current = useStoredSession(PomodoroSessionStatus.ACTIVE);
+      await db.pomodoroSessions.add(session());
 
       const completed = await service.completeSession('session-123', 25);
 
       expect(completed).toBe(true);
-      expect(current()).toEqual(expect.objectContaining({ status: PomodoroSessionStatus.COMPLETED, rewardEarned: 25 }));
-      expect(userMock.addBalance).toHaveBeenCalledWith(25);
+      expect(await storedSession()).toEqual(
+        expect.objectContaining({ status: PomodoroSessionStatus.COMPLETED, rewardEarned: 25 }),
+      );
+      expect(await balance()).toBe(INITIAL_BALANCE + 25);
     });
 
     it('should credit the reward once when the session is completed twice at the same time', async () => {
-      useStoredSession(PomodoroSessionStatus.ACTIVE);
+      await db.pomodoroSessions.add(session());
 
       const results = await Promise.all([
         service.completeSession('session-123', 25),
@@ -113,134 +90,107 @@ describe('PomodoroStorageService', () => {
       ]);
 
       expect(results.filter(Boolean)).toHaveLength(1);
-      expect(userMock.addBalance).toHaveBeenCalledTimes(1);
+      expect(await balance()).toBe(INITIAL_BALANCE + 25);
     });
 
     it('should neither complete nor credit a session that was cancelled', async () => {
-      const current = useStoredSession(PomodoroSessionStatus.CANCELLED);
+      await db.pomodoroSessions.add(session({ status: PomodoroSessionStatus.CANCELLED }));
 
       const completed = await service.completeSession('session-123', 25);
 
       expect(completed).toBe(false);
-      expect(current().status).toBe(PomodoroSessionStatus.CANCELLED);
-      expect(userMock.addBalance).not.toHaveBeenCalled();
+      expect((await storedSession())?.status).toBe(PomodoroSessionStatus.CANCELLED);
+      expect(await balance()).toBe(INITIAL_BALANCE);
     });
   });
 
   describe('cancelSession', () => {
     it('should mark an active session cancelled', async () => {
-      const current = useStoredSession(PomodoroSessionStatus.ACTIVE);
+      await db.pomodoroSessions.add(session());
 
       await service.cancelSession('session-123');
 
-      expect(current().status).toBe(PomodoroSessionStatus.CANCELLED);
+      expect((await storedSession())?.status).toBe(PomodoroSessionStatus.CANCELLED);
     });
 
     it('should leave a session that already completed as completed', async () => {
-      const current = useStoredSession(PomodoroSessionStatus.ACTIVE);
+      await db.pomodoroSessions.add(session());
 
       await Promise.all([service.completeSession('session-123', 25), service.cancelSession('session-123')]);
 
-      expect(current().status).toBe(PomodoroSessionStatus.COMPLETED);
-      expect(userMock.addBalance).toHaveBeenCalledTimes(1);
+      expect((await storedSession())?.status).toBe(PomodoroSessionStatus.COMPLETED);
+      expect(await balance()).toBe(INITIAL_BALANCE + 25);
     });
   });
 
   it('should delete a session by id', async () => {
+    await db.pomodoroSessions.bulkAdd([session(), session({ id: 'session-456' })]);
+
     await service.deleteSession('session-123');
-    expect(dbMock.pomodoroSessions.delete).toHaveBeenCalledWith('session-123');
+
+    expect(await db.pomodoroSessions.toCollection().primaryKeys()).toEqual(['session-456']);
   });
 
   it('should retrieve all sessions ordered by startTime descending', async () => {
-    const sessionList: PomodoroSession[] = [
-      {
-        id: 'session-123',
-        durationMinutes: 25,
-        engagementType: EngagementType.WORK,
-        startTime: 1000000,
-        status: PomodoroSessionStatus.COMPLETED,
-      },
-    ];
-
-    const toArrayMock = vi.fn().mockResolvedValue(sessionList);
-    const reverseMock = vi.fn().mockReturnValue({ toArray: toArrayMock });
-    dbMock.pomodoroSessions.orderBy.mockReturnValue({ reverse: reverseMock });
+    await db.pomodoroSessions.bulkAdd([
+      session({ id: 'middle', startTime: 2000000 }),
+      session({ id: 'latest', startTime: 3000000 }),
+      session({ id: 'earliest', startTime: 1000000 }),
+    ]);
 
     const result = await service.getAllSessions();
-    expect(dbMock.pomodoroSessions.orderBy).toHaveBeenCalledWith('startTime');
-    expect(reverseMock).toHaveBeenCalled();
-    expect(result).toEqual(sessionList);
+
+    expect(result.map((s) => s.id)).toEqual(['latest', 'middle', 'earliest']);
   });
 
   it('should log error and rethrow when saveSession fails', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const testError = new Error('Database put failure');
-    dbMock.pomodoroSessions.put.mockRejectedValue(testError);
+    const consoleSpy = breakDatabase();
 
-    const session: PomodoroSession = {
-      id: 'session-123',
-      durationMinutes: 25,
-      engagementType: EngagementType.WORK,
-      startTime: 1000000,
-      status: PomodoroSessionStatus.ACTIVE,
-    };
+    const error = await rejectionOf(service.saveSession(session()));
 
-    await expect(service.saveSession(session)).rejects.toThrow(testError);
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to save pomodoro session:', testError);
-    consoleSpy.mockRestore();
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to save pomodoro session:', error);
   });
 
   it('should log error and rethrow when getSession fails', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const testError = new Error('Database get failure');
-    dbMock.pomodoroSessions.get.mockRejectedValue(testError);
+    const consoleSpy = breakDatabase();
 
-    await expect(service.getSession('session-123')).rejects.toThrow(testError);
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to get pomodoro session:', testError);
-    consoleSpy.mockRestore();
+    const error = await rejectionOf(service.getSession('session-123'));
+
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to get pomodoro session:', error);
   });
 
   it('should log error and rethrow when getAllSessions fails', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const testError = new Error('Database query failure');
-    const toArrayMock = vi.fn().mockRejectedValue(testError);
-    const reverseMock = vi.fn().mockReturnValue({ toArray: toArrayMock });
-    dbMock.pomodoroSessions.orderBy.mockReturnValue({ reverse: reverseMock });
+    const consoleSpy = breakDatabase();
 
-    await expect(service.getAllSessions()).rejects.toThrow(testError);
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to get all pomodoro sessions:', testError);
-    consoleSpy.mockRestore();
+    const error = await rejectionOf(service.getAllSessions());
+
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to get all pomodoro sessions:', error);
   });
 
   it('should log error and rethrow when completeSession fails', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const testError = new Error('Database update failure');
-    useStoredSession(PomodoroSessionStatus.ACTIVE);
-    dbMock.pomodoroSessions.update.mockRejectedValue(testError);
+    await db.pomodoroSessions.add(session());
+    const consoleSpy = breakDatabase();
 
-    await expect(service.completeSession('session-123', 25)).rejects.toThrow(testError);
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to complete pomodoro session:', testError);
-    consoleSpy.mockRestore();
+    const error = await rejectionOf(service.completeSession('session-123', 25));
+
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to complete pomodoro session:', error);
   });
 
   it('should log error and rethrow when cancelSession fails', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const testError = new Error('Database update failure');
-    useStoredSession(PomodoroSessionStatus.ACTIVE);
-    dbMock.pomodoroSessions.update.mockRejectedValue(testError);
+    await db.pomodoroSessions.add(session());
+    const consoleSpy = breakDatabase();
 
-    await expect(service.cancelSession('session-123')).rejects.toThrow(testError);
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to cancel pomodoro session:', testError);
-    consoleSpy.mockRestore();
+    const error = await rejectionOf(service.cancelSession('session-123'));
+
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to cancel pomodoro session:', error);
   });
 
   it('should log error and rethrow when deleteSession fails', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const testError = new Error('Database delete failure');
-    dbMock.pomodoroSessions.delete.mockRejectedValue(testError);
+    await db.pomodoroSessions.add(session());
+    const consoleSpy = breakDatabase();
 
-    await expect(service.deleteSession('session-123')).rejects.toThrow(testError);
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to delete pomodoro session:', testError);
-    consoleSpy.mockRestore();
+    const error = await rejectionOf(service.deleteSession('session-123'));
+
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to delete pomodoro session:', error);
   });
 });

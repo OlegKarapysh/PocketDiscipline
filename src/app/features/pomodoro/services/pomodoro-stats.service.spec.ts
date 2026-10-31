@@ -2,47 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { PomodoroStatsService } from './pomodoro-stats.service';
-import { DbService } from '../../../database/db.service';
+import type { DbService } from '../../../database/db.service';
+import { openEmptyDb } from '../../../shared/testing/empty-db';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
 import type { PomodoroTally } from '../models/pomodoro-tally.model';
-
-vi.mock('dexie', () => {
-  class MockDexie {
-    version = vi.fn();
-  }
-  return {
-    default: MockDexie,
-    Dexie: MockDexie,
-    liveQuery: (fn: () => unknown) => fn(),
-  };
-});
-
-// A pomodoroSessions table that answers whichever index it is queried by, so the spec checks the
-// counting rule, not how the service narrows the query.
-function pomodoroTable(sessions: readonly object[]): { where: ReturnType<typeof vi.fn> } {
-  const valueOf = (session: object, index: string): unknown => (session as Record<string, unknown>)[index];
-  return {
-    where: vi.fn((index: string) => ({
-      equals: (value: unknown) => ({
-        toArray: () => Promise.resolve(sessions.filter((s) => valueOf(s, index) === value)),
-      }),
-      between: (lower: number, upper: number) => ({
-        toArray: () =>
-          Promise.resolve(
-            sessions.filter((s) => {
-              const v = valueOf(s, index) as number;
-              return v >= lower && v <= upper;
-            }),
-          ),
-      }),
-      above: (lower: number) => ({
-        toArray: () => Promise.resolve(sessions.filter((s) => (valueOf(s, index) as number) > lower)),
-      }),
-    })),
-  };
-}
 
 const at = (dateTime: string) => new Date(dateTime).getTime();
 
@@ -68,20 +33,15 @@ const tally = (overrides: Partial<PomodoroTally> = {}): PomodoroTally => ({
 
 describe('PomodoroStatsService', () => {
   let service: PomodoroStatsService;
-  let dbMock: { pomodoroSessions: { where: ReturnType<typeof vi.fn> } };
+  let db: DbService;
 
-  const summaryOf = (sessions: PomodoroSession[], startDate: string, endDate = startDate) => {
-    dbMock.pomodoroSessions = pomodoroTable(sessions);
+  const summaryOf = async (sessions: PomodoroSession[], startDate: string, endDate = startDate) => {
+    await db.pomodoroSessions.bulkAdd(sessions);
     return firstValueFrom(service.getPeriodSummary(startDate, endDate));
   };
 
-  beforeEach(() => {
-    dbMock = { pomodoroSessions: pomodoroTable([]) };
-
-    TestBed.configureTestingModule({
-      providers: [PomodoroStatsService, { provide: DbService, useValue: dbMock }],
-    });
-
+  beforeEach(async () => {
+    db = await openEmptyDb();
     service = TestBed.inject(PomodoroStatsService);
   });
 
@@ -232,9 +192,10 @@ describe('PomodoroStatsService', () => {
 
   it('should return an empty, zero-filled summary when the read fails', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    dbMock.pomodoroSessions = {
-      where: vi.fn(() => ({ equals: () => ({ toArray: () => Promise.reject(new Error('IndexedDB is gone')) }) })),
-    };
+    await db.pomodoroSessions.add(session({}));
+    vi.spyOn(db.pomodoroSessions, 'where').mockImplementation(() => {
+      throw new Error('IndexedDB is gone');
+    });
 
     const summary = await firstValueFrom(service.getPeriodSummary('2026-09-01', '2026-09-02'));
 
@@ -243,6 +204,23 @@ describe('PomodoroStatsService', () => {
       { date: '2026-09-02', ...tally() },
     ]);
     expect(summary.total).toEqual(tally());
+  });
+
+  it('should count a session completed after the summary was first read', async () => {
+    const pomodoros: number[] = [];
+    const subscription = service
+      .getPeriodSummary('2026-09-01', '2026-09-01')
+      .subscribe((summary) => pomodoros.push(summary.total.pomodoros));
+    await vi.waitFor(() => {
+      expect(pomodoros).toEqual([0]);
+    });
+
+    await db.pomodoroSessions.add(session({}));
+
+    await vi.waitFor(() => {
+      expect(pomodoros).toEqual([0, 1]);
+    });
+    subscription.unsubscribe();
   });
 
   // In Chile, daylight saving time starts at midnight, so 6 September 2026 has no 00:00.

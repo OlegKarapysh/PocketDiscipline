@@ -212,7 +212,7 @@ test.describe('Money in whole hryvnias: the version 9 upgrade', () => {
     await expect(balance(page)).toHaveText(/^1\s000\s*₴$/);
   });
 
-  test('should round every stored money value to whole hryvnias', async ({ page }) => {
+  test('should round every stored money value to whole hryvnias', { tag: '@smoke' }, async ({ page }) => {
     const { version, rows } = await readDatabase(page);
 
     // The later upgrades run too.

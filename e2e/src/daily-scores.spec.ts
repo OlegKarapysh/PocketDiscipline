@@ -28,36 +28,42 @@ test.describe('Daily Scores Flow', () => {
     await expect(scoreButtons).toHaveCount(10);
   });
 
-  test('should navigate via sidenav menu and submit a daily score successfully', async ({ page }) => {
-    await page.goto('/dashboard');
+  test(
+    'should navigate via sidenav menu and submit a daily score successfully',
+    { tag: '@smoke' },
+    async ({ page }) => {
+      await page.goto('/dashboard');
 
-    // Navigate to Daily Scores via Sidenav
-    await page.getByRole('link', { name: 'Daily Scores' }).click();
-    await expect(page).toHaveURL(/.*daily-scores/);
+      // Navigate to Daily Scores via Sidenav
+      await page.getByRole('link', { name: 'Daily Scores' }).click();
+      await expect(page).toHaveURL(/.*daily-scores/);
 
-    // Verify loading state finishes
-    await expect(page.locator('mat-spinner')).not.toBeVisible();
+      // Verify loading state finishes
+      await expect(page.locator('mat-spinner')).not.toBeVisible();
 
-    // Select score 10
-    await page.getByRole('button', { name: 'Score 10' }).click();
+      // Select score 10
+      await page.getByRole('button', { name: 'Score 10' }).click();
 
-    // Submit button should appear
-    const submitButton = page.getByRole('button', { name: 'Save score' });
-    await expect(submitButton).toBeVisible();
-    await submitButton.click();
+      // Submit button should appear
+      const submitButton = page.getByRole('button', { name: 'Save score' });
+      await expect(submitButton).toBeVisible();
+      await submitButton.click();
 
-    // Verify reward success message appears
-    await expect(page.locator('.success-message')).toBeVisible();
-    await expect(page.locator('.success-message')).toContainText('Score saved. You earned 500 ₴. High-score streak: 1');
+      // Verify reward success message appears
+      await expect(page.locator('.success-message')).toBeVisible();
+      await expect(page.locator('.success-message')).toContainText(
+        'Score saved. You earned 500 ₴. High-score streak: 1',
+      );
 
-    // Verify readonly state is displayed for today's score
-    await expect(page.locator('.readonly-container')).toBeVisible();
-    await expect(page.locator('.readonly-score-num')).toHaveText('10');
-    await expect(page.getByText('Score set for today')).toBeVisible();
+      // Verify readonly state is displayed for today's score
+      await expect(page.locator('.readonly-container')).toBeVisible();
+      await expect(page.locator('.readonly-score-num')).toHaveText('10');
+      await expect(page.getByText('Score set for today')).toBeVisible();
 
-    // Verify streak is updated in the stats card
-    await expect(page.locator('.stat-value.streak')).toHaveText('1');
-  });
+      // Verify streak is updated in the stats card
+      await expect(page.locator('.stat-value.streak')).toHaveText('1');
+    },
+  );
 
   test('should chart a range longer than 90 days week by week', async ({ page }) => {
     await page.goto('/daily-scores');
