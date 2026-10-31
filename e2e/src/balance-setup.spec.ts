@@ -1,11 +1,13 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
+import { openDialog } from './dialog';
 
 const setUpButton = (page: Page) => page.getByRole('button', { name: 'Set up balance' });
+const balanceInput = (page: Page) => page.locator('app-balance-setup-dialog').getByLabel('Balance');
 
 const setUpBalance = async (page: Page, amount: string) => {
-  await setUpButton(page).click();
-  await page.locator('app-balance-setup-dialog').getByLabel('Balance').fill(amount);
+  await openDialog(setUpButton(page), balanceInput(page));
+  await balanceInput(page).fill(amount);
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.locator('app-confirm-dialog').getByRole('button', { name: 'Set balance' }).click();
 };
@@ -30,8 +32,8 @@ test.describe('Balance setup', () => {
   });
 
   test('should leave the balance alone when the confirmation is cancelled', async ({ page }) => {
-    await setUpButton(page).click();
-    await page.locator('app-balance-setup-dialog').getByLabel('Balance').fill('4321');
+    await openDialog(setUpButton(page), balanceInput(page));
+    await balanceInput(page).fill('4321');
     await page.getByRole('button', { name: 'Continue' }).click();
     await page.locator('app-confirm-dialog').getByRole('button', { name: 'Cancel' }).click();
 
