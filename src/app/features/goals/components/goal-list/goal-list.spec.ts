@@ -45,6 +45,14 @@ describe('GoalList', () => {
     expect(completedSection).toBeNull();
   });
 
+  it('should render nothing for the active goals before they are read', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.debugElement.query(By.directive(EmptyState))).toBeNull();
+    expect(fixture.debugElement.query(By.css('.active-section'))).toBeNull();
+  });
+
   it('should render empty state message when active goals list is empty', async () => {
     fixture.componentRef.setInput('activeGoals', []);
     fixture.detectChanges();
