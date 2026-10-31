@@ -3,13 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Dexie from 'dexie';
 import type { Table } from 'dexie';
 import { LegacyPomodoroMigrationService } from './legacy-pomodoro-migration.service';
+import { openEmptyDb } from '../shared/testing/empty-db';
 import type { PomodoroSession } from '../core/models/pomodoro-session.model';
 import { EngagementType } from '../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../core/models/pomodoro-session-status.enum';
 
+const LEGACY_DB_NAME = 'PomodoroDatabase';
+
 describe('LegacyPomodoroMigrationService', () => {
   let service: LegacyPomodoroMigrationService;
-  let target: { bulkPut: ReturnType<typeof vi.fn> };
+  let target: Table<PomodoroSession, string>;
 
   const validSession: PomodoroSession = {
     id: 'session-123',
@@ -19,64 +22,60 @@ describe('LegacyPomodoroMigrationService', () => {
     status: PomodoroSessionStatus.COMPLETED,
   };
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [LegacyPomodoroMigrationService] });
+  // The main database is opened first: opening it runs this migration on `ready`, and the test
+  // means to run it itself.
+  beforeEach(async () => {
+    target = (await openEmptyDb()).pomodoroSessions;
     service = TestBed.inject(LegacyPomodoroMigrationService);
-    target = { bulkPut: vi.fn().mockResolvedValue(undefined) };
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  const asTarget = () => target as unknown as Table<PomodoroSession, string>;
-
-  const stageLegacyDb = (rows: unknown[], tableName = 'sessions') => {
-    vi.spyOn(Dexie, 'exists').mockResolvedValue(true);
-    vi.spyOn(Dexie, 'delete').mockResolvedValue(undefined);
-    vi.spyOn(Dexie.prototype, 'open').mockResolvedValue(undefined);
-    vi.spyOn(Dexie.prototype, 'close').mockImplementation(() => undefined);
-    vi.spyOn(Dexie.prototype, 'tables', 'get').mockReturnValue([{ name: tableName }] as never);
-    vi.spyOn(Dexie.prototype, 'table').mockReturnValue({
-      toArray: vi.fn().mockResolvedValue(rows),
-    });
+  // An outbound auto-incremented key, so the legacy table can hold rows of any shape, even null.
+  const stageLegacyDb = async (rows: unknown[], tableName = 'sessions') => {
+    const legacyDb = new Dexie(LEGACY_DB_NAME);
+    legacyDb.version(1).stores({ [tableName]: '++' });
+    await legacyDb.table(tableName).bulkAdd(rows);
+    legacyDb.close();
   };
 
+  const sessionsById = async () => new Map((await target.toArray()).map((session) => [session.id, session]));
+
   it('should skip migration when legacy database does not exist', async () => {
-    vi.spyOn(Dexie, 'exists').mockResolvedValue(false);
     const deleteSpy = vi.spyOn(Dexie, 'delete');
 
-    await service.migrate(asTarget());
+    await service.migrate(target);
 
     expect(deleteSpy).not.toHaveBeenCalled();
-    expect(target.bulkPut).not.toHaveBeenCalled();
+    expect(await target.count()).toBe(0);
   });
 
   it('should copy valid sessions into the target table and drop the legacy database', async () => {
-    stageLegacyDb([validSession]);
+    await stageLegacyDb([validSession]);
 
-    await service.migrate(asTarget());
+    await service.migrate(target);
 
-    expect(target.bulkPut).toHaveBeenCalledWith([validSession]);
-    expect(Dexie.delete).toHaveBeenCalledWith('PomodoroDatabase');
+    expect(await target.toArray()).toEqual([validSession]);
+    expect(await Dexie.exists(LEGACY_DB_NAME)).toBe(false);
   });
 
   it('should keep a whole legacy reward and round a fractional one to whole hryvnias', async () => {
-    stageLegacyDb([
+    await stageLegacyDb([
       { ...validSession, id: 'whole', rewardEarned: 12 },
       { ...validSession, id: 'fraction', rewardEarned: 12.5 },
     ]);
 
-    await service.migrate(asTarget());
+    await service.migrate(target);
 
-    expect(target.bulkPut).toHaveBeenCalledWith([
-      { ...validSession, id: 'whole', rewardEarned: 12 },
-      { ...validSession, id: 'fraction', rewardEarned: 13 },
-    ]);
+    const sessions = await sessionsById();
+    expect(sessions.get('whole')).toEqual({ ...validSession, id: 'whole', rewardEarned: 12 });
+    expect(sessions.get('fraction')).toEqual({ ...validSession, id: 'fraction', rewardEarned: 13 });
   });
 
   it('should filter out rows that are not valid PomodoroSessions', async () => {
-    stageLegacyDb([
+    await stageLegacyDb([
       validSession,
       null,
       {},
@@ -87,34 +86,34 @@ describe('LegacyPomodoroMigrationService', () => {
       { id: 's-4', durationMinutes: 25, startTime: 1000, status: 42 },
     ]);
 
-    await service.migrate(asTarget());
+    await service.migrate(target);
 
-    expect(target.bulkPut).toHaveBeenCalledWith([validSession]);
+    expect(await target.toArray()).toEqual([validSession]);
   });
 
   it('should not write anything when no row survives validation, but still drop the legacy database', async () => {
-    stageLegacyDb([null, {}, { id: 's-1' }]);
+    await stageLegacyDb([null, {}, { id: 's-1' }]);
 
-    await service.migrate(asTarget());
+    await service.migrate(target);
 
-    expect(target.bulkPut).not.toHaveBeenCalled();
-    expect(Dexie.delete).toHaveBeenCalledWith('PomodoroDatabase');
+    expect(await target.count()).toBe(0);
+    expect(await Dexie.exists(LEGACY_DB_NAME)).toBe(false);
   });
 
   it('should leave the target untouched when the legacy database has no sessions table', async () => {
-    stageLegacyDb([validSession], 'somethingElse');
+    await stageLegacyDb([validSession], 'somethingElse');
 
-    await service.migrate(asTarget());
+    await service.migrate(target);
 
-    expect(target.bulkPut).not.toHaveBeenCalled();
-    expect(Dexie.delete).toHaveBeenCalledWith('PomodoroDatabase');
+    expect(await target.count()).toBe(0);
+    expect(await Dexie.exists(LEGACY_DB_NAME)).toBe(false);
   });
 
   it('should catch error and log error when migration fails', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     vi.spyOn(Dexie, 'exists').mockRejectedValue(new Error('IndexedDB failure'));
 
-    await service.migrate(asTarget());
+    await service.migrate(target);
 
     expect(consoleSpy).toHaveBeenCalledWith('Failed to migrate legacy Pomodoro database:', expect.any(Error));
   });

@@ -2,62 +2,21 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { DashboardEarningsService } from './dashboard-earnings.service';
-import { DbService } from '../../../database/db.service';
+import type { DbService } from '../../../database/db.service';
+import { openEmptyDb } from '../../../shared/testing/empty-db';
+import type { Goal } from '../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../core/models/goal.model';
+import { EngagementType } from '../../../core/models/engagement-type.enum';
+import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
-import type { DailyEarningsRecord } from '../models/daily-earnings-record.model';
-
-vi.mock('dexie', () => {
-  class MockDexie {
-    version = vi.fn();
-  }
-  return {
-    default: MockDexie,
-    Dexie: MockDexie,
-    liveQuery: (fn: () => unknown) => fn(),
-  };
-});
-
-// A pomodoroSessions table that answers whichever index it is queried by, so the spec does not
-// depend on how the service narrows the query.
-function pomodoroTable(sessions: readonly object[]): { where: ReturnType<typeof vi.fn> } {
-  const valueOf = (session: object, index: string): unknown => (session as Record<string, unknown>)[index];
-  return {
-    where: vi.fn((index: string) => ({
-      equals: (value: unknown) => ({
-        toArray: () => Promise.resolve(sessions.filter((s) => valueOf(s, index) === value)),
-      }),
-      between: (lower: number, upper: number) => ({
-        toArray: () =>
-          Promise.resolve(
-            sessions.filter((s) => {
-              const v = valueOf(s, index) as number;
-              return v >= lower && v <= upper;
-            }),
-          ),
-      }),
-    })),
-  };
-}
+import type { DailyScore } from '../../../core/models/daily-score.model';
+import type { DailyTaskCompletion } from '../../../core/models/daily-task-completion.model';
 
 describe('DashboardEarningsService', () => {
   let service: DashboardEarningsService;
-  let dbMock: {
-    goals: {
-      where: ReturnType<typeof vi.fn>;
-    };
-    dailyScores: {
-      where: ReturnType<typeof vi.fn>;
-    };
-    pomodoroSessions: {
-      where: ReturnType<typeof vi.fn>;
-    };
-    dailyTaskCompletions: {
-      where: ReturnType<typeof vi.fn>;
-    };
-  };
+  let db: DbService;
 
-  const sampleGoals = [
+  const sampleGoals: Goal[] = [
     {
       id: 'g1',
       title: 'Workout Goal',
@@ -68,7 +27,7 @@ describe('DashboardEarningsService', () => {
     },
   ];
 
-  const sampleScores = [
+  const sampleScores: DailyScore[] = [
     {
       date: '2026-09-02',
       score: 10,
@@ -78,18 +37,18 @@ describe('DashboardEarningsService', () => {
     },
   ];
 
-  const sampleSessions = [
+  const sampleSessions: PomodoroSession[] = [
     {
       id: 'p1',
       durationMinutes: 25,
-      engagementType: 'work',
+      engagementType: EngagementType.WORK,
       startTime: new Date('2026-09-01T15:00:00').getTime(),
       status: PomodoroSessionStatus.COMPLETED,
       rewardEarned: 250,
     },
   ];
 
-  const sampleTaskCompletions = [
+  const sampleTaskCompletions: DailyTaskCompletion[] = [
     {
       id: 'tc1',
       taskId: 't1',
@@ -100,42 +59,18 @@ describe('DashboardEarningsService', () => {
     },
   ];
 
-  beforeEach(() => {
-    dbMock = {
-      goals: {
-        where: vi.fn().mockReturnValue({
-          between: vi.fn().mockReturnValue({
-            toArray: vi.fn().mockResolvedValue(sampleGoals),
-          }),
-          equals: vi.fn().mockReturnValue({
-            filter: vi.fn().mockImplementation((predicate: (goal: (typeof sampleGoals)[number]) => boolean) => ({
-              toArray: vi.fn().mockResolvedValue(sampleGoals.filter(predicate)),
-            })),
-            toArray: vi.fn().mockResolvedValue(sampleGoals),
-          }),
-        }),
-      },
-      dailyScores: {
-        where: vi.fn().mockReturnValue({
-          between: vi.fn().mockReturnValue({
-            toArray: vi.fn().mockResolvedValue(sampleScores),
-          }),
-        }),
-      },
-      pomodoroSessions: pomodoroTable(sampleSessions),
-      dailyTaskCompletions: {
-        where: vi.fn().mockReturnValue({
-          between: vi.fn().mockReturnValue({
-            toArray: vi.fn().mockResolvedValue(sampleTaskCompletions),
-          }),
-        }),
-      },
-    };
+  // Replaces the sample pomodoro sessions with the given ones.
+  const storeSessions = async (sessions: PomodoroSession[]) => {
+    await db.pomodoroSessions.clear();
+    await db.pomodoroSessions.bulkAdd(sessions);
+  };
 
-    TestBed.configureTestingModule({
-      providers: [DashboardEarningsService, { provide: DbService, useValue: dbMock }],
-    });
-
+  beforeEach(async () => {
+    db = await openEmptyDb();
+    await db.goals.bulkAdd(sampleGoals);
+    await db.dailyScores.bulkAdd(sampleScores);
+    await db.pomodoroSessions.bulkAdd(sampleSessions);
+    await db.dailyTaskCompletions.bulkAdd(sampleTaskCompletions);
     service = TestBed.inject(DashboardEarningsService);
   });
 
@@ -204,6 +139,29 @@ describe('DashboardEarningsService', () => {
       expect(day2?.totalEarned).toBe(2600);
     });
 
+    it('should leave out activity on days outside the range', async () => {
+      const records = await firstValueFrom(service.getDailyEarnings('2026-09-02', '2026-09-02'));
+
+      expect(records).toEqual([
+        {
+          date: '2026-09-02',
+          totalEarned: 2600,
+          goalsEarned: 2000,
+          dailyTasksEarned: 100,
+          pomodoroEarned: 0,
+          dailyScoresEarned: 500,
+        },
+      ]);
+    });
+
+    it('should not credit a goal that is no longer completed', async () => {
+      await db.goals.update('g1', { status: GOAL_STATUS.ACTIVE });
+
+      const records = await firstValueFrom(service.getDailyEarnings('2026-09-01', '2026-09-02'));
+
+      expect(records.find((r) => r.date === '2026-09-02')?.goalsEarned).toBe(0);
+    });
+
     it('should return zero earnings for days with no activity', async () => {
       const records = await firstValueFrom(service.getDailyEarnings('2026-08-20', '2026-08-22'));
 
@@ -229,32 +187,20 @@ describe('DashboardEarningsService', () => {
     });
 
     it('should ignore goals without completedAt and pomodoro sessions without rewardEarned', async () => {
-      const incompleteGoals = [
-        {
-          id: 'g2',
-          title: 'Incomplete Goal',
-          rewardValue: 1000,
-          status: GOAL_STATUS.COMPLETED,
-          completedAt: null,
-        },
-      ];
-      dbMock.goals.where = vi.fn().mockReturnValue({
-        between: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockResolvedValue(incompleteGoals),
-        }),
-        equals: vi.fn().mockReturnValue({
-          filter: vi.fn().mockImplementation((predicate: (goal: (typeof incompleteGoals)[number]) => boolean) => ({
-            toArray: vi.fn().mockResolvedValue(incompleteGoals.filter(predicate)),
-          })),
-          toArray: vi.fn().mockResolvedValue(incompleteGoals),
-        }),
+      await db.goals.clear();
+      await db.goals.add({
+        id: 'g2',
+        title: 'Incomplete Goal',
+        rewardValue: 1000,
+        status: GOAL_STATUS.COMPLETED,
+        completedAt: null,
+        createdAt: Date.now(),
       });
-
-      dbMock.pomodoroSessions = pomodoroTable([
+      await storeSessions([
         {
           id: 'p2',
           durationMinutes: 25,
-          engagementType: 'work',
+          engagementType: EngagementType.WORK,
           startTime: new Date('2026-09-01T15:00:00').getTime(),
           endTime: new Date('2026-09-01T15:25:00').getTime(),
           status: PomodoroSessionStatus.COMPLETED,
@@ -269,11 +215,11 @@ describe('DashboardEarningsService', () => {
     });
 
     it('should credit a pomodoro to the day it ended, even when it started before the range', async () => {
-      dbMock.pomodoroSessions = pomodoroTable([
+      await storeSessions([
         {
           id: 'p3',
           durationMinutes: 30,
-          engagementType: 'work',
+          engagementType: EngagementType.WORK,
           startTime: new Date('2026-08-31T23:50:00').getTime(),
           endTime: new Date('2026-09-01T00:20:00').getTime(),
           status: PomodoroSessionStatus.COMPLETED,
@@ -287,11 +233,11 @@ describe('DashboardEarningsService', () => {
     });
 
     it('should not credit a pomodoro that ended after the range, even when it started inside it', async () => {
-      dbMock.pomodoroSessions = pomodoroTable([
+      await storeSessions([
         {
           id: 'p4',
           durationMinutes: 30,
-          engagementType: 'work',
+          engagementType: EngagementType.WORK,
           startTime: new Date('2026-09-02T23:50:00').getTime(),
           endTime: new Date('2026-09-03T00:20:00').getTime(),
           status: PomodoroSessionStatus.COMPLETED,
@@ -305,16 +251,16 @@ describe('DashboardEarningsService', () => {
     });
 
     it('should leave out pomodoros that were cancelled or are still running', async () => {
-      const session = (id: string, status: PomodoroSessionStatus): object => ({
+      const session = (id: string, status: PomodoroSessionStatus): PomodoroSession => ({
         id,
         durationMinutes: 25,
-        engagementType: 'work',
+        engagementType: EngagementType.WORK,
         startTime: new Date('2026-09-01T15:00:00').getTime(),
         endTime: new Date('2026-09-01T15:25:00').getTime(),
         status,
         rewardEarned: 250,
       });
-      dbMock.pomodoroSessions = pomodoroTable([
+      await storeSessions([
         session('p5', PomodoroSessionStatus.CANCELLED),
         session('p6', PomodoroSessionStatus.ACTIVE),
       ]);
@@ -326,11 +272,7 @@ describe('DashboardEarningsService', () => {
 
     it('should handle database errors gracefully and return fallback records', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
-      dbMock.goals.where = vi.fn().mockReturnValue({
-        between: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockRejectedValue(new Error('IndexedDB error')),
-        }),
-      });
+      db.close();
 
       const records = await firstValueFrom(service.getDailyEarnings('2026-09-01', '2026-09-02'));
       expect(records).toBeDefined();
@@ -346,13 +288,22 @@ describe('DashboardEarningsService', () => {
   });
 
   describe('getMonthlyEarningsSummary', () => {
-    const earnedOn = (date: string, totalEarned: number): DailyEarningsRecord => ({
-      date,
-      totalEarned,
-      goalsEarned: totalEarned,
-      dailyTasksEarned: 0,
-      pomodoroEarned: 0,
-      dailyScoresEarned: 0,
+    const completedGoal = (id: string, completedAt: Date, rewardValue: number): Goal => ({
+      id,
+      title: 'Goal',
+      rewardValue,
+      status: GOAL_STATUS.COMPLETED,
+      completedAt: completedAt.getTime(),
+      createdAt: 0,
+    });
+
+    beforeEach(async () => {
+      await Promise.all([
+        db.goals.clear(),
+        db.dailyScores.clear(),
+        db.pomodoroSessions.clear(),
+        db.dailyTaskCompletions.clear(),
+      ]);
     });
 
     it('should calculate monthly average using elapsed days for current month', async () => {
@@ -360,7 +311,7 @@ describe('DashboardEarningsService', () => {
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth() + 1;
       const currentDay = now.getDate();
-      vi.spyOn(service, 'calculateDailyEarnings').mockResolvedValue([earnedOn('2026-09-01', 31_000)]);
+      await db.goals.add(completedGoal('g-now', new Date(currentYear, currentMonth - 1, 1, 12), 31_000));
 
       const summary = await firstValueFrom(service.getMonthlyEarningsSummary(currentYear, currentMonth));
 
@@ -372,7 +323,10 @@ describe('DashboardEarningsService', () => {
 
     it('should calculate monthly average using total month days for completed past month', async () => {
       // Past month: August 2026 (31 days)
-      vi.spyOn(service, 'calculateDailyEarnings').mockResolvedValue([earnedOn('2026-08-01', 10_000)]);
+      await db.goals.bulkAdd([
+        completedGoal('g-aug', new Date(2026, 7, 1, 12), 10_000),
+        completedGoal('g-sep', new Date(2026, 8, 1, 12), 5000),
+      ]);
 
       const summary = await firstValueFrom(service.getMonthlyEarningsSummary(2026, 8));
 

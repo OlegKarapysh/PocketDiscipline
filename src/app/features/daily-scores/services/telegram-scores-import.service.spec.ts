@@ -1,58 +1,23 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { DailyScore } from '../../../core/models/daily-score.model';
-import type { User } from '../../../core/models/user.model';
-import { DbService } from '../../../database/db.service';
+import { CURRENT_USER_ID } from '../../../core/models/user.model';
+import type { DbService } from '../../../database/db.service';
+import { openEmptyDb } from '../../../shared/testing/empty-db';
 import { TelegramScoresImportService } from './telegram-scores-import.service';
 import { TelegramScoresParserService } from './telegram-scores-parser.service';
-
-class FakeScoresTable {
-  readonly rows = new Map<string, DailyScore>();
-
-  toArray(): Promise<DailyScore[]> {
-    return Promise.resolve([...this.rows.values()]);
-  }
-
-  bulkPut(scores: DailyScore[]): Promise<void> {
-    for (const score of scores) {
-      this.rows.set(score.date, structuredClone(score));
-    }
-    return Promise.resolve();
-  }
-
-  all(): DailyScore[] {
-    return [...this.rows.values()].sort((a, b) => a.date.localeCompare(b.date));
-  }
-}
 
 describe('TelegramScoresImportService', () => {
   let service: TelegramScoresImportService;
   let parser: TelegramScoresParserService;
-  let db: {
-    users: { rows: User[] };
-    dailyScores: FakeScoresTable;
-    transaction: ReturnType<typeof vi.fn>;
-  };
+  let db: DbService;
 
-  beforeEach(() => {
-    db = {
-      users: { rows: [{ id: 1, name: 'Current', balance: 2500, createdAt: 0, updatedAt: 0 }] },
-      dailyScores: new FakeScoresTable(),
-      transaction: vi.fn(async (_mode: string, _tables: unknown[], work: () => Promise<unknown>) => {
-        const snapshot = new Map(db.dailyScores.rows);
-        try {
-          return await work();
-        } catch (err) {
-          db.dailyScores.rows.clear();
-          for (const [k, v] of snapshot) db.dailyScores.rows.set(k, v);
-          throw err;
-        }
-      }),
-    };
+  const balance = async () => (await db.users.get(CURRENT_USER_ID))?.balance;
+  const storedScores = async () => (await db.dailyScores.toArray()).sort((a, b) => a.date.localeCompare(b.date));
 
-    TestBed.configureTestingModule({
-      providers: [{ provide: DbService, useValue: db }],
-    });
+  beforeEach(async () => {
+    db = await openEmptyDb();
+    await db.users.add({ id: CURRENT_USER_ID, name: 'Current', balance: 2500, createdAt: 0, updatedAt: 0 });
 
     service = TestBed.inject(TelegramScoresImportService);
     parser = TestBed.inject(TelegramScoresParserService);
@@ -69,7 +34,7 @@ describe('TelegramScoresImportService', () => {
     });
 
   it('previews new and replaced scores, average score, and resulting high-score streak', async () => {
-    await db.dailyScores.bulkPut([
+    await db.dailyScores.bulkAdd([
       { date: '2026-09-02', score: 6, rewardEarned: 0, streakAtThisDay: 0, createdAt: 100 },
     ]);
 
@@ -97,7 +62,7 @@ describe('TelegramScoresImportService', () => {
   });
 
   it('replaces overlapping existing scores, computes streak bonuses, and never modifies user balance', async () => {
-    await db.dailyScores.bulkPut([
+    await db.dailyScores.bulkAdd([
       { date: '2026-08-31', score: 9, rewardEarned: 100, streakAtThisDay: 1, createdAt: 10 },
       { date: '2026-09-02', score: 5, rewardEarned: 0, streakAtThisDay: 0, createdAt: 20 },
       { date: '2026-09-04', score: 10, rewardEarned: 500, streakAtThisDay: 1, createdAt: 30 },
@@ -119,14 +84,15 @@ describe('TelegramScoresImportService', () => {
       skipped: 0,
       resultingStreak: 5,
     });
-    expect(db.users.rows[0].balance).toBe(2500);
-    expect(db.transaction).toHaveBeenCalledTimes(1);
-    expect(db.transaction.mock.calls[0][1]).toEqual([db.dailyScores]);
+    expect(await balance()).toBe(2500);
 
     expect(
-      db.dailyScores
-        .all()
-        .map(({ date, score, rewardEarned, streakAtThisDay }) => [date, score, rewardEarned, streakAtThisDay]),
+      (await storedScores()).map(({ date, score, rewardEarned, streakAtThisDay }) => [
+        date,
+        score,
+        rewardEarned,
+        streakAtThisDay,
+      ]),
     ).toEqual([
       ['2026-08-31', 9, 100, 1],
       ['2026-09-01', 10, 550, 2],
@@ -151,7 +117,7 @@ describe('TelegramScoresImportService', () => {
     const result = await service.import(parsed);
 
     expect(result.resultingStreak).toBe(2);
-    expect(db.dailyScores.all().map((row) => [row.date, row.streakAtThisDay, row.rewardEarned])).toEqual([
+    expect((await storedScores()).map((row) => [row.date, row.streakAtThisDay, row.rewardEarned])).toEqual([
       ['2026-09-01', 1, 100],
       ['2026-09-02', 0, 0],
       ['2026-09-03', 1, 500],
@@ -178,8 +144,8 @@ describe('TelegramScoresImportService', () => {
       resultingStreak: 12,
     });
 
-    const day11 = db.dailyScores.rows.get('2026-09-11');
-    const day12 = db.dailyScores.rows.get('2026-09-12');
+    const day11 = await db.dailyScores.get('2026-09-11');
+    const day12 = await db.dailyScores.get('2026-09-12');
     expect(day11).toMatchObject({ score: 9, streakAtThisDay: 11, rewardEarned: 200 });
     expect(day12).toMatchObject({ score: 10, streakAtThisDay: 12, rewardEarned: 1000 });
   });
@@ -192,8 +158,11 @@ describe('TelegramScoresImportService', () => {
       streakAtThisDay: 0,
       createdAt: 10,
     };
-    await db.dailyScores.bulkPut([initialScore]);
-    vi.spyOn(db.dailyScores, 'bulkPut').mockRejectedValueOnce(new Error('QuotaExceededError'));
+    await db.dailyScores.bulkAdd([initialScore]);
+    // Storage refuses the second row, after the first (a replacement) has been handed to it.
+    db.dailyScores.hook('creating', (_key, row) => {
+      if (row.date === '2026-09-02') throw new Error('QuotaExceededError');
+    });
 
     const parsed = parser.parse(
       exportJson([
@@ -203,7 +172,7 @@ describe('TelegramScoresImportService', () => {
     );
 
     await expect(service.import(parsed)).rejects.toThrow('QuotaExceededError');
-    expect(db.dailyScores.all()).toEqual([initialScore]);
-    expect(db.users.rows[0].balance).toBe(2500);
+    expect(await storedScores()).toEqual([initialScore]);
+    expect(await balance()).toBe(2500);
   });
 });

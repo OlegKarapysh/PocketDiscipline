@@ -1,139 +1,60 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { ERROR_TYPE_LOCKED, RewardsService } from './rewards.service';
-import { DbService } from '../../../database/db.service';
+import type { DbService } from '../../../database/db.service';
+import { openEmptyDb } from '../../../shared/testing/empty-db';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import type { RewardItem } from '../../../core/models/reward.model';
 
-vi.mock('dexie', () => {
-  class MockDexie {
-    version = vi.fn();
-  }
-  return {
-    default: MockDexie,
-    Dexie: MockDexie,
-    liveQuery: (fn: () => unknown) => ({
-      '@@observable'() {
-        return {
-          subscribe(subscriber: { next: (val: unknown) => void; complete: () => void; error: (err: unknown) => void }) {
-            Promise.resolve()
-              .then(fn)
-              .then(
-                (val) => {
-                  subscriber.next(val);
-                  subscriber.complete();
-                },
-                (err: unknown) => {
-                  subscriber.error(err);
-                },
-              );
-            return {
-              unsubscribe() {
-                // no-op for mock
-              },
-            };
-          },
-        };
-      },
-    }),
-  };
-});
-
 describe('RewardsService', () => {
   let service: RewardsService;
-  let dbMock: {
-    users: {
-      get: ReturnType<typeof vi.fn>;
-      update: ReturnType<typeof vi.fn>;
-    };
-    rewards: {
-      get: ReturnType<typeof vi.fn>;
-      add: ReturnType<typeof vi.fn>;
-      update: ReturnType<typeof vi.fn>;
-      delete: ReturnType<typeof vi.fn>;
-      orderBy: ReturnType<typeof vi.fn>;
-    };
-    withdrawals: {
-      add: ReturnType<typeof vi.fn>;
-    };
-    transaction: ReturnType<typeof vi.fn>;
+  let db: DbService;
+
+  const mockReward: RewardItem = {
+    id: 'rew-1',
+    title: 'Mechanical Keyboard',
+    cost: 2500,
+    categoryId: 'cat-tech',
+    type: 'one-time',
+    status: 'active',
+    claimCount: 0,
+    claimedAt: null,
+    createdAt: 1000,
   };
 
-  let mockReward: RewardItem;
-  let mockRepeatableReward: RewardItem;
+  const mockRepeatableReward: RewardItem = {
+    id: 'rew-2',
+    title: 'Specialty Coffee',
+    cost: 80,
+    categoryId: 'cat-food',
+    type: 'repeatable',
+    status: 'active',
+    claimCount: 1,
+    claimedAt: null,
+    createdAt: 2000,
+  };
 
-  beforeEach(() => {
-    mockReward = {
-      id: 'rew-1',
-      title: 'Mechanical Keyboard',
-      cost: 2500,
-      categoryId: 'cat-tech',
-      type: 'one-time',
-      status: 'active',
-      claimCount: 0,
-      claimedAt: null,
-      createdAt: 1000,
-    };
+  const balance = async () => (await db.users.get(CURRENT_USER_ID))?.balance;
 
-    mockRepeatableReward = {
-      id: 'rew-2',
-      title: 'Specialty Coffee',
-      cost: 80,
-      categoryId: 'cat-food',
-      type: 'repeatable',
-      status: 'active',
-      claimCount: 1,
-      claimedAt: null,
-      createdAt: 2000,
-    };
-
-    dbMock = {
-      users: {
-        get: vi.fn().mockResolvedValue({ id: CURRENT_USER_ID, balance: 3000 }),
-        update: vi.fn().mockResolvedValue(1),
-      },
-      rewards: {
-        get: vi.fn().mockImplementation((id: string) => {
-          if (id === 'rew-1') return Promise.resolve({ ...mockReward });
-          if (id === 'rew-2') return Promise.resolve({ ...mockRepeatableReward });
-          return Promise.resolve(undefined);
-        }),
-        add: vi.fn().mockResolvedValue('rew-new'),
-        update: vi.fn().mockResolvedValue(1),
-        delete: vi.fn().mockResolvedValue(undefined),
-        orderBy: vi.fn().mockReturnValue({
-          reverse: vi.fn().mockReturnValue({
-            toArray: vi.fn().mockResolvedValue([mockReward, mockRepeatableReward]),
-          }),
-        }),
-      },
-      withdrawals: {
-        add: vi.fn().mockResolvedValue('w-new'),
-      },
-      transaction: vi.fn().mockImplementation(async (...args: unknown[]) => {
-        const fn = args.find((arg): arg is () => Promise<unknown> => typeof arg === 'function');
-        if (fn) return await fn();
-        return undefined;
-      }),
-    };
-
-    TestBed.configureTestingModule({
-      providers: [RewardsService, { provide: DbService, useValue: dbMock }],
-    });
-
+  beforeEach(async () => {
+    db = await openEmptyDb();
+    await db.users.add({ id: CURRENT_USER_ID, name: 'Current', balance: 3000, createdAt: 0, updatedAt: 0 });
+    await db.rewards.bulkAdd([mockReward, mockRepeatableReward]);
     service = TestBed.inject(RewardsService);
   });
 
   it('should return all rewards or filtered rewards by status', async () => {
+    await db.rewards.update('rew-1', { status: 'claimed' });
+
     const all = await firstValueFrom(service.getRewards());
     expect(all).toHaveLength(2);
 
     const active = await firstValueFrom(service.getRewards('active'));
-    expect(active).toHaveLength(2);
+    expect(active.map((reward) => reward.id)).toEqual(['rew-2']);
 
     const claimed = await firstValueFrom(service.getRewards('claimed'));
-    expect(claimed).toHaveLength(0);
+    expect(claimed.map((reward) => reward.id)).toEqual(['rew-1']);
   });
 
   it('should get reward by id', async () => {
@@ -157,7 +78,7 @@ describe('RewardsService', () => {
     expect(created.status).toBe('active');
     expect(created.claimCount).toBe(0);
     expect(created.claimedAt).toBeNull();
-    expect(dbMock.rewards.add).toHaveBeenCalledWith(created);
+    expect(await db.rewards.get(created.id)).toEqual(created);
   });
 
   it('should reject creating reward with non-positive or non-finite cost', async () => {
@@ -178,6 +99,7 @@ describe('RewardsService', () => {
         type: 'one-time',
       }),
     ).rejects.toThrow('Reward cost must be greater than zero');
+    expect(await db.rewards.count()).toBe(2);
   });
 
   it('should reject creating reward with a cost that is not a whole number of hryvnias', async () => {
@@ -210,13 +132,7 @@ describe('RewardsService', () => {
 
     expect(updated.title).toBe('Gaming Keyboard');
     expect(updated.cost).toBe(2800);
-    expect(dbMock.rewards.update).toHaveBeenCalledWith(
-      'rew-1',
-      expect.objectContaining({
-        title: 'Gaming Keyboard',
-        cost: 2800,
-      }),
-    );
+    expect(await db.rewards.get('rew-1')).toEqual(updated);
   });
 
   it('should partially update categoryId and type without altering title or cost', async () => {
@@ -228,14 +144,18 @@ describe('RewardsService', () => {
     expect(updated.categoryId).toBe('cat-new');
     expect(updated.type).toBe('repeatable');
     expect(updated.title).toBe('Mechanical Keyboard');
+    expect(await db.rewards.get('rew-1')).toEqual(
+      expect.objectContaining({ categoryId: 'cat-new', title: 'Mechanical Keyboard', cost: 2500 }),
+    );
   });
 
   it('should refuse to change the type of a reward that has been claimed', async () => {
-    mockReward = { ...mockReward, status: 'claimed', claimedAt: 5000 };
+    await db.rewards.update('rew-1', { status: 'claimed', claimedAt: 5000 });
 
     await expect(service.updateReward('rew-1', { type: 'repeatable' })).rejects.toThrow(ERROR_TYPE_LOCKED);
     await expect(service.updateReward('rew-2', { type: 'one-time' })).rejects.toThrow(ERROR_TYPE_LOCKED);
-    expect(dbMock.rewards.update).not.toHaveBeenCalled();
+    expect((await db.rewards.get('rew-1'))?.type).toBe('one-time');
+    expect((await db.rewards.get('rew-2'))?.type).toBe('repeatable');
   });
 
   it('should still edit the other fields of a claimed reward', async () => {
@@ -253,6 +173,7 @@ describe('RewardsService', () => {
     await expect(service.updateReward('rew-1', { cost: 12.5 })).rejects.toThrow(
       'Reward cost must be a whole number of hryvnias',
     );
+    expect((await db.rewards.get('rew-1'))?.cost).toBe(2500);
   });
 
   it('should reject empty title on update', async () => {
@@ -265,7 +186,7 @@ describe('RewardsService', () => {
 
   it('should delete an existing reward item', async () => {
     await service.deleteReward('rew-1');
-    expect(dbMock.rewards.delete).toHaveBeenCalledWith('rew-1');
+    expect(await db.rewards.get('rew-1')).toBeUndefined();
   });
 
   it('should throw when deleting a non-existent reward', async () => {
@@ -279,19 +200,14 @@ describe('RewardsService', () => {
     expect(withdrawal.title).toBe('Claimed: Mechanical Keyboard');
     expect(withdrawal.rewardId).toBe('rew-1');
 
-    expect(dbMock.transaction).toHaveBeenCalled();
-    expect(dbMock.users.update).toHaveBeenCalledWith(CURRENT_USER_ID, {
-      balance: 500,
-      updatedAt: expect.any(Number) as number,
-    });
-    expect(dbMock.rewards.update).toHaveBeenCalledWith(
-      'rew-1',
+    expect(await balance()).toBe(500);
+    expect(await db.rewards.get('rew-1')).toEqual(
       expect.objectContaining({
         status: 'claimed',
         claimedAt: expect.any(Number) as number,
       }),
     );
-    expect(dbMock.withdrawals.add).toHaveBeenCalled();
+    expect(await db.withdrawals.get(withdrawal.id)).toEqual(withdrawal);
   });
 
   it('should claim a repeatable reward and increment claimCount', async () => {
@@ -300,22 +216,20 @@ describe('RewardsService', () => {
     expect(withdrawal.amount).toBe(80);
     expect(withdrawal.title).toBe('Claimed: Specialty Coffee');
 
-    expect(dbMock.rewards.update).toHaveBeenCalledWith(
-      'rew-2',
-      expect.objectContaining({
-        claimCount: 2,
-      }),
-    );
+    expect(await db.rewards.get('rew-2')).toEqual(expect.objectContaining({ status: 'active', claimCount: 2 }));
   });
 
   it('should reject claiming reward when user balance is insufficient', async () => {
-    dbMock.users.get.mockResolvedValueOnce({ id: CURRENT_USER_ID, balance: 100 });
+    await db.users.update(CURRENT_USER_ID, { balance: 100 });
 
     await expect(service.claimReward(mockReward)).rejects.toThrow('Insufficient balance to claim reward');
+    expect(await balance()).toBe(100);
+    expect(await db.withdrawals.count()).toBe(0);
+    expect((await db.rewards.get('rew-1'))?.status).toBe('active');
   });
 
   it('should reject claiming reward when user record is not found in database', async () => {
-    dbMock.users.get.mockResolvedValueOnce(undefined);
+    await db.users.clear();
 
     await expect(service.claimReward(mockReward)).rejects.toThrow('Insufficient balance to claim reward');
   });
