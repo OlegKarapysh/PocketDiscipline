@@ -1,0 +1,47 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Serialize validation and deployment; never cancel an active production run. A manual run from another
+# branch deploys nothing, so it gets its own group: in `pages` it could replace a waiting main run.
+concurrency:
+  group: ${{ github.ref == 'refs/heads/main' && 'pages' || format('deploy-{0}', github.ref) }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validation
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/validate.yml
+    with:
+      upload-pages-artifact: true
+
+  deploy:
+    name: GitHub Pages
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

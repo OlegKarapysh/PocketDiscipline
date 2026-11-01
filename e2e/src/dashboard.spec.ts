@@ -57,7 +57,7 @@ const stat = (page: Page, label: string) => page.locator('app-stat-card', { hasT
 test.describe('Dashboard totals', () => {
   test.beforeEach(async ({ page }) => {
     await page.clock.setFixedTime(NOW);
-    await page.goto('/dashboard');
+    await page.goto('dashboard');
     await expect(page.locator('app-stat-card').first()).toBeVisible();
     await putRows(page, { users: [userRow(12_345)], ...EARNINGS });
     await page.reload();
@@ -103,7 +103,7 @@ test.describe('Dashboard chart where DST starts at midnight', () => {
 
   test('should keep the last day of a range that crosses the change', async ({ page }) => {
     await page.clock.setFixedTime(new Date('2026-09-10T12:00:00-03:00'));
-    await page.goto('/dashboard');
+    await page.goto('dashboard');
     await expect(page.locator('app-stat-card').first()).toBeVisible();
     await putRows(page, {
       users: [userRow(0)],

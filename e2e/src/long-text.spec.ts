@@ -12,7 +12,7 @@ test.describe('Long text on a phone', () => {
   test.use({ viewport: { width: 360, height: 740 } });
 
   test('should cut a pasted goal title at the limit and wrap it inside the card', async ({ page }) => {
-    await page.goto('/goals');
+    await page.goto('goals');
     const title = page.getByPlaceholder('e.g. Read a book');
     await openDialog(page.getByRole('button', { name: /Add Goal/i }), title);
 
@@ -27,7 +27,7 @@ test.describe('Long text on a phone', () => {
   });
 
   test('should cut a pasted daily task title and difficulty name and keep them inside the card', async ({ page }) => {
-    await page.goto('/tasks');
+    await page.goto('tasks');
     await page.getByRole('button', { name: /Add Daily Task/i }).click();
 
     const title = page.getByPlaceholder('e.g. Morning Workout');
@@ -56,7 +56,7 @@ test.describe('Long text on a phone', () => {
   });
 
   test('should cut a pasted one-off task title at the limit and wrap it inside the card', async ({ page }) => {
-    await page.goto('/tasks');
+    await page.goto('tasks');
     await page.getByRole('tab', { name: /One-off/ }).click();
     await page.getByRole('button', { name: 'Add one-off task' }).click();
 

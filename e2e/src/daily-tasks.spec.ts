@@ -95,7 +95,7 @@ async function createTask(page: Page, title: string): Promise<void> {
 
 // Leaves the task in the opened "Done today" group.
 async function createAndCompleteTask(page: Page, title: string): Promise<void> {
-  await page.goto('/tasks');
+  await page.goto('tasks');
   await createTask(page, title);
   await openTask(page, title);
   await taskItem(page, title).locator('.pd-difficulty', { hasText: 'Easy' }).click();
@@ -112,7 +112,7 @@ async function openEdit(page: Page, title: string): Promise<void> {
 
 test.describe('Daily Tasks Flow', () => {
   test('should create a new daily task with Save Task and display it in the list', async ({ page }) => {
-    await page.goto('/tasks');
+    await page.goto('tasks');
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tasks');
     await expect(page.locator('h2').first()).toContainText('Daily tasks');
@@ -210,14 +210,14 @@ test.describe('Daily Tasks Flow', () => {
     expect(after['users']).toEqual(before['users']);
 
     // The dashboard sums completions by date without looking the task up.
-    await page.goto('/dashboard');
+    await page.goto('dashboard');
     await expect(page.locator('app-stat-card').first()).toBeVisible();
   });
 
   test('should explain why a task saved with an invalid reward cannot be completed, until it is edited', async ({
     page,
   }) => {
-    await page.goto('/tasks');
+    await page.goto('tasks');
     await expect(page.locator('app-daily-task-list app-empty-state')).toBeVisible();
     await putRow(page, 'dailyTasks', {
       id: 'legacy',
@@ -249,7 +249,7 @@ test.describe('Daily Tasks Flow', () => {
   });
 
   test('should move a task done today into its own group, and count it', async ({ page }) => {
-    await page.goto('/tasks');
+    await page.goto('tasks');
     await createTask(page, 'Run');
     await createTask(page, 'Read');
     await expect(page.locator('.progress')).toHaveText('0 of 2 done today');
@@ -270,7 +270,7 @@ test.describe('Daily Tasks Flow', () => {
 
   test('should show the rewards with the streak bonus, and pay what it shows', { tag: '@smoke' }, async ({ page }) => {
     await page.clock.setFixedTime(new Date('2026-10-29T12:00:00'));
-    await page.goto('/tasks');
+    await page.goto('tasks');
     await expect(page.locator('app-daily-task-list app-empty-state')).toBeVisible();
     await putRow(page, 'dailyTasks', {
       id: 'streaky',
@@ -301,7 +301,7 @@ test.describe('Daily Tasks Flow', () => {
   });
 
   test('should open one task at a time', async ({ page }) => {
-    await page.goto('/tasks');
+    await page.goto('tasks');
     await createTask(page, 'Run');
     await createTask(page, 'Read');
 
@@ -313,7 +313,7 @@ test.describe('Daily Tasks Flow', () => {
   });
 
   test('should keep the order the user gives the tasks, after a reload', async ({ page }) => {
-    await page.goto('/tasks');
+    await page.goto('tasks');
     for (const title of ['Run', 'Read', 'Swim']) await createTask(page, title);
     await expect(titles(page)).toHaveText(['Run', 'Read', 'Swim']);
 
@@ -350,7 +350,7 @@ test.describe('Daily Tasks Flow', () => {
   });
 
   test('should keep the one-off tasks on a tab of their own', async ({ page }) => {
-    await page.goto('/tasks');
+    await page.goto('tasks');
     await expect(page.locator('app-task-list')).toHaveCount(0);
 
     await page.getByRole('tab', { name: /One-off/ }).click();

@@ -40,7 +40,7 @@ async function openHistory(page: Page): Promise<void> {
 
 test.describe('Rewards: money out and back', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/rewards');
+    await page.goto('rewards');
     await expect(page.locator('app-reward-store')).toBeVisible();
     await putRows(page, { users: [userRow(START_BALANCE)], rewards: [reward], withdrawals: [withdrawal] });
     await page.reload();

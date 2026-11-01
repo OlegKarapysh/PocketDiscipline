@@ -3,14 +3,14 @@ import { openDialog } from './dialog';
 
 test.describe('Purge database', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/goals');
+    await page.goto('goals');
     const title = page.getByPlaceholder('e.g. Read a book');
     await openDialog(page.getByRole('button', { name: /Add Goal/i }), title);
     await title.fill('Goal to be purged');
     await page.locator('input[type="number"]').fill('500');
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Goal to be purged')).toBeVisible();
-    await page.goto('/settings');
+    await page.goto('settings');
   });
 
   test('should keep the data when the user cancels', async ({ page }) => {
@@ -18,7 +18,7 @@ test.describe('Purge database', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
 
     await expect(page).toHaveURL(/\/settings$/);
-    await page.goto('/goals');
+    await page.goto('goals');
     await expect(page.getByText('Goal to be purged')).toBeVisible();
   });
 

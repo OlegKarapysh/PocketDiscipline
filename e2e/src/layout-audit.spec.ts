@@ -48,11 +48,11 @@ interface Screen {
 
 // Add a screen here whenever you add a route, a tab, a dialog or any other state with its own layout.
 const SCREENS: Screen[] = [
-  { name: 'dashboard', path: '/dashboard', ready: 'app-stat-card' },
+  { name: 'dashboard', path: 'dashboard', ready: 'app-stat-card' },
   {
     // Two years: one bar per month, with the chart's widest axis labels ("Jan '24").
     name: 'dashboard: earnings over a long range',
-    path: '/dashboard',
+    path: 'dashboard',
     ready: 'app-stat-card',
     open: async (page) => {
       const filter = page.locator('app-period-filter');
@@ -65,7 +65,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'dashboard: quick spend dialog',
-    path: '/dashboard',
+    path: 'dashboard',
     ready: 'app-stat-card',
     root: OVERLAY,
     open: async (page) => {
@@ -79,7 +79,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'dashboard: quick spend dialog, invalid amount',
-    path: '/dashboard',
+    path: 'dashboard',
     ready: 'app-stat-card',
     root: OVERLAY,
     open: async (page) => {
@@ -92,10 +92,10 @@ const SCREENS: Screen[] = [
       await expect(page.locator('app-quick-spend-dialog mat-error')).toBeVisible();
     },
   },
-  { name: 'tasks', path: '/tasks', ready: 'app-daily-task-item' },
+  { name: 'tasks', path: 'tasks', ready: 'app-daily-task-item' },
   {
     name: 'tasks: new daily task form',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-daily-task-item',
     open: async (page) => {
       await page.getByRole('button', { name: 'Add daily task' }).click();
@@ -105,7 +105,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'tasks: daily task opened',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-daily-task-item',
     open: async (page) => {
       await page.locator('app-daily-task-item button.summary').first().click();
@@ -114,7 +114,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'tasks: done today opened',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-daily-task-item',
     open: async (page) => {
       await page.getByRole('button', { name: /Done today/ }).click();
@@ -124,7 +124,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'tasks: reorder daily tasks',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-daily-task-item',
     open: async (page) => {
       await page.getByRole('button', { name: 'Reorder' }).click();
@@ -133,7 +133,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'tasks: edit daily task form',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-daily-task-item',
     open: async (page) => {
       await page.locator('app-daily-task-item button.summary').first().click();
@@ -143,7 +143,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'tasks: delete daily task confirmation',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-daily-task-item',
     root: OVERLAY,
     open: async (page) => {
@@ -155,7 +155,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'tasks: one-off tab',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-daily-task-item',
     open: async (page) => {
       await page.getByRole('tab', { name: /One-off/ }).click();
@@ -164,7 +164,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'tasks: new one-off task form',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-daily-task-item',
     open: async (page) => {
       await page.getByRole('tab', { name: /One-off/ }).click();
@@ -174,7 +174,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'tasks: edit one-off task form',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-daily-task-item',
     open: async (page) => {
       await page.getByRole('tab', { name: /One-off/ }).click();
@@ -184,7 +184,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'tasks: completed one-off tasks opened',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-daily-task-item',
     open: async (page) => {
       await page.getByRole('tab', { name: /One-off/ }).click();
@@ -194,7 +194,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'tasks: delete one-off task confirmation',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-daily-task-item',
     root: OVERLAY,
     open: async (page) => {
@@ -203,10 +203,10 @@ const SCREENS: Screen[] = [
       await expect(page.locator('app-confirm-dialog')).toBeVisible();
     },
   },
-  { name: 'goals', path: '/goals', ready: 'app-goal-item' },
+  { name: 'goals', path: 'goals', ready: 'app-goal-item' },
   {
     name: 'goals: edit dialog',
-    path: '/goals',
+    path: 'goals',
     ready: 'app-goal-item',
     root: OVERLAY,
     open: async (page) => {
@@ -216,7 +216,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'goals: goal complete dialog',
-    path: '/goals',
+    path: 'goals',
     ready: 'app-goal-item',
     root: OVERLAY,
     open: async (page) => {
@@ -226,7 +226,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'goals: delete confirmation',
-    path: '/goals',
+    path: 'goals',
     ready: 'app-goal-item',
     root: OVERLAY,
     open: async (page) => {
@@ -234,10 +234,10 @@ const SCREENS: Screen[] = [
       await expect(page.locator('app-confirm-dialog')).toBeVisible();
     },
   },
-  { name: 'rewards: store', path: '/rewards', ready: 'app-reward-card' },
+  { name: 'rewards: store', path: 'rewards', ready: 'app-reward-card' },
   {
     name: 'rewards: category filter open',
-    path: '/rewards',
+    path: 'rewards',
     ready: 'app-reward-card',
     root: OVERLAY,
     open: async (page) => {
@@ -247,7 +247,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'rewards: reward dialog and its snackbar',
-    path: '/rewards',
+    path: 'rewards',
     ready: 'app-reward-card',
     root: OVERLAY,
     open: async (page) => {
@@ -260,7 +260,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'rewards: delete confirmation',
-    path: '/rewards',
+    path: 'rewards',
     ready: 'app-reward-card',
     root: OVERLAY,
     open: async (page) => {
@@ -271,7 +271,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'rewards: history',
-    path: '/rewards',
+    path: 'rewards',
     ready: 'app-reward-card',
     open: async (page) => {
       await page.getByRole('tab', { name: /History/ }).click();
@@ -280,7 +280,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'rewards: revert confirmation',
-    path: '/rewards',
+    path: 'rewards',
     ready: 'app-reward-card',
     root: OVERLAY,
     open: async (page) => {
@@ -291,7 +291,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'rewards: analytics',
-    path: '/rewards',
+    path: 'rewards',
     ready: 'app-reward-card',
     open: async (page) => {
       await page.getByRole('tab', { name: /Analytics/ }).click();
@@ -299,10 +299,10 @@ const SCREENS: Screen[] = [
       await expect(page.locator('.center-sub')).toBeVisible();
     },
   },
-  { name: 'categories', path: '/rewards/categories', ready: '.category-row' },
+  { name: 'categories', path: 'rewards/categories', ready: '.category-row' },
   {
     name: 'categories: category dialog',
-    path: '/rewards/categories',
+    path: 'rewards/categories',
     ready: '.category-row',
     root: OVERLAY,
     open: async (page) => {
@@ -312,7 +312,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'categories: delete confirmation',
-    path: '/rewards/categories',
+    path: 'rewards/categories',
     ready: '.category-row',
     root: OVERLAY,
     open: async (page) => {
@@ -324,7 +324,7 @@ const SCREENS: Screen[] = [
   // seeded sessions have; Today counts them in the same read.
   {
     name: 'pomodoro',
-    path: '/pomodoro',
+    path: 'pomodoro',
     ready: 'app-timer-controls app-badge',
     open: async (page) => {
       await expect(page.locator('app-pomodoro-today')).toContainText(`${String(POMODOROS_TODAY)} pomodoros`);
@@ -333,7 +333,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'pomodoro: custom range',
-    path: '/pomodoro',
+    path: 'pomodoro',
     ready: 'app-pomodoro-history-chart',
     open: async (page) => {
       await page.locator('app-pomodoro-history').getByRole('radio', { name: 'Custom' }).click();
@@ -343,7 +343,7 @@ const SCREENS: Screen[] = [
   {
     // Two years: one bar per month, with the chart's widest axis labels ("Jan '24").
     name: 'pomodoro: long range',
-    path: '/pomodoro',
+    path: 'pomodoro',
     ready: 'app-pomodoro-history-chart',
     open: async (page) => {
       const filter = page.locator('app-pomodoro-history app-period-filter');
@@ -356,7 +356,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'pomodoro: empty period',
-    path: '/pomodoro',
+    path: 'pomodoro',
     ready: 'app-pomodoro-history-chart',
     open: async (page) => {
       const filter = page.locator('app-pomodoro-history app-period-filter');
@@ -370,7 +370,7 @@ const SCREENS: Screen[] = [
   {
     // 120 minutes pays three times the rate: the widest reward Start shows.
     name: 'pomodoro: longest session',
-    path: '/pomodoro',
+    path: 'pomodoro',
     ready: 'app-timer-controls app-badge',
     open: async (page) => {
       const increase = page.getByRole('button', { name: 'Increase duration' });
@@ -383,17 +383,17 @@ const SCREENS: Screen[] = [
   {
     // Last of the pomodoro screens: the session it starts stays running.
     name: 'pomodoro: running',
-    path: '/pomodoro',
+    path: 'pomodoro',
     ready: 'app-timer-controls app-badge',
     open: async (page) => {
       await page.getByRole('button', { name: /^Start/ }).click();
       await expect(page.getByRole('button', { name: 'Stop' })).toBeVisible();
     },
   },
-  { name: 'daily scores', path: '/daily-scores', ready: '.score-btn' },
+  { name: 'daily scores', path: 'daily-scores', ready: '.score-btn' },
   {
     name: 'daily scores: custom range',
-    path: '/daily-scores',
+    path: 'daily-scores',
     ready: '.score-btn',
     open: async (page) => {
       await page.locator('app-period-filter').getByRole('radio', { name: 'Custom' }).click();
@@ -403,7 +403,7 @@ const SCREENS: Screen[] = [
   {
     // Two years: one bar per month, with the chart's widest axis labels ("Jan '24").
     name: 'daily scores: long range',
-    path: '/daily-scores',
+    path: 'daily-scores',
     ready: '.score-btn',
     open: async (page) => {
       const filter = page.locator('app-period-filter');
@@ -416,7 +416,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'daily scores: score selected',
-    path: '/daily-scores',
+    path: 'daily-scores',
     ready: '.score-btn',
     open: async (page) => {
       await page.getByRole('button', { name: 'Score 10' }).click();
@@ -426,7 +426,7 @@ const SCREENS: Screen[] = [
   // Saves today's score, which replaces the score input: keep it after the screens that need the input.
   {
     name: 'daily scores: score saved',
-    path: '/daily-scores',
+    path: 'daily-scores',
     ready: '.score-btn',
     open: async (page) => {
       await page.getByRole('button', { name: 'Score 10' }).click();
@@ -434,10 +434,10 @@ const SCREENS: Screen[] = [
       await expect(page.locator('.readonly-container')).toBeVisible();
     },
   },
-  { name: 'settings', path: '/settings', ready: '.settings-link' },
+  { name: 'settings', path: 'settings', ready: '.settings-link' },
   {
     name: 'settings: invalid pomodoro rewards',
-    path: '/settings',
+    path: 'settings',
     ready: 'app-pomodoro-reward-settings input',
     open: async (page) => {
       await page.getByLabel('Work').fill('12.5');
@@ -448,7 +448,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'settings: balance setup dialog',
-    path: '/settings',
+    path: 'settings',
     ready: '.settings-link',
     root: OVERLAY,
     open: async (page) => {
@@ -463,7 +463,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'settings: balance setup confirmation',
-    path: '/settings',
+    path: 'settings',
     ready: '.settings-link',
     root: OVERLAY,
     open: async (page) => {
@@ -478,7 +478,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'settings: purge confirmation',
-    path: '/settings',
+    path: 'settings',
     ready: '.settings-link',
     root: OVERLAY,
     open: async (page) => {
@@ -486,10 +486,10 @@ const SCREENS: Screen[] = [
       await expect(page.locator('app-confirm-dialog')).toBeVisible();
     },
   },
-  { name: 'jar import', path: '/settings/jar-import', ready: '.choose-button' },
+  { name: 'jar import', path: 'settings/jar-import', ready: '.choose-button' },
   {
     name: 'jar import: rejected file',
-    path: '/settings/jar-import',
+    path: 'settings/jar-import',
     ready: '.choose-button',
     open: async (page) => {
       // The message quotes the value it could not read: text from the file, of any length.
@@ -500,17 +500,17 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'jar import: worst-case statement',
-    path: '/settings/jar-import',
+    path: 'settings/jar-import',
     ready: '.choose-button',
     open: async (page) => {
       await pickJarStatement(page, 'Jar_statement.csv', worstCaseJarStatement());
       await expect(page.locator('.review-row')).toHaveCount(JAR_ONE_OFFS + 5);
     },
   },
-  { name: 'telegram import', path: '/settings/telegram-import', ready: '.choose-button' },
+  { name: 'telegram import', path: 'settings/telegram-import', ready: '.choose-button' },
   {
     name: 'telegram import: rejected file',
-    path: '/settings/telegram-import',
+    path: 'settings/telegram-import',
     ready: '.choose-button',
     open: async (page) => {
       const broken = JSON.stringify({
@@ -522,7 +522,7 @@ const SCREENS: Screen[] = [
   },
   {
     name: 'telegram import: worst-case export',
-    path: '/settings/telegram-import',
+    path: 'settings/telegram-import',
     ready: '.choose-button',
     open: async (page) => {
       const messages = [
@@ -537,29 +537,29 @@ const SCREENS: Screen[] = [
       await expect(page.locator('.import-button')).toBeVisible();
     },
   },
-  { name: 'design system gallery', path: '/design-system', ready: 'app-stat-card', devOnly: true },
+  { name: 'design system gallery', path: 'design-system', ready: 'app-stat-card', devOnly: true },
 ];
 
 // The lists again with nothing in them: an empty state is a layout of its own. Audited before the
 // worst case is seeded.
 const EMPTY_SCREENS: Screen[] = [
-  { name: 'dashboard: no earnings', path: '/dashboard', ready: '.empty-earnings-indicator' },
-  { name: 'tasks: nothing yet', path: '/tasks', ready: 'app-empty-state' },
+  { name: 'dashboard: no earnings', path: 'dashboard', ready: '.empty-earnings-indicator' },
+  { name: 'tasks: nothing yet', path: 'tasks', ready: 'app-empty-state' },
   {
     name: 'tasks: no one-off tasks yet',
-    path: '/tasks',
+    path: 'tasks',
     ready: 'app-empty-state',
     open: async (page) => {
       await page.getByRole('tab', { name: /One-off/ }).click();
       await expect(page.locator('app-task-list app-empty-state')).toBeVisible();
     },
   },
-  { name: 'goals: nothing yet', path: '/goals', ready: 'app-empty-state' },
-  { name: 'pomodoro: nothing yet', path: '/pomodoro', ready: 'app-pomodoro-history .empty' },
-  { name: 'rewards: empty store', path: '/rewards', ready: 'app-reward-store app-empty-state' },
+  { name: 'goals: nothing yet', path: 'goals', ready: 'app-empty-state' },
+  { name: 'pomodoro: nothing yet', path: 'pomodoro', ready: 'app-pomodoro-history .empty' },
+  { name: 'rewards: empty store', path: 'rewards', ready: 'app-reward-store app-empty-state' },
   {
     name: 'rewards: empty history',
-    path: '/rewards',
+    path: 'rewards',
     ready: 'app-reward-store app-empty-state',
     open: async (page) => {
       await page.getByRole('tab', { name: /History/ }).click();
@@ -568,7 +568,7 @@ const EMPTY_SCREENS: Screen[] = [
   },
   {
     name: 'rewards: empty analytics',
-    path: '/rewards',
+    path: 'rewards',
     ready: 'app-reward-store app-empty-state',
     open: async (page) => {
       await page.getByRole('tab', { name: /Analytics/ }).click();
@@ -993,7 +993,7 @@ test.describe('Layout audit', { tag: '@smoke' }, () => {
         test.setTimeout(180_000);
         await page.clock.setFixedTime(NOW);
         // The app creates its database on its first load.
-        await page.goto('/dashboard');
+        await page.goto('dashboard');
         await expect(page.locator('app-balance-widget')).toBeVisible();
 
         await replaceLists(page);

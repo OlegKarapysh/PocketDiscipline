@@ -1,137 +1,19 @@
 name: CI
 
-# One workflow so a deploy can only follow a green build of the same commit: the deploy job needs the
-# test and e2e-smoke jobs, and it ships the very build the test job produced and budget-checked.
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+  # Validates any branch by hand, without opening a PR and without deploying.
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # The design-system step reads the baseline as it was on the base commit.
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint (ESLint + design-system check)
-        run: npm run lint
-
-      - name: Design-system baseline may only shrink
-        # A manual run has no base commit to compare against.
-        if: github.event_name != 'workflow_dispatch'
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: node scripts/check-ui.mjs --baseline-against="$BASE_SHA"
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Run Unit Tests
-        run: npm run test -- --watch=false
-
-      # Production build: fails on the bundle budgets in angular.json.
-      - name: Build
-        run: npm run build -- --base-href /PocketDiscipline/
-
-      - name: Upload Pages artifact
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './dist/pocket-discipline/browser'
-
-  # The tests tagged @smoke against the production build: one happy path per feature and the whole
-  # layout audit. The full e2e suite is too slow for CI; run it locally with `npm run e2e`.
-  e2e-smoke:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-      - name: Install Playwright Chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
-
-      # The cached browser still needs its system libraries, which live outside the cache.
-      - name: Install Playwright system dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
-
-      # Served from the root, so the default base href; the deployed build is the test job's.
-      - name: Build for e2e
-        run: npx ng build
-
-      - name: Run smoke e2e tests
-        run: npx playwright test -c e2e/playwright.smoke.config.ts
-
-      - name: Upload Playwright report
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 14
-
-  deploy:
-    needs: [test, e2e-smoke]
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-
-    # One deployment at a time; a queued one waits rather than cancelling a production deploy in progress.
-    concurrency:
-      group: 'pages'
-      cancel-in-progress: false
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+  validate:
+    name: Validation
+    uses: ./.github/workflows/validate.yml

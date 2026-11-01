@@ -10,7 +10,7 @@ const SESSION = '25:00';
 
 async function completeSession(page: Page): Promise<void> {
   if (!page.url().includes('/pomodoro')) {
-    await page.goto('/pomodoro');
+    await page.goto('pomodoro');
   }
   const start = page.getByRole('button', { name: /^Start/ });
   await expect(start).toBeEnabled();
@@ -25,7 +25,7 @@ test.describe('Pomodoro', () => {
   });
 
   test('should pay a completed session into the balance', { tag: '@smoke' }, async ({ page }) => {
-    await page.goto('/pomodoro');
+    await page.goto('pomodoro');
     await expect(page.getByRole('button', { name: /^Start/ })).toBeEnabled();
     const balance = await readBalance(page);
 
@@ -41,7 +41,7 @@ test.describe('Pomodoro', () => {
   });
 
   test('should pay the work rate set in Settings', async ({ page }) => {
-    await page.goto('/settings');
+    await page.goto('settings');
     const work = page.getByLabel('Work');
     await expect(work).toHaveValue('100');
     await expect(page.getByLabel('Study')).toHaveValue('125');
@@ -57,7 +57,7 @@ test.describe('Pomodoro', () => {
   });
 
   test('should pay the default study rate for a study session', async ({ page }) => {
-    await page.goto('/pomodoro');
+    await page.goto('pomodoro');
     await expect(page.getByRole('button', { name: /^Start/ })).toBeEnabled();
     const balance = await readBalance(page);
 
@@ -110,7 +110,7 @@ test.describe('Pomodoro on a phone', () => {
   }
 
   test('should set up, start and stop a session with taps only', async ({ page }) => {
-    await page.goto('/pomodoro');
+    await page.goto('pomodoro');
     const start = page.getByRole('button', { name: /^Start/ });
     await expect(start).toBeEnabled();
 

@@ -21,10 +21,10 @@ const taskCard = (page: Page, title: string) =>
 test.describe('Jar import', () => {
   test.beforeEach(async ({ page }) => {
     await page.clock.setFixedTime(NOW);
-    await page.goto('/dashboard');
+    await page.goto('dashboard');
     await expect(page.locator('app-balance-widget')).toBeVisible();
     await putRows(page, { users: [userRow(7_000)] });
-    await page.goto('/settings');
+    await page.goto('settings');
     await page.getByRole('link', { name: 'Import jar statement' }).click();
     await expect(page).toHaveURL(/\/settings\/jar-import$/);
   });
@@ -60,7 +60,7 @@ test.describe('Jar import', () => {
     ]);
 
     expect(await readBalance(page)).toBe(7_000);
-    await page.goto('/dashboard');
+    await page.goto('dashboard');
     await expect(page.locator('app-stat-card', { hasText: 'Total earned' }).locator('app-amount')).toHaveText(
       /^11\s493\s*₴$/,
     );
@@ -72,7 +72,7 @@ test.describe('Jar import', () => {
     await expect(page).toHaveURL(/\/tasks$/);
     const before = await readStores(page, ['dailyTasks', 'dailyTaskCompletions', 'goals', 'withdrawals']);
 
-    await page.goto('/settings/jar-import');
+    await page.goto('settings/jar-import');
     await pickStatement(page, JAR_STATEMENT_FIXTURE);
     await page.getByRole('button', { name: 'Import', exact: true }).click();
 

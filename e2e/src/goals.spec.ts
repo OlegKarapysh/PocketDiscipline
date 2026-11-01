@@ -4,7 +4,7 @@ import { readBalance, readStores } from './indexed-db';
 
 test.describe('Goals Flow', () => {
   test('should navigate to goals page and show predefined goals', async ({ page }) => {
-    await page.goto('/goals');
+    await page.goto('goals');
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Goals');
     await expect(page.locator('h2').first()).toContainText('Active goals');
@@ -16,7 +16,7 @@ test.describe('Goals Flow', () => {
   });
 
   test('should add a new goal', { tag: '@smoke' }, async ({ page }) => {
-    await page.goto('/goals');
+    await page.goto('goals');
 
     // Click Add Goal
     const title = page.getByPlaceholder('e.g. Read a book');
@@ -36,7 +36,7 @@ test.describe('Goals Flow', () => {
   });
 
   test('should delete a goal only once the delete is confirmed, and leave the balance alone', async ({ page }) => {
-    await page.goto('/goals');
+    await page.goto('goals');
     const card = page.locator('app-goal-item', { hasText: 'do 100 squats' });
     const confirmDialog = page.locator('app-confirm-dialog');
     await expect(card).toBeVisible();

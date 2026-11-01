@@ -78,9 +78,9 @@ async function expectOnScreen(page: Page, element: Locator): Promise<void> {
 }
 
 const CHARTS = [
-  { name: 'earnings', path: '/dashboard', selector: 'app-earnings-chart' },
-  { name: 'scores', path: '/daily-scores', selector: 'app-scores-chart' },
-  { name: 'pomodoro', path: '/pomodoro', selector: 'app-pomodoro-history-chart' },
+  { name: 'earnings', path: 'dashboard', selector: 'app-earnings-chart' },
+  { name: 'scores', path: 'daily-scores', selector: 'app-scores-chart' },
+  { name: 'pomodoro', path: 'pomodoro', selector: 'app-pomodoro-history-chart' },
 ];
 
 const BARS = [
@@ -90,7 +90,7 @@ const BARS = [
 
 async function seed(page: Page): Promise<void> {
   await page.clock.setFixedTime(NOW);
-  await page.goto('/dashboard');
+  await page.goto('dashboard');
   await expect(page.locator('app-balance-widget')).toBeVisible();
   await putRows(page, { users: [userRow(0)], ...ROWS });
 }
@@ -153,7 +153,7 @@ test.describe('Chart tooltip when the window narrows', () => {
 
   test('should move a tooltip that is open back on screen', async ({ page }) => {
     await page.clock.setFixedTime(NOW);
-    await page.goto('/daily-scores');
+    await page.goto('daily-scores');
     const chart = page.locator('app-scores-chart');
     // Keyboard focus keeps the tooltip open while the window changes under it.
     await chart.locator('.chart-bar-group').nth(-2).focus();

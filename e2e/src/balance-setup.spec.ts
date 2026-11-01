@@ -14,7 +14,7 @@ const setUpBalance = async (page: Page, amount: string) => {
 
 test.describe('Balance setup', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/settings');
+    await page.goto('settings');
   });
 
   test('should replace the balance once and then no longer be offered', { tag: '@smoke' }, async ({ page }) => {
@@ -23,10 +23,10 @@ test.describe('Balance setup', () => {
     await expect(page.locator('simple-snack-bar', { hasText: /Balance set to 4\s321/ })).toBeVisible();
     await expect(setUpButton(page)).toHaveCount(0);
 
-    await page.goto('/dashboard');
+    await page.goto('dashboard');
     await expect(page.locator('app-balance-widget')).toContainText(/4\s321/);
 
-    await page.goto('/settings');
+    await page.goto('settings');
     await expect(page.getByRole('button', { name: 'Purge database' })).toBeVisible();
     await expect(setUpButton(page)).toHaveCount(0);
   });
@@ -38,7 +38,7 @@ test.describe('Balance setup', () => {
     await page.locator('app-confirm-dialog').getByRole('button', { name: 'Cancel' }).click();
 
     await expect(setUpButton(page)).toBeVisible();
-    await page.goto('/dashboard');
+    await page.goto('dashboard');
     await expect(page.locator('app-balance-widget')).not.toContainText(/4\s321/);
   });
 
@@ -50,7 +50,7 @@ test.describe('Balance setup', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Purge' }).click();
     await expect(page).toHaveURL(/\/dashboard$/);
 
-    await page.goto('/settings');
+    await page.goto('settings');
     await expect(setUpButton(page)).toBeVisible();
   });
 });

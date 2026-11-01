@@ -142,7 +142,7 @@ const V8_ROWS: Rows = {
 // Creates the version 8 database before the app has ever run. Any same-origin page that does not boot
 // the app will do; the favicon is the smallest.
 async function createV8Database(page: Page): Promise<void> {
-  await page.goto('/favicon.ico');
+  await page.goto('favicon.ico');
   await page.evaluate(
     async ({ database, version, stores, rows }) => {
       await new Promise<void>((resolve, reject) => {
@@ -208,7 +208,7 @@ const balance = (page: Page) => page.locator('app-balance-widget app-amount');
 test.describe('Money in whole hryvnias: the version 9 upgrade', () => {
   test.beforeEach(async ({ page }) => {
     await createV8Database(page);
-    await page.goto('/dashboard');
+    await page.goto('dashboard');
     await expect(balance(page)).toHaveText(/^1\s000\s*₴$/);
   });
 
@@ -238,18 +238,18 @@ test.describe('Money in whole hryvnias: the version 9 upgrade', () => {
   });
 
   test('should show the rounded amounts, without decimals', async ({ page }) => {
-    await page.goto('/goals');
+    await page.goto('goals');
     await expect(page.locator('app-goal-item', { hasText: 'Migrated goal' }).locator('app-amount')).toHaveText(
       /^\+1\s235\s*₴$/,
     );
 
-    await page.goto('/tasks');
+    await page.goto('tasks');
     const dailyTask = page.locator('app-daily-task-item', { hasText: 'Migrated daily task' });
     await dailyTask.locator('button.summary').click();
     await expect(dailyTask.getByRole('button', { name: /Easy\s*\+100\s*₴/ })).toBeVisible();
     await expect(dailyTask.getByRole('button', { name: /Odd\s*\+13\s*₴/ })).toBeVisible();
 
-    await page.goto('/rewards');
+    await page.goto('rewards');
     await expect(page.locator('app-reward-card', { hasText: 'Headphones' }).locator('.cost-value')).toHaveText(
       /^2\s501\s*₴$/,
     );
@@ -261,7 +261,7 @@ test.describe('Money in whole hryvnias: the version 9 upgrade', () => {
 test.describe('Daily tasks in the order the list showed them: the version 10 upgrade', () => {
   test('should number the daily tasks in the order they were listed, and list them so', async ({ page }) => {
     await createV8Database(page);
-    await page.goto('/tasks');
+    await page.goto('tasks');
     await expect(page.locator('app-daily-task-item').first()).toBeVisible();
 
     const { rows } = await readDatabase(page);
