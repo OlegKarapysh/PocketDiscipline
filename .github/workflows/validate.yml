@@ -2,13 +2,18 @@ name: Validate
 
 on:
   workflow_call:
+    inputs:
+      upload-pages-artifact:
+        description: Also upload the tested build as the GitHub Pages artifact, for a deploy job that needs this workflow.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
-  validate:
-    name: Lint, test and build
+  checks:
+    name: Lint and unit tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -43,20 +48,47 @@ jobs:
       - name: Run Unit Tests
         run: npm run test -- --watch=false
 
+  # The one build: the smoke job tests it and, when asked, the very same files become the Pages artifact.
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
       # Production build: fails on the bundle budgets in angular.json.
-      - name: Build
-        run: npm run build -- --base-href /PocketDiscipline/
+      - name: Build for GitHub Pages
+        run: npm run build:pages
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-build
+          path: dist/pocket-discipline/browser
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Upload Pages artifact
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: inputs.upload-pages-artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './dist/pocket-discipline/browser'
 
-  # The tests tagged @smoke against the production build: one happy path per feature and the whole
-  # layout audit. The full e2e suite is too slow for CI; run it locally with `npm run e2e`.
+  # The tests tagged @smoke against the build above: one happy path per feature and the whole layout
+  # audit. The full e2e suite is too slow for CI; run it locally with `npm run e2e`.
   e2e-smoke:
     name: Smoke tests
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -88,8 +120,14 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
 
-      - name: Build and run smoke e2e tests
-        run: npm run e2e:smoke
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-build
+          path: dist/pocket-discipline/browser
+
+      - name: Run smoke e2e tests
+        run: npx playwright test -c e2e/playwright.smoke.config.ts
 
       - name: Upload Playwright report
         if: failure()

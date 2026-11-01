@@ -18,6 +18,8 @@ jobs:
     name: Validation
     if: github.ref == 'refs/heads/main'
     uses: ./.github/workflows/validate.yml
+    with:
+      upload-pages-artifact: true
 
   deploy:
     name: GitHub Pages
