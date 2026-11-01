@@ -5,6 +5,7 @@ import { By } from '@angular/platform-browser';
 import type { Observable } from 'rxjs';
 import { EMPTY, Subject, of, throwError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { fakeSnackBarRef } from '../../../../shared/testing/snack-bar-ref.fake';
 import { TaskList } from './task-list';
 import { TaskService } from '../../services/task.service';
 import type { DisciplineItem } from '../../../../core/models/discipline-item.model';
@@ -61,7 +62,7 @@ describe('TaskList', () => {
     confirmServiceMock = {
       ask: vi.fn().mockReturnValue(of(undefined)),
     };
-    snackBarMock = { open: vi.fn() };
+    snackBarMock = { open: vi.fn(fakeSnackBarRef) };
 
     await TestBed.configureTestingModule({
       imports: [TaskList],

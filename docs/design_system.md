@@ -69,6 +69,7 @@ To refresh or add a font, request its css2 URL from Google Fonts with a current 
 ## Navigation
 
 - **Below 840px:** `app-bottom-nav` shows Today, Tasks, Goals, Rewards and More (a menu with Pomodoro, Daily Scores and Settings). `app-speed-dial` sits above it with Start focus and New task.
+- **Toasts below 840px** sit above the bottom nav, never on it, so the tabs stay usable while one shows. The speed dial moves up above the open toast (`Layout` reads `SnackBarService.height`).
 - **840px and up:** a persistent `mat-sidenav` rail with every section.
 
 ## Component mapping
@@ -87,7 +88,7 @@ To refresh or add a font, request its css2 URL from Google Fonts with a current 
 | Progress ring      | `app-progress-ring` (wraps `mat-progress-spinner` and adds a track)                                                  |
 | Fields             | `mat-form-field appearance="outline"`                                                                                |
 | Dialog / confirm   | `MatDialog`                                                                                                          |
-| Toast              | `MatSnackBar` via `SnackBarService`                                                                                  |
+| Toast              | `MatSnackBar` via `SnackBarService`; elevation 2, swipe sideways to dismiss                                          |
 | Switch             | `mat-slide-toggle`                                                                                                   |
 | Icons              | `mat-icon` with Material Symbols Rounded (registered in `app.config.ts`); add `.pd-icon-filled` for active/filled    |
 | Charts             | `app-bar-chart`; tones `primary`, `secondary`, `inverse-primary` and `reward` (earned only), axes `.pd-num`          |

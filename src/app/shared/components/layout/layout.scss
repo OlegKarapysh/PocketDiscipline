@@ -36,6 +36,8 @@
   right: t.space(5);
   bottom: calc(t.$bottom-nav-height + t.space(3) + env(safe-area-inset-bottom));
   z-index: 2;
+  // A transform would contain the speed dial's fixed fullscreen scrim.
+  transition: margin-bottom 150ms ease-out;
 }
 
 .rail {

@@ -20,7 +20,7 @@
       </main>
     </div>
     @if (isCompact()) {
-      <app-speed-dial class="speed-dial" [actions]="quickActions" />
+      <app-speed-dial class="speed-dial" [actions]="quickActions" [style.margin-bottom.px]="speedDialLift()" />
       <app-bottom-nav [items]="primaryNav" [moreItems]="moreNav" />
     }
   </mat-sidenav-content>
