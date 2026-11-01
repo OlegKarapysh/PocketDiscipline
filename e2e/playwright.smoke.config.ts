@@ -3,8 +3,8 @@ import { defineConfig } from '@playwright/test';
 import base from '../playwright.config';
 
 // The smoke run: the tests tagged @smoke (one happy path per feature, and the whole layout audit),
-// against the exact Pages artifact instead of the dev server. Locally, `npm run e2e:smoke` builds
-// with the same base href as the deployed app.
+// against the production build instead of the dev server. `npm run e2e:smoke` builds and serves
+// the app with the same base href as the deployed site (/PocketDiscipline/).
 //
 // Paths in a config resolve against its own folder, so everything outside e2e/ is spelled out.
 const ROOT = join(__dirname, '..');
