@@ -39,7 +39,7 @@ Read these before writing or reviewing code:
   must fit both: `npm run e2e` includes the layout audit (`e2e/src/layout-audit.spec.ts`). Run it
   before finishing any UI change; "Verifying" in `docs/design_system.md` says what to register in it
   for anything new.
-- Do not commit code changes automatically. Let the user review and commit the changes manually.
+- Do not commit code changes automatically. Let the user review and commit the changes manually. When asked to commit, follow `.agents/skills/commit/SKILL.md` (one logical change and at most 15 files per commit).
 - **Clarification and context**: always ask clarifying questions before proceeding if there is
   insufficient context, ambiguity, or missing information to understand the user's intention or
   task requirements.
