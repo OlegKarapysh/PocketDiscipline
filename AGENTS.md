@@ -19,6 +19,8 @@ Read these before writing or reviewing code:
    change together with the `pocketdiscipline-ui` skill. Agents that do not discover skills under
    `.agents/skills/` (e.g. Claude Code) must read `.agents/skills/pocketdiscipline-ui/SKILL.md`
    directly. Its "Responsive layout" section is the contract for every screen.
+4. **[docs/security.md](docs/security.md)** — required reading for changes involving user data,
+   imports, browser rendering, dependencies, or deployment.
 
 ## Workflow rules
 
