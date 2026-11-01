@@ -10,7 +10,9 @@ import { extname, join, resolve, sep } from 'node:path';
 
 const ROOT = resolve(process.argv[2] ?? 'dist/pocket-discipline/browser');
 const PORT = Number(process.argv[3] ?? 4300);
-const BASE_PATH = process.argv[4] ?? '/';
+const rawBasePath = process.argv[4] ?? '/';
+const BASE_PATH = `/${rawBasePath.replace(/^\/+|\/+$/g, '')}/`.replace(/^\/\/$/, '/');
+const BASE_PREFIX = BASE_PATH.slice(0, -1);
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -39,30 +41,37 @@ async function fileAt(path) {
 }
 
 async function resolveFile(urlPath) {
-  const requested = resolve(join(ROOT, decodeURIComponent(urlPath)));
+  let decoded;
+  try {
+    decoded = decodeURIComponent(urlPath);
+  } catch {
+    return undefined;
+  }
+  const requested = resolve(join(ROOT, decoded));
   // Never outside the build, whatever the path says.
   const inside = requested === ROOT || requested.startsWith(ROOT + sep);
-  const file = inside ? await fileAt(requested) : undefined;
+  if (!inside) return undefined;
+  const file = await fileAt(requested);
   if (file) return file;
   // A missing asset is a real 404; only a route falls back to the app shell.
-  return extname(urlPath) ? undefined : join(ROOT, 'index.html');
+  return extname(decoded) ? undefined : join(ROOT, 'index.html');
 }
 
 if (!(await fileAt(join(ROOT, 'index.html')))) {
-  console.error(`No build in ${ROOT}: run \`npx ng build\` first.`);
+  const baseHrefArg = BASE_PATH === '/' ? '' : ` --base-href ${BASE_PATH}`;
+  console.error(`No build in ${ROOT}: run \`npx ng build${baseHrefArg}\` first.`);
   process.exit(1);
 }
 
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url ?? '/', 'http://localhost');
+    if (BASE_PREFIX && url.pathname === BASE_PREFIX) {
+      response.writeHead(302, { Location: `${BASE_PATH}${url.search}` }).end();
+      return;
+    }
     if (!url.pathname.startsWith(BASE_PATH)) {
-      // Shared tests enter at root-relative routes; serve the app only under its deployment path.
-      if (!extname(url.pathname)) {
-        response.writeHead(302, { Location: `${BASE_PATH}${url.pathname.slice(1)}${url.search}` }).end();
-      } else {
-        response.writeHead(404).end();
-      }
+      response.writeHead(404).end();
       return;
     }
     const file = await resolveFile(url.pathname.slice(BASE_PATH.length));
@@ -82,6 +91,6 @@ const server = createServer(async (request, response) => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`Serving ${ROOT} at http://localhost:${String(PORT)}${BASE_PATH}`);
 });

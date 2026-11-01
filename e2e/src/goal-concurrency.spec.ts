@@ -23,7 +23,7 @@ interface Settled {
 }
 
 async function openGoalsPage(page: Page): Promise<void> {
-  await page.goto('/goals');
+  await page.goto('goals');
   await expect(page.getByText('do 100 squats')).toBeVisible();
 }
 
