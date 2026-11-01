@@ -15,13 +15,13 @@ async function pickExport(page: Page, text: string, name = 'result.json'): Promi
 test.describe('Telegram scores import', () => {
   test.beforeEach(async ({ page }) => {
     await page.clock.setFixedTime(NOW);
-    await page.goto('/dashboard');
+    await page.goto('dashboard');
     await expect(page.locator('app-balance-widget')).toBeVisible();
     await putRows(page, {
       users: [userRow(7_000)],
       dailyScores: [{ date: '2026-09-07', score: 5, rewardEarned: 0, streakAtThisDay: 0, createdAt: 1 }],
     });
-    await page.goto('/settings');
+    await page.goto('settings');
     await page.getByRole('link', { name: 'Import Telegram scores' }).click();
     await expect(page).toHaveURL(/\/settings\/telegram-import$/);
   });

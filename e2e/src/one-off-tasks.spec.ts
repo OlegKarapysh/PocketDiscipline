@@ -43,7 +43,7 @@ const taskItem = (page: Page, title: string) => page.locator('app-task-item', { 
 const snackBar = (page: Page, text: string) => page.locator('simple-snack-bar', { hasText: text });
 
 async function openOneOffTab(page: Page): Promise<void> {
-  await page.goto('/tasks');
+  await page.goto('tasks');
   await page.getByRole('tab', { name: /One-off/ }).click();
   await expect(page.locator('app-task-list')).toBeVisible();
 }

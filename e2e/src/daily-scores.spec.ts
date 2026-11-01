@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Daily Scores Flow', () => {
   test('should navigate to daily scores page and render all components without freezing', async ({ page }) => {
-    await page.goto('/daily-scores');
+    await page.goto('daily-scores');
 
     // Verify loading indicator is not visible
     await expect(page.locator('mat-spinner')).not.toBeVisible();
@@ -32,7 +32,7 @@ test.describe('Daily Scores Flow', () => {
     'should navigate via sidenav menu and submit a daily score successfully',
     { tag: '@smoke' },
     async ({ page }) => {
-      await page.goto('/dashboard');
+      await page.goto('dashboard');
 
       // Navigate to Daily Scores via Sidenav
       await page.getByRole('link', { name: 'Daily Scores' }).click();
@@ -66,7 +66,7 @@ test.describe('Daily Scores Flow', () => {
   );
 
   test('should chart a range longer than 90 days week by week', async ({ page }) => {
-    await page.goto('/daily-scores');
+    await page.goto('daily-scores');
     const filter = page.locator('app-period-filter');
     await filter.getByRole('radio', { name: 'Custom' }).click();
     await filter.getByPlaceholder('Start date').fill('1/1/2025');

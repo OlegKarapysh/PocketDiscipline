@@ -26,7 +26,7 @@ function session(startTime: string, endTime: string | null, extra: Row = {}): Ro
 }
 
 async function openWith(page: Page, sessions: Row[]): Promise<void> {
-  await page.goto('/pomodoro');
+  await page.goto('pomodoro');
   await expect(page.getByRole('button', { name: /^Start/ })).toBeEnabled();
   await putRows(page, { pomodoroSessions: sessions });
   await page.reload();
@@ -144,7 +144,7 @@ test.describe('Pomodoro stats', () => {
       await expectFigures(todayCard(page), [/\+400\s*₴/]);
 
       // SC-003: the pomodoro share of today's bar in the earnings chart.
-      await page.goto('/dashboard');
+      await page.goto('dashboard');
       const earnings = page.locator('app-earnings-chart');
       await earnings.locator('.chart-bar-group').last().hover();
       const pomodoroRow = earnings.locator('.chart-tooltip .tooltip-row').filter({ hasText: 'Pomodoro' });

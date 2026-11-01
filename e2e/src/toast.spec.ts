@@ -15,7 +15,7 @@ async function rect(locator: Locator): Promise<{ top: number; bottom: number; le
 }
 
 async function showToast(page: Page): Promise<void> {
-  await page.goto('/tasks');
+  await page.goto('tasks');
   await page.getByRole('tab', { name: /One-off/ }).click();
   await page.getByRole('button', { name: 'Add one-off task' }).click();
   const form = page.locator('app-task-form');
