@@ -3,13 +3,14 @@
 // host would: real files as they are, and index.html for every other path, so a deep link like /goals
 // reaches the Angular router. Not for deployment; it exists so the smoke run needs no extra package.
 //
-//   node scripts/serve-dist.mjs [root=dist/pocket-discipline/browser] [port=4300]
+//   node scripts/serve-dist.mjs [root=dist/pocket-discipline/browser] [port=4300] [base-path=/]
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, resolve, sep } from 'node:path';
 
 const ROOT = resolve(process.argv[2] ?? 'dist/pocket-discipline/browser');
 const PORT = Number(process.argv[3] ?? 4300);
+const BASE_PATH = process.argv[4] ?? '/';
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -54,7 +55,17 @@ if (!(await fileAt(join(ROOT, 'index.html')))) {
 
 const server = createServer(async (request, response) => {
   try {
-    const file = await resolveFile(new URL(request.url ?? '/', 'http://localhost').pathname);
+    const url = new URL(request.url ?? '/', 'http://localhost');
+    if (!url.pathname.startsWith(BASE_PATH)) {
+      // Shared tests enter at root-relative routes; serve the app only under its deployment path.
+      if (!extname(url.pathname)) {
+        response.writeHead(302, { Location: `${BASE_PATH}${url.pathname.slice(1)}${url.search}` }).end();
+      } else {
+        response.writeHead(404).end();
+      }
+      return;
+    }
+    const file = await resolveFile(url.pathname.slice(BASE_PATH.length));
     if (!file) {
       response.writeHead(404).end();
       return;
@@ -72,5 +83,5 @@ const server = createServer(async (request, response) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Serving ${ROOT} at http://localhost:${String(PORT)}`);
+  console.log(`Serving ${ROOT} at http://localhost:${String(PORT)}${BASE_PATH}`);
 });

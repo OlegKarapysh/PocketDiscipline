@@ -9,7 +9,7 @@
     "test": "ng test",
     "test:coverage": "ng test --configuration=coverage --watch=false",
     "e2e": "playwright test",
-    "e2e:smoke": "ng build && playwright test -c e2e/playwright.smoke.config.ts",
+    "e2e:smoke": "ng build --base-href /PocketDiscipline/ && playwright test -c e2e/playwright.smoke.config.ts",
     "lint": "npm run lint:ui && npm run lint:format && ng lint",
     "lint:ui": "node scripts/check-ui.mjs",
     "lint:format": "prettier --check .",
