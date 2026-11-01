@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-// Serves the production build for the e2e smoke run (e2e/playwright.smoke.config.ts), the way a static
-// host would: real files as they are, and index.html for every other path, so a deep link like /goals
-// reaches the Angular router. Not for deployment; it exists so the smoke run needs no extra package.
+// Serves the production build for the e2e smoke run (e2e/playwright.smoke.config.ts) the way GitHub Pages
+// does: real files as they are, a folder's index.html, and 404.html with status 404 for every other path.
+// A deep link like /goals reaches the Angular router only because `npm run build:pages` copies index.html
+// to 404.html, so the smoke run fails if the deployed build stops doing that. Not for deployment; it
+// exists so the smoke run needs no extra package.
 //
 //   node scripts/serve-dist.mjs [root=dist/pocket-discipline/browser] [port=4300] [base-path=/]
 import { createServer } from 'node:http';
@@ -10,9 +12,8 @@ import { extname, join, resolve, sep } from 'node:path';
 
 const ROOT = resolve(process.argv[2] ?? 'dist/pocket-discipline/browser');
 const PORT = Number(process.argv[3] ?? 4300);
-const rawBasePath = process.argv[4] ?? '/';
-const BASE_PATH = `/${rawBasePath.replace(/^\/+|\/+$/g, '')}/`.replace(/^\/\/$/, '/');
-const BASE_PREFIX = BASE_PATH.slice(0, -1);
+const BASE_SEGMENT = (process.argv[4] ?? '').replace(/^\/+|\/+$/g, '');
+const BASE_PATH = BASE_SEGMENT ? `/${BASE_SEGMENT}/` : '/';
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -51,37 +52,35 @@ async function resolveFile(urlPath) {
   // Never outside the build, whatever the path says.
   const inside = requested === ROOT || requested.startsWith(ROOT + sep);
   if (!inside) return undefined;
-  const file = await fileAt(requested);
-  if (file) return file;
-  // A missing asset is a real 404; only a route falls back to the app shell.
-  return extname(decoded) ? undefined : join(ROOT, 'index.html');
+  return (await fileAt(requested)) ?? (await fileAt(join(requested, 'index.html')));
 }
 
 if (!(await fileAt(join(ROOT, 'index.html')))) {
-  const baseHrefArg = BASE_PATH === '/' ? '' : ` --base-href ${BASE_PATH}`;
-  console.error(`No build in ${ROOT}: run \`npx ng build${baseHrefArg}\` first.`);
+  console.error(`No build in ${ROOT}: run \`npm run build:pages\` first.`);
   process.exit(1);
 }
 
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url ?? '/', 'http://localhost');
-    if (BASE_PREFIX && url.pathname === BASE_PREFIX) {
+    if (BASE_SEGMENT && url.pathname === `/${BASE_SEGMENT}`) {
       response.writeHead(302, { Location: `${BASE_PATH}${url.search}` }).end();
       return;
     }
+    // Outside the base path is another site on Pages, so not this build's 404.html either.
     if (!url.pathname.startsWith(BASE_PATH)) {
       response.writeHead(404).end();
       return;
     }
     const file = await resolveFile(url.pathname.slice(BASE_PATH.length));
-    if (!file) {
+    const served = file ?? (await fileAt(join(ROOT, '404.html')));
+    if (!served) {
       response.writeHead(404).end();
       return;
     }
-    const body = await readFile(file);
-    response.writeHead(200, {
-      'Content-Type': TYPES[extname(file)] ?? 'application/octet-stream',
+    const body = await readFile(served);
+    response.writeHead(file ? 200 : 404, {
+      'Content-Type': TYPES[extname(served)] ?? 'application/octet-stream',
       // Each run must see the build on disk now, not one a browser kept from an earlier run.
       'Cache-Control': 'no-store',
     });
@@ -92,5 +91,5 @@ const server = createServer(async (request, response) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`Serving ${ROOT} at http://localhost:${String(PORT)}${BASE_PATH}`);
+  console.log(`Serving ${ROOT} at http://127.0.0.1:${String(PORT)}${BASE_PATH}`);
 });
