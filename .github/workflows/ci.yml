@@ -3,12 +3,14 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  # Validates any branch by hand, without opening a PR and without deploying.
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-pr-${{ github.event.pull_request.number }}
+  group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
