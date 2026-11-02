@@ -12,7 +12,6 @@ disable-model-invocation: false
 
 <!-- Generated from .agents/skills/speckit-taskstoissues/SKILL.md by npm run skills:sync. Do not edit here. -->
 
-
 ## User Input
 
 ```text

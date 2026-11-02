@@ -76,9 +76,9 @@ for (const name of names) {
     ...(!/^user-invocable:/m.test(frontmatter) ? ['user-invocable: true'] : []),
     ...(!/^disable-model-invocation:/m.test(frontmatter) ? ['disable-model-invocation: false'] : []),
   ];
-  const body = source.slice(match[0].length);
+  const body = source.slice(match[0].length).replace(/^\n+/, '');
   const notice = `<!-- Generated from .agents/skills/${name}/SKILL.md by npm run skills:sync. Do not edit here. -->`;
-  const separator = body.startsWith('\n') || body.length === 0 ? '\n' : '\n\n';
+  const separator = body.length === 0 ? '\n' : '\n\n';
   const expected = `---\n${[frontmatter, ...adapterFields].join('\n')}\n---\n\n${notice}${separator}${body}`;
   const targetDir = join(targetRoot, name);
   const targetPath = join(targetDir, 'SKILL.md');

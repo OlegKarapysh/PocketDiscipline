@@ -12,7 +12,6 @@ disable-model-invocation: false
 
 <!-- Generated from .agents/skills/speckit-checklist/SKILL.md by npm run skills:sync. Do not edit here. -->
 
-
 ## Checklist Purpose: "Unit Tests for English"
 
 **CRITICAL CONCEPT**: Checklists are **UNIT TESTS FOR REQUIREMENTS WRITING** - they validate the quality, clarity, and completeness of requirements in a given domain.
