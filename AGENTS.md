@@ -1,6 +1,6 @@
 # PocketDiscipline — agent instructions
 
-These rules apply to every agent working here (Antigravity, Claude Code, Gemini CLI, …). This file
+These rules apply to every agent working here (Codex, Antigravity, Claude Code, Gemini CLI, …). This file
 holds the project _workflow_ rules and points to the sources for everything else; it deliberately
 does not repeat what they say.
 
@@ -16,9 +16,8 @@ Read these before writing or reviewing code:
 2. **[docs/schema.md](docs/schema.md)** — required reading before writing or modifying any data
    access code, Dexie queries, or features that interact with local storage.
 3. **[docs/design_system.md](docs/design_system.md)** — the source of truth for UI, read before any UI
-   change together with the `pocketdiscipline-ui` skill. Agents that do not discover skills under
-   `.agents/skills/` (e.g. Claude Code) must read `.agents/skills/pocketdiscipline-ui/SKILL.md`
-   directly. Its "Responsive layout" section is the contract for every screen.
+   change together with the `pocketdiscipline-ui` skill. Its "Responsive layout" section is the
+   contract for every screen.
 4. **[docs/security.md](docs/security.md)** — required reading for changes involving user data,
    imports, browser rendering, dependencies, or deployment.
 
@@ -33,7 +32,7 @@ Read these before writing or reviewing code:
   or bypass lint errors and code style violations. Structurally fix the underlying issue instead.**
 - **UI work**: reuse the shared components in `src/app/shared/components` first, then plain Angular
   Material, before building anything custom. Before touching `.html` or `.scss` under `src/app`, or
-  adding a screen, read `.agents/skills/pocketdiscipline-ui/SKILL.md`. `npm run lint` includes
+  adding a screen, use the `pocketdiscipline-ui` skill (`.agents/skills/pocketdiscipline-ui/SKILL.md`). `npm run lint` includes
   `scripts/check-ui.mjs`, a ratchet against `scripts/ui-baseline.json`: fix what it reports and never
   edit the baseline by hand. The app is used on phones and on wide desktops alike, so every screen
   must fit both: `npm run e2e` includes the layout audit (`e2e/src/layout-audit.spec.ts`). Run it
@@ -62,9 +61,16 @@ you commit. Run `npm run e2e` locally, always for UI changes (it holds the layou
 This project is on Angular 22. Several long-standing defaults changed in v22 — `OnPush`, zoneless,
 `@Service`, signal forms. **Do not assert version-dependent Angular behaviour from memory.** Verify
 against the official Angular v22 documentation, `node_modules/@angular/`, or the `angular-cli` MCP
-server (`get_best_practices`, `search_documentation`), which is configured project-scoped in
-`.mcp.json`. The v22 defaults table in `docs/code_style.md` records what has already been verified.
+server (`get_best_practices`, `search_documentation`), configured project-scoped in
+`.mcp.json` (Claude Code), `.codex/config.toml` (Codex), and `.agents/mcp_config.json` (Antigravity). The v22 defaults table in `docs/code_style.md` records what has already been verified.
 
 Always use the Angular CLI MCP server when developing this project, for its workspace awareness, CLI
 automation and official documentation access. If the server is not active or configured, prompt the
 user to start it via `ng mcp`.
+
+## Shared skills
+
+`.agents/skills/` is the canonical skill source for every harness. After changing skills, run
+`npm run skills:sync` to regenerate `.claude/skills/`; never edit those copies directly.
+`npm run lint` includes `lint:skills`, which checks for missing, stale, or extra Claude skills.
+Keep instructions and paths portable across harnesses and worktrees.

@@ -6,12 +6,11 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
-# Agent worktrees: whole checkouts of the repo, ignored by git only through .git/info/exclude.
+# Agent worktrees: whole checkouts of the repo.
 .claude/worktrees/
 
 # Vendored spec-kit tooling: overwritten on upgrade, so keep it byte-identical to upstream.
 .agents/skills/speckit-*/
-.claude/skills/speckit-*/
 .specify/init-options.json
 .specify/integrations/
 .specify/workflows/
@@ -22,3 +21,6 @@ pnpm-lock.yaml
 
 # Spec documents: spec-kit writes them unformatted, and they are documents, not code.
 specs/
+
+# Generated skill adapters: checked against canonical sources by lint:skills.
+.claude/skills/
