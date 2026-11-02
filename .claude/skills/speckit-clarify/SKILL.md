@@ -6,8 +6,6 @@ metadata:
   author: "github-spec-kit"
   source: "templates/commands/clarify.md"
 argument-hint: "Optional areas to clarify in the spec"
-user-invocable: true
-disable-model-invocation: false
 ---
 
 <!-- Generated from .agents/skills/speckit-clarify/SKILL.md by npm run skills:sync. Do not edit here. -->

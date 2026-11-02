@@ -1,8 +1,6 @@
 ---
 name: 'pocketdiscipline-ui'
 description: 'Build or change any PocketDiscipline UI (components, pages, templates, SCSS, dialogs, charts, navigation) so it follows the project design system: Material 3 theme tokens, shared core components, spacing/radius/breakpoint tokens, reward colour rules and the 1a Cards layout. Use for every task that touches .html or .scss under src/app, or that adds a screen or feature with UI.'
-user-invocable: true
-disable-model-invocation: false
 ---
 
 <!-- Generated from .agents/skills/pocketdiscipline-ui/SKILL.md by npm run skills:sync. Do not edit here. -->

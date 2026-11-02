@@ -1,8 +1,6 @@
 ---
 name: 'commit'
 description: 'Create small, atomic Git commits (at most 15 files per commit) that each describe a single logical change using the repository Conventional Commits style. Use whenever the user asks to commit changes.'
-user-invocable: true
-disable-model-invocation: false
 ---
 
 <!-- Generated from .agents/skills/commit/SKILL.md by npm run skills:sync. Do not edit here. -->

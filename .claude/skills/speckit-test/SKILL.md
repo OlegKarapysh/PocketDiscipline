@@ -1,8 +1,6 @@
 ---
 name: "speckit-test"
 description: "Run the project's unit and E2E test suites to verify implementation."
-user-invocable: true
-disable-model-invocation: false
 ---
 
 <!-- Generated from .agents/skills/speckit-test/SKILL.md by npm run skills:sync. Do not edit here. -->

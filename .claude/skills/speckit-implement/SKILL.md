@@ -6,8 +6,6 @@ metadata:
   author: "github-spec-kit"
   source: "templates/commands/implement.md"
 argument-hint: "Optional implementation guidance or task filter"
-user-invocable: true
-disable-model-invocation: false
 ---
 
 <!-- Generated from .agents/skills/speckit-implement/SKILL.md by npm run skills:sync. Do not edit here. -->

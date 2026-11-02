@@ -69,13 +69,10 @@ for (const name of names) {
     differences.push(`Skill name does not match its folder: .agents/skills/${name}/SKILL.md`);
     continue;
   }
-  const adapterFields = [
-    ...(!/^argument-hint:/m.test(frontmatter) && Object.hasOwn(argumentHints, name)
+  const adapterFields =
+    !/^argument-hint:/m.test(frontmatter) && Object.hasOwn(argumentHints, name)
       ? [`argument-hint: ${JSON.stringify(argumentHints[name])}`]
-      : []),
-    ...(!/^user-invocable:/m.test(frontmatter) ? ['user-invocable: true'] : []),
-    ...(!/^disable-model-invocation:/m.test(frontmatter) ? ['disable-model-invocation: false'] : []),
-  ];
+      : [];
   const body = source.slice(match[0].length).replace(/^\n+/, '');
   const notice = `<!-- Generated from .agents/skills/${name}/SKILL.md by npm run skills:sync. Do not edit here. -->`;
   const separator = body.length === 0 ? '\n' : '\n\n';

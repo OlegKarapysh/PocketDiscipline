@@ -6,8 +6,6 @@ metadata:
   author: "github-spec-kit"
   source: "templates/commands/specify.md"
 argument-hint: "Describe the feature you want to specify"
-user-invocable: true
-disable-model-invocation: false
 ---
 
 <!-- Generated from .agents/skills/speckit-specify/SKILL.md by npm run skills:sync. Do not edit here. -->

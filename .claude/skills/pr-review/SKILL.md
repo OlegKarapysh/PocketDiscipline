@@ -1,8 +1,6 @@
 ---
 name: 'pr-review'
 description: 'Conduct an expert-level, multi-perspective pull request review by orchestrating three parallel subagents (Senior Software Engineer, Software Architect, Cybersecurity Expert) and synthesizing their findings into an actionable report.'
-user-invocable: true
-disable-model-invocation: false
 ---
 
 <!-- Generated from .agents/skills/pr-review/SKILL.md by npm run skills:sync. Do not edit here. -->

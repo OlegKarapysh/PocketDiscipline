@@ -6,8 +6,6 @@ metadata:
   author: "github-spec-kit"
   source: "templates/commands/taskstoissues.md"
 argument-hint: "Optional filter or label for GitHub issues"
-user-invocable: true
-disable-model-invocation: false
 ---
 
 <!-- Generated from .agents/skills/speckit-taskstoissues/SKILL.md by npm run skills:sync. Do not edit here. -->

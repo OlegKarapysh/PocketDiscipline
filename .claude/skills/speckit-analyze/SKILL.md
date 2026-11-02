@@ -6,8 +6,6 @@ metadata:
   author: "github-spec-kit"
   source: "templates/commands/analyze.md"
 argument-hint: "Optional focus areas for analysis"
-user-invocable: true
-disable-model-invocation: false
 ---
 
 <!-- Generated from .agents/skills/speckit-analyze/SKILL.md by npm run skills:sync. Do not edit here. -->

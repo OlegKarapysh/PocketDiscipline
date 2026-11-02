@@ -6,8 +6,6 @@ metadata:
   author: "github-spec-kit"
   source: "templates/commands/tasks.md"
 argument-hint: "Optional task generation constraints"
-user-invocable: true
-disable-model-invocation: false
 ---
 
 <!-- Generated from .agents/skills/speckit-tasks/SKILL.md by npm run skills:sync. Do not edit here. -->
