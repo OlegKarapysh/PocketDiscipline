@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,7 +8,8 @@ const sourceRoot = join(root, '.agents/skills');
 const targetRoot = join(root, '.claude/skills');
 const args = process.argv.slice(2);
 if (args.some((arg) => arg !== '--check')) {
-  throw new Error('Usage: node scripts/sync-agent-skills.mjs [--check]');
+  console.error('Usage: node scripts/sync-agent-skills.mjs [--check]');
+  process.exit(1);
 }
 const check = args.includes('--check');
 const names = readdirSync(sourceRoot, { withFileTypes: true })
@@ -29,15 +31,24 @@ const argumentHints = {
 };
 
 for (const name of names) {
+  if (!/^[a-z0-9-]+$/.test(name)) {
+    differences.push(`Invalid skill directory name: .agents/skills/${name}`);
+    continue;
+  }
   const sourcePath = join(sourceRoot, name, 'SKILL.md');
+  if (!existsSync(sourcePath)) {
+    differences.push(`Missing canonical skill file: .agents/skills/${name}/SKILL.md`);
+    continue;
+  }
   const source = readFileSync(sourcePath, 'utf8').replaceAll('\r\n', '\n');
   const match = /^---\n([\s\S]*?)\n---(?:\n|$)/.exec(source);
-  if (!match || !/^name: /m.test(match[1]) || !/^description: /m.test(match[1])) {
-    throw new Error(`Missing skill frontmatter: ${sourcePath}`);
+  if (!match || !/^name:\s*\S/m.test(match[1]) || !/^description:\s*\S/m.test(match[1])) {
+    differences.push(`Missing skill frontmatter: .agents/skills/${name}/SKILL.md`);
+    continue;
   }
   const frontmatter = match[1];
   const adapterFields = [
-    ...(!/^argument-hint:/m.test(frontmatter) && argumentHints[name]
+    ...(!/^argument-hint:/m.test(frontmatter) && Object.hasOwn(argumentHints, name)
       ? [`argument-hint: ${JSON.stringify(argumentHints[name])}`]
       : []),
     ...(!/^user-invocable:/m.test(frontmatter) ? ['user-invocable: true'] : []),
@@ -45,22 +56,34 @@ for (const name of names) {
   ];
   const body = source.slice(match[0].length);
   const notice = `<!-- Generated from .agents/skills/${name}/SKILL.md by npm run skills:sync. Do not edit here. -->`;
-  const expected = `---\n${[frontmatter, ...adapterFields].join('\n')}\n---\n\n${notice}\n${body}`;
-  const targetPath = join(targetRoot, name, 'SKILL.md');
-  const actual = existsSync(targetPath) ? readFileSync(targetPath, 'utf8').replaceAll('\r\n', '\n') : null;
-  if (actual === expected) continue;
-  if (check) {
-    differences.push(`Missing or outdated: .claude/skills/${name}/SKILL.md`);
-  } else {
-    mkdirSync(dirname(targetPath), { recursive: true });
-    writeFileSync(targetPath, expected);
-    updated++;
+  const separator = body.startsWith('\n') || body.length === 0 ? '\n' : '\n\n';
+  const expected = `---\n${[frontmatter, ...adapterFields].join('\n')}\n---\n\n${notice}${separator}${body}`;
+  const targetDir = join(targetRoot, name);
+  const targetPath = join(targetDir, 'SKILL.md');
+  const actual = existsSync(targetPath) ? readFileSync(targetPath, 'utf8') : null;
+  if (actual !== expected) {
+    if (check) {
+      differences.push(`Missing or outdated: .claude/skills/${name}/SKILL.md`);
+    } else {
+      mkdirSync(targetDir, { recursive: true });
+      writeFileSync(targetPath, expected);
+      updated++;
+    }
+  }
+  if (existsSync(targetDir)) {
+    for (const child of readdirSync(targetDir)) {
+      if (child !== 'SKILL.md') {
+        differences.push(
+          `Unexpected entry in generated skill folder: .claude/skills/${name}/${child}; keep supporting resources in .agents/skills/${name}/`,
+        );
+      }
+    }
   }
 }
 
 if (existsSync(targetRoot)) {
   for (const entry of readdirSync(targetRoot, { withFileTypes: true })) {
-    if (entry.isDirectory() && !names.includes(entry.name)) {
+    if (!entry.isDirectory() || !names.includes(entry.name)) {
       differences.push(
         `Unexpected Claude skill: .claude/skills/${entry.name}; move its source to .agents/skills or remove it.`,
       );
