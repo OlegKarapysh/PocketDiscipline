@@ -1,8 +1,6 @@
 ---
 name: 'write-unit-tests'
 description: 'Author behavior-driven, high-value unit tests in Angular v22 and TypeScript using Vitest, grounded in feature specs, business logic, DOM interactions, and thorough edge case coverage.'
-user-invocable: true
-disable-model-invocation: false
 ---
 
 <!-- Generated from .agents/skills/write-unit-tests/SKILL.md by npm run skills:sync. Do not edit here. -->
