@@ -1,14 +1,16 @@
 ---
 name: "speckit-checklist"
 description: "Generate a custom checklist for the current feature based on user requirements."
-argument-hint: "Domain or focus area for the checklist"
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
   author: "github-spec-kit"
   source: "templates/commands/checklist.md"
+argument-hint: "Domain or focus area for the checklist"
 user-invocable: true
 disable-model-invocation: false
 ---
+
+<!-- Generated from .agents/skills/speckit-checklist/SKILL.md by npm run skills:sync. Do not edit here. -->
 
 
 ## Checklist Purpose: "Unit Tests for English"

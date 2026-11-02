@@ -1,14 +1,16 @@
 ---
 name: "speckit-constitution"
 description: "Create or update the project constitution from interactive or provided principle inputs, ensuring all dependent templates stay in sync."
-argument-hint: "Principles or values for the project constitution"
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
   author: "github-spec-kit"
   source: "templates/commands/constitution.md"
+argument-hint: "Principles or values for the project constitution"
 user-invocable: true
 disable-model-invocation: false
 ---
+
+<!-- Generated from .agents/skills/speckit-constitution/SKILL.md by npm run skills:sync. Do not edit here. -->
 
 
 ## User Input

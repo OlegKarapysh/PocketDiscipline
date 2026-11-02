@@ -1,14 +1,16 @@
 ---
 name: "speckit-implement"
 description: "Execute the implementation plan by processing and executing all tasks defined in tasks.md"
-argument-hint: "Optional implementation guidance or task filter"
 compatibility: "Requires spec-kit project structure with .specify/ directory"
 metadata:
   author: "github-spec-kit"
   source: "templates/commands/implement.md"
+argument-hint: "Optional implementation guidance or task filter"
 user-invocable: true
 disable-model-invocation: false
 ---
+
+<!-- Generated from .agents/skills/speckit-implement/SKILL.md by npm run skills:sync. Do not edit here. -->
 
 
 ## User Input
@@ -97,6 +99,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **IF EXISTS**: Read contracts/ for API specifications and test requirements
    - **IF EXISTS**: Read research.md for technical decisions and constraints
    - **IF EXISTS**: Read .specify/memory/constitution.md for governance constraints
+   - **IF EXISTS**: Read docs/code_style.md for the code conventions every task must follow
    - **IF EXISTS**: Read quickstart.md for integration scenarios
 
 4. **Project Setup Verification**:
