@@ -30,6 +30,23 @@ const argumentHints = {
   'speckit-taskstoissues': 'Optional filter or label for GitHub issues',
 };
 
+for (const hinted of Object.keys(argumentHints)) {
+  if (!names.includes(hinted)) {
+    differences.push(`Argument hint for a skill that does not exist: ${hinted}`);
+  }
+}
+
+// A top-level `key: value` from frontmatter, unquoted; empty when the key is missing or blank.
+function frontmatterValue(frontmatter, key) {
+  const line = new RegExp(`^${key}:[ \\t]*(.*)$`, 'm').exec(frontmatter);
+  return line
+    ? line[1]
+        .trim()
+        .replace(/^(["'])(.*)\1$/, '$2')
+        .trim()
+    : '';
+}
+
 for (const name of names) {
   if (!/^[a-z0-9-]+$/.test(name)) {
     differences.push(`Invalid skill directory name: .agents/skills/${name}`);
@@ -42,11 +59,16 @@ for (const name of names) {
   }
   const source = readFileSync(sourcePath, 'utf8').replaceAll('\r\n', '\n');
   const match = /^---\n([\s\S]*?)\n---(?:\n|$)/.exec(source);
-  if (!match || !/^name:\s*\S/m.test(match[1]) || !/^description:\s*\S/m.test(match[1])) {
+  if (!match || !frontmatterValue(match[1], 'name') || !frontmatterValue(match[1], 'description')) {
     differences.push(`Missing skill frontmatter: .agents/skills/${name}/SKILL.md`);
     continue;
   }
   const frontmatter = match[1];
+  // Every harness must invoke the skill by the same name, and Agent Skills requires it to match the folder.
+  if (frontmatterValue(frontmatter, 'name') !== name) {
+    differences.push(`Skill name does not match its folder: .agents/skills/${name}/SKILL.md`);
+    continue;
+  }
   const adapterFields = [
     ...(!/^argument-hint:/m.test(frontmatter) && Object.hasOwn(argumentHints, name)
       ? [`argument-hint: ${JSON.stringify(argumentHints[name])}`]
