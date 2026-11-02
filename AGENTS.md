@@ -16,9 +16,8 @@ Read these before writing or reviewing code:
 2. **[docs/schema.md](docs/schema.md)** — required reading before writing or modifying any data
    access code, Dexie queries, or features that interact with local storage.
 3. **[docs/design_system.md](docs/design_system.md)** — the source of truth for UI, read before any UI
-   change together with the `pocketdiscipline-ui` skill. Agents that do not discover skills under
-   `.agents/skills/` (e.g. Claude Code) must read `.agents/skills/pocketdiscipline-ui/SKILL.md`
-   directly. Its "Responsive layout" section is the contract for every screen.
+   change together with the `pocketdiscipline-ui` skill. Claude Code discovers a generated copy under
+   `.claude/skills/`; edit the canonical `.agents/skills/pocketdiscipline-ui/SKILL.md` only. Its "Responsive layout" section is the contract for every screen.
 4. **[docs/security.md](docs/security.md)** — required reading for changes involving user data,
    imports, browser rendering, dependencies, or deployment.
 
@@ -62,9 +61,16 @@ you commit. Run `npm run e2e` locally, always for UI changes (it holds the layou
 This project is on Angular 22. Several long-standing defaults changed in v22 — `OnPush`, zoneless,
 `@Service`, signal forms. **Do not assert version-dependent Angular behaviour from memory.** Verify
 against the official Angular v22 documentation, `node_modules/@angular/`, or the `angular-cli` MCP
-server (`get_best_practices`, `search_documentation`), which is configured project-scoped in
-`.mcp.json`. The v22 defaults table in `docs/code_style.md` records what has already been verified.
+server (`get_best_practices`, `search_documentation`), configured project-scoped in
+`.mcp.json` (Claude Code), `.codex/config.toml` (Codex), and `.agents/mcp_config.json` (Antigravity). The v22 defaults table in `docs/code_style.md` records what has already been verified.
 
 Always use the Angular CLI MCP server when developing this project, for its workspace awareness, CLI
 automation and official documentation access. If the server is not active or configured, prompt the
 user to start it via `ng mcp`.
+
+## Shared skills
+
+`.agents/skills/` is the canonical skill source for every harness. After changing skills, run
+`npm run skills:sync` to regenerate `.claude/skills/`; never edit those copies directly.
+`npm run lint` includes `lint:skills`, which checks for missing, stale, or extra Claude skills.
+Keep instructions and paths portable across harnesses and worktrees.
