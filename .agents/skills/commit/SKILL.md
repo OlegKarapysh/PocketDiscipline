@@ -19,7 +19,7 @@ This skill is agent-agnostic and applies equally to Antigravity, Claude Code, Co
 2. **One logical change per commit.** Never bundle unrelated changes (e.g., mixing a CI workflow change, a feature fix, and a broad test refactor) into the same commit. If a commit message requires "and" to connect two distinct changes, split the commit.
 3. **At most 15 files per commit.** A single commit may create, modify, or delete **no more than 15 files**.
    - If a logical change touches more than 15 files (for example, a mechanical rename or E2E route update across 18 specs), split it into coherent, self-contained batches of at most 15 files each.
-4. **Never commit untracked scratch or local config files.** Workspace hooks may run `git add -A` automatically after edits. Always reset the index (`git reset`) and stage explicit file paths (`git add <file...>`) so untracked files (like local reports, plans, or `.codex/`) are not swept into a commit.
+4. **Preserve the user's index and unrelated work.** Stage only explicit paths or hunks belonging to the requested commit. Never stage scratch files or private local configuration. Do not reset the index or unstage existing changes automatically. If unrelated staged work would enter the commit, stop and ask how the user wants it handled.
 5. **Lint before committing.** Committing runs no Git hooks (`.git/hooks/pre-push` only runs on push). Ensure `npm run lint` passes before creating the commit.
 
 ---
@@ -73,10 +73,10 @@ across 16 specs; assertions now check stored rows, not table calls.
 
 ## Step-by-Step Workflow
 
-1. **Inspect working tree and reset auto-staged files**:
+1. **Inspect the working tree and existing staged changes**:
    ```bash
-   git reset
    git status --short
+   git diff --cached --name-status
    ```
 2. **Plan the commit batches**:
    - Group modified/created/deleted files by logical change.
