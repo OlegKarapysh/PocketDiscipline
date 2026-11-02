@@ -25,6 +25,7 @@ Perform an exhaustive, multi-dimensional code review of a pull request or branch
    - Enforce `docs/code_style.md` (naming conventions, no magic numbers, explicit types).
    - Enforce `docs/schema.md` for data persistence and Dexie operations.
    - Enforce `docs/design_system.md` for every UI change (shared components, theme tokens, `scripts/check-ui.mjs`).
+   - Enforce `docs/security.md` for local data protection, untrusted imports, browser rendering, secrets, dependencies, and deployment.
    - Adhere to Angular v22 zoneless/signals best practices and Angular Material UI usage.
 3. **Actionable & Constructive Feedback**:
    - Classify findings clearly: **CRITICAL** (blocking bugs/security flaws), **MAJOR** (architectural/functional issues), and **MINOR** (nits, styling, small optimizations).
@@ -57,8 +58,9 @@ Perform an exhaustive, multi-dimensional code review of a pull request or branch
 
 ### 3. Cybersecurity Expert Subagent
 
-- **Focus**: Application security, threat modeling, data privacy, injection prevention, secure storage.
+- **Focus**: Application security, threat modeling, data privacy, injection prevention, secure storage, and `docs/security.md` compliance.
 - **Key Inspection Points**:
+  - Does the implementation comply with `docs/security.md` (preserving local data, no real personal data in commits/fixtures, safe rendering, no secrets)?
   - Are inputs validated and sanitized against XSS, injection, or unexpected payloads?
   - Is sensitive user data properly protected in IndexedDB/Dexie without accidental leakage?
   - Are there risks of prototype pollution, insecure deserialization, or improper error disclosure?
@@ -82,7 +84,7 @@ Perform an exhaustive, multi-dimensional code review of a pull request or branch
    ```
 2. Gather project context:
    - Changed files list.
-   - Project rules: `AGENTS.md`, `docs/code_style.md`, `docs/schema.md`, `docs/design_system.md`.
+   - Project rules: `AGENTS.md`, `docs/code_style.md`, `docs/schema.md`, `docs/design_system.md`, `docs/security.md`.
    - Relevant feature specs in `specs/`.
 
 ### Step 2: Parallel Subagent Dispatch

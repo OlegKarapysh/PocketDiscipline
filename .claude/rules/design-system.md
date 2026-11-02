@@ -8,8 +8,9 @@ paths:
 
 # UI changes follow the design system
 
-Before changing markup or styles, read `.agents/skills/pocketdiscipline-ui/SKILL.md` and follow it.
-The discoverable `.claude/skills/pocketdiscipline-ui/` copy is generated from that canonical skill.
+Before changing markup or styles, use the `pocketdiscipline-ui` skill and follow it. The
+discoverable `.claude/skills/pocketdiscipline-ui/` copy is generated from
+`.agents/skills/pocketdiscipline-ui/SKILL.md`; edit only the canonical file in `.agents/skills/`.
 `docs/design_system.md` is the source of truth; the skill says how to apply it.
 
 A hook runs `scripts/check-ui.mjs` on every file you edit under `src/app` and again before you finish.

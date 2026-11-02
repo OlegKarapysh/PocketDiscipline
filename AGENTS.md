@@ -1,6 +1,6 @@
 # PocketDiscipline — agent instructions
 
-These rules apply to every agent working here (Antigravity, Claude Code, Gemini CLI, …). This file
+These rules apply to every agent working here (Codex, Antigravity, Claude Code, Gemini CLI, …). This file
 holds the project _workflow_ rules and points to the sources for everything else; it deliberately
 does not repeat what they say.
 
@@ -16,8 +16,8 @@ Read these before writing or reviewing code:
 2. **[docs/schema.md](docs/schema.md)** — required reading before writing or modifying any data
    access code, Dexie queries, or features that interact with local storage.
 3. **[docs/design_system.md](docs/design_system.md)** — the source of truth for UI, read before any UI
-   change together with the `pocketdiscipline-ui` skill. Claude Code discovers a generated copy under
-   `.claude/skills/`; edit the canonical `.agents/skills/pocketdiscipline-ui/SKILL.md` only. Its "Responsive layout" section is the contract for every screen.
+   change together with the `pocketdiscipline-ui` skill. Its "Responsive layout" section is the
+   contract for every screen.
 4. **[docs/security.md](docs/security.md)** — required reading for changes involving user data,
    imports, browser rendering, dependencies, or deployment.
 
@@ -32,7 +32,7 @@ Read these before writing or reviewing code:
   or bypass lint errors and code style violations. Structurally fix the underlying issue instead.**
 - **UI work**: reuse the shared components in `src/app/shared/components` first, then plain Angular
   Material, before building anything custom. Before touching `.html` or `.scss` under `src/app`, or
-  adding a screen, read `.agents/skills/pocketdiscipline-ui/SKILL.md`. `npm run lint` includes
+  adding a screen, use the `pocketdiscipline-ui` skill (`.agents/skills/pocketdiscipline-ui/SKILL.md`). `npm run lint` includes
   `scripts/check-ui.mjs`, a ratchet against `scripts/ui-baseline.json`: fix what it reports and never
   edit the baseline by hand. The app is used on phones and on wide desktops alike, so every screen
   must fit both: `npm run e2e` includes the layout audit (`e2e/src/layout-audit.spec.ts`). Run it

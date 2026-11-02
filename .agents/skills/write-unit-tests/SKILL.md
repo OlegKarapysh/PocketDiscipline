@@ -49,18 +49,19 @@ When writing tests, always adhere to the foundational principles from _Unit Test
 - **Test Output Emissions**: When a child component emits an `output()`, assert that parent listeners or subscribers receive the expected payload upon DOM interactions.
 - **No Redundant TestBed Boilerplate**: Do NOT use `.overrideComponent()` unless the component explicitly defines local `providers` in its `@Component` decorator.
 
-### 4. Ground in Business Logic & Reactive Streams
+### 4. Ground in Business Logic, Real IndexedDB & Reactive Streams
 
-- **Reactive Streams & Dexie Live Queries**: When services expose streams (e.g. `tasks$`, `user$`), test stream emissions using `firstValueFrom` or subscriptions, verifying initial values, fallbacks, and side-effects (e.g. streak resets).
+- **Real Database (`openEmptyDb`) — Never Mock Dexie**: `src/test-setup.ts` provides an isolated `fake-indexeddb` instance per test. Call `openEmptyDb()` from `src/app/shared/testing/empty-db.ts` for empty tables, seed the rows the test needs through it, and assert on what is stored afterwards — never on which Dexie table method was called. Prefer real services (`DbService`, `UserService`) over stubs; stub only external browser/UI boundaries such as dialogs, notifications, or the clock.
+- **Reactive Streams & Dexie Live Queries**: When services expose streams (e.g. `tasks$`, `user$`), test stream emissions using `firstValueFrom` or subscriptions, verifying initial values, fallbacks, and persisted database state.
 - **Boundary & Edge Case Coverage**:
   - Empty collections, zero values, negative numbers, maximum limits, off-by-one dates.
-  - Failure/rejection handling: verify that database errors or rejected promises fail gracefully without breaking UI state.
+  - Failure/rejection handling: verify that validation errors or rejected promises fail gracefully without corrupting stored state.
 
-### 5. Adhere to Project Code Style ([docs/code_style.md](docs/code_style.md))
+### 5. Adhere to Project Code Style (`docs/code_style.md`)
 
 - **No Over-Extraction of Mock Values**: Do NOT extract single-use, self-documenting literals into top-of-file constants (e.g., avoid `SCORE_BTN_INDEX_ZERO = 0`, `TEST_SCORE_TEN = 10`, `ZERO_VALUE = 0`). Use inline literals directly (`buttons[0]`, `score: 10`, `0`).
 - **Extract Obscure Constants Only**: Extract into named constants only when values represent domain meaning and are not immediately obvious (e.g., `86_400_000` -> `ONE_DAY_MS`).
-- **Type-Safe Mocks**: Type mock dependencies accurately with `ReturnType<typeof vi.fn>` or typed partials. Avoid `any`.
+- **Type-Safe Mocks**: When stubbing external boundaries, type mock dependencies accurately with `ReturnType<typeof vi.fn>` or typed partials. Avoid `any`.
 
 ---
 
@@ -71,26 +72,39 @@ When writing tests, always adhere to the foundational principles from _Unit Test
 ```typescript
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { of } from 'rxjs';
-import { ReminderService } from './reminder.service';
-import { DailyScoresService } from '../../features/daily-scores/services/daily-scores.service';
+import { firstValueFrom, of } from 'rxjs';
+import { DailyScoreReminderService } from './daily-score-reminder.service';
+import { DailyScoresService } from './daily-scores.service';
+import { BrowserNotificationService } from '../../../core/services/browser-notification.service';
 
-describe('ReminderService', () => {
-  let service: ReminderService;
-  let dailyScoresServiceMock: { getTodayScore: ReturnType<typeof vi.fn> };
+describe('DailyScoreReminderService', () => {
+  let service: DailyScoreReminderService;
+  let notificationsMock: {
+    requestPermission: ReturnType<typeof vi.fn>;
+    show: ReturnType<typeof vi.fn>;
+  };
+  let dailyScoresMock: { getTodayScore: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     vi.useFakeTimers();
 
-    dailyScoresServiceMock = {
+    notificationsMock = {
+      requestPermission: vi.fn().mockResolvedValue(true),
+      show: vi.fn(),
+    };
+    dailyScoresMock = {
       getTodayScore: vi.fn().mockReturnValue(of(undefined)),
     };
 
     TestBed.configureTestingModule({
-      providers: [ReminderService, { provide: DailyScoresService, useValue: dailyScoresServiceMock }],
+      providers: [
+        DailyScoreReminderService,
+        { provide: BrowserNotificationService, useValue: notificationsMock },
+        { provide: DailyScoresService, useValue: dailyScoresMock },
+      ],
     });
 
-    service = TestBed.inject(ReminderService);
+    service = TestBed.inject(DailyScoreReminderService);
   });
 
   afterEach(() => {
@@ -98,17 +112,15 @@ describe('ReminderService', () => {
     vi.restoreAllMocks();
   });
 
-  it('should schedule reminder and trigger notification when score is missing', async () => {
-    const notificationSpy = vi.fn();
-    vi.stubGlobal('Notification', notificationSpy);
-    (Notification as unknown as { permission: string }).permission = 'granted';
+  it('should schedule reminder and trigger notification at 21:30 when score is missing', async () => {
+    vi.setSystemTime(new Date(2026, 7, 28, 10, 0, 0));
 
-    await service.scheduleDailyReminder();
+    const granted = await firstValueFrom(service.scheduleDailyReminder());
+    expect(granted).toBe(true);
 
-    // Fast-forward to scheduled reminder time
-    await vi.advanceTimersToNextTimerAsync();
+    await vi.advanceTimersByTimeAsync(11.5 * 60 * 60 * 1000);
 
-    expect(notificationSpy).toHaveBeenCalledWith(
+    expect(notificationsMock.show).toHaveBeenCalledWith(
       'Pocket Discipline',
       expect.objectContaining({ body: 'Time to set your daily score!' }),
     );
@@ -116,59 +128,47 @@ describe('ReminderService', () => {
 });
 ```
 
-### Pattern B: Service with Reactive LiveQuery Stream
+### Pattern B: Service with Real Database (`openEmptyDb`) & LiveQuery Stream
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { DailyTasksService } from './daily-tasks.service';
-import { DbService } from '../../../core/services/db.service';
-import { UserService } from '../../../core/services/user.service';
+import type { DbService } from '../../../database/db.service';
+import { openEmptyDb } from '../../../shared/testing/empty-db';
+import type { DailyTask } from '../../../core/models/daily-task.model';
+import type { DailyTaskDifficulty } from '../../../core/models/daily-task-difficulty.model';
 
+const easy: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
 const ONE_DAY_MS = 86_400_000;
 
 describe('DailyTasksService', () => {
   let service: DailyTasksService;
-  let dbMock: {
-    dailyTasks: {
-      toArray: ReturnType<typeof vi.fn>;
-      update: ReturnType<typeof vi.fn>;
-    };
-  };
+  let db: DbService;
 
-  beforeEach(() => {
-    dbMock = {
-      dailyTasks: {
-        toArray: vi.fn().mockResolvedValue([]),
-        update: vi.fn().mockResolvedValue(1),
-      },
-    };
-
-    TestBed.configureTestingModule({
-      providers: [
-        DailyTasksService,
-        { provide: DbService, useValue: dbMock },
-        { provide: UserService, useValue: { addBalance: vi.fn() } },
-      ],
-    });
-
+  beforeEach(async () => {
+    db = await openEmptyDb();
     service = TestBed.inject(DailyTasksService);
   });
 
-  it('should reset broken streak to 0 when task was last completed more than 1 day ago', async () => {
-    const staleTask = {
+  it('should reset broken streak to 0 in stream and persist via resetBrokenStreaks when missed for more than 1 day', async () => {
+    const staleTask: DailyTask = {
       id: 'task-1',
       title: 'Workout',
+      difficulties: [easy],
+      createdAt: Date.now() - 10 * ONE_DAY_MS,
+      sortOrder: 0,
       streak: 5,
       lastCompletedAt: Date.now() - 2 * ONE_DAY_MS,
     };
-    dbMock.dailyTasks.toArray.mockResolvedValue([staleTask]);
+    await db.dailyTasks.add(staleTask);
 
     const tasks = await firstValueFrom(service.tasks$);
-
     expect(tasks[0].streak).toBe(0);
-    expect(dbMock.dailyTasks.update).toHaveBeenCalledWith('task-1', { streak: 0 });
+
+    await service.resetBrokenStreaks();
+    expect(await db.dailyTasks.get('task-1')).toEqual({ ...staleTask, streak: 0 });
   });
 });
 ```
@@ -179,18 +179,18 @@ describe('DailyTasksService', () => {
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
-import { TaskFormComponent } from './task-form.component';
+import { TaskForm } from './task-form';
 
-describe('TaskFormComponent', () => {
-  let component: TaskFormComponent;
-  let fixture: ComponentFixture<TaskFormComponent>;
+describe('TaskForm', () => {
+  let component: TaskForm;
+  let fixture: ComponentFixture<TaskForm>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TaskFormComponent],
+      imports: [TaskForm],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(TaskFormComponent);
+    fixture = TestBed.createComponent(TaskForm);
     component = fixture.componentInstance;
     fixture.detectChanges();
     await fixture.whenStable();
