@@ -436,6 +436,35 @@ const SCREENS: Screen[] = [
   },
   { name: 'settings', path: 'settings', ready: '.settings-link' },
   {
+    name: 'settings: preparing backup',
+    path: 'settings',
+    ready: '.settings-link',
+    open: async (page) => {
+      await page.evaluate(() => {
+        Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+        Object.defineProperty(navigator, 'share', { configurable: true, value: () => new Promise<void>(() => {}) });
+      });
+      await page.getByRole('button', { name: 'Export data' }).click();
+      await expect(page.locator('app-backup-card [aria-busy="true"]')).toBeVisible();
+    },
+  },
+  {
+    name: 'settings: backup ready to share',
+    path: 'settings',
+    ready: '.settings-link',
+    open: async (page) => {
+      await page.evaluate(() => {
+        Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+        Object.defineProperty(navigator, 'share', {
+          configurable: true,
+          value: () => Promise.reject(new DOMException('Fresh tap required', 'NotAllowedError')),
+        });
+      });
+      await page.getByRole('button', { name: 'Export data' }).click();
+      await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible();
+    },
+  },
+  {
     name: 'settings: invalid pomodoro rewards',
     path: 'settings',
     ready: 'app-pomodoro-reward-settings input',
@@ -728,7 +757,16 @@ function worstCaseRows(): Rows {
   });
 
   return {
-    users: [{ id: CURRENT_USER_ID, name: CURRENT_USER_NAME, balance: 1_234_567, createdAt: now, updatedAt: now }],
+    users: [
+      {
+        id: CURRENT_USER_ID,
+        name: CURRENT_USER_NAME,
+        balance: 1_234_567,
+        createdAt: now,
+        updatedAt: now,
+        lastExportedAt: new Date(1990, 0, 1).getTime(),
+      },
+    ],
     pomodoroSessions,
     pomodoroRewardRates: [
       { engagementType: 'work', baseReward: 10_000_000 },
