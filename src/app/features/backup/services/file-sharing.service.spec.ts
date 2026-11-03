@@ -31,6 +31,15 @@ describe('FileSharingService', () => {
     expect(service.canShare(file)).toBe(supported);
     expect(canShare).toHaveBeenCalledWith({ files: [file] });
   });
+  it('uses a default plain-text probe file and returns false if canShare throws', () => {
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: canShare.mockReturnValue(true) });
+    expect(service.canShare()).toBe(true);
+    expect(canShare).toHaveBeenCalledWith({ files: [expect.any(File)] });
+    canShare.mockImplementation(() => {
+      throw new TypeError('Unsupported ShareData');
+    });
+    expect(service.canShare()).toBe(false);
+  });
   it('shares the file', async () => {
     share.mockResolvedValue(undefined);
     await expect(service.share(file)).resolves.toBe('shared');

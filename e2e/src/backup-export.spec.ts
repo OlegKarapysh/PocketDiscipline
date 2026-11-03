@@ -89,8 +89,10 @@ test.describe('Backup export', () => {
     await page.goto('settings');
     await page.getByRole('button', { name: 'Export data' }).click();
     await expect(page.getByText('Your backup is ready to share.')).toBeVisible();
+    await expect(page.getByText('Last backup: Never')).toBeVisible();
     await page.getByRole('button', { name: 'Share', exact: true }).click();
     await expect(page.locator('simple-snack-bar')).toContainText('Backup shared.');
+    await expect(page.getByText('Last backup: today')).toBeVisible();
     expect(
       await page.evaluate(
         () => window.backupSharedFiles.length === 2 && window.backupSharedFiles[0] === window.backupSharedFiles[1],

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import Dexie from 'dexie';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DbService } from '../../../database/db.service';
 import { openEmptyDb } from '../../../shared/testing/empty-db';
@@ -134,13 +135,28 @@ describe('BackupExportService', () => {
   });
 
   it('never exports half of a concurrent transaction', async () => {
-    const writing = db.transaction('rw', db.users, db.dailyScores, async () => {
-      await db.users.put({ id: 1, name: 'Current', balance: 100, createdAt: 1, updatedAt: 1 });
-      await db.dailyScores.put({ date: '2026-01-01', score: 8, rewardEarned: 100, streakAtThisDay: 1, createdAt: 1 });
+    const readUsers = db.users.toArray.bind(db.users);
+    let writing!: Promise<unknown>;
+    vi.spyOn(db.users, 'toArray').mockImplementation(() => {
+      const result = readUsers();
+      writing = Dexie.ignoreTransaction(() =>
+        db.transaction('rw', db.users, db.dailyScores, async () => {
+          await db.users.put({ id: 1, name: 'Current', balance: 100, createdAt: 1, updatedAt: 1 });
+          await db.dailyScores.put({
+            date: '2026-01-01',
+            score: 8,
+            rewardEarned: 100,
+            streakAtThisDay: 1,
+            createdAt: 1,
+          });
+        }),
+      );
+      return result;
     });
     const { envelope } = await contents();
     await writing;
-    expect(envelope.data['users'].length).toBe(envelope.data['dailyScores'].length);
+    expect(envelope.data['users'].length).toBe(0);
+    expect(envelope.data['dailyScores'].length).toBe(0);
   });
 
   it('records only the export timestamp without changing other stored values', async () => {

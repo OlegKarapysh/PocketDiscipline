@@ -60,7 +60,10 @@ describe('BackupCard', () => {
     fixture.detectChanges();
     await settle();
   });
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
   it('shares the backup and returns to Export data', async () => {
     primary().click();
@@ -160,19 +163,49 @@ describe('BackupCard', () => {
     expect(sharing.share).not.toHaveBeenCalled();
     expect(sharing.download).not.toHaveBeenCalled();
   });
+  it('reports a download failure without recording the backup', async () => {
+    sharing.download.mockImplementation(() => {
+      throw new Error('Download blocked');
+    });
+    download().click();
+    await settle();
+    expect(snackBar.error).toHaveBeenCalledWith(expect.any(Error), "Couldn't download the backup.");
+    expect((await db.users.get(1))?.lastExportedAt).toBeUndefined();
+  });
+  it('clears the prepared backup if user data changes while waiting to share', async () => {
+    sharing.share.mockResolvedValueOnce('needs-tap');
+    primary().click();
+    await settle();
+    expect(primary().textContent).toContain('Share');
+    await db.users.update(1, { balance: 250 });
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(primary().textContent).toContain('Export data');
+    });
+  });
 
   it.each([
     [undefined, 'Never'],
+    [Number.NaN, 'Never'],
     [new Date(2026, 0, 4, 0, 1).getTime(), 'today'],
     [new Date(2026, 0, 3, 23, 59).getTime(), 'yesterday'],
     [new Date(2026, 0, 1, 12).getTime(), '3 days ago'],
     [new Date(2026, 0, 5, 12).getTime(), 'today'],
-    [0, '20457 days ago'],
+    [new Date(1970, 0, 1, 12).getTime(), '20457 days ago'],
   ])('shows the calendar age for %s as %s', async (lastExportedAt, wording) => {
     if (lastExportedAt !== undefined) await db.users.update(1, { lastExportedAt });
     await vi.waitFor(() => {
       fixture.detectChanges();
       expect(text()).toContain(`Last backup: ${wording}`);
+    });
+  });
+
+  it('treats epoch 0 as a valid timestamp rather than Never', async () => {
+    today.set(new Date(0).toLocaleDateString('en-CA'));
+    await db.users.update(1, { lastExportedAt: 0 });
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(text()).toContain('Last backup: today');
     });
   });
 
@@ -197,17 +230,14 @@ describe('BackupCard', () => {
   });
 
   it('updates the age live after download and when the calendar day changes', async () => {
-    const localDay = new Date().toLocaleDateString('en-CA');
-    today.set(localDay);
+    vi.setSystemTime(new Date(2026, 0, 4, 12));
     download().click();
     await settle();
     await vi.waitFor(() => {
       fixture.detectChanges();
       expect(text()).toContain('Last backup: today');
     });
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    today.set(tomorrow.toLocaleDateString('en-CA'));
+    today.set('2026-01-05');
     fixture.detectChanges();
     expect(text()).toContain('Last backup: yesterday');
   });
