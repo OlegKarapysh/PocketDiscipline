@@ -4,7 +4,7 @@ const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 
 module.exports = defineConfig(
-  globalIgnores(['dist/', 'build/', 'coverage/']),
+  globalIgnores(['node_modules/', 'dist/', 'build/', 'coverage/', '**/*.min.js']),
   {
     files: ['**/*.ts'],
     extends: [

@@ -16,8 +16,10 @@ import { DatabasePurgeService } from './services/database-purge.service';
 import { BalanceSetupDialog } from './components/balance-setup-dialog/balance-setup-dialog';
 import { PomodoroRewardSettings } from '../pomodoro/components/pomodoro-reward-settings/pomodoro-reward-settings';
 
+import { BackupCard } from '../backup/components/backup-card/backup-card';
+
 @Component({
-  imports: [RouterLink, MatButtonModule, MatIconModule, PageHeader, PomodoroRewardSettings],
+  imports: [RouterLink, MatButtonModule, MatIconModule, PageHeader, PomodoroRewardSettings, BackupCard],
   selector: 'app-settings',
   styleUrl: './settings.scss',
   templateUrl: './settings.html',

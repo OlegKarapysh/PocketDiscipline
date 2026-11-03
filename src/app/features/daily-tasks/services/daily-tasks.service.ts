@@ -9,8 +9,8 @@ import { liveQuery } from 'dexie';
 import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
 import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { ONE_DAY_MS } from '../../../core/constants/one-day-ms.const';
 
-const ONE_DAY_MS = 86_400_000;
 const MAX_STREAK_BONUS_DAYS = 10;
 const STREAK_BONUS_RATE = 0.1;
 const ERROR_TASK_NOT_FOUND = 'This daily task no longer exists.';

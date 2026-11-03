@@ -49,3 +49,11 @@ test-results/
 
 # Agent worktrees
 /.claude/worktrees/
+
+# Local build output, environment variants and logs
+/build/
+.env*
+*.log
+*.tmp
+*.swp
+pocket-discipline-*.txt

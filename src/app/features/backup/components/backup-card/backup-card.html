@@ -1,0 +1,31 @@
+<app-section-card heading="Backup">
+  <p class="note">Saves all your data to one file you can keep elsewhere. The file is not encrypted.</p>
+  @if (lastBackup(); as age) {
+    <p class="last-backup">
+      Last backup:
+      @if (age.days; as days) {
+        <span class="pd-num">{{ days }}</span>
+      }
+      {{ age.label }}
+    </p>
+  }
+  @if (ready()) {
+    <p class="note" role="status">Your backup is ready to share.</p>
+  }
+  <div class="actions" [attr.aria-busy]="preparing()">
+    <button mat-flat-button type="button" [disabled]="preparing()" (click)="export()">
+      <span class="primary-content">
+        @if (preparing()) {
+          <mat-progress-spinner mode="indeterminate" [diameter]="20" aria-label="Preparing backup" />
+        } @else {
+          <mat-icon>ios_share</mat-icon>
+        }
+        {{ primaryLabel() }}
+      </span>
+    </button>
+    <button mat-stroked-button type="button" [disabled]="preparing()" (click)="download()">
+      <mat-icon>download</mat-icon>
+      Download
+    </button>
+  </div>
+</app-section-card>
