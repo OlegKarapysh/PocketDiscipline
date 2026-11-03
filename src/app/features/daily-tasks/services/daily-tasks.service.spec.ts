@@ -8,10 +8,10 @@ import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import type { DailyTask } from '../../../core/models/daily-task.model';
 import type { DailyTaskDifficulty } from '../../../core/models/daily-task-difficulty.model';
 import type { DailyTaskCompletion } from '../../../core/models/daily-task-completion.model';
+import { ONE_DAY_MS } from '../../../core/constants/one-day-ms.const';
 
 const easy: DailyTaskDifficulty = { id: 'easy', name: 'Easy', baseReward: 100 };
 const hard: DailyTaskDifficulty = { id: 'hard', name: 'Hard', baseReward: 300 };
-const ONE_DAY_MS = 86_400_000;
 const INITIAL_BALANCE = 1000;
 
 describe('DailyTasksService', () => {
