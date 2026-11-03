@@ -22,11 +22,13 @@ one name pattern.
 
 ## 2. The share sheet needs a recent tap
 
-**Implementation check (2026-11-03)**: T002 remains pending: no phone is available. The user authorized continuing with the designed fallback. Real Android Chrome / iOS Safari activation, cancellation and large-history timing are unverified.
+**Implementation check (2026-11-03)**: T002 has been superseded by T028, the sole pending real-device validation task: no phone is available. The user authorized continuing with the designed fallback. Real Android Chrome / iOS Safari activation, cancellation and large-history timing are unverified.
+
+**Validation protocol**: T028 records the direct/fallback timing and tap counts from `quickstart.md` section 4.1 (SC-001), and the fixed 29,533-row reference-phone benchmark from section 4.2 (SC-002). Record all required device, payload and run details here when measured; no passing real-device results are claimed yet.
 
 **Decision**: Try to share straight from the tap. If the browser refuses with `NotAllowedError`, keep the
 prepared file and show a **Share** button; its tap shares that file at once, with no other `await` before
-`navigator.share`. The spike (task 1) measures how often the fallback happens on real phones.
+`navigator.share`. The spike in T028 measures how often the fallback happens on real phones.
 
 **Rationale**: `navigator.share` requires transient user activation (MDN: `NotAllowedError` without it), and
 the activation expires a short time after the tap. Chromium's window is about 5 seconds; WebKit does not

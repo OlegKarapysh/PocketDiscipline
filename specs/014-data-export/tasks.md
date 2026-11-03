@@ -26,15 +26,7 @@ description: "Task list for Data Export (Backup)"
 **Purpose**: Load the conventions, and settle the one technical unknown before any UI is built.
 
 - [X] T001 Load the Angular v22 coding standards through the `angular-cli` MCP server (`list_projects`, then `get_best_practices` with the workspace path), and read `docs/code_style.md`, `docs/design_system.md`, `docs/schema.md` and `.agents/skills/pocketdiscipline-ui/SKILL.md` before writing code. If the MCP server is not running, ask the user to start it with `ng mcp` (`AC-003`, `AC-004`)
-- [ ] T002 Run the share spike in `specs/014-data-export/quickstart.md` §1 on Android Chrome and, if available, iOS Safari, with a scratch page kept in the session scratchpad, never in the repo. The page reads the database in one transaction, then calls `navigator.share` with a `.txt` file of realistic size. Record in `specs/014-data-export/research.md` §2:
-  - whether the direct share opens the sheet;
-  - the data size or read time at which it fails with `NotAllowedError`;
-  - whether a second tap always shares;
-  - what dismissing the sheet throws.
-
-  Also time the export with inflated data (five years of daily use, tens of thousands of rows) and record whether the file is ready within 3 s (`SC-002`).
-
-  If the result contradicts the error mapping in research §2, stop and tell the user before continuing. If no phone is at hand, ask the user to run the spike; the fallback is designed in either way, so the card (T012) may be built before the results arrive, and research §2 is updated when they do.
+- **T002 — superseded by T028**: The real-phone spike and large-history validation were deferred because no phone was available. T028 is the sole pending task and owns the complete checklist in `quickstart.md` sections 1 and 4. Do not track or complete the same validation twice.
 
 ---
 
@@ -174,7 +166,7 @@ description: "Task list for Data Export (Backup)"
 - [X] T023 [P] Document `lastExportedAt` in `docs/schema.md`, under `users`: add the field to the interface block and one sentence in the description, like `balanceSetUpAt`. Mention that the backup slice (`features/backup/`, spec 014) writes it and that it has no index, so it needed no schema version.
 - [X] T024 [P] Run `npm run build` and confirm that the JSON import adds only `version`, not the rest of `package.json`, to the bundle: search the output in `dist/` for a field such as `"devDependencies"`. If the whole file is bundled, switch to the build's `define` option (research §7) and update the research note. Also confirm that the initial bundle budget in `angular.json` still passes.
 - [X] T025 Run the definition of done and fix every failure: `npm run lint && npm run typecheck && npm test -- --watch=false && npm run e2e`. Never use `eslint-disable` or edit `scripts/ui-baseline.json` by hand.
-- [X] T026 Look at the layout audit screenshots of the settings entries at 360px and 1280px, light and dark: `LAYOUT_AUDIT_SCREENSHOTS=1 npx playwright test layout-audit -g settings`. Check the 44px touch targets and that the buttons wrap cleanly (`SC-006`).
+- [X] T026 Look at the layout audit screenshots of the settings entries at 360px and 1280px, light and dark. Follow the PowerShell commands in `specs/014-data-export/quickstart.md` section 3: set `LAYOUT_AUDIT_SCREENSHOTS=1`, then run `npx playwright test layout-audit -g "at (360|1280)px"`. The audit groups all screens by width; a settings-name filter selects no tests. Check the 44px touch targets and that the buttons wrap cleanly (`SC-006`).
 - [X] T027 Run the manual checks in `specs/014-data-export/quickstart.md` §4 on a phone (including the large-history timing for `SC-002`) and §5 on a desktop, or list them for the user if no device is at hand. Then hand the change to the user to review and commit. Never commit automatically (`AGENTS.md`).
 
 ---
@@ -183,9 +175,9 @@ description: "Task list for Data Export (Backup)"
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: T001 first. T002, the spike, should finish before T012 and can run alongside Phase 2 and T006–T010. If it needs the user's phone and the results are not in yet, T012 goes ahead: the spike measures how often the fallback is needed, not whether it is built.
+- **Setup (Phase 1)**: T001 first. The spike originally tracked as T002 is now owned solely by T028. It may run alongside implementation when a phone is available; lack of a phone does not block T012 because the fallback is required either way.
 - **Foundational (Phase 2)**: depends on T001 and blocks both stories.
-- **User Story 1 (Phase 3)**: depends on Phase 2. T012 follows T002 where the spike can run first.
+- **User Story 1 (Phase 3)**: depends on Phase 2. The spike in T028 may precede T012 when a phone is available.
 - **User Story 2 (Phase 4)**: depends on Phase 2 for its service work (T016, T019, T020). Its card and e2e tasks (T017, T018, T021, T022) extend files created in US1, so they come after T012, T014 and T015.
 - **Polish (Phase 5)**: depends on both stories.
 
@@ -251,4 +243,8 @@ Task: "Extend e2e/src/backup-export.spec.ts for today / cancel / 3 days ago / pu
 - Do not commit. The user reviews and commits.
 ## Phase 6: Convergence
 
-- [ ] T028 Complete the deferred real-device validation from T002: run the share-after-database-read spike in `specs/014-data-export/quickstart.md` section 1 on Android Chrome and, if available, iOS Safari; verify direct sharing, the fresh-tap fallback with the same file, and silent cancellation without changing the last-backup time. With synthetic five-year history (tens of thousands of rows), measure file preparation against the 3-second target and verify that the progress state renders and the page stays responsive. Record browser/device, data size, timings, activation and cancellation results in `specs/014-data-export/research.md` section 2; address any demonstrated failures before marking validation complete. Keep this task pending until a phone is available; desktop stubs do not complete it. Required per T002, FR-014, FR-015, SC-002 and plan: real-phone share spike (partial)
+- [ ] T028 Complete all deferred real-device validation (sole owner; supersedes T002). Use the authoritative checklist in `specs/014-data-export/quickstart.md` sections 1 and 4:
+  - Run the real share-after-database-read spike on Android Chrome and, if available, iOS Safari. Verify direct sharing, the fresh-tap fallback with the same file, and silent cancellation with an unchanged last-backup time (`FR-014`, `FR-015`).
+  - Measure both direct and fallback shares against the under-15-second and three-/four-tap limits using section 4.1 (`SC-001`).
+  - Seed the fixed 29,533-row workload and run the five measured exports on the reference phone using section 4.2. Record all preparation times against the 3-second limit, payload bytes, device/RAM, OS/browser/build versions, and responsiveness/progress observations (`SC-002`).
+  - Complete the remaining phone checks in section 4. Record all results in `specs/014-data-export/research.md` section 2 and address demonstrated failures before marking this task complete. Keep it pending while required hardware or evidence is unavailable; desktop stubs and supplemental-device timings do not complete reference-device validation.
