@@ -1,10 +1,17 @@
-import { Service } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Service, inject } from '@angular/core';
 import type { ShareOutcome } from '../models/share-outcome.type';
 
 @Service()
 export class FileSharingService {
-  canShare(file: File): boolean {
-    return typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] });
+  private readonly document = inject(DOCUMENT);
+
+  canShare(file = new File([], 'pocket-discipline-2000-01-01-0000.txt', { type: 'text/plain' })): boolean {
+    try {
+      return typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] });
+    } catch {
+      return false;
+    }
   }
 
   async share(file: File): Promise<ShareOutcome> {
@@ -25,7 +32,7 @@ export class FileSharingService {
   download(file: File): void {
     const url = URL.createObjectURL(file);
     try {
-      const anchor = document.createElement('a');
+      const anchor = this.document.createElement('a');
       anchor.href = url;
       anchor.download = file.name;
       anchor.click();

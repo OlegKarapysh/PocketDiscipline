@@ -8,7 +8,7 @@
 .note {
   font: var(--mat-sys-body-medium);
   color: var(--mat-sys-on-surface-variant);
-  margin: 0 0 t.space(3);
+  margin: 0;
 }
 
 .actions {
@@ -25,7 +25,7 @@
 .last-backup {
   font: var(--mat-sys-label-large);
   color: var(--mat-sys-on-surface-variant);
-  margin: 0 0 t.space(3);
+  margin: 0;
 }
 
 .primary-content {
