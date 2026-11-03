@@ -121,8 +121,8 @@ Next to the export button, Settings tells the user when they last backed up: "La
 
 ### Measurable Outcomes
 
-- **SC-001**: From opening Settings, the user can produce a backup and send it to another app in under 15 seconds and three taps (four when the prepare-then-share fallback is needed).
-- **SC-002**: A file exported from a database holding five years of daily use is ready to share or download within 3 seconds on a mid-range phone.
+- **SC-001**: Starting when Settings is visible and its export controls are enabled, the user can complete a share in under 15 seconds and at most three taps (four when the prepare-then-share fallback is needed). Stop timing when the share promise resolves, the success boundary in the assumptions below. Count Export, the fallback Share tap when needed, and all taps in the native share sheet and receiving app before resolution. Use a preconfigured share target with no sign-in or setup; record the target, timing and tap count for both paths under T028 using `quickstart.md` section 4.1.
+- **SC-002**: Using the fixed 29,533-row synthetic five-year workload in `quickstart.md` section 4.2, file preparation MUST complete within 3 seconds in each of five measured runs on the reference mid-range phone, a Samsung Galaxy A54 running Android Chrome, without CPU throttling. Measure from the export click handler entry until `createBackup()` resolves with the prepared file, excluding native sharing and download delivery. Record device/RAM variant, OS/browser/build versions, payload bytes and all timings. A different phone may provide supplemental evidence; the reference-device result remains pending until that device is tested.
 - **SC-003**: 100% of tables and 100% of rows of the database appear in the file, with values identical to those stored, verified by comparing the file with the database after an export of a fully populated install.
 - **SC-004**: Adding a new table to the database without including it in the export makes the automated test suite fail, every time.
 - **SC-005**: Cancelling the share sheet produces no error message and leaves the last-backup line unchanged in 100% of attempts.

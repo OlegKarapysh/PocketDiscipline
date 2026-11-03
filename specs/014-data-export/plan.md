@@ -48,7 +48,8 @@ one new optional field, `users.lastExportedAt`.
 
 **Performance Goals**:
 
-- With five years of data, the file is ready within 3 s on a mid-range phone (SC-002).
+- The fixed 29,533-row workload is ready within 3 s in each of five measured runs on the reference Samsung Galaxy A54 (SC-002; `quickstart.md` section 4.2).
+- Direct and fallback shares meet the duration/tap limits in SC-001 (`quickstart.md` section 4.1); T028 owns both device checks.
 - The page never freezes while the file is prepared. The read is async, and the stringify of a few MB takes
   well under the 3 s.
 
@@ -170,9 +171,11 @@ import adds more UI ([research §10](./research.md#10-where-the-ui-lives)).
 
 ## Order of work
 
-1. **Spike** ([quickstart §1](./quickstart.md#1-spike-share-after-reading-the-database-do-first)). Measure the
+1. **Spike** ([quickstart §1](./quickstart.md#1-spike-share-after-reading-the-database-t028)). Measure the
    share after a database read on Android Chrome and on iOS Safari, then record the results in research §2.
    The fallback is in the design either way. The spike only tells us how often it will be needed.
+   When hardware is unavailable, implementation may proceed; T028 is the sole owner of deferred real-device
+   validation, including SC-001 and SC-002 (the original T002 is superseded).
 2. **Model and export.** Add `lastExportedAt`, `BackupExportService` and its tests, including the completeness
    test and the check that it can fail.
 3. **`FileSharingService`** and its tests.
