@@ -67,6 +67,8 @@ Daily tasks the import creates keep UUIDs. The import never changes `users.balan
 The balance can be set up once in Settings (`UserService.setUpBalance`): it replaces the balance and
 records `balanceSetUpAt`, and a second setup is refused. A purge reseeds the row without that field,
 so the setup is available again. The field has no index, so it needed no schema version.
+The backup slice (`features/backup/`, spec 014) writes `lastExportedAt` only after a successful share
+or download; a purge clears it. This optional field has no index and needs no schema version.
 
 ```typescript
 export interface User {
@@ -74,6 +76,7 @@ export interface User {
   name: string;
   balance: number; // Whole hryvnias. The current accumulated reward balance
   balanceSetUpAt?: number; // timestamp of the one-time balance setup; absent until it is used
+  lastExportedAt?: number; // timestamp of the last successful export; absent until it is used
   createdAt: number; // timestamp
   updatedAt: number; // timestamp
 }
