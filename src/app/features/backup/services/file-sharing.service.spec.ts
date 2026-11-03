@@ -16,6 +16,7 @@ describe('FileSharingService', () => {
   afterEach(() => {
     Reflect.deleteProperty(navigator, 'share');
     Reflect.deleteProperty(navigator, 'canShare');
+    vi.useRealTimers();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     share.mockReset();
@@ -57,7 +58,8 @@ describe('FileSharingService', () => {
     share.mockRejectedValue(error);
     await expect(service.share(file)).rejects.toBe(error);
   });
-  it('downloads a named file and releases the object URL', () => {
+  it('downloads a named file and releases the object URL after the click', () => {
+    vi.useFakeTimers();
     const createObjectURL = vi.fn().mockReturnValue('blob:backup');
     const revokeObjectURL = vi.fn();
     vi.stubGlobal('URL', { createObjectURL, revokeObjectURL });
@@ -69,6 +71,8 @@ describe('FileSharingService', () => {
     expect(createObjectURL).toHaveBeenCalledWith(file);
     expect(anchor?.download).toBe(file.name);
     expect(anchor?.href).toBe('blob:backup');
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+    vi.runAllTimers();
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:backup');
   });
 });

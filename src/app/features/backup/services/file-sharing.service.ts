@@ -2,6 +2,9 @@ import { DOCUMENT } from '@angular/common';
 import { Service, inject } from '@angular/core';
 import type { ShareOutcome } from '../models/share-outcome.type';
 
+// Firefox and Safari start a download after the click returns, so the URL must outlive the click.
+const OBJECT_URL_LIFETIME_MS = 60_000;
+
 @Service()
 export class FileSharingService {
   private readonly document = inject(DOCUMENT);
@@ -37,7 +40,9 @@ export class FileSharingService {
       anchor.download = file.name;
       anchor.click();
     } finally {
-      URL.revokeObjectURL(url);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, OBJECT_URL_LIFETIME_MS);
     }
   }
 }
