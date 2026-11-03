@@ -8,6 +8,8 @@ export interface User {
   balance: number;
   // Absent until the balance is set up in Settings, which can be done once per database.
   balanceSetUpAt?: number;
+  // Absent until the first export; cleared by a database purge.
+  lastExportedAt?: number;
   createdAt: number;
   updatedAt: number;
 }
