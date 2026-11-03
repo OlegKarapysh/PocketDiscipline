@@ -12,6 +12,7 @@ import { SectionCard } from '../../../../shared/components/section-card/section-
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import type { BackupFile } from '../../models/backup-file.model';
 import type { BackupState } from '../../models/backup-state.type';
+import type { ShareOutcome } from '../../models/share-outcome.type';
 import { BackupExportService } from '../../services/backup-export.service';
 import { FileSharingService } from '../../services/file-sharing.service';
 
@@ -27,9 +28,9 @@ export class BackupCard {
   private readonly snackBar = inject(SnackBarService);
   private readonly clock = inject(ClockService);
   private readonly userService = inject(UserService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly state = signal<BackupState>('idle');
   private readonly prepared = signal<BackupFile | undefined>(undefined);
-  private readonly destroyed = signal(false);
 
   readonly preparing = computed(() => this.state() === 'preparing');
   readonly ready = computed(() => this.state() === 'ready');
@@ -59,13 +60,6 @@ export class BackupCard {
     return days <= 0 ? { label: 'today' } : days === 1 ? { label: 'yesterday' } : { days, label: 'days ago' };
   });
 
-  constructor() {
-    inject(DestroyRef).onDestroy(() => {
-      this.destroyed.set(true);
-      this.reset();
-    });
-  }
-
   async export(): Promise<void> {
     if (this.preparing()) return;
     const prepared = this.prepared();
@@ -76,16 +70,8 @@ export class BackupCard {
     }
     this.state.set('preparing');
     const canShare = this.sharing.canShare();
-    let file: BackupFile;
-    try {
-      file = await this.backup.createBackup();
-    } catch (error) {
-      if (this.destroyed()) return;
-      this.snackBar.error(error, "Couldn't prepare the backup.");
-      this.reset();
-      return;
-    }
-    if (this.destroyed()) return;
+    const file = await this.prepare();
+    if (!file) return;
     if (canShare) {
       await this.share(file, true);
     } else {
@@ -96,21 +82,26 @@ export class BackupCard {
   async download(): Promise<void> {
     if (this.preparing()) return;
     this.state.set('preparing');
-    let file: BackupFile;
-    try {
-      file = this.prepared() ?? (await this.backup.createBackup());
-    } catch (error) {
-      if (this.destroyed()) return;
-      this.snackBar.error(error, "Couldn't prepare the backup.");
-      this.reset();
-      return;
-    }
-    if (this.destroyed()) return;
+    const file = this.prepared() ?? (await this.prepare());
+    if (!file) return;
     await this.save(file);
   }
 
+  // Undefined when the card was destroyed meanwhile or the backup failed; the failure is already reported.
+  private async prepare(): Promise<BackupFile | undefined> {
+    try {
+      const file = await this.backup.createBackup();
+      return this.destroyed() ? undefined : file;
+    } catch (error) {
+      if (this.destroyed()) return undefined;
+      this.snackBar.error(error, "Couldn't prepare the backup.");
+      this.reset();
+      return undefined;
+    }
+  }
+
   private async share(file: BackupFile, allowRetry: boolean): Promise<void> {
-    let outcome: Awaited<ReturnType<FileSharingService['share']>>;
+    let outcome: ShareOutcome;
     try {
       outcome = await this.sharing.share(file);
     } catch {
@@ -147,6 +138,11 @@ export class BackupCard {
     if (this.destroyed()) return;
     this.snackBar.show('Backup saved.');
     this.reset();
+  }
+
+  // A method, not a property read: TypeScript would keep a property narrowed across an await.
+  private destroyed(): boolean {
+    return this.destroyRef.destroyed;
   }
 
   private reset(): void {
