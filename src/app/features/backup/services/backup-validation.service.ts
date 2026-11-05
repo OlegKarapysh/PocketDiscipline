@@ -6,6 +6,7 @@ import { BackupImportError } from '../models/backup-import-error.model';
 import type { BackupData } from '../models/backup-data.type';
 import type { BackupEnvelope } from '../models/backup-envelope.model';
 import { BACKUP_FIELDS, BACKUP_TABLES } from '../validation/backup-schema.const';
+import { isRow } from '../validation/is-row';
 
 const SEMVER =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*)?$/;
@@ -27,7 +28,7 @@ export class BackupValidationService {
       throw new BackupImportError('invalid-json', 'This file is not valid backup JSON.');
     }
     if (
-      !this.isRow(parsed) ||
+      !isRow(parsed) ||
       parsed['format'] !== BACKUP_FORMAT ||
       !this.positiveInteger(parsed['formatVersion']) ||
       !this.positiveInteger(parsed['schemaVersion']) ||
@@ -70,7 +71,7 @@ export class BackupValidationService {
       throw new BackupImportError('unsupported-version', 'This backup schema is not supported.');
     const tables = Object.entries(BACKUP_TABLES).filter(([, descriptor]) => descriptor.since <= schema);
     if (
-      !this.isRow(value) ||
+      !isRow(value) ||
       Object.keys(value).length !== tables.length ||
       Object.keys(value).some((name) => !tables.some(([table]) => table === name))
     )
@@ -93,10 +94,10 @@ export class BackupValidationService {
       result[table] = rows;
     }
     if (schema >= 8) {
-      const categories = new Set(result['rewardCategories'].filter((row) => this.isRow(row)).map((row) => row['id']));
+      const categories = new Set(result['rewardCategories'].filter((row) => isRow(row)).map((row) => row['id']));
       for (const table of ['rewards', 'withdrawals'])
         result[table].forEach((row, index) => {
-          if (!this.isRow(row) || !categories.has(row['categoryId']))
+          if (!isRow(row) || !categories.has(row['categoryId']))
             throw new BackupImportError(
               'invalid-reference',
               'The referenced reward category is missing.',
@@ -115,7 +116,7 @@ export class BackupValidationService {
     dailyTask = false,
   ): asserts value is Record<string, unknown> {
     if (
-      !this.isRow(value) ||
+      !isRow(value) ||
       Object.keys(value).some((key) => !Object.hasOwn(fields, key) || (dailyTask && schema < 10 && key === 'sortOrder'))
     )
       throw new BackupImportError('invalid-row', 'Unsupported row shape or field.', path);
@@ -181,9 +182,6 @@ export class BackupValidationService {
       default:
         return typeof value === 'string' && kind.split('|').includes(value);
     }
-  }
-  private isRow(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
   private positiveInteger(value: unknown): value is number {
     return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;

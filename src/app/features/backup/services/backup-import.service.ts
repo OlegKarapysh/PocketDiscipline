@@ -8,6 +8,7 @@ import type { BackupData } from '../models/backup-data.type';
 import { BackupImportError } from '../models/backup-import-error.model';
 import { PomodoroTimerService } from '../../pomodoro/services/pomodoro-timer.service';
 import { BACKUP_TABLES } from '../validation/backup-schema.const';
+import { isRow } from '../validation/is-row';
 
 @Service()
 export class BackupImportService {
@@ -88,7 +89,7 @@ export class BackupImportService {
       ),
     );
     const profile = data['users'][0];
-    if (!this.isRow(profile) || typeof profile['balance'] !== 'number')
+    if (!isRow(profile) || typeof profile['balance'] !== 'number')
       throw new Error('Could not load the current profile.');
     const canonical = JSON.stringify(
       Object.fromEntries(
@@ -98,7 +99,7 @@ export class BackupImportService {
             table,
             [...data[table]]
               .sort((a, b) => {
-                if (!this.isRow(a) || !this.isRow(b)) return 0;
+                if (!isRow(a) || !isRow(b)) return 0;
                 const x = a[descriptor.key];
                 const y = b[descriptor.key];
                 if (typeof x === 'number' && typeof y === 'number') return x - y;
@@ -120,7 +121,7 @@ export class BackupImportService {
     if (typeof value === 'number') return ['number', Object.is(value, -0) ? '-0' : String(value)];
     if (value instanceof Date) return ['date', value.getTime()];
     if (Array.isArray(value)) return ['array', value.map((item) => this.ordered(item))];
-    if (this.isRow(value))
+    if (isRow(value))
       return [
         'object',
         Object.keys(value)
@@ -128,8 +129,5 @@ export class BackupImportService {
           .map((key) => [key, this.ordered(value[key])]),
       ];
     return [typeof value, value];
-  }
-  private isRow(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 }

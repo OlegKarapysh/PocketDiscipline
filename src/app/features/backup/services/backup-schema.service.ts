@@ -5,6 +5,7 @@ import { DailyTaskOrderMigrationService } from '../../../database/daily-task-ord
 import { MoneyRoundingMigrationService } from '../../../database/money-rounding-migration.service';
 import type { BackupData } from '../models/backup-data.type';
 import { BackupImportError } from '../models/backup-import-error.model';
+import { isRow } from '../validation/is-row';
 
 @Service()
 export class BackupSchemaService {
@@ -37,11 +38,11 @@ export class BackupSchemaService {
       },
       8: () => {
         for (const [table, rows] of Object.entries(data))
-          for (const row of rows) if (this.isRow(row)) this.moneyRounding.roundRow(table, row);
+          for (const row of rows) if (isRow(row)) this.moneyRounding.roundRow(table, row);
       },
       9: () => {
         // Source validation has already proved every daily task is a row.
-        const tasks = data['dailyTasks'].filter((row) => this.isRow(row));
+        const tasks = data['dailyTasks'].filter(isRow);
         this.taskOrder.orderRows(tasks);
         data['dailyTasks'] = tasks;
       },
@@ -61,8 +62,5 @@ export class BackupSchemaService {
       transform();
     }
     return data;
-  }
-  private isRow(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 }
