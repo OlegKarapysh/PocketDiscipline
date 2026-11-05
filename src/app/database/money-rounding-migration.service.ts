@@ -21,29 +21,35 @@ const MONEY_FIELDS: Readonly<Record<string, string>> = {
 export class MoneyRoundingMigrationService {
   /** The version 9 upgrade: rounds every stored money value to a whole number of hryvnias. */
   async migrate(tx: Transaction): Promise<void> {
-    await Promise.all([
-      ...Object.entries(MONEY_FIELDS).map(([table, field]) =>
+    await Promise.all(
+      [...Object.keys(MONEY_FIELDS), 'dailyTasks'].map((table) =>
         tx
           .table<LegacyRow>(table)
           .toCollection()
           .modify((row) => {
-            this.round(row, field);
+            this.roundRow(table, row);
           }),
       ),
-      tx
-        .table<LegacyRow>('dailyTasks')
-        .toCollection()
-        .modify((task) => {
-          const difficulties = task['difficulties'];
-          if (Array.isArray(difficulties)) {
-            difficulties.forEach((difficulty: unknown) => {
-              if (this.isRow(difficulty)) {
-                this.round(difficulty, 'baseReward');
-              }
-            });
-          }
-        }),
-    ]);
+    );
+  }
+
+  /**
+   * Rounds the money of one version 8 row of the given table in place, exactly as the version 9
+   * upgrade does, including the difficulty rewards inside a daily task. Backup restore applies it to
+   * the detached rows of an older backup.
+   */
+  roundRow(table: string, row: LegacyRow): void {
+    if (Object.hasOwn(MONEY_FIELDS, table)) {
+      this.round(row, MONEY_FIELDS[table]);
+    }
+    const difficulties = row['difficulties'];
+    if (table === 'dailyTasks' && Array.isArray(difficulties)) {
+      difficulties.forEach((difficulty: unknown) => {
+        if (this.isRow(difficulty)) {
+          this.round(difficulty, 'baseReward');
+        }
+      });
+    }
   }
 
   // Leaves anything that is not a number alone: a pomodoro session that was not completed has no reward.
