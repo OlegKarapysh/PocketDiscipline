@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 import { JAR_STATEMENT_FIXTURE } from '../../src/app/features/jar-import/testing/jar-statement.fixture';
 import { putRows, readBalance, readStores, userRow } from './indexed-db';
+import { ONE_DAY_MS } from '../../src/app/core/constants/one-day-ms.const';
 
 // The import end to end on a real IndexedDB: the synthetic statement runs 1–9 September 2026, so on
 // the 9th the habits that ran every day to the 8th still have their streaks.
@@ -70,6 +71,17 @@ test.describe('Jar import', () => {
     await pickStatement(page, JAR_STATEMENT_FIXTURE);
     await page.getByRole('button', { name: 'Import', exact: true }).click();
     await expect(page).toHaveURL(/\/tasks$/);
+    await expect
+      .poll(async () => {
+        const tasks = (await readStores(page, ['dailyTasks']))['dailyTasks'];
+        return tasks.every(
+          (task) =>
+            typeof task['lastCompletedAt'] !== 'number' ||
+            NOW.getTime() - task['lastCompletedAt'] <= 2 * ONE_DAY_MS ||
+            task['streak'] === 0,
+        );
+      })
+      .toBe(true);
     const before = await readStores(page, ['dailyTasks', 'dailyTaskCompletions', 'goals', 'withdrawals']);
 
     await page.goto('settings/jar-import');
