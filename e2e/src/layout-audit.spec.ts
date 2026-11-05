@@ -13,6 +13,8 @@ import {
   TITLE_MAX_LENGTH,
 } from '../../src/app/shared/constants/text-length.const';
 import { openDialog } from './dialog';
+import { backupFixture } from '../../src/app/features/backup/testing/backup.fixture';
+import { importFile } from './backup-import.fixture';
 
 // The layout audit: every screen, at every supported width, filled with the worst content the forms
 // allow, must keep all of its text inside its box and must not scroll sideways.
@@ -40,6 +42,7 @@ interface Screen {
   ready: string;
   // Brings the screen into the state to measure. Runs after navigation.
   open?: (page: Page) => Promise<void>;
+  close?: (page: Page) => Promise<void>;
   // What to measure; the whole page unless the screen is an overlay on top of one.
   root?: string;
   // Routed only in a dev build (isDevMode() in app.routes.ts), so not audited against the production one.
@@ -48,6 +51,110 @@ interface Screen {
 
 // Add a screen here whenever you add a route, a tab, a dialog or any other state with its own layout.
 const SCREENS: Screen[] = [
+  ...(
+    ['idle', 'checking', 'review', 'replacing', 'error', 'safety-preparing', 'ready-share', 'confirmation'] as const
+  ).map((state): Screen => ({
+    name: `data import: ${state}`,
+    path: 'settings/data-import',
+    ready: 'app-data-import-page .choose-button',
+    ...(state === 'confirmation' ? { root: OVERLAY } : {}),
+    ...(state === 'replacing'
+      ? {
+          close: async (page: Page) => {
+            await page.evaluate(() => {
+              window.dispatchEvent(new Event('pagehide'));
+            });
+            await expect(page.getByRole('alert')).toContainText('Your data was preserved');
+          },
+        }
+      : {}),
+    open: async (page) => {
+      if (state === 'idle') return;
+      if (state === 'checking')
+        await page.evaluate(() => {
+          const read = File.prototype.text;
+          File.prototype.text = function () {
+            return new Promise<string>((resolve, reject) => {
+              setTimeout(() => {
+                void read.call(this).then(resolve, reject);
+              }, 30_000);
+            });
+          };
+        });
+      const fixture = backupFixture();
+      Object.assign(fixture.data['users'][0] as object, { balance: 9_999_999 });
+      await page
+        .locator('app-data-import-page input[type="file"]')
+        .setInputFiles(
+          importFile(state === 'error' ? { ...fixture, encrypted: true } : fixture, 'W'.repeat(180) + '.txt'),
+        );
+      if (state === 'checking') {
+        await expect(page.getByText('Checking backup…', { exact: true })).toBeVisible();
+        return;
+      }
+      if (state === 'error') {
+        await expect(page.getByRole('alert')).toBeVisible();
+        return;
+      }
+      await expect(page.getByRole('heading', { name: 'Review backup' })).toBeVisible();
+      if (state === 'safety-preparing' || state === 'ready-share') {
+        await page.evaluate((ready) => {
+          Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+          Object.defineProperty(navigator, 'share', {
+            configurable: true,
+            value: () =>
+              ready ? Promise.reject(new DOMException('Fresh tap', 'NotAllowedError')) : new Promise<void>(() => {}),
+          });
+        }, state === 'ready-share');
+        await page.getByRole('button', { name: 'Export current data', exact: true }).click();
+        if (state === 'ready-share')
+          await expect(page.getByRole('button', { name: 'Share', exact: true })).toBeVisible();
+        else await expect(page.locator('app-backup-export-actions [aria-busy="true"]')).toBeVisible();
+      }
+      if (state === 'confirmation' || state === 'replacing') {
+        if (state === 'replacing')
+          await page.evaluate(() => {
+            const originalClear = IDBObjectStore.prototype.clear;
+            const originalCommit = IDBTransaction.prototype.commit;
+            let held: IDBTransaction | undefined;
+            IDBTransaction.prototype.commit = function () {
+              if (this.mode !== 'readwrite') originalCommit.call(this);
+            };
+            IDBObjectStore.prototype.clear = function () {
+              const request = originalClear.call(this);
+              if (!held && this.transaction.mode === 'readwrite') {
+                held = this.transaction;
+                const store = this;
+                const pump = () => {
+                  try {
+                    store.get('__layout_keepalive__').onsuccess = pump;
+                  } catch {
+                    /* Transaction was aborted by cleanup. */
+                  }
+                };
+                pump();
+                window.addEventListener(
+                  'pagehide',
+                  () => {
+                    held?.abort();
+                  },
+                  { once: true },
+                );
+              }
+              return request;
+            };
+          });
+        await openDialog(
+          page.getByRole('button', { name: 'Replace data', exact: true }),
+          page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }),
+        );
+        if (state === 'replacing') {
+          await page.getByRole('dialog').getByRole('button', { name: 'Replace data', exact: true }).click();
+          await expect(page.getByText('Replacing data…', { exact: true })).toBeVisible();
+        }
+      }
+    },
+  })),
   { name: 'dashboard', path: 'dashboard', ready: 'app-stat-card' },
   {
     // Two years: one bar per month, with the chart's widest axis labels ("Jan '24").
@@ -995,9 +1102,24 @@ async function audit(page: Page, screen: Screen, width: number, testInfo: TestIn
   if (process.env['LAYOUT_AUDIT_SCREENSHOTS']) {
     const file = `${screen.name.replace(/[^a-z0-9]+/gi, '-')}.png`;
     await page.screenshot({ path: join(SCREENSHOT_DIR, String(width), file), fullPage: true });
+    if (screen.path === 'settings/data-import' && [360, 1280].includes(width)) {
+      for (const theme of ['light', 'dark'] as const) {
+        await page.evaluate((value) => {
+          document.documentElement.dataset['theme'] = value;
+        }, theme);
+        await page.screenshot({
+          path: join(SCREENSHOT_DIR, String(width), file.replace('.png', `-${theme}.png`)),
+          fullPage: true,
+        });
+      }
+      await page.evaluate(() => {
+        delete document.documentElement.dataset['theme'];
+      });
+    }
   }
 
   const findings = await page.evaluate(findOverflow, screen.root ?? 'body');
+  await screen.close?.(page);
   const gap = KNOWN_GAPS.find((known) => known.screen === screen.name && known.width === width);
 
   if (gap) {

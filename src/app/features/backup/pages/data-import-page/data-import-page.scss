@@ -1,0 +1,60 @@
+@use '../../../../../styles/tokens' as t;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+.import-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: t.space(4);
+  align-items: start;
+}
+p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.picker {
+  display: none;
+}
+.file-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.space(3);
+}
+.file-name {
+  font: var(--mat-sys-body-medium);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.progress {
+  display: flex;
+  align-items: center;
+  gap: t.space(3);
+}
+.error {
+  color: var(--mat-sys-error);
+}
+.comparison-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8ch 12ch;
+  gap: t.space(3);
+  align-items: start;
+  overflow-wrap: anywhere;
+  font: var(--mat-sys-body-small);
+  > :nth-child(n + 2) {
+    text-align: end;
+  }
+}
+.balances {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.space(4);
+}
+.balances > div {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(2);
+  min-width: 0;
+}

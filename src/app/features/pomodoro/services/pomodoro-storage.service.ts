@@ -9,9 +9,11 @@ export class PomodoroStorageService {
   private db = inject(DbService);
   private userService = inject(UserService);
 
-  async saveSession(session: PomodoroSession): Promise<void> {
+  async saveSession(session: PomodoroSession, canMutate: () => boolean = () => true): Promise<void> {
     try {
-      await this.db.pomodoroSessions.put(session);
+      await this.db.transaction('rw', this.db.pomodoroSessions, async () => {
+        if (canMutate()) await this.db.pomodoroSessions.put(session);
+      });
     } catch (error) {
       console.error('Failed to save pomodoro session:', error);
       throw error;
@@ -36,11 +38,12 @@ export class PomodoroStorageService {
     }
   }
 
-  async completeSession(id: string, rewardEarned: number): Promise<boolean> {
+  async completeSession(id: string, rewardEarned: number, canMutate: () => boolean = () => true): Promise<boolean> {
     try {
       return await this.db.transaction('rw', this.db.pomodoroSessions, this.db.users, async () => {
+        if (!canMutate()) return false;
         const session = await this.db.pomodoroSessions.get(id);
-        if (session?.status !== PomodoroSessionStatus.ACTIVE) return false;
+        if (!canMutate() || session?.status !== PomodoroSessionStatus.ACTIVE) return false;
 
         await this.db.pomodoroSessions.update(id, {
           status: PomodoroSessionStatus.COMPLETED,
@@ -56,11 +59,12 @@ export class PomodoroStorageService {
     }
   }
 
-  async cancelSession(id: string): Promise<void> {
+  async cancelSession(id: string, canMutate: () => boolean = () => true): Promise<void> {
     try {
       await this.db.transaction('rw', this.db.pomodoroSessions, async () => {
+        if (!canMutate()) return;
         const session = await this.db.pomodoroSessions.get(id);
-        if (session?.status !== PomodoroSessionStatus.ACTIVE) return;
+        if (!canMutate() || session?.status !== PomodoroSessionStatus.ACTIVE) return;
 
         await this.db.pomodoroSessions.update(id, {
           status: PomodoroSessionStatus.CANCELLED,

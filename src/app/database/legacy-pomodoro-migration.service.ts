@@ -7,7 +7,8 @@ const LEGACY_DB_NAME = 'PomodoroDatabase';
 
 @Service()
 export class LegacyPomodoroMigrationService {
-  async migrate(target: Table<PomodoroSession, string>): Promise<void> {
+  async migrate(target: Table<PomodoroSession, string>, authoritative = false): Promise<void> {
+    if (authoritative) return;
     try {
       const exists = await Dexie.exists(LEGACY_DB_NAME);
       if (!exists) {

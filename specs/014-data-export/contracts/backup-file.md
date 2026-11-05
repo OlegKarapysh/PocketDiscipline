@@ -37,7 +37,7 @@ One JSON object, pretty-printed with two-space indentation so a person can read 
 | `format`        | string    | Always `pocket-discipline-backup`. A reader rejects any other value: it is not a backup of this app.     |
 | `formatVersion` | integer   | Version of this envelope contract. `1` here. Bumped only for a change an existing reader would misread. |
 | `schemaVersion` | integer   | Dexie schema version of the exporting app (`db.verno`, 11 today). Describes the shape of `data`'s rows. |
-| `appVersion`    | string    | App version from `package.json`. Informational only.                                                     |
+| `appVersion`    | string    | SemVer from `package.json`; readers refuse a higher-precedence version (spec 015).                                                     |
 | `exportedAt`    | string    | ISO 8601 UTC time the snapshot was taken.                                                                |
 | `encrypted`     | boolean   | `false` in this spec. When `true` (spec 016), `data` is absent and an encryption block replaces it.      |
 | `data`          | object    | Present when `encrypted` is `false`. Table name → array of that table's rows, as stored.                 |
@@ -54,10 +54,16 @@ One JSON object, pretty-printed with two-space indentation so a person can read 
 ## Rules for readers (for spec 015 and 016)
 
 1. Parse; if it is not a JSON object with `format === 'pocket-discipline-backup'`, it is not a backup.
-2. `formatVersion` greater than the reader knows → the file is from a newer app; refuse and ask to update.
-3. `encrypted === true` → decrypt first (spec 016); a reader without encryption support refuses.
-4. `schemaVersion` greater than the reader's database version → newer app; refuse. Smaller → the rows are
-   older; the reader upgrades them as the Dexie upgrade functions would.
+2. Validate header types, positive integer format/schema versions, a valid SemVer `appVersion`, a valid
+   UTC `exportedAt` and a boolean `encrypted` before applying compatibility policy.
+3. A newer `formatVersion`, database `schemaVersion`, or higher-precedence SemVer `appVersion` → refuse
+   and ask to update. Compare numeric components and prerelease precedence; ignore build metadata.
+   Same or older app versions remain eligible, subject to supported format/schema and data validation.
+4. Then handle `encrypted === true`: a reader without encryption support refuses explicitly, before
+   expecting `data`; spec 016 decrypts supported encrypted files. Newer-version refusal takes precedence.
+5. For plaintext, validate the declared source schema and upgrade older rows through the explicit
+   backup transformations matching Dexie upgrades; validate the complete result before any writes.
+   Unsupported older formats or missing transformations are compatibility errors, never guessed.
 
 ## Compatibility promise for spec 016
 

@@ -1,8 +1,8 @@
 import type { Page } from '@playwright/test';
 import { CURRENT_USER_ID, CURRENT_USER_NAME } from '../../src/app/core/models/user.model';
 
-// Raw IndexedDB access for the money-flow specs: the unit specs mock Dexie, so only a browser can
-// show that a balance really moved. Every helper opens the database without asking for a version, so
+// Raw IndexedDB access complements real-DbService unit tests with native browser transactions.
+// Every helper opens the database without asking for a version, so
 // the app's own connection is not disturbed. The app must have opened its database first.
 
 const DATABASE = 'pocket-discipline-db';

@@ -3,7 +3,7 @@ import { version } from '../../../../../package.json';
 import { DbService } from '../../../database/db.service';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
 import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
-import { BACKUP_FORMAT } from '../constants/backup-format.const';
+import { BACKUP_FORMAT, BACKUP_FORMAT_VERSION } from '../constants/backup-format.const';
 import type { BackupEnvelope } from '../models/backup-envelope.model';
 import type { BackupFile } from '../models/backup-file.model';
 
@@ -21,7 +21,7 @@ export class BackupExportService {
     const rows = await this.db.transaction('r', tables, () => Promise.all(tables.map((table) => table.toArray())));
     const envelope: BackupEnvelope = {
       format: BACKUP_FORMAT,
-      formatVersion: 1,
+      formatVersion: BACKUP_FORMAT_VERSION,
       schemaVersion: this.db.verno,
       appVersion: version,
       exportedAt: now.toISOString(),

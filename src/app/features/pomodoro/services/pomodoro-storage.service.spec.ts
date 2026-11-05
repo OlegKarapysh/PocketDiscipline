@@ -7,6 +7,7 @@ import type { PomodoroSession } from '../../../core/models/pomodoro-session.mode
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
 import { CURRENT_USER_ID, CURRENT_USER_NAME } from '../../../core/models/user.model';
+import Dexie from 'dexie';
 
 const INITIAL_BALANCE = 10;
 
@@ -55,6 +56,41 @@ describe('PomodoroStorageService', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it('rejects stale guarded writes without changing session or balance', async () => {
+    await db.pomodoroSessions.put(session());
+    await service.saveSession(session({ id: 'stale' }), () => false);
+    await service.cancelSession('session-123', () => false);
+    expect(await service.completeSession('session-123', 100, () => false)).toBe(false);
+    expect(await db.pomodoroSessions.toArray()).toEqual([session()]);
+    expect(await balance()).toBe(INITIAL_BALANCE);
+  });
+
+  it('rechecks queued writes after a transaction lock is acquired', async () => {
+    await db.pomodoroSessions.put(session());
+    let unlock!: () => void;
+    let locked!: () => void;
+    const acquired = new Promise<void>((resolve) => {
+      locked = resolve;
+    });
+    const release = new Promise<void>((resolve) => {
+      unlock = resolve;
+    });
+    const blocking = db.transaction('rw', db.pomodoroSessions, async () => {
+      locked();
+      await Dexie.waitFor(release);
+    });
+    await acquired;
+    let allowed = true;
+    const saving = Dexie.ignoreTransaction(() => service.saveSession(session({ id: 'queued' }), () => allowed));
+    const cancelling = Dexie.ignoreTransaction(() => service.cancelSession('session-123', () => allowed));
+    const completing = Dexie.ignoreTransaction(() => service.completeSession('session-123', 100, () => allowed));
+    allowed = false;
+    unlock();
+    await Promise.all([blocking, saving, cancelling, completing]);
+    expect(await Dexie.ignoreTransaction(() => db.pomodoroSessions.toArray())).toEqual([session()]);
+    expect(await Dexie.ignoreTransaction(() => balance())).toBe(INITIAL_BALANCE);
   });
 
   it('should be created', () => {

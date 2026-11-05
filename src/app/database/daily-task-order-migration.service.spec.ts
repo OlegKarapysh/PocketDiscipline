@@ -38,6 +38,22 @@ describe('DailyTaskOrderMigrationService', () => {
     expect(rows.map((row) => row['sortOrder'])).toEqual([0, 1, 2]);
   });
 
+  it('should number detached tasks in primary key order, as the upgrade visits stored ones', () => {
+    const rows: Row[] = [
+      { id: 'b', title: 'Run' },
+      { id: 'B', title: 'Swim' },
+      { id: 'a', title: 'Read' },
+    ];
+
+    service.orderRows(rows);
+
+    expect(rows).toEqual([
+      { id: 'B', title: 'Swim', sortOrder: 0 },
+      { id: 'a', title: 'Read', sortOrder: 1 },
+      { id: 'b', title: 'Run', sortOrder: 2 },
+    ]);
+  });
+
   it('should leave the rest of each task as it was', async () => {
     const rows: Row[] = [{ id: 'a', title: 'Read', createdAt: 3, streak: 4, lastCompletedAt: 5, difficulties: [] }];
 

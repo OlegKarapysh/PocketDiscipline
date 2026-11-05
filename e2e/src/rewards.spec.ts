@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 import { FALLBACK_CATEGORY_ID } from '../../src/app/core/constants/initial-reward-categories.const';
 import { putRows, readBalance, readStores, userRow } from './indexed-db';
+import { openDialog } from './dialog';
 
 // Spending money on a real IndexedDB: claiming a reward, a quick spend, reverting a withdrawal and
 // deleting a reward, each checked against the stored balance.
@@ -59,8 +60,11 @@ test.describe('Rewards: money out and back', () => {
   });
 
   test('should record a quick spend and take it off the balance', async ({ page }) => {
-    await page.locator('app-rewards-hub').getByRole('button', { name: 'Quick spend' }).click();
     const dialog = page.locator('app-quick-spend-dialog');
+    await openDialog(
+      page.locator('app-rewards-hub').getByRole('button', { name: 'Quick spend' }),
+      dialog.getByLabel('Amount', { exact: true }),
+    );
     await dialog.getByPlaceholder('0', { exact: true }).fill('120');
     await dialog.getByPlaceholder('e.g. Protein bar, coffee, lunch').fill('Lunch');
     await dialog.getByRole('button', { name: 'Withdraw' }).click();
@@ -79,7 +83,10 @@ test.describe('Rewards: money out and back', () => {
       ['99', 'Dinner'],
       ['1', 'Gum'],
     ]) {
-      await page.locator('app-rewards-hub').getByRole('button', { name: 'Quick spend' }).click();
+      await openDialog(
+        page.locator('app-rewards-hub').getByRole('button', { name: 'Quick spend' }),
+        dialog.getByLabel('Amount', { exact: true }),
+      );
       await dialog.getByPlaceholder('0', { exact: true }).fill(amount);
       await dialog.getByPlaceholder('e.g. Protein bar, coffee, lunch').fill(title);
       await dialog.getByRole('button', { name: 'Withdraw' }).click();

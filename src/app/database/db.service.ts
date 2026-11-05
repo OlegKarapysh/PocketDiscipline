@@ -128,7 +128,7 @@ export class DbService extends Dexie {
         });
       }
 
-      await this.legacyPomodoroMigration.migrate(this.pomodoroSessions);
+      await this.legacyPomodoroMigration.migrate(this.pomodoroSessions, user?.lastExportedAt !== undefined);
     });
   }
 

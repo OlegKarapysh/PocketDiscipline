@@ -11,6 +11,7 @@ import type { PomodoroSession } from '../../../core/models/pomodoro-session.mode
 import type { PomodoroRewardRates } from '../models/pomodoro-reward-rates.type';
 import { CelebrationService } from '../../../shared/services/celebration.service';
 import { SnackBarService } from '../../../shared/services/snack-bar.service';
+import { BrowserNotificationService } from '../../../core/services/browser-notification.service';
 
 describe('PomodoroTimerService', () => {
   let service: PomodoroTimerService;
@@ -77,6 +78,111 @@ describe('PomodoroTimerService', () => {
     vi.restoreAllMocks();
   });
 
+  describe('replacement hold', () => {
+    it('drains delayed completion and startup recovery before releasing a hold', async () => {
+      let finishNotification!: () => void;
+      const notification = vi.spyOn(TestBed.inject(BrowserNotificationService), 'show').mockReturnValueOnce(
+        new Promise<void>((resolve) => {
+          finishNotification = resolve;
+        }),
+      );
+      await service.startTimer();
+      let resolveRates!: (value: PomodoroRewardRates) => void;
+      rewardRatesMock.getRates.mockReturnValueOnce(
+        new Promise<PomodoroRewardRates>((resolve) => {
+          resolveRates = resolve;
+        }),
+      );
+      await vi.advanceTimersByTimeAsync(1_500_000);
+      let acquired = false;
+      const holding = service.holdForReplacement().then((hold) => {
+        acquired = true;
+        return hold;
+      });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(acquired).toBe(false);
+      resolveRates({ work: 100, study: 125 });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(notification).toHaveBeenCalledTimes(1);
+      expect(acquired).toBe(false);
+      finishNotification();
+      const hold = await holding;
+      hold.commit();
+      const calls = storageMock.completeSession.mock.calls.length;
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(storageMock.completeSession.mock.calls.length).toBe(calls);
+      expect(notification).toHaveBeenCalledTimes(1);
+      expect(service.currentSessionId()).toBeNull();
+
+      let resolveRecovery!: (rows: PomodoroSession[]) => void;
+      createService(
+        new Promise<PomodoroSession[]>((resolve) => {
+          resolveRecovery = resolve;
+        }),
+      );
+      const recoveryHold = service.holdForReplacement();
+      resolveRecovery([]);
+      const recovered = await recoveryHold;
+      recovered.commit();
+      expect(service.isRestoring()).toBe(false);
+    });
+
+    it('preserves the timer while held and resumes its original deadline on rollback', async () => {
+      await service.startTimer();
+      const id = service.currentSessionId();
+      const hold = await service.holdForReplacement();
+      await vi.advanceTimersByTimeAsync(10_000);
+      await service.stopTimer();
+      expect(service.currentSessionId()).toBe(id);
+      expect(storageMock.cancelSession).not.toHaveBeenCalled();
+      hold.release();
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(service.timeRemaining()).toBe(1489);
+    });
+    it('catches up on a visibility change it swallowed while held', async () => {
+      await service.startTimer();
+      const hold = await service.holdForReplacement();
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+      const rateReads = rewardRatesMock.getRates.mock.calls.length;
+      hold.release();
+      await vi.advanceTimersByTimeAsync(0);
+      // Going hidden schedules the completion notification, which reads the configured rate.
+      expect(rewardRatesMock.getRates.mock.calls.length).toBe(rateReads + 1);
+    });
+    it('resets only memory on commit, blocking old completion and same-id cancellation', async () => {
+      await service.startTimer();
+      const hold = await service.holdForReplacement();
+      hold.commit();
+      await service.stopTimer();
+      await vi.advanceTimersByTimeAsync(1_600_000);
+      expect(service.isActive()).toBe(false);
+      expect(storageMock.cancelSession).not.toHaveBeenCalled();
+      expect(storageMock.completeSession).not.toHaveBeenCalled();
+    });
+    it('drains delayed session starts before allowing replacement', async () => {
+      let resolve!: () => void;
+      storageMock.saveSession.mockReturnValueOnce(
+        new Promise<void>((done) => {
+          resolve = done;
+        }),
+      );
+      const starting = service.startTimer();
+      let held = false;
+      const holding = service.holdForReplacement().then((value) => {
+        held = true;
+        return value;
+      });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(held).toBe(false);
+      resolve();
+      await starting;
+      const hold = await holding;
+      hold.commit();
+      expect(service.currentSessionId()).toBeNull();
+    });
+  });
+
   describe('Initial State and Configuration', () => {
     it('should initialize with default 25 minutes and WORK engagement type', () => {
       expect(service.durationMinutes()).toBe(25);
@@ -120,7 +226,7 @@ describe('PomodoroTimerService', () => {
 
       expect(service.isActive()).toBe(true);
       expect(service.currentSessionId()).toBe('12345678-1234-1234-1234-123456789abc');
-      expect(storageMock.saveSession).toHaveBeenCalledWith(
+      expect(storageMock.saveSession.mock.calls.map((call: unknown[]) => call[0])).toContainEqual(
         expect.objectContaining({
           id: '12345678-1234-1234-1234-123456789abc',
           durationMinutes: 25,
@@ -147,7 +253,9 @@ describe('PomodoroTimerService', () => {
       expect(service.isActive()).toBe(false);
       expect(service.currentSessionId()).toBeNull();
       expect(service.timeRemaining()).toBe(1500);
-      expect(storageMock.cancelSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc');
+      expect(storageMock.cancelSession.mock.calls.map((call: unknown[]) => call.slice(0, 1))).toContainEqual([
+        '12345678-1234-1234-1234-123456789abc',
+      ]);
       expect(storageMock.completeSession).not.toHaveBeenCalled();
       expect(celebrationMock.show).not.toHaveBeenCalled();
     });
@@ -160,7 +268,10 @@ describe('PomodoroTimerService', () => {
 
       expect(service.isActive()).toBe(false);
       // 25 min work session = 100 ₴ (1.0x base)
-      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 100);
+      expect(storageMock.completeSession.mock.calls.map((call: unknown[]) => call.slice(0, 2))).toContainEqual([
+        '12345678-1234-1234-1234-123456789abc',
+        100,
+      ]);
       expect(celebrationMock.show).toHaveBeenCalledWith(expect.objectContaining({ amount: 100 }));
     });
 
@@ -170,7 +281,10 @@ describe('PomodoroTimerService', () => {
 
       await vi.advanceTimersByTimeAsync(1500 * 1000);
 
-      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 40);
+      expect(storageMock.completeSession.mock.calls.map((call: unknown[]) => call.slice(0, 2))).toContainEqual([
+        '12345678-1234-1234-1234-123456789abc',
+        40,
+      ]);
     });
   });
 
@@ -222,7 +336,9 @@ describe('PomodoroTimerService', () => {
       await vi.advanceTimersByTimeAsync(0);
 
       expect(service.currentSessionId()).toBe('newest');
-      expect(storageMock.cancelSession).toHaveBeenCalledWith('orphaned');
+      expect(storageMock.cancelSession.mock.calls.map((call: unknown[]) => call.slice(0, 1))).toContainEqual([
+        'orphaned',
+      ]);
       expect(storageMock.cancelSession).not.toHaveBeenCalledWith('newest');
     });
 
@@ -262,7 +378,10 @@ describe('PomodoroTimerService', () => {
       await vi.advanceTimersByTimeAsync(0);
 
       expect(service.isActive()).toBe(false);
-      expect(storageMock.completeSession).toHaveBeenCalledWith('expired-session-1', 100);
+      expect(storageMock.completeSession.mock.calls.map((call: unknown[]) => call.slice(0, 2))).toContainEqual([
+        'expired-session-1',
+        100,
+      ]);
       expect(celebrationMock.show).toHaveBeenCalledWith(expect.objectContaining({ amount: 100 }));
     });
   });
@@ -301,7 +420,10 @@ describe('PomodoroTimerService', () => {
       document.dispatchEvent(new Event('visibilitychange'));
 
       expect(service.isActive()).toBe(false);
-      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 100);
+      expect(storageMock.completeSession.mock.calls.map((call: unknown[]) => call.slice(0, 2))).toContainEqual([
+        '12345678-1234-1234-1234-123456789abc',
+        100,
+      ]);
       expect(celebrationMock.show).toHaveBeenCalledWith(expect.objectContaining({ amount: 100 }));
     });
   });
@@ -316,7 +438,10 @@ describe('PomodoroTimerService', () => {
       await vi.advanceTimersByTimeAsync(20 * 60 * 1000);
 
       // Math.trunc(100 * 0.5) = 50
-      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 50);
+      expect(storageMock.completeSession.mock.calls.map((call: unknown[]) => call.slice(0, 2))).toContainEqual([
+        '12345678-1234-1234-1234-123456789abc',
+        50,
+      ]);
     });
 
     it('should calculate Tier 1 (15-24 min) study reward: 0.5x base', async () => {
@@ -328,7 +453,10 @@ describe('PomodoroTimerService', () => {
       await vi.advanceTimersByTimeAsync(20 * 60 * 1000);
 
       // Math.trunc(125 * 0.5) = 62
-      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 62);
+      expect(storageMock.completeSession.mock.calls.map((call: unknown[]) => call.slice(0, 2))).toContainEqual([
+        '12345678-1234-1234-1234-123456789abc',
+        62,
+      ]);
     });
 
     it('should calculate Tier 3 (50-75 min) reward: 2.0x base', async () => {
@@ -340,7 +468,10 @@ describe('PomodoroTimerService', () => {
       await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
 
       // Math.trunc(100 * 2.0) = 200
-      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 200);
+      expect(storageMock.completeSession.mock.calls.map((call: unknown[]) => call.slice(0, 2))).toContainEqual([
+        '12345678-1234-1234-1234-123456789abc',
+        200,
+      ]);
     });
 
     it('should calculate Tier 4 (80-120 min) reward: 3.0x base', async () => {
@@ -352,7 +483,10 @@ describe('PomodoroTimerService', () => {
       await vi.advanceTimersByTimeAsync(90 * 60 * 1000);
 
       // Math.trunc(125 * 3.0) = 375
-      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 375);
+      expect(storageMock.completeSession.mock.calls.map((call: unknown[]) => call.slice(0, 2))).toContainEqual([
+        '12345678-1234-1234-1234-123456789abc',
+        375,
+      ]);
     });
   });
 
@@ -390,7 +524,10 @@ describe('PomodoroTimerService', () => {
       await service.startTimer();
       await vi.advanceTimersByTimeAsync(15 * 60 * 1000);
 
-      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', shown);
+      expect(storageMock.completeSession.mock.calls.map((call: unknown[]) => call.slice(0, 2))).toContainEqual([
+        '12345678-1234-1234-1234-123456789abc',
+        shown,
+      ]);
     });
   });
 
@@ -463,7 +600,10 @@ describe('PomodoroTimerService', () => {
       await service.startTimer();
       await vi.advanceTimersByTimeAsync(1500 * 1000);
 
-      expect(storageMock.completeSession).toHaveBeenCalledWith('12345678-1234-1234-1234-123456789abc', 100);
+      expect(storageMock.completeSession.mock.calls.map((call: unknown[]) => call.slice(0, 2))).toContainEqual([
+        '12345678-1234-1234-1234-123456789abc',
+        100,
+      ]);
     });
 
     it('should catch error gracefully if getAllSessions fails on startup', async () => {

@@ -11,30 +11,8 @@
   margin: 0;
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: t.space(3);
-
-  button {
-    flex: 1 1 auto;
-    min-height: t.$touch-target;
-  }
-}
-
 .last-backup {
   font: var(--mat-sys-label-large);
   color: var(--mat-sys-on-surface-variant);
   margin: 0;
-}
-
-.primary-content {
-  display: inline-flex;
-  align-items: center;
-  gap: t.space(2);
-
-  mat-icon {
-    @include t.icon-size(sm);
-    margin: 0;
-  }
 }
