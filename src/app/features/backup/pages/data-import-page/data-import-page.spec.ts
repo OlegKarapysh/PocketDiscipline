@@ -143,6 +143,30 @@ describe('DataImportPage', () => {
     expect(snapshot).toHaveBeenCalledTimes(2);
     expect(fixture.componentInstance.state()).toBe('review');
   });
+  it('keeps Replace blocked while a failed restore re-reads the device and keeps a re-read failure', async () => {
+    const { fixture, input, replace, snapshot } = setup();
+    await fixture.componentInstance.selectFile(input);
+    replace.mockRejectedValueOnce(new BackupImportError('device-changed', 'Device changed.'));
+    let fail!: (error: Error) => void;
+    snapshot.mockReturnValueOnce(
+      new Promise((_, reject) => {
+        fail = reject;
+      }),
+    );
+    const restoring = fixture.componentInstance.restore();
+    await vi.waitFor(() => {
+      expect(snapshot).toHaveBeenCalledTimes(2);
+    });
+    expect(fixture.componentInstance.busy()).toBe(true);
+    await fixture.componentInstance.restore();
+    expect(replace).toHaveBeenCalledTimes(1);
+    fail(new Error('Read failed'));
+    await restoring;
+    expect(fixture.componentInstance.comparison()).toBeUndefined();
+    expect(fixture.componentInstance.error()).toBe(
+      'Could not load current device data. Select the backup again to retry.',
+    );
+  });
   it('keeps the committed result when navigation fails', async () => {
     const { fixture, input, navigate, replace } = setup();
     await fixture.componentInstance.selectFile(input);

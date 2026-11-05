@@ -140,8 +140,11 @@ export class DataImportPage {
       await this.importer.replace(prepared, baseline);
     } catch (error) {
       if (this.destroyed()) return;
-      this.state.set('review');
+      // Stays 'replacing' until the review shows current data, so Replace cannot run on a stale baseline.
       await this.refreshBaseline();
+      this.state.set('review');
+      // With no baseline there is nothing to confirm, and refreshBaseline has said to select the file again.
+      if (!this.baseline()) return;
       this.error.set(
         error instanceof BackupImportError
           ? error.message
