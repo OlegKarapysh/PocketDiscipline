@@ -18,10 +18,14 @@ export class BackupImportService {
 
   async prepare(file: File): Promise<ValidatedBackup> {
     const envelope = await this.validation.validate(file, this.db.verno);
-    const data = this.validation.validateData(
-      this.schema.upgrade(envelope.data, envelope.schemaVersion, this.db.verno),
-      this.db.verno,
-    );
+    const transformed = envelope.schemaVersion !== this.db.verno;
+    // A current-schema file was already validated against this schema; only upgraded data is checked again.
+    const data = transformed
+      ? this.validation.validateData(
+          this.schema.upgrade(envelope.data, envelope.schemaVersion, this.db.verno),
+          this.db.verno,
+        )
+      : envelope.data;
     const profile = data['users'][0];
     if (
       typeof profile !== 'object' ||
@@ -32,7 +36,7 @@ export class BackupImportService {
       throw new Error('The backup profile is invalid.');
     return {
       envelope: { ...envelope, data },
-      transformed: envelope.schemaVersion !== this.db.verno,
+      transformed,
       counts: Object.fromEntries(Object.entries(data).map(([table, rows]) => [table, rows.length])),
       balance: profile.balance,
     };
