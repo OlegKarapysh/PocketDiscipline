@@ -1,0 +1,35 @@
+@use '../../../../../styles/tokens' as t;
+
+:host {
+  display: grid;
+  gap: t.space(3);
+  min-width: 0;
+}
+
+.note {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: t.space(3);
+
+  button {
+    flex: 1 1 auto;
+    min-height: t.$touch-target;
+  }
+}
+
+.primary-content {
+  display: inline-flex;
+  align-items: center;
+  gap: t.space(2);
+
+  mat-icon {
+    @include t.icon-size(sm);
+    margin: 0;
+  }
+}

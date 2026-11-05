@@ -9,23 +9,5 @@
       {{ age.label }}
     </p>
   }
-  @if (ready()) {
-    <p class="note" role="status">Your backup is ready to share.</p>
-  }
-  <div class="actions" [attr.aria-busy]="preparing()">
-    <button mat-flat-button type="button" [disabled]="preparing()" (click)="export()">
-      <span class="primary-content">
-        @if (preparing()) {
-          <mat-progress-spinner mode="indeterminate" [diameter]="20" aria-label="Preparing backup" />
-        } @else {
-          <mat-icon>ios_share</mat-icon>
-        }
-        {{ primaryLabel() }}
-      </span>
-    </button>
-    <button mat-stroked-button type="button" [disabled]="preparing()" (click)="download()">
-      <mat-icon>download</mat-icon>
-      Download
-    </button>
-  </div>
+  <app-backup-export-actions />
 </app-section-card>
