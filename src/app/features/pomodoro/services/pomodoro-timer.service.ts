@@ -43,6 +43,10 @@ export class PomodoroTimerService implements OnDestroy {
   private expectedEndTime = 0;
   private backgroundTimeStart: number | null = null;
   private isDestroyed = false;
+  private replacementHeld = false;
+  private generation = 0;
+  private completingGeneration: number | undefined;
+  private readonly pending = new Set<Promise<void>>();
 
   private storage = inject(PomodoroStorageService);
   private rewardRates = inject(PomodoroRewardRateService);
@@ -67,7 +71,7 @@ export class PomodoroTimerService implements OnDestroy {
   });
 
   constructor() {
-    void this.restoreActiveSession();
+    void this.track(() => this.restoreActiveSession());
     void this.requestNotificationPermission();
 
     if (typeof document !== 'undefined') {
@@ -85,6 +89,7 @@ export class PomodoroTimerService implements OnDestroy {
 
   private cleanup(): void {
     this.isDestroyed = true;
+    this.generation++;
     this.clearInterval();
     if (typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.handleVisibilityChange);
@@ -92,7 +97,7 @@ export class PomodoroTimerService implements OnDestroy {
   }
 
   private handleVisibilityChange = (): void => {
-    if (this.isDestroyed) {
+    if (this.isDestroyed || this.replacementHeld) {
       return;
     }
 
@@ -111,20 +116,27 @@ export class PomodoroTimerService implements OnDestroy {
     } else {
       if (this.isActive()) {
         this.backgroundTimeStart = Date.now();
-        void this.scheduleCompletionNotification();
+        void this.track(() => this.scheduleCompletionNotification());
       }
     }
   };
 
   setConfig(config: TimerConfig): void {
-    if (this.isActive()) return;
+    if (this.isActive() || this.replacementHeld) return;
     this.durationMinutes.set(config.durationMinutes);
     this.engagementType.set(config.engagementType);
     this.timeRemaining.set(config.durationMinutes * 60);
   }
 
-  async startTimer(): Promise<void> {
+  startTimer(): Promise<void> {
+    if (this.replacementHeld || this.isDestroyed) return Promise.resolve();
+    return this.track(() => this.startSession());
+  }
+
+  private async startSession(): Promise<void> {
     if (this.isActive() || this.isRestoring()) return;
+    this.generation++;
+    const valid = this.operationGuard();
 
     const id = crypto.randomUUID();
     this.currentSessionId.set(id);
@@ -141,35 +153,41 @@ export class PomodoroTimerService implements OnDestroy {
     };
 
     try {
-      await this.storage.saveSession(session);
-      this.startInterval();
+      await this.storage.saveSession(session, valid);
+      if (valid()) this.startInterval();
     } catch (error) {
       console.error('Failed to start pomodoro timer session:', error);
-      this.resetTimer();
+      if (valid()) this.resetTimer();
       throw error;
     }
   }
 
-  async stopTimer(): Promise<void> {
+  stopTimer(): Promise<void> {
+    if (this.replacementHeld || this.isDestroyed) return Promise.resolve();
+    return this.track(() => this.stopSession());
+  }
+
+  private async stopSession(): Promise<void> {
     if (!this.isActive()) return;
+    const valid = this.operationGuard();
     this.clearInterval();
 
     const id = this.currentSessionId();
     try {
       if (id) {
-        await this.storage.cancelSession(id);
+        await this.storage.cancelSession(id, valid);
       }
     } catch (error) {
       console.error('Failed to stop pomodoro timer session:', error);
       throw error;
     } finally {
-      this.resetTimer();
+      if (valid()) this.resetTimer();
     }
   }
 
   private startInterval(): void {
     this.clearInterval();
-    if (this.isDestroyed) {
+    if (this.isDestroyed || this.replacementHeld) {
       return;
     }
     this.timerInterval = setInterval(() => {
@@ -185,7 +203,7 @@ export class PomodoroTimerService implements OnDestroy {
   }
 
   private triggerCompleteSession(): void {
-    void this.completeSession();
+    if (!this.replacementHeld && !this.isDestroyed) void this.track(() => this.completeSession());
   }
 
   private clearInterval(): void {
@@ -196,23 +214,27 @@ export class PomodoroTimerService implements OnDestroy {
   }
 
   private async completeSession(): Promise<void> {
+    const generation = this.generation;
+    if (this.completingGeneration === generation) return;
+    const valid = this.operationGuard();
     this.clearInterval();
     const id = this.currentSessionId();
     if (!id) return;
-    this.currentSessionId.set(null);
+    this.completingGeneration = generation;
 
     const engagementType = this.engagementType();
     const durationMinutes = this.durationMinutes();
     try {
       const reward = await this.calculateReward(durationMinutes, engagementType);
-      if (!(await this.storage.completeSession(id, reward))) return;
+      if (!valid() || !(await this.storage.completeSession(id, reward, valid)) || !valid()) return;
 
-      this.notifications
+      await this.notifications
         .show(COMPLETION_TITLE, { body: this.rewardMessage(reward, engagementType), icon: 'icons/icon-192x192.png' })
         .catch((err: unknown) => {
           console.error('Failed to show notification:', err);
         });
 
+      if (!valid()) return;
       this.celebration
         .show({
           title: COMPLETION_TITLE,
@@ -224,7 +246,8 @@ export class PomodoroTimerService implements OnDestroy {
       console.error('Failed to complete pomodoro session:', err);
       this.snackBar.error(err, 'Failed to save completed session reward.');
     } finally {
-      this.resetTimer();
+      if (valid()) this.resetTimer();
+      if (this.completingGeneration === generation) this.completingGeneration = undefined;
     }
   }
 
@@ -251,9 +274,10 @@ export class PomodoroTimerService implements OnDestroy {
   }
 
   private async restoreActiveSession(): Promise<void> {
+    const valid = this.operationGuard();
     try {
       const sessions = await this.storage.getAllSessions();
-      if (this.isDestroyed) {
+      if (!valid()) {
         return;
       }
       const activeSessions = sessions.filter((s) => s.status === PomodoroSessionStatus.ACTIVE);
@@ -282,12 +306,12 @@ export class PomodoroTimerService implements OnDestroy {
       // Only one session runs at a time. An older active row never ran as a timer (it was started
       // while an earlier restore was still loading), so it is cancelled rather than paid out later.
       for (const session of orphaned) {
-        await this.storage.cancelSession(session.id);
+        if (valid()) await this.storage.cancelSession(session.id, valid);
       }
     } catch (e) {
       console.error('Failed to restore active session:', e);
     } finally {
-      this.isRestoring.set(false);
+      if (valid()) this.isRestoring.set(false);
     }
   }
 
@@ -302,23 +326,30 @@ export class PomodoroTimerService implements OnDestroy {
   }
 
   private async scheduleCompletionNotification(): Promise<void> {
+    const valid = this.operationGuard();
     try {
       const durationMinutes = this.durationMinutes();
       const engagementType = this.engagementType();
       const reward = await this.calculateReward(durationMinutes, engagementType);
       // The tab may have come back, and cancelled the notifications, while the rate was read.
-      if (document.visibilityState !== 'hidden' || !this.isActive()) return;
+      if (!valid() || this.replacementHeld || document.visibilityState !== 'hidden' || !this.isActive()) return;
       await this.scheduleNotification(
         COMPLETION_TITLE,
         this.rewardMessage(reward, engagementType),
         this.expectedEndTime,
+        valid,
       );
     } catch (err: unknown) {
       console.error('Failed to schedule notification:', err);
     }
   }
 
-  private async scheduleNotification(title: string, body: string, timestamp: number): Promise<void> {
+  private async scheduleNotification(
+    title: string,
+    body: string,
+    timestamp: number,
+    valid: () => boolean,
+  ): Promise<void> {
     if (
       typeof window === 'undefined' ||
       !('Notification' in window) ||
@@ -331,7 +362,7 @@ export class PomodoroTimerService implements OnDestroy {
 
     try {
       const reg = await navigator.serviceWorker.getRegistration();
-      if (reg) {
+      if (reg && valid() && !this.replacementHeld && this.isActive() && document.visibilityState === 'hidden') {
         await reg.showNotification(title, {
           body,
           icon: 'icons/icon-192x192.png',
@@ -359,5 +390,53 @@ export class PomodoroTimerService implements OnDestroy {
     } catch (err: unknown) {
       console.error('Failed to cancel scheduled notifications:', err);
     }
+  }
+
+  async ready(): Promise<void> {
+    while (this.pending.size) await Promise.allSettled([...this.pending]);
+  }
+
+  async holdForReplacement(): Promise<{ commit: () => void; release: () => void }> {
+    if (this.replacementHeld) throw new Error('A data replacement is already in progress.');
+    this.replacementHeld = true;
+    this.clearInterval();
+    await this.ready();
+    let finished = false;
+    return {
+      commit: () => {
+        if (finished) return;
+        finished = true;
+        this.generation++;
+        this.resetTimer();
+        this.backgroundTimeStart = null;
+        this.isRestoring.set(false);
+        this.replacementHeld = false;
+        void this.cancelScheduledNotifications();
+      },
+      release: () => {
+        if (finished) return;
+        finished = true;
+        this.replacementHeld = false;
+        if (this.isActive()) {
+          this.timeRemaining.set(Math.max(0, Math.round((this.expectedEndTime - Date.now()) / 1000)));
+          this.startInterval();
+        }
+      },
+    };
+  }
+
+  private operationGuard(): () => boolean {
+    const generation = this.generation;
+    return () => generation === this.generation && !this.isDestroyed;
+  }
+
+  private track(work: () => Promise<void>): Promise<void> {
+    const operation = work();
+    this.pending.add(operation);
+    void operation.then(
+      () => this.pending.delete(operation),
+      () => this.pending.delete(operation),
+    );
+    return operation;
   }
 }
