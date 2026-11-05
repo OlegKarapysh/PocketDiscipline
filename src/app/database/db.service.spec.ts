@@ -85,6 +85,20 @@ describe('DbService', () => {
     expect(service.pomodoroRewardRates).toBeDefined();
   });
 
+  it('does not copy stale legacy sessions over an authoritative backed-up profile on ready', async () => {
+    await stageVersion8(async (db) => {
+      await db.table('users').put({ ...existingUser, lastExportedAt: 0 });
+      await db.table('pomodoroSessions').put({ ...session, rewardEarned: 20 });
+    });
+    const legacy = new Dexie('PomodoroDatabase');
+    legacy.version(1).stores({ sessions: 'id' });
+    await legacy.table('sessions').put({ ...session, rewardEarned: 999 });
+    legacy.close();
+    await service.open();
+    expect(await service.pomodoroSessions.toArray()).toEqual([{ ...session, rewardEarned: 20 }]);
+    expect(await Dexie.exists('PomodoroDatabase')).toBe(true);
+  });
+
   it('should declare the schema up to version 11', () => {
     expect(service.verno).toBe(11);
   });

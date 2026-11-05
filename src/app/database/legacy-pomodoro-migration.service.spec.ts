@@ -43,6 +43,14 @@ describe('LegacyPomodoroMigrationService', () => {
 
   const sessionsById = async () => new Map((await target.toArray()).map((session) => [session.id, session]));
 
+  it('preserves authoritative main rows and leaves legacy source untouched', async () => {
+    await stageLegacyDb([{ ...validSession, rewardEarned: 999 }]);
+    await target.put(validSession);
+    await service.migrate(target, true);
+    expect(await target.toArray()).toEqual([validSession]);
+    expect(await Dexie.exists(LEGACY_DB_NAME)).toBe(true);
+  });
+
   it('should skip migration when legacy database does not exist', async () => {
     const deleteSpy = vi.spyOn(Dexie, 'delete');
 
