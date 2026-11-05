@@ -15,7 +15,7 @@ describe('DataImportPage', () => {
   const prepared: ValidatedBackup = { envelope: backupFixture(), transformed: false, counts: {}, balance: -12 };
   function setup() {
     const prepare = vi.fn<(file: File) => Promise<ValidatedBackup>>().mockResolvedValue(prepared);
-    const baseline: DeviceSnapshot = { data: backupFixture().data, canonical: 'baseline', counts: {}, balance: 100 };
+    const baseline: DeviceSnapshot = { canonical: 'baseline', counts: {}, balance: 100 };
     const snapshot = vi.fn().mockResolvedValue(baseline);
     const replace = vi.fn().mockResolvedValue(undefined);
     const ask = vi.fn().mockReturnValue(of(true));

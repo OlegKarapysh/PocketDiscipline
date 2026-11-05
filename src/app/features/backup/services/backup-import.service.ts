@@ -105,7 +105,6 @@ export class BackupImportService {
       ),
     );
     return {
-      data,
       canonical,
       counts: Object.fromEntries(Object.entries(data).map(([table, rows]) => [table, rows.length])),
       balance: profile['balance'],
