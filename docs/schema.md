@@ -21,6 +21,14 @@ either discards existing users' IndexedDB data. Add a new version; never edit an
 The current version is **11**. IndexedDB itself reports ten times that, 110: Dexie multiplies its
 version numbers by 10.
 
+### Backup-import compatibility
+
+Every new database schema version MUST define and test the corresponding backup-import
+transformation from the previous version, including an explicit identity transformation when the
+stored backup shape is unchanged. Restore applies these transformations in order and validates the
+complete current-schema result before writing any device data. Keep them consistent with the
+database upgrade rules; see spec 015 in `specs/015-data-import/spec.md`.
+
 ### Money
 
 Every money field is an **integer number of whole hryvnias**: there are no kopiykas anywhere in the
@@ -235,6 +243,11 @@ export interface WithdrawalRecord {
 
 #### `rewards` _(Version 8)_
 
+Restore preserves documented legacy optional `description` and `icon` strings and the legacy
+`archived` status. Current producers emit `active`/`claimed`, omit `description`/`icon`, and allow
+`updatedAt` to be absent. Stored money can be zero after the version-9 rounding migration, including
+reward costs and withdrawal amounts; restore validates stored domains rather than creation-form limits.
+
 **Primary Key**: `id`  
 **Indexed Properties**: `id`, `categoryId`, `status`, `type`, `createdAt`  
 **Description**: Reward store catalog items defining repeatable or one-time milestone rewards and their costs.
@@ -255,7 +268,7 @@ export interface RewardItem {
   claimCount: number; // Number of times claimed (for repeatable)
   claimedAt?: number | null; // Timestamp of first/milestone claim
   createdAt: number; // Creation timestamp
-  updatedAt: number; // Last updated timestamp
+  updatedAt?: number; // Absent on some persisted rewards
 }
 ```
 
@@ -263,16 +276,16 @@ export interface RewardItem {
 
 **Primary Key**: `id`  
 **Indexed Properties**: `id`, `name`, `isProtected`  
-**Description**: Categories for organizing rewards and withdrawals. Includes the protected default fallback category `general` (`General`).
+**Description**: Categories for organizing rewards and withdrawals. Includes the protected default fallback category `cat-general` (`General`).
 
 ```typescript
 export interface RewardCategory {
-  id: string; // UUID or fixed ID ('general')
+  id: string; // UUID or fixed ID ('cat-general')
   name: string; // Category display name
   color: string; // Hex color code (e.g. #6b7280)
   icon: string; // Material icon name
   isDefault: boolean; // Built-in seed category flag
-  isProtected: boolean; // Protected from deletion flag (true for 'general')
+  isProtected: boolean; // Protected from deletion flag (true for 'cat-general')
   createdAt: number; // Creation timestamp
 }
 ```
