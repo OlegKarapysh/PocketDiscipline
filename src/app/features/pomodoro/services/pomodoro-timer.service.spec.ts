@@ -139,6 +139,17 @@ describe('PomodoroTimerService', () => {
       await vi.advanceTimersByTimeAsync(1000);
       expect(service.timeRemaining()).toBe(1489);
     });
+    it('catches up on a visibility change it swallowed while held', async () => {
+      await service.startTimer();
+      const hold = await service.holdForReplacement();
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+      const rateReads = rewardRatesMock.getRates.mock.calls.length;
+      hold.release();
+      await vi.advanceTimersByTimeAsync(0);
+      // Going hidden schedules the completion notification, which reads the configured rate.
+      expect(rewardRatesMock.getRates.mock.calls.length).toBe(rateReads + 1);
+    });
     it('resets only memory on commit, blocking old completion and same-id cancellation', async () => {
       await service.startTimer();
       const hold = await service.holdForReplacement();

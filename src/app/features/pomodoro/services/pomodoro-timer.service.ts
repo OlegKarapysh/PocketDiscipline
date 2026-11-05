@@ -399,6 +399,8 @@ export class PomodoroTimerService implements OnDestroy {
   async holdForReplacement(): Promise<{ commit: () => void; release: () => void }> {
     if (this.replacementHeld) throw new Error('A data replacement is already in progress.');
     this.replacementHeld = true;
+    // Visibility events are ignored while held; release catches up on a change the hold swallowed.
+    const visibilityAtHold = typeof document === 'undefined' ? undefined : document.visibilityState;
     this.clearInterval();
     await this.ready();
     let finished = false;
@@ -420,6 +422,9 @@ export class PomodoroTimerService implements OnDestroy {
         if (this.isActive()) {
           this.timeRemaining.set(Math.max(0, Math.round((this.expectedEndTime - Date.now()) / 1000)));
           this.startInterval();
+        }
+        if (visibilityAtHold !== undefined && document.visibilityState !== visibilityAtHold) {
+          this.handleVisibilityChange();
         }
       },
     };
