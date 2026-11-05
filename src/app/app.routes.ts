@@ -26,6 +26,11 @@ export const routes: Routes = [
     children: [
       { path: '', loadComponent: () => import('./features/settings/settings').then((m) => m.Settings) },
       {
+        path: 'data-import',
+        loadComponent: () =>
+          import('./features/backup/pages/data-import-page/data-import-page').then((m) => m.DataImportPage),
+      },
+      {
         path: 'jar-import',
         loadComponent: () =>
           import('./features/jar-import/pages/jar-import-page/jar-import-page').then((m) => m.JarImportPage),

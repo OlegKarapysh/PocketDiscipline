@@ -1,0 +1,66 @@
+<app-page-header title="Import data" />
+<div class="import-grid">
+  <app-section-card heading="Choose a backup">
+    <p>Restore a PocketDiscipline backup. This replaces all data on this device. Maximum file size: 50 MiB.</p>
+    <input
+      #picker
+      type="file"
+      accept=".txt,.json,text/plain,application/json"
+      class="picker"
+      [disabled]="busy()"
+      (change)="selectFile(picker)"
+    />
+    <div class="file-row">
+      <button mat-flat-button type="button" class="choose-button" [disabled]="busy()" (click)="picker.click()">
+        <mat-icon>upload_file</mat-icon>
+        Choose backup
+      </button>
+      @if (filename(); as name) {
+        <span class="file-name">{{ name }}</span>
+      }
+    </div>
+    @if (state() === 'checking') {
+      <div class="progress" role="status">
+        <mat-progress-spinner mode="indeterminate" [diameter]="24" aria-label="Checking backup" />
+        Checking backup…
+      </div>
+    }
+    @if (error(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+  </app-section-card>
+  @if (comparison(); as review) {
+    <app-section-card heading="Review backup">
+      <p>Exported {{ review.exportedAt | date: 'medium' }} · App {{ review.appVersion }}</p>
+      @if (review.transformed) {
+        <p>This older backup was upgraded. The values below show what will be restored.</p>
+      }
+      <div class="comparison-row"><strong>Data</strong><strong>Backup</strong><strong>This device</strong></div>
+      @for (row of review.rows; track row.table) {
+        <div class="comparison-row">
+          <span>{{ row.label }}</span
+          ><span class="pd-num">{{ row.incoming }}</span
+          ><span class="pd-num">{{ row.current }}</span>
+        </div>
+      }
+      <div class="balances">
+        <div>Backup balance <app-amount [value]="review.incomingBalance" /></div>
+        <div>This device <app-amount [value]="review.currentBalance" /></div>
+      </div>
+    </app-section-card>
+    <app-section-card heading="Keep a safety backup">
+      <p>Export current data to undo a mistaken replacement later. Taking a safety backup is optional.</p>
+      <app-backup-export-actions
+        primaryLabel="Export current data"
+        [disabled]="state() !== 'review' || safetyBusy()"
+        (busy)="exportBusy($event)"
+      />
+      <button mat-flat-button type="button" [disabled]="busy()" (click)="restore()">Replace data</button>
+      @if (state() === 'replacing') {
+        <div class="progress" role="status">
+          <mat-progress-spinner mode="indeterminate" [diameter]="24" aria-label="Replacing data" />Replacing data…
+        </div>
+      }
+    </app-section-card>
+  }
+</div>

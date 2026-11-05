@@ -66,7 +66,7 @@ describe('Settings', () => {
   });
 
   it('should render link to manage categories', () => {
-    const link = fixture.debugElement.query(By.css('.settings-link'));
+    const link = fixture.debugElement.query(By.css('a[routerLink="/rewards/categories"]'));
     expect(link).toBeTruthy();
     const linkEl = link.nativeElement as HTMLElement;
     expect(linkEl.textContent).toContain('Manage reward categories');
@@ -76,6 +76,11 @@ describe('Settings', () => {
     const link = fixture.debugElement.query(By.css('a[routerLink="/settings/telegram-import"]'));
     expect(link).toBeTruthy();
     expect((link.nativeElement as HTMLElement).textContent).toContain('Import Telegram scores');
+  });
+
+  it('opens the backup import page from Settings', () => {
+    const link = fixture.debugElement.query(By.css('a[routerLink="/settings/data-import"]'));
+    expect((link.nativeElement as HTMLElement).textContent).toContain('Import data');
   });
 
   it('should render pomodoro reward settings', () => {
