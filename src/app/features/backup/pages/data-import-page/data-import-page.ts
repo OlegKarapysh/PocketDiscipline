@@ -82,8 +82,7 @@ export class DataImportPage {
     this.filename.set(file.name);
     this.state.set('checking');
     try {
-      const prepared = await this.importer.prepare(file);
-      const baseline = await this.importer.snapshot();
+      const [prepared, baseline] = await Promise.all([this.importer.prepare(file), this.importer.snapshot()]);
       if (this.destroyed() || generation !== this.generation) return;
       this.baseline.set(baseline);
       this.prepared.set(prepared);
