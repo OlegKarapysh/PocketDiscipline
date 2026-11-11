@@ -8,14 +8,7 @@ import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 import type { CreateWithdrawalDto } from '../models/create-withdrawal.dto';
 import type { WithdrawalFilter } from '../models/withdrawal-filter.model';
 import { NOTES_MAX_LENGTH } from '../../../shared/constants/text-length.const';
-
-function getTodayDateString(): string {
-  const now = new Date();
-  const year = String(now.getFullYear());
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
+import { toDateKey } from '../../../core/dates/date-key';
 
 @Service()
 export class WithdrawalService {
@@ -55,7 +48,7 @@ export class WithdrawalService {
         title: trimmedTitle,
         categoryId: dto.categoryId,
         notes: dto.notes?.trim() ? dto.notes.trim() : undefined,
-        date: getTodayDateString(),
+        date: toDateKey(new Date()),
         timestamp: Date.now(),
         rewardId: dto.rewardId ?? null,
       };

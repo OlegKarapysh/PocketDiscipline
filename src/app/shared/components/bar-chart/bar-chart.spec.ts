@@ -1,7 +1,7 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../core/dates/date-key';
 import { BarChart } from './bar-chart';
 import type { BarChartBar } from './bar-chart-bar.model';
 import type { BarChartScale } from './bar-chart-scale.model';
@@ -21,7 +21,7 @@ describe('BarChart', () => {
     segments,
     tooltip: { title: key, rows: [], ...tooltip },
   });
-  const day = (offset: number) => new Date(2026, 0, 1 + offset).toLocaleDateString(DATE_LOCALE_CA);
+  const day = (offset: number) => toDateKey(new Date(2026, 0, 1 + offset));
   const days = (count: number) =>
     Array.from({ length: count }, (_, i) => bar(day(i), [{ value: 10, tone: 'primary' }]));
   // One bar per month from January 2020, labelled like a monthly chart ("Jan '20").
@@ -29,7 +29,7 @@ describe('BarChart', () => {
     Array.from({ length: count }, (_, i): BarChartBar => {
       const start = new Date(2020, i, 1);
       const label = `${start.toLocaleDateString('en-US', { month: 'short' })} '${String(start.getFullYear()).slice(-2)}`;
-      return { ...bar(start.toLocaleDateString(DATE_LOCALE_CA)), axisLabel: label };
+      return { ...bar(toDateKey(start)), axisLabel: label };
     });
 
   const render = (bars: BarChartBar[], scale = SCALE, width?: number) => {

@@ -9,16 +9,9 @@ import type { RewardStatus } from '../../../core/models/reward-status.type';
 import type { CreateRewardDto } from '../models/create-reward.dto';
 import type { UpdateRewardDto } from '../models/update-reward.dto';
 import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
+import { toDateKey } from '../../../core/dates/date-key';
 
 export const ERROR_TYPE_LOCKED = 'The type of a reward cannot change once it has been claimed';
-
-function getTodayDateString(): string {
-  const now = new Date();
-  const year = String(now.getFullYear());
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 @Service()
 export class RewardsService {
@@ -153,7 +146,7 @@ export class RewardsService {
         title: `Claimed: ${currentReward.title}`,
         categoryId: currentReward.categoryId,
         notes: `Redeemed ${currentReward.type === 'one-time' ? 'milestone' : 'reward'} from store`,
-        date: getTodayDateString(),
+        date: toDateKey(new Date()),
         timestamp: Date.now(),
         rewardId: currentReward.id,
       };

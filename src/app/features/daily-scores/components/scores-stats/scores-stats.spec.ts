@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { ScoresStats } from './scores-stats';
 import type { DailyScore } from '../../../../core/models/daily-score.model';
-import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../../core/dates/date-key';
 
 describe('ScoresStats', () => {
   let component: ScoresStats;
@@ -57,7 +57,7 @@ describe('ScoresStats', () => {
   });
 
   it('should display current streak when latest score is from today', async () => {
-    const todayStr = new Date().toLocaleDateString(DATE_LOCALE_CA);
+    const todayStr = toDateKey(new Date());
     const mockLatestScore: DailyScore = {
       date: todayStr,
       score: 10,
@@ -78,7 +78,7 @@ describe('ScoresStats', () => {
   it('should display current streak when latest score is from yesterday', async () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toLocaleDateString(DATE_LOCALE_CA);
+    const yesterdayStr = toDateKey(yesterday);
 
     const mockLatestScore: DailyScore = {
       date: yesterdayStr,

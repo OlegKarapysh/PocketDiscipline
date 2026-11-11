@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { EarningsChart } from './earnings-chart';
 import type { DailyEarningsRecord } from '../../models/daily-earnings-record.model';
-import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../../core/dates/date-key';
 
 describe('EarningsChart', () => {
   let fixture: ComponentFixture<EarningsChart>;
@@ -158,7 +158,7 @@ describe('EarningsChart', () => {
     // Every day of the range earns 10 ₴, all of it from goals.
     const daysFrom = (year: number, monthIndex: number, day: number, count: number): DailyEarningsRecord[] =>
       Array.from({ length: count }, (_, i) => ({
-        date: new Date(year, monthIndex, day + i).toLocaleDateString(DATE_LOCALE_CA),
+        date: toDateKey(new Date(year, monthIndex, day + i)),
         totalEarned: 10,
         goalsEarned: 10,
         dailyTasksEarned: 0,

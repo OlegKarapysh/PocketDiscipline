@@ -345,8 +345,10 @@ Do not extract when: the literal is self-evident at the call site (`0`, `2`, `''
 is used once in one file; or it is mock data in a spec.
 
 **Status: swept.** 262 module-level `SCREAMING_CASE` constants outside specs went down to 68, every one
-shared, opaque or a domain rule. Dexie's `'rw'` and `'granted'` are inlined, `DATE_LOCALE_CA` has one
-home in `core/constants/`, and snackbar durations live only in `SnackBarService`.
+shared, opaque or a domain rule. Dexie's `'rw'` and `'granted'` are inlined, and snackbar durations
+live only in `SnackBarService`. `DATE_LOCALE_CA` is gone: the local `YYYY-MM-DD` day key has one home,
+`toDateKey()` in `core/dates/date-key.ts`. Use it rather than formatting a date by hand or through a
+locale.
 
 **Anti-examples.** All four of these were live before the sweep:
 

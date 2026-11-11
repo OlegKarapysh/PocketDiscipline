@@ -1,7 +1,7 @@
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../../core/dates/date-key';
 import { PomodoroHistoryChart } from './pomodoro-history-chart';
 import type { DailyPomodoroTally } from '../../models/daily-pomodoro-tally.model';
 
@@ -17,7 +17,7 @@ describe('PomodoroHistoryChart', () => {
   });
   // Consecutive days from a date, each with the given work pomodoros.
   const daysFrom = (year: number, monthIndex: number, dayOfMonth: number, works: number[]) =>
-    works.map((work, i) => day(new Date(year, monthIndex, dayOfMonth + i).toLocaleDateString(DATE_LOCALE_CA), work));
+    works.map((work, i) => day(toDateKey(new Date(year, monthIndex, dayOfMonth + i)), work));
 
   const render = (days: DailyPomodoroTally[]) => {
     fixture.componentRef.setInput('days', days);

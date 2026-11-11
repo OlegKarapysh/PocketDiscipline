@@ -10,18 +10,12 @@ import type { CategorySpendingBreakdown } from '../models/category-spending-brea
 import type { SpendingTrendPoint } from '../models/spending-trend-point.model';
 import type { WithdrawalRecord } from '../../../core/models/withdrawal.model';
 import type { RewardCategory } from '../../../core/models/reward-category.model';
+import { toDateKey } from '../../../core/dates/date-key';
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function formatZeroPadded(num: number): string {
   return String(num).padStart(2, '0');
-}
-
-function formatDateString(date: Date): string {
-  const y = date.getFullYear();
-  const m = formatZeroPadded(date.getMonth() + 1);
-  const d = formatZeroPadded(date.getDate());
-  return `${y}-${m}-${d}`;
 }
 
 @Service()
@@ -32,7 +26,7 @@ export class SpendingAnalyticsService {
     return from(
       liveQuery(async () => {
         const now = new Date();
-        const todayStr = formatDateString(now);
+        const todayStr = toDateKey(now);
 
         let startDate: string | undefined;
         let endDate: string | undefined = todayStr;
@@ -41,7 +35,7 @@ export class SpendingAnalyticsService {
           startDate = `${now.getFullYear()}-${formatZeroPadded(now.getMonth() + 1)}-01`;
         } else if (period === 'last30') {
           const past30 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (30 - 1));
-          startDate = formatDateString(past30);
+          startDate = toDateKey(past30);
         } else if (period === 'thisYear') {
           startDate = `${now.getFullYear()}-01-01`;
           endDate = `${now.getFullYear()}-12-31`;
@@ -152,7 +146,7 @@ export class SpendingAnalyticsService {
       for (let i = 30 - 1; i >= 0; i--) {
         // Calendar days, not 24-hour steps: a DST change makes one day 23 or 25 hours long.
         const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
-        const dateStr = formatDateString(d);
+        const dateStr = toDateKey(d);
         const label = `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
         points.push({
           dateOrMonth: dateStr,

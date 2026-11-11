@@ -4,7 +4,7 @@ import { from, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { liveQuery } from 'dexie';
 import { DbService } from '../../../database/db.service';
-import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../core/dates/date-key';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
@@ -36,7 +36,7 @@ export class PomodoroStatsService {
   private summarise(startDate: string, endDate: string, sessions: readonly PomodoroSession[]): PomodoroPeriodSummary {
     const sessionsByDate = new Map<string, PomodoroSession[]>();
     for (const session of sessions) {
-      const date = new Date(session.endTime ?? session.startTime).toLocaleDateString(DATE_LOCALE_CA);
+      const date = toDateKey(new Date(session.endTime ?? session.startTime));
       const onDate = sessionsByDate.get(date);
       if (onDate) {
         onDate.push(session);
