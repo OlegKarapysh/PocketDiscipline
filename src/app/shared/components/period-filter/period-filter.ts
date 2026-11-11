@@ -6,7 +6,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { SegmentedControl } from '../segmented-control/segmented-control';
 import type { SegmentOption } from '../segmented-control/segment-option.model';
-import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../core/dates/date-key';
 import { ClockService } from '../../../core/services/clock.service';
 import type { PeriodFilterValue } from './period-filter-value.model';
 import type { PeriodPreset } from './period-preset.type';
@@ -75,8 +75,8 @@ export class PeriodFilter {
     this.activePreset.set('custom');
     this.filterChange.emit({
       preset: 'custom',
-      startDate: start.toLocaleDateString(DATE_LOCALE_CA),
-      endDate: end.toLocaleDateString(DATE_LOCALE_CA),
+      startDate: toDateKey(start),
+      endDate: toDateKey(end),
     });
   }
 }

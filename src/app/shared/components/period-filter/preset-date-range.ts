@@ -1,10 +1,10 @@
-import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../core/dates/date-key';
 import type { PeriodFilterValue } from './period-filter-value.model';
 import type { PeriodPreset } from './period-preset.type';
 
 export function getPresetDateRange(
   preset: PeriodPreset,
-  todayStr: string = new Date().toLocaleDateString(DATE_LOCALE_CA),
+  todayStr: string = toDateKey(new Date()),
 ): { startDate: string; endDate: string } {
   const [year, month, day] = todayStr.split('-').map(Number);
 
@@ -17,7 +17,7 @@ export function getPresetDateRange(
 
   // The range includes today.
   const startDateObj = new Date(year, month - 1, day - (days - 1));
-  const startDate = startDateObj.toLocaleDateString(DATE_LOCALE_CA);
+  const startDate = toDateKey(startDateObj);
 
   return { startDate, endDate: todayStr };
 }

@@ -14,7 +14,7 @@ import { DailyTaskForm } from '../daily-task-form/daily-task-form';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import type { DailyTaskDraft } from '../../models/daily-task-draft.model';
 import { NEW_ITEM_QUERY_PARAM } from '../../../../shared/constants/new-item-query-param.const';
-import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../../core/dates/date-key';
 import { MONEY_FORMAT } from '../../../../shared/constants/money-format.const';
 import { ClockService } from '../../../../core/services/clock.service';
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
@@ -67,8 +67,7 @@ export class DailyTaskList {
     }
     return (this.tasks() ?? []).map((task) => ({
       task,
-      done:
-        task.lastCompletedAt !== null && new Date(task.lastCompletedAt).toLocaleDateString(DATE_LOCALE_CA) === today,
+      done: task.lastCompletedAt !== null && toDateKey(new Date(task.lastCompletedAt)) === today,
       earned: earned.get(task.id) ?? null,
       // Priced again when the day changes: whether a completion continues the streak depends on the day.
       rewards: this.dailyTasksService.rewardsFor(task),

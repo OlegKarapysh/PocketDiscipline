@@ -1,4 +1,4 @@
-import { DATE_LOCALE_CA } from '../../core/constants/date-locale.const';
+import { toDateKey } from '../../core/dates/date-key';
 import type { ChartGranularity } from '../models/chart-granularity.type';
 import type { ChartPeriod } from '../models/chart-period.model';
 import type { ChartPeriodGrouping } from '../models/chart-period-grouping.model';
@@ -12,7 +12,7 @@ const PERIOD_START: Record<ChartGranularity, (date: string) => string> = {
   week: (date) => {
     const [year, month, day] = date.split('-').map(Number);
     const daysSinceMonday = (new Date(year, month - 1, day).getDay() + 6) % 7;
-    return new Date(year, month - 1, day - daysSinceMonday).toLocaleDateString(DATE_LOCALE_CA);
+    return toDateKey(new Date(year, month - 1, day - daysSinceMonday));
   },
   month: (date) => `${date.slice(0, 7)}-01`,
   year: (date) => `${date.slice(0, 4)}-01-01`,
@@ -31,10 +31,10 @@ export function datesInRange(startDate: string, endDate: string): string[] {
   // Each date is built from its own day number. Stepping one Date forward a day at a time would
   // drop the last day where DST starts at midnight: that midnight does not exist, so the stepped
   // Date moves to 01:00 and stays there, past the end date's 00:00.
-  const last = end.toLocaleDateString(DATE_LOCALE_CA);
+  const last = toDateKey(end);
   const dates: string[] = [];
   for (let offset = 0; dates.at(-1) !== last; offset++) {
-    dates.push(new Date(startYear, startMonth - 1, startDay + offset).toLocaleDateString(DATE_LOCALE_CA));
+    dates.push(toDateKey(new Date(startYear, startMonth - 1, startDay + offset)));
   }
   return dates;
 }

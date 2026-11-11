@@ -1,5 +1,5 @@
 import { Service, inject } from '@angular/core';
-import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../core/dates/date-key';
 import { FALLBACK_CATEGORY_ID } from '../../../core/constants/initial-reward-categories.const';
 import type { DailyScore } from '../../../core/models/daily-score.model';
 import type { DailyTaskCompletion } from '../../../core/models/daily-task-completion.model';
@@ -272,7 +272,7 @@ export class JarImportService {
     const latest = completions.reduce((max, completion) => Math.max(max, completion.completedAt), 0);
 
     let streak = 0;
-    for (let day = new Date(latest); days.has(day.toLocaleDateString(DATE_LOCALE_CA)); day.setDate(day.getDate() - 1)) {
+    for (let day = new Date(latest); days.has(toDateKey(day)); day.setDate(day.getDate() - 1)) {
       streak++;
     }
     return { streak, lastCompletedAt: latest };
@@ -450,7 +450,7 @@ export class JarImportService {
 
   private dayBefore(date: string): string {
     const [year, month, day] = date.split('-').map(Number);
-    return new Date(year, month - 1, day - 1).toLocaleDateString(DATE_LOCALE_CA);
+    return toDateKey(new Date(year, month - 1, day - 1));
   }
 
   private async writeSessions(

@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Service, inject, signal } from '@angular/core';
-import { DATE_LOCALE_CA } from '../constants/date-locale.const';
+import { toDateKey } from '../dates/date-key';
 
 /**
  * The local calendar day as a signal, so anything derived from "today" re-derives when the day
@@ -39,6 +39,6 @@ export class ClockService {
   }
 
   private readToday(): string {
-    return new Date().toLocaleDateString(DATE_LOCALE_CA);
+    return toDateKey(new Date());
   }
 }

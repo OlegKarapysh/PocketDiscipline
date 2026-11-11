@@ -4,7 +4,7 @@ import type { DailyScore } from '../../../core/models/daily-score.model';
 import type { Observable } from 'rxjs';
 import { from, of } from 'rxjs';
 import { CURRENT_USER_ID } from '../../../core/models/user.model';
-import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../core/dates/date-key';
 import { getPresetDateRange } from '../../../shared/components/period-filter/preset-date-range';
 import {
   MAX_STREAK_BONUS,
@@ -46,18 +46,18 @@ export class DailyScoresService {
   }
 
   getTodayScore(): Observable<DailyScore | undefined> {
-    const today = new Date().toLocaleDateString(DATE_LOCALE_CA);
+    const today = toDateKey(new Date());
     return this.getScore(today);
   }
 
   async saveTodayScore(score: number): Promise<{ reward: number; newStreak: number }> {
     try {
       const today = new Date();
-      const todayStr = today.toLocaleDateString(DATE_LOCALE_CA);
+      const todayStr = toDateKey(today);
 
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toLocaleDateString(DATE_LOCALE_CA);
+      const yesterdayStr = toDateKey(yesterday);
 
       const yesterdayScore = await this.db.dailyScores.get(yesterdayStr);
       const previousStreak = yesterdayScore ? yesterdayScore.streakAtThisDay : 0;

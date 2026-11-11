@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import type { DailyScore } from '../../../../core/models/daily-score.model';
-import { DATE_LOCALE_CA } from '../../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../../core/dates/date-key';
 import { StatCard } from '../../../../shared/components/stat-card/stat-card';
 
 @Component({
@@ -29,10 +29,10 @@ export class ScoresStats {
     const latest = this.latestScore();
     if (latest) {
       const today = new Date();
-      const todayStr = today.toLocaleDateString(DATE_LOCALE_CA);
+      const todayStr = toDateKey(today);
       const yesterday = new Date();
       yesterday.setDate(today.getDate() - 1);
-      const yesterdayStr = yesterday.toLocaleDateString(DATE_LOCALE_CA);
+      const yesterdayStr = toDateKey(yesterday);
 
       if (latest.date === todayStr || latest.date === yesterdayStr) {
         return latest.streakAtThisDay;

@@ -8,7 +8,7 @@ import type { DifficultyReward } from '../models/difficulty-reward.model';
 import { liveQuery } from 'dexie';
 import type { Observable } from 'rxjs';
 import { from } from 'rxjs';
-import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../core/dates/date-key';
 import { ONE_DAY_MS } from '../../../core/constants/one-day-ms.const';
 
 const MAX_STREAK_BONUS_DAYS = 10;
@@ -159,7 +159,7 @@ export class DailyTasksService {
   // Resolves to the reward earned, streak bonus included, or null when the task was already done today.
   async completeTask(task: DailyTask, difficulty: DailyTaskDifficulty): Promise<number | null> {
     const now = Date.now();
-    const todayStr = new Date(now).toLocaleDateString(DATE_LOCALE_CA);
+    const todayStr = toDateKey(new Date(now));
 
     return this.db.transaction('rw', this.db.dailyTasks, this.db.users, this.db.dailyTaskCompletions, async () => {
       // The stored row, not the rendered one: another tab may have edited or deleted the task since.

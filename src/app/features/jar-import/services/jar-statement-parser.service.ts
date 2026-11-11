@@ -1,5 +1,5 @@
 import { Service } from '@angular/core';
-import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../core/dates/date-key';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import { COUNTED, ENVELOPE, GRADED, POMODORO, SCORE, TIMED, TOP_UP } from '../constants/jar-comment-patterns.const';
 import { JAR_LABEL_ALIASES } from '../constants/jar-label-aliases.const';
@@ -94,7 +94,7 @@ export class JarStatementParserService {
       line,
       category,
       completedAt: completedAt.getTime(),
-      date: completedAt.toLocaleDateString(DATE_LOCALE_CA),
+      date: toDateKey(completedAt),
       amount,
       reward,
     };

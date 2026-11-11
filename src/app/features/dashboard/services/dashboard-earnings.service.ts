@@ -14,7 +14,7 @@ import type { PomodoroSession } from '../../../core/models/pomodoro-session.mode
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
 import type { DailyScore } from '../../../core/models/daily-score.model';
 import type { DailyTaskCompletion } from '../../../core/models/daily-task-completion.model';
-import { DATE_LOCALE_CA } from '../../../core/constants/date-locale.const';
+import { toDateKey } from '../../../core/dates/date-key';
 import { datesInRange } from '../../../shared/charts/chart-periods';
 
 @Service()
@@ -93,7 +93,7 @@ export class DashboardEarningsService {
 
       for (const goal of completedGoalsInRange) {
         if (goal.completedAt) {
-          const dateStr = this.formatLocalDate(new Date(goal.completedAt));
+          const dateStr = toDateKey(new Date(goal.completedAt));
           const record = dateMap.get(dateStr);
           if (record) {
             record.goalsEarned += goal.rewardValue;
@@ -111,7 +111,7 @@ export class DashboardEarningsService {
       }
 
       for (const session of completedSessionsInRange) {
-        const dateStr = this.formatLocalDate(new Date(this.creditedAt(session)));
+        const dateStr = toDateKey(new Date(this.creditedAt(session)));
         const record = dateMap.get(dateStr);
         if (record && session.rewardEarned) {
           record.pomodoroEarned += session.rewardEarned;
@@ -240,10 +240,6 @@ export class DashboardEarningsService {
   // without one falls back to when it started.
   private creditedAt(session: PomodoroSession): number {
     return session.endTime ?? session.startTime;
-  }
-
-  private formatLocalDate(date: Date): string {
-    return date.toLocaleDateString(DATE_LOCALE_CA);
   }
 
   // Local-time bounds of a YYYY-MM-DD range: the start of its first day to the end of its last.
