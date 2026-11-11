@@ -7,12 +7,14 @@ import { BalanceWidget } from './balance-widget';
 import { UserService } from '../../../../core/services/user.service';
 import type { User } from '../../../../core/models/user.model';
 import { EventBusService } from '../../../../core/services/event-bus.service';
+import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { Amount } from '../../../../shared/components/amount/amount';
 
 describe('BalanceWidget', () => {
   let fixture: ComponentFixture<BalanceWidget>;
   let userSubject: BehaviorSubject<User | undefined>;
   let eventBusMock: { emit: ReturnType<typeof vi.fn> };
+  let snackBarMock: { show: ReturnType<typeof vi.fn> };
 
   const renderedBalance = () => (fixture.debugElement.query(By.directive(Amount)).componentInstance as Amount).value();
 
@@ -29,11 +31,14 @@ describe('BalanceWidget', () => {
       emit: vi.fn(),
     };
 
+    snackBarMock = { show: vi.fn() };
+
     await TestBed.configureTestingModule({
       imports: [BalanceWidget],
       providers: [
         { provide: UserService, useValue: { user$: userSubject.asObservable() } },
         { provide: EventBusService, useValue: eventBusMock },
+        { provide: SnackBarService, useValue: snackBarMock },
       ],
     }).compileComponents();
 
@@ -66,14 +71,12 @@ describe('BalanceWidget', () => {
     expect(eventBusMock.emit).toHaveBeenCalledWith({ type: 'REQUEST_QUICK_SPEND' });
   });
 
-  it('should handle error gracefully and render an empty amount when user$ errors', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
+  it('should say so and render an empty amount when the balance cannot be read', async () => {
     userSubject.error(new Error('User error'));
     fixture.detectChanges();
     await fixture.whenStable();
 
     expect(renderedBalance()).toBeUndefined();
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(snackBarMock.show).toHaveBeenCalledWith('Could not load your balance.');
   });
 });

@@ -13,6 +13,9 @@ import { PeriodFilter } from '../../../shared/components/period-filter/period-fi
 import type { PeriodFilterValue } from '../../../shared/components/period-filter/period-filter-value.model';
 import { formatPeriodLabel, getPresetDateRange } from '../../../shared/components/period-filter/preset-date-range';
 import { MONEY_FORMAT } from '../../../shared/constants/money-format.const';
+import { SnackBarService } from '../../../shared/services/snack-bar.service';
+
+const LOAD_FAILED = 'Could not load your scores.';
 
 @Component({
   selector: 'app-daily-scores-page',
@@ -23,6 +26,7 @@ import { MONEY_FORMAT } from '../../../shared/constants/money-format.const';
 export class DailyScoresPage {
   private dailyScoresService = inject(DailyScoresService);
   private clock = inject(ClockService);
+  private snackBar = inject(SnackBarService);
   private destroyRef = inject(DestroyRef);
   private readonly reload = new Subject<void>();
   private readonly filterReload = new Subject<PeriodFilterValue>();
@@ -66,8 +70,8 @@ export class DailyScoresPage {
           if (!fullReload) {
             return this.dailyScoresService.getScoresInRange(filter.startDate, filter.endDate).pipe(
               map((periodScores) => ({ fullReload: false as const, periodScores })),
-              catchError((e: unknown) => {
-                console.error(e);
+              catchError(() => {
+                this.snackBar.show(LOAD_FAILED);
                 return EMPTY;
               }),
             );
@@ -79,8 +83,8 @@ export class DailyScoresPage {
             recentScores: this.dailyScoresService.getLast7DaysScores(),
           }).pipe(
             map((results) => ({ fullReload: true as const, ...results })),
-            catchError((e: unknown) => {
-              console.error(e);
+            catchError(() => {
+              this.snackBar.show(LOAD_FAILED);
               this.loading.set(false);
               return EMPTY;
             }),
@@ -139,7 +143,7 @@ export class DailyScoresPage {
       }
       this.loadData();
     } catch (e) {
-      console.error('Failed to save score', e);
+      this.snackBar.error(e, 'Could not save your score.');
       this.loading.set(false);
     }
   }

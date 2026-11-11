@@ -171,21 +171,17 @@ describe('DailyScoresService', () => {
     });
 
     it('should throw error and store nothing when user is not found during reward transaction', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
       await db.users.clear();
 
       await expect(service.saveTodayScore(10)).rejects.toThrow('User not found when attempting to add reward.');
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to save daily score:', expect.any(Error));
       expect(await db.dailyScores.get(TODAY)).toBeUndefined();
     });
 
-    it('should log and rethrow when the score cannot be stored, leaving the stored data unchanged', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
+    it('should reject when the score cannot be stored, leaving the stored data unchanged', async () => {
       const alreadySaved = score(TODAY, 9, 1, 100);
       await db.dailyScores.add(alreadySaved);
 
       await expect(service.saveTodayScore(10)).rejects.toThrow();
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to save daily score:', expect.anything());
       expect(await db.dailyScores.get(TODAY)).toEqual(alreadySaved);
       expect(await balance()).toBe(1000);
     });

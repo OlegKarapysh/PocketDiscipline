@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { firstValueFrom } from 'rxjs';
 import { DashboardEarningsService } from './dashboard-earnings.service';
 import type { DbService } from '../../../database/db.service';
@@ -72,6 +72,10 @@ describe('DashboardEarningsService', () => {
     await db.pomodoroSessions.bulkAdd(sampleSessions);
     await db.dailyTaskCompletions.bulkAdd(sampleTaskCompletions);
     service = TestBed.inject(DashboardEarningsService);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('getPresetDateRange', () => {
@@ -270,15 +274,14 @@ describe('DashboardEarningsService', () => {
       expect(records.reduce((sum, r) => sum + r.pomodoroEarned, 0)).toBe(0);
     });
 
-    it('should handle database errors gracefully and return fallback records', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
-      db.close();
+    it('should fail rather than report zero earnings when the database cannot be read', async () => {
+      vi.spyOn(db.dailyScores, 'where').mockImplementation(() => {
+        throw new Error('IndexedDB is gone');
+      });
 
-      const records = await firstValueFrom(service.getDailyEarnings('2026-09-01', '2026-09-02'));
-      expect(records).toBeDefined();
-      expect(Array.isArray(records)).toBe(true);
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
+      await expect(firstValueFrom(service.getDailyEarnings('2026-09-01', '2026-09-02'))).rejects.toThrow(
+        'IndexedDB is gone',
+      );
     });
 
     it('should return empty array for invalid date strings', async () => {
@@ -338,16 +341,12 @@ describe('DashboardEarningsService', () => {
       expect(summary.averageEarnedPerDay).toBe(323);
     });
 
-    it('should handle error gracefully and return fallback summary when calculation fails', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockReturnValue(undefined);
-      vi.spyOn(service, 'calculateDailyEarnings').mockRejectedValue(new Error('DB failure'));
+    it('should fail rather than report a month without earnings when the database cannot be read', async () => {
+      vi.spyOn(db.dailyScores, 'where').mockImplementation(() => {
+        throw new Error('IndexedDB is gone');
+      });
 
-      const summary = await firstValueFrom(service.getMonthlyEarningsSummary(2026, 8));
-      expect(summary).toBeDefined();
-      expect(summary.totalEarned).toBe(0);
-      expect(summary.averageEarnedPerDay).toBe(0);
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
+      await expect(firstValueFrom(service.getMonthlyEarningsSummary(2026, 8))).rejects.toThrow('IndexedDB is gone');
     });
 
     it('should return fallback summary for invalid year or month', async () => {

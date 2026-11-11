@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { By } from '@angular/platform-browser';
 import { signal } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, throwError } from 'rxjs';
 import { PomodoroContainer } from './pomodoro-container';
 import { TimerDisplay } from '../components/timer-display/timer-display';
 import { TimerControls } from '../components/timer-controls/timer-controls';
@@ -12,6 +12,7 @@ import { SectionCard } from '../../../shared/components/section-card/section-car
 import { PomodoroTimerService } from '../services/pomodoro-timer.service';
 import { PomodoroStatsService } from '../services/pomodoro-stats.service';
 import { ClockService } from '../../../core/services/clock.service';
+import { SnackBarService } from '../../../shared/services/snack-bar.service';
 import { EngagementType } from '../../../core/models/engagement-type.enum';
 import type { PomodoroPeriodSummary } from '../models/pomodoro-period-summary.model';
 import type { PomodoroTally } from '../models/pomodoro-tally.model';
@@ -50,6 +51,7 @@ describe('PomodoroContainer', () => {
   // One live stream per requested range, so a spec can push a new reading into it.
   let streams: Map<string, BehaviorSubject<PomodoroPeriodSummary>>;
   let statsMock: { getPeriodSummary: ReturnType<typeof vi.fn> };
+  let snackBarMock: { show: ReturnType<typeof vi.fn> };
 
   const stream = (startDate: string, endDate = startDate) => {
     const key = `${startDate}..${endDate}`;
@@ -83,6 +85,7 @@ describe('PomodoroContainer', () => {
     };
     today.set('2026-10-30');
     streams = new Map();
+    snackBarMock = { show: vi.fn() };
     statsMock = {
       getPeriodSummary: vi.fn((startDate: string, endDate: string) => stream(startDate, endDate)),
     };
@@ -93,6 +96,7 @@ describe('PomodoroContainer', () => {
         { provide: PomodoroTimerService, useValue: timerServiceMock },
         { provide: PomodoroStatsService, useValue: statsMock },
         { provide: ClockService, useValue: { today } },
+        { provide: SnackBarService, useValue: snackBarMock },
       ],
     }).compileComponents();
 
@@ -146,6 +150,16 @@ describe('PomodoroContainer', () => {
     expect(host().querySelectorAll('app-pomodoro-stats')).toHaveLength(2);
     expect(host().querySelector('app-pomodoro-today .invitation')).not.toBeNull();
     expect(host().querySelector('app-pomodoro-history .empty')).not.toBeNull();
+  });
+
+  it('should say so, and claim no "no pomodoros", when the sessions cannot be read', async () => {
+    statsMock.getPeriodSummary.mockReturnValue(throwError(() => new Error('IndexedDB is gone')));
+    await settle();
+
+    expect(snackBarMock.show).toHaveBeenCalledWith('Could not load your pomodoro stats.');
+    expect(host().querySelector('app-pomodoro-stats')).toBeNull();
+    expect(host().querySelector('app-pomodoro-today .invitation')).toBeNull();
+    expect(host().querySelector('app-pomodoro-history .empty')).toBeNull();
   });
 
   describe('Today card', () => {

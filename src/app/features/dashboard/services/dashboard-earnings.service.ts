@@ -1,7 +1,6 @@
 import { Service, inject } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { from, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { from } from 'rxjs';
 import { liveQuery } from 'dexie';
 import { DbService } from '../../../database/db.service';
 import type { DailyEarningsRecord } from '../models/daily-earnings-record.model';
@@ -12,8 +11,6 @@ import type { Goal } from '../../../core/models/goal.model';
 import { GOAL_STATUS } from '../../../core/models/goal.model';
 import type { PomodoroSession } from '../../../core/models/pomodoro-session.model';
 import { PomodoroSessionStatus } from '../../../core/models/pomodoro-session-status.enum';
-import type { DailyScore } from '../../../core/models/daily-score.model';
-import type { DailyTaskCompletion } from '../../../core/models/daily-task-completion.model';
 import { toDateKey } from '../../../core/dates/date-key';
 import { datesInRange } from '../../../shared/charts/chart-periods';
 
@@ -26,196 +23,142 @@ export class DashboardEarningsService {
   }
 
   getDailyEarnings(startDate: string, endDate: string): Observable<DailyEarningsRecord[]> {
-    return from(liveQuery(async () => await this.calculateDailyEarnings(startDate, endDate))).pipe(
-      catchError((error) => {
-        console.error('DashboardEarningsService.getDailyEarnings stream error:', error);
-        return of([]);
-      }),
-    );
+    return from(liveQuery(() => this.calculateDailyEarnings(startDate, endDate)));
   }
 
   getMonthlyEarningsSummary(year: number, month: number): Observable<MonthlyEarningsSummary> {
-    return from(liveQuery(async () => await this.calculateMonthlyEarningsSummary(year, month))).pipe(
-      catchError((error) => {
-        console.error('DashboardEarningsService.getMonthlyEarningsSummary stream error:', error);
-        return of(this.getFallbackMonthlySummary(year, month));
-      }),
-    );
+    return from(liveQuery(() => this.calculateMonthlyEarningsSummary(year, month)));
   }
 
-  async calculateDailyEarnings(startDate: string, endDate: string): Promise<DailyEarningsRecord[]> {
-    try {
-      const dates = datesInRange(startDate, endDate);
-      if (dates.length === 0) {
-        return [];
-      }
-
-      const [completedGoalsInRange, scoresInRange, completedSessionsInRange, taskCompletionsInRange] =
-        await Promise.all([
-          this.getCompletedGoalsInRange(startDate, endDate).catch((error: unknown) => {
-            console.error('Failed to get completed goals in range:', error);
-            return [] as Goal[];
-          }),
-          this.db.dailyScores
-            .where('date')
-            .between(startDate, endDate, true, true)
-            .toArray()
-            .catch((error: unknown) => {
-              console.error('Failed to get daily scores in range:', error);
-              return [] as DailyScore[];
-            }),
-          this.getCompletedPomodoroSessionsInRange(startDate, endDate).catch((error: unknown) => {
-            console.error('Failed to get completed pomodoro sessions in range:', error);
-            return [] as PomodoroSession[];
-          }),
-          this.db.dailyTaskCompletions
-            .where('date')
-            .between(startDate, endDate, true, true)
-            .toArray()
-            .catch((error: unknown) => {
-              console.error('Failed to get daily task completions in range:', error);
-              return [] as DailyTaskCompletion[];
-            }),
-        ]);
-
-      const dateMap = new Map<string, DailyEarningsRecord>();
-
-      for (const date of dates) {
-        dateMap.set(date, {
-          date,
-          totalEarned: 0,
-          goalsEarned: 0,
-          dailyTasksEarned: 0,
-          pomodoroEarned: 0,
-          dailyScoresEarned: 0,
-        });
-      }
-
-      for (const goal of completedGoalsInRange) {
-        if (goal.completedAt) {
-          const dateStr = toDateKey(new Date(goal.completedAt));
-          const record = dateMap.get(dateStr);
-          if (record) {
-            record.goalsEarned += goal.rewardValue;
-            record.totalEarned += goal.rewardValue;
-          }
-        }
-      }
-
-      for (const score of scoresInRange) {
-        const record = dateMap.get(score.date);
-        if (record) {
-          record.dailyScoresEarned += score.rewardEarned;
-          record.totalEarned += score.rewardEarned;
-        }
-      }
-
-      for (const session of completedSessionsInRange) {
-        const dateStr = toDateKey(new Date(this.creditedAt(session)));
-        const record = dateMap.get(dateStr);
-        if (record && session.rewardEarned) {
-          record.pomodoroEarned += session.rewardEarned;
-          record.totalEarned += session.rewardEarned;
-        }
-      }
-
-      for (const taskComp of taskCompletionsInRange) {
-        const record = dateMap.get(taskComp.date);
-        if (record) {
-          record.dailyTasksEarned += taskComp.rewardEarned;
-          record.totalEarned += taskComp.rewardEarned;
-        }
-      }
-
-      return Array.from(dateMap.values());
-    } catch (error) {
-      console.error('Failed to calculate daily earnings:', error);
+  private async calculateDailyEarnings(startDate: string, endDate: string): Promise<DailyEarningsRecord[]> {
+    const dates = datesInRange(startDate, endDate);
+    if (dates.length === 0) {
       return [];
     }
+
+    const [completedGoalsInRange, scoresInRange, completedSessionsInRange, taskCompletionsInRange] = await Promise.all([
+      this.getCompletedGoalsInRange(startDate, endDate),
+      this.db.dailyScores.where('date').between(startDate, endDate, true, true).toArray(),
+      this.getCompletedPomodoroSessionsInRange(startDate, endDate),
+      this.db.dailyTaskCompletions.where('date').between(startDate, endDate, true, true).toArray(),
+    ]);
+
+    const dateMap = new Map<string, DailyEarningsRecord>();
+
+    for (const date of dates) {
+      dateMap.set(date, {
+        date,
+        totalEarned: 0,
+        goalsEarned: 0,
+        dailyTasksEarned: 0,
+        pomodoroEarned: 0,
+        dailyScoresEarned: 0,
+      });
+    }
+
+    for (const goal of completedGoalsInRange) {
+      if (goal.completedAt) {
+        const dateStr = toDateKey(new Date(goal.completedAt));
+        const record = dateMap.get(dateStr);
+        if (record) {
+          record.goalsEarned += goal.rewardValue;
+          record.totalEarned += goal.rewardValue;
+        }
+      }
+    }
+
+    for (const score of scoresInRange) {
+      const record = dateMap.get(score.date);
+      if (record) {
+        record.dailyScoresEarned += score.rewardEarned;
+        record.totalEarned += score.rewardEarned;
+      }
+    }
+
+    for (const session of completedSessionsInRange) {
+      const dateStr = toDateKey(new Date(this.creditedAt(session)));
+      const record = dateMap.get(dateStr);
+      if (record && session.rewardEarned) {
+        record.pomodoroEarned += session.rewardEarned;
+        record.totalEarned += session.rewardEarned;
+      }
+    }
+
+    for (const taskComp of taskCompletionsInRange) {
+      const record = dateMap.get(taskComp.date);
+      if (record) {
+        record.dailyTasksEarned += taskComp.rewardEarned;
+        record.totalEarned += taskComp.rewardEarned;
+      }
+    }
+
+    return Array.from(dateMap.values());
   }
 
-  async calculateMonthlyEarningsSummary(year: number, month: number): Promise<MonthlyEarningsSummary> {
-    try {
-      if (!year || !month || month < 1 || month > 12) {
-        return this.getFallbackMonthlySummary(year, month);
-      }
-
-      const formattedMonth = String(month).padStart(2, '0');
-      // Day 0 of the next month is the last day of this one.
-      const totalDaysInMonth = new Date(year, month, 0).getDate();
-      const startDate = `${year}-${formattedMonth}-01`;
-      const endDate = `${year}-${formattedMonth}-${String(totalDaysInMonth).padStart(2, '0')}`;
-
-      const dateForLabel = new Date(year, month - 1, 1);
-      const monthLabel = dateForLabel.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-      const dailyRecords = await this.calculateDailyEarnings(startDate, endDate);
-      const totalEarned = dailyRecords.reduce((sum, r) => sum + r.totalEarned, 0);
-
-      const now = new Date();
-      const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
-
-      let daysCount = totalDaysInMonth;
-      if (isCurrentMonth) {
-        daysCount = Math.max(now.getDate(), 1);
-      }
-
-      const averageEarnedPerDay = daysCount > 0 ? Math.round(totalEarned / daysCount) : 0;
-
-      return {
-        year,
-        month,
-        monthLabel,
-        totalEarned,
-        daysCount,
-        averageEarnedPerDay,
-        isCurrentMonth,
-      };
-    } catch (error) {
-      console.error('Failed to calculate monthly earnings summary:', error);
+  private async calculateMonthlyEarningsSummary(year: number, month: number): Promise<MonthlyEarningsSummary> {
+    if (!year || !month || month < 1 || month > 12) {
       return this.getFallbackMonthlySummary(year, month);
     }
+
+    const formattedMonth = String(month).padStart(2, '0');
+    // Day 0 of the next month is the last day of this one.
+    const totalDaysInMonth = new Date(year, month, 0).getDate();
+    const startDate = `${year}-${formattedMonth}-01`;
+    const endDate = `${year}-${formattedMonth}-${String(totalDaysInMonth).padStart(2, '0')}`;
+
+    const dateForLabel = new Date(year, month - 1, 1);
+    const monthLabel = dateForLabel.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    const dailyRecords = await this.calculateDailyEarnings(startDate, endDate);
+    const totalEarned = dailyRecords.reduce((sum, r) => sum + r.totalEarned, 0);
+
+    const now = new Date();
+    const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
+
+    let daysCount = totalDaysInMonth;
+    if (isCurrentMonth) {
+      daysCount = Math.max(now.getDate(), 1);
+    }
+
+    const averageEarnedPerDay = daysCount > 0 ? Math.round(totalEarned / daysCount) : 0;
+
+    return {
+      year,
+      month,
+      monthLabel,
+      totalEarned,
+      daysCount,
+      averageEarnedPerDay,
+      isCurrentMonth,
+    };
   }
 
   private async getCompletedGoalsInRange(startDate: string, endDate: string): Promise<Goal[]> {
-    try {
-      const [startTimestamp, endTimestamp] = this.toTimestampRange(startDate, endDate);
+    const [startTimestamp, endTimestamp] = this.toTimestampRange(startDate, endDate);
 
-      if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
-        return [];
-      }
-
-      const goals = await this.db.goals
-        .where('completedAt')
-        .between(startTimestamp, endTimestamp, true, true)
-        .toArray();
-
-      return goals.filter((goal) => goal.status === GOAL_STATUS.COMPLETED);
-    } catch (error) {
-      console.error('Failed to get completed goals in range:', error);
+    if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
       return [];
     }
+
+    const goals = await this.db.goals.where('completedAt').between(startTimestamp, endTimestamp, true, true).toArray();
+
+    return goals.filter((goal) => goal.status === GOAL_STATUS.COMPLETED);
   }
 
   private async getCompletedPomodoroSessionsInRange(startDate: string, endDate: string): Promise<PomodoroSession[]> {
-    try {
-      const [startTimestamp, endTimestamp] = this.toTimestampRange(startDate, endDate);
+    const [startTimestamp, endTimestamp] = this.toTimestampRange(startDate, endDate);
 
-      if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
-        return [];
-      }
-
-      // `endTime` is not indexed, so the range is applied in memory to the completed sessions.
-      const sessions = await this.db.pomodoroSessions.where('status').equals(PomodoroSessionStatus.COMPLETED).toArray();
-
-      return sessions.filter((session) => {
-        const creditedAt = this.creditedAt(session);
-        return creditedAt >= startTimestamp && creditedAt <= endTimestamp;
-      });
-    } catch (error) {
-      console.error('Failed to get completed pomodoro sessions in range:', error);
+    if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
       return [];
     }
+
+    // `endTime` is not indexed, so the range is applied in memory to the completed sessions.
+    const sessions = await this.db.pomodoroSessions.where('status').equals(PomodoroSessionStatus.COMPLETED).toArray();
+
+    return sessions.filter((session) => {
+      const creditedAt = this.creditedAt(session);
+      return creditedAt >= startTimestamp && creditedAt <= endTimestamp;
+    });
   }
 
   private getFallbackMonthlySummary(year: number, month: number): MonthlyEarningsSummary {

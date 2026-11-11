@@ -190,20 +190,15 @@ describe('PomodoroStatsService', () => {
     expect(summary.total).toEqual(tally());
   });
 
-  it('should return an empty, zero-filled summary when the read fails', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  it('should fail rather than report no pomodoros when the read fails', async () => {
     await db.pomodoroSessions.add(session({}));
     vi.spyOn(db.pomodoroSessions, 'where').mockImplementation(() => {
       throw new Error('IndexedDB is gone');
     });
 
-    const summary = await firstValueFrom(service.getPeriodSummary('2026-09-01', '2026-09-02'));
-
-    expect(summary.days).toEqual([
-      { date: '2026-09-01', ...tally() },
-      { date: '2026-09-02', ...tally() },
-    ]);
-    expect(summary.total).toEqual(tally());
+    await expect(firstValueFrom(service.getPeriodSummary('2026-09-01', '2026-09-02'))).rejects.toThrow(
+      'IndexedDB is gone',
+    );
   });
 
   it('should count a session completed after the summary was first read', async () => {

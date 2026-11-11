@@ -7,6 +7,7 @@ import { Dashboard } from './dashboard';
 import { DashboardEarningsService } from './services/dashboard-earnings.service';
 import { UserService } from '../../core/services/user.service';
 import { ClockService } from '../../core/services/clock.service';
+import { SnackBarService } from '../../shared/services/snack-bar.service';
 import type { EarningsPeriodFilter } from './models/earnings-period-filter.model';
 import type { MonthChangeEvent } from './models/month-change-event.model';
 import type { MonthlyEarningsSummary } from './models/monthly-earnings-summary.model';
@@ -23,6 +24,7 @@ describe('Dashboard', () => {
     user$: Observable<{ id: number; name: string; balance: number }>;
   };
   const today = signal('2026-09-02');
+  let snackBarMock: { show: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     earningsServiceMock = {
@@ -35,6 +37,7 @@ describe('Dashboard', () => {
       user$: of({ id: 1, name: 'User', balance: 1000 }),
     };
     today.set('2026-09-02');
+    snackBarMock = { show: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [Dashboard],
@@ -42,6 +45,7 @@ describe('Dashboard', () => {
         { provide: DashboardEarningsService, useValue: earningsServiceMock },
         { provide: UserService, useValue: userServiceMock },
         { provide: ClockService, useValue: { today } },
+        { provide: SnackBarService, useValue: snackBarMock },
       ],
     }).compileComponents();
 
@@ -156,11 +160,7 @@ describe('Dashboard', () => {
     expect(compiled.querySelector('app-daily-task-list')).toBeFalsy();
   });
 
-  it('should handle service error gracefully in dailyEarnings stream', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
-      // suppress expected console error output
-    });
-
+  it('should say so and show no earnings when the daily earnings cannot be read', async () => {
     earningsServiceMock.getDailyEarnings.mockReturnValue(
       new Observable((subscriber) => {
         subscriber.error(new Error('IndexedDB error'));
@@ -175,16 +175,11 @@ describe('Dashboard', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.dailyEarnings()).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(component.dailyEarnings()).toBeUndefined();
+    expect(snackBarMock.show).toHaveBeenCalledWith('Could not load your earnings.');
   });
 
-  it('should handle service error gracefully in monthlySummary stream', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
-      // suppress expected console error output
-    });
-
+  it('should say so and show no summary when the monthly summary cannot be read', async () => {
     earningsServiceMock.getMonthlyEarningsSummary.mockReturnValue(
       new Observable((subscriber) => {
         subscriber.error(new Error('Monthly summary error'));
@@ -199,8 +194,7 @@ describe('Dashboard', () => {
     await fixture.whenStable();
 
     expect(component.monthlySummary()).toBeUndefined();
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(snackBarMock.show).toHaveBeenCalledWith('Could not load the monthly summary.');
   });
 
   it('should return empty dailyEarnings without calling service when filter dates are missing', async () => {
@@ -218,11 +212,7 @@ describe('Dashboard', () => {
     expect(earningsServiceMock.getDailyEarnings).not.toHaveBeenCalled();
   });
 
-  it('should handle synchronous service errors gracefully in streams', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
-      // suppress expected console error output
-    });
-
+  it('should treat a service that throws like a failed read', async () => {
     earningsServiceMock.getDailyEarnings.mockImplementation(() => {
       throw new Error('Synchronous service error');
     });
@@ -235,8 +225,7 @@ describe('Dashboard', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.dailyEarnings()).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(component.dailyEarnings()).toBeUndefined();
+    expect(snackBarMock.show).toHaveBeenCalledWith('Could not load your earnings.');
   });
 });

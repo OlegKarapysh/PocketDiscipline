@@ -7,12 +7,14 @@ import { Subject, of, throwError } from 'rxjs';
 import { DailyScoresPage } from './daily-scores-page';
 import { DailyScoresService } from '../services/daily-scores.service';
 import { ClockService } from '../../../core/services/clock.service';
+import { SnackBarService } from '../../../shared/services/snack-bar.service';
 import type { DailyScore } from '../../../core/models/daily-score.model';
 
 describe('DailyScoresPage', () => {
   let component: DailyScoresPage;
   let fixture: ComponentFixture<DailyScoresPage>;
   const today = signal('2026-09-30');
+  let snackBarMock: { show: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
   let dailyScoresServiceMock: {
     getTodayScore: ReturnType<typeof vi.fn>;
     getScoresInRange: ReturnType<typeof vi.fn>;
@@ -28,11 +30,14 @@ describe('DailyScoresPage', () => {
       saveTodayScore: vi.fn().mockResolvedValue({ reward: 500, newStreak: 1 }),
     };
 
+    snackBarMock = { show: vi.fn(), error: vi.fn() };
+
     await TestBed.configureTestingModule({
       imports: [DailyScoresPage],
       providers: [
         { provide: DailyScoresService, useValue: dailyScoresServiceMock },
         { provide: ClockService, useValue: { today } },
+        { provide: SnackBarService, useValue: snackBarMock },
       ],
     }).compileComponents();
 
@@ -156,10 +161,7 @@ describe('DailyScoresPage', () => {
     expect(component.successMessage()).toBe('Score saved. Aim for a 9 or 10 tomorrow to earn rewards.');
   });
 
-  it('should handle submission failure gracefully', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
-      // suppress expected error output
-    });
+  it('should tell the user when the score cannot be saved', async () => {
     dailyScoresServiceMock.saveTodayScore.mockRejectedValue(new Error('Database error'));
 
     fixture.detectChanges();
@@ -168,13 +170,10 @@ describe('DailyScoresPage', () => {
     await component.onScoreSubmit(10);
 
     expect(component.loading()).toBe(false);
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to save score', expect.any(Error));
+    expect(snackBarMock.error).toHaveBeenCalledWith(expect.any(Error), 'Could not save your score.');
   });
 
-  it('should handle data loading failure gracefully', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
-      // suppress expected error output
-    });
+  it('should tell the user when the scores cannot be loaded', async () => {
     dailyScoresServiceMock.getTodayScore.mockReturnValue(throwError(() => new Error('Network error')));
 
     component.loadData();
@@ -182,7 +181,7 @@ describe('DailyScoresPage', () => {
     await fixture.whenStable();
 
     expect(component.loading()).toBe(false);
-    expect(consoleSpy).toHaveBeenCalled();
+    expect(snackBarMock.show).toHaveBeenCalledWith('Could not load your scores.');
   });
 
   it('should unsubscribe from loadData when component is destroyed', () => {

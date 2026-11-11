@@ -9,6 +9,7 @@ import { PageHeader } from '../../shared/components/page-header/page-header';
 import { PeriodFilter } from '../../shared/components/period-filter/period-filter';
 import { DashboardEarningsService } from './services/dashboard-earnings.service';
 import { ClockService } from '../../core/services/clock.service';
+import { SnackBarService } from '../../shared/services/snack-bar.service';
 import type { EarningsPeriodFilter } from './models/earnings-period-filter.model';
 import type { MonthChangeEvent } from './models/month-change-event.model';
 
@@ -21,6 +22,7 @@ import type { MonthChangeEvent } from './models/month-change-event.model';
 export class Dashboard {
   private readonly earningsService = inject(DashboardEarningsService);
   private readonly clock = inject(ClockService);
+  private readonly snackBar = inject(SnackBarService);
 
   private readonly selectedFilter = signal<EarningsPeriodFilter>({ preset: 'last7', startDate: '', endDate: '' });
 
@@ -48,9 +50,9 @@ export class Dashboard {
           return of([]);
         }
         return defer(() => this.earningsService.getDailyEarnings(filter.startDate, filter.endDate)).pipe(
-          catchError((error) => {
-            console.error('Failed to load daily earnings:', error);
-            return of([]);
+          catchError(() => {
+            this.snackBar.show('Could not load your earnings.');
+            return of(undefined);
           }),
         );
       }),
@@ -64,8 +66,8 @@ export class Dashboard {
           return of(undefined);
         }
         return defer(() => this.earningsService.getMonthlyEarningsSummary(year, month)).pipe(
-          catchError((error) => {
-            console.error('Failed to load monthly summary:', error);
+          catchError(() => {
+            this.snackBar.show('Could not load the monthly summary.');
             return of(undefined);
           }),
         );

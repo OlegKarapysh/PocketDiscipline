@@ -1,7 +1,6 @@
 import { Service, inject } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { from, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { from } from 'rxjs';
 import { liveQuery } from 'dexie';
 import { DbService } from '../../../database/db.service';
 import { toDateKey } from '../../../core/dates/date-key';
@@ -17,12 +16,7 @@ export class PomodoroStatsService {
   private readonly db = inject(DbService);
 
   getPeriodSummary(startDate: string, endDate: string): Observable<PomodoroPeriodSummary> {
-    return from(liveQuery(async () => this.summarise(startDate, endDate, await this.completedSessions()))).pipe(
-      catchError((error: unknown) => {
-        console.error('PomodoroStatsService.getPeriodSummary stream error:', error);
-        return of(this.summarise(startDate, endDate, []));
-      }),
-    );
+    return from(liveQuery(async () => this.summarise(startDate, endDate, await this.completedSessions())));
   }
 
   // Read through the status index rather than by startTime: a session whose time ran out while the app

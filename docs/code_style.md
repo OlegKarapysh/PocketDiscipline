@@ -258,6 +258,12 @@ on screen. It must not be an answer the database could give.
   pushing the page down.
 - The component's spec holds the stream back with a `Subject` and asserts that no empty state, zero
   or "None" renders before the first emission.
+- A failed read is not empty either. A service lets the error through: no `catchError` that turns
+  it into `[]`, `0` or a zero-filled summary, and no `catch` that only logs and rethrows. The
+  component that displays the data catches it once, inside its `switchMap`, tells the user through
+  `SnackBarService` and yields `undefined`. A failed user action is reported the same way.
+  `console.error` is left for background work with nobody to tell (a reminder, a migration, a
+  notification).
 
 **Status: swept 2026-10-30.** Every `toSignal` over a Dexie read starts `undefined`. The two other
 initial values are not Dexie reads: `bottom-nav.ts` (the router's URL) and `layout.ts` (a

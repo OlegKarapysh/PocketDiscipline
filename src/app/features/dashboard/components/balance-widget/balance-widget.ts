@@ -8,6 +8,7 @@ import { UserService } from '../../../../core/services/user.service';
 import type { User } from '../../../../core/models/user.model';
 import { EventBusService } from '../../../../core/services/event-bus.service';
 import { Amount } from '../../../../shared/components/amount/amount';
+import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 
 @Component({
   selector: 'app-balance-widget',
@@ -18,11 +19,12 @@ import { Amount } from '../../../../shared/components/amount/amount';
 export class BalanceWidget {
   private readonly userService = inject(UserService);
   private readonly eventBus = inject(EventBusService);
+  private readonly snackBar = inject(SnackBarService);
 
   readonly user = toSignal<User | undefined>(
     from(this.userService.user$).pipe(
-      catchError((error: unknown) => {
-        console.error('Failed to load user balance:', error);
+      catchError(() => {
+        this.snackBar.show('Could not load your balance.');
         return of(undefined);
       }),
     ),
