@@ -554,19 +554,15 @@ describe('PomodoroTimerService', () => {
 
   describe('Error Handling and Robustness', () => {
     it('should reset timer and rethrow error if saving session fails during startTimer', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
       const testError = new Error('Database write error');
       storageMock.saveSession.mockRejectedValue(testError);
 
       await expect(service.startTimer()).rejects.toThrow(testError);
       expect(service.isActive()).toBe(false);
       expect(service.currentSessionId()).toBeNull();
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to start pomodoro timer session:', testError);
-      consoleSpy.mockRestore();
     });
 
     it('should reset timer and rethrow error if cancelling the session fails during stopTimer', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
       const testError = new Error('Database update error');
       storageMock.cancelSession.mockRejectedValue(testError);
 
@@ -576,12 +572,9 @@ describe('PomodoroTimerService', () => {
       await expect(service.stopTimer()).rejects.toThrow(testError);
       expect(service.isActive()).toBe(false);
       expect(service.currentSessionId()).toBeNull();
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to stop pomodoro timer session:', testError);
-      consoleSpy.mockRestore();
     });
 
     it('should catch error gracefully if completing the session fails', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
       const testError = new Error('Database complete error');
       storageMock.completeSession.mockRejectedValue(testError);
 
@@ -589,9 +582,7 @@ describe('PomodoroTimerService', () => {
       await vi.advanceTimersByTimeAsync(1500 * 1000);
 
       expect(service.isActive()).toBe(false);
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to complete pomodoro session:', testError);
       expect(snackBarMock.error).toHaveBeenCalledWith(testError, 'Failed to save completed session reward.');
-      consoleSpy.mockRestore();
     });
 
     it('should fall back to default base reward if rate lookup lacks engagement type', async () => {

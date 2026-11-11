@@ -7,6 +7,7 @@ import { EMPTY, of } from 'rxjs';
 import { TimerControls } from './timer-controls';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
 import { ConfirmService } from '../../../../shared/services/confirm.service';
+import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 
 describe('TimerControls', () => {
   let fixture: ComponentFixture<TimerControls>;
@@ -18,6 +19,7 @@ describe('TimerControls', () => {
     stopTimer: ReturnType<typeof vi.fn>;
   };
   let confirmServiceMock: { ask: ReturnType<typeof vi.fn> };
+  let snackBarMock: { error: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     timerServiceMock = {
@@ -28,12 +30,14 @@ describe('TimerControls', () => {
       stopTimer: vi.fn().mockResolvedValue(undefined),
     };
     confirmServiceMock = { ask: vi.fn().mockReturnValue(of(true)) };
+    snackBarMock = { error: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [TimerControls],
       providers: [
         { provide: PomodoroTimerService, useValue: timerServiceMock },
         { provide: ConfirmService, useValue: confirmServiceMock },
+        { provide: SnackBarService, useValue: snackBarMock },
       ],
     }).compileComponents();
 
@@ -99,8 +103,7 @@ describe('TimerControls', () => {
     expect(startBtn.disabled).toBe(false);
   });
 
-  it('should handle error gracefully when startTimer rejects', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  it('should tell the user when the session cannot be started', async () => {
     const testError = new Error('Failed to start');
     timerServiceMock.startTimer.mockRejectedValue(testError);
 
@@ -112,9 +115,7 @@ describe('TimerControls', () => {
     (startBtn.nativeElement as HTMLButtonElement).click();
     await fixture.whenStable();
 
-    expect(timerServiceMock.startTimer).toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith(testError);
-    consoleSpy.mockRestore();
+    expect(snackBarMock.error).toHaveBeenCalledWith(testError, 'Could not start the session.');
   });
 
   it('should keep the session running when stopping is not confirmed', async () => {
@@ -143,8 +144,7 @@ describe('TimerControls', () => {
     expect(timerServiceMock.stopTimer).toHaveBeenCalled();
   });
 
-  it('should handle error gracefully when stopTimer rejects', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  it('should tell the user when the session cannot be stopped', async () => {
     const testError = new Error('Failed to stop');
     timerServiceMock.stopTimer.mockRejectedValue(testError);
 
@@ -156,8 +156,6 @@ describe('TimerControls', () => {
     (stopBtn.nativeElement as HTMLButtonElement).click();
     await fixture.whenStable();
 
-    expect(timerServiceMock.stopTimer).toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith(testError);
-    consoleSpy.mockRestore();
+    expect(snackBarMock.error).toHaveBeenCalledWith(testError, 'Could not stop the session.');
   });
 });

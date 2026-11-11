@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { EMPTY, catchError, from, switchMap } from 'rxjs';
 import { PomodoroTimerService } from '../../services/pomodoro-timer.service';
 import { ConfirmService } from '../../../../shared/services/confirm.service';
+import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { Amount } from '../../../../shared/components/amount/amount';
 import { Badge } from '../../../../shared/components/badge/badge';
 
@@ -17,6 +18,7 @@ import { Badge } from '../../../../shared/components/badge/badge';
 export class TimerControls {
   private timerService = inject(PomodoroTimerService);
   private confirmService = inject(ConfirmService);
+  private snackBar = inject(SnackBarService);
   private destroyRef = inject(DestroyRef);
 
   isActive = this.timerService.isActive;
@@ -27,7 +29,7 @@ export class TimerControls {
     try {
       await this.timerService.startTimer();
     } catch (e) {
-      console.error(e);
+      this.snackBar.error(e, 'Could not start the session.');
     }
   }
 
@@ -46,7 +48,7 @@ export class TimerControls {
         switchMap(() =>
           from(this.timerService.stopTimer()).pipe(
             catchError((e: unknown) => {
-              console.error(e);
+              this.snackBar.error(e, 'Could not stop the session.');
               return EMPTY;
             }),
           ),

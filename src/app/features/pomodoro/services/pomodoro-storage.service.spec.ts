@@ -30,17 +30,7 @@ describe('PomodoroStorageService', () => {
   // A failing database: every operation on a closed Dexie database rejects.
   const breakDatabase = () => {
     db.close();
-    return vi.spyOn(console, 'error').mockImplementation(() => undefined);
   };
-
-  // Resolves to what `promise` rejects with, and fails the test if it resolves instead.
-  const rejectionOf = (promise: Promise<unknown>): Promise<unknown> =>
-    promise.then(
-      () => {
-        throw new Error('Expected a rejection');
-      },
-      (error: unknown) => error,
-    );
 
   beforeEach(async () => {
     db = await openEmptyDb();
@@ -179,54 +169,17 @@ describe('PomodoroStorageService', () => {
     expect(result.map((s) => s.id)).toEqual(['latest', 'middle', 'earliest']);
   });
 
-  it('should log error and rethrow when saveSession fails', async () => {
-    const consoleSpy = breakDatabase();
-
-    const error = await rejectionOf(service.saveSession(session()));
-
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to save pomodoro session:', error);
-  });
-
-  it('should log error and rethrow when getSession fails', async () => {
-    const consoleSpy = breakDatabase();
-
-    const error = await rejectionOf(service.getSession('session-123'));
-
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to get pomodoro session:', error);
-  });
-
-  it('should log error and rethrow when getAllSessions fails', async () => {
-    const consoleSpy = breakDatabase();
-
-    const error = await rejectionOf(service.getAllSessions());
-
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to get all pomodoro sessions:', error);
-  });
-
-  it('should log error and rethrow when completeSession fails', async () => {
+  it.each([
+    ['saveSession', () => service.saveSession(session())],
+    ['getSession', () => service.getSession('session-123')],
+    ['getAllSessions', () => service.getAllSessions()],
+    ['completeSession', () => service.completeSession('session-123', 25)],
+    ['cancelSession', () => service.cancelSession('session-123')],
+    ['deleteSession', () => service.deleteSession('session-123')],
+  ])('should reject when %s cannot reach the database', async (_name, operation) => {
     await db.pomodoroSessions.add(session());
-    const consoleSpy = breakDatabase();
+    breakDatabase();
 
-    const error = await rejectionOf(service.completeSession('session-123', 25));
-
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to complete pomodoro session:', error);
-  });
-
-  it('should log error and rethrow when cancelSession fails', async () => {
-    await db.pomodoroSessions.add(session());
-    const consoleSpy = breakDatabase();
-
-    const error = await rejectionOf(service.cancelSession('session-123'));
-
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to cancel pomodoro session:', error);
-  });
-
-  it('should log error and rethrow when deleteSession fails', async () => {
-    await db.pomodoroSessions.add(session());
-    const consoleSpy = breakDatabase();
-
-    const error = await rejectionOf(service.deleteSession('session-123'));
-
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to delete pomodoro session:', error);
+    await expect(operation()).rejects.toBeDefined();
   });
 });

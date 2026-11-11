@@ -156,7 +156,6 @@ export class PomodoroTimerService implements OnDestroy {
       await this.storage.saveSession(session, valid);
       if (valid()) this.startInterval();
     } catch (error) {
-      console.error('Failed to start pomodoro timer session:', error);
       if (valid()) this.resetTimer();
       throw error;
     }
@@ -177,9 +176,6 @@ export class PomodoroTimerService implements OnDestroy {
       if (id) {
         await this.storage.cancelSession(id, valid);
       }
-    } catch (error) {
-      console.error('Failed to stop pomodoro timer session:', error);
-      throw error;
     } finally {
       if (valid()) this.resetTimer();
     }
@@ -243,7 +239,6 @@ export class PomodoroTimerService implements OnDestroy {
         })
         .subscribe();
     } catch (err: unknown) {
-      console.error('Failed to complete pomodoro session:', err);
       this.snackBar.error(err, 'Failed to save completed session reward.');
     } finally {
       if (valid()) this.resetTimer();

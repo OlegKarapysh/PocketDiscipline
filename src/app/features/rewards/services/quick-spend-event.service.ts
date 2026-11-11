@@ -30,8 +30,7 @@ export class QuickSpendEventService {
       .then((m) => {
         this.dialog.open(m.QuickSpendDialog, { width: '440px' });
       })
-      .catch((e: unknown) => {
-        console.error('Failed to open Quick spend:', e);
+      .catch(() => {
         this.snackBar.show('Could not open Quick spend. Try again.');
       });
   }

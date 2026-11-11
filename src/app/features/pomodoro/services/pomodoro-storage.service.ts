@@ -10,79 +10,49 @@ export class PomodoroStorageService {
   private userService = inject(UserService);
 
   async saveSession(session: PomodoroSession, canMutate: () => boolean = () => true): Promise<void> {
-    try {
-      await this.db.transaction('rw', this.db.pomodoroSessions, async () => {
-        if (canMutate()) await this.db.pomodoroSessions.put(session);
-      });
-    } catch (error) {
-      console.error('Failed to save pomodoro session:', error);
-      throw error;
-    }
+    await this.db.transaction('rw', this.db.pomodoroSessions, async () => {
+      if (canMutate()) await this.db.pomodoroSessions.put(session);
+    });
   }
 
   async getSession(id: string): Promise<PomodoroSession | undefined> {
-    try {
-      return await this.db.pomodoroSessions.get(id);
-    } catch (error) {
-      console.error('Failed to get pomodoro session:', error);
-      throw error;
-    }
+    return await this.db.pomodoroSessions.get(id);
   }
 
   async getAllSessions(): Promise<PomodoroSession[]> {
-    try {
-      return await this.db.pomodoroSessions.orderBy('startTime').reverse().toArray();
-    } catch (error) {
-      console.error('Failed to get all pomodoro sessions:', error);
-      throw error;
-    }
+    return await this.db.pomodoroSessions.orderBy('startTime').reverse().toArray();
   }
 
   async completeSession(id: string, rewardEarned: number, canMutate: () => boolean = () => true): Promise<boolean> {
-    try {
-      return await this.db.transaction('rw', this.db.pomodoroSessions, this.db.users, async () => {
-        if (!canMutate()) return false;
-        const session = await this.db.pomodoroSessions.get(id);
-        if (!canMutate() || session?.status !== PomodoroSessionStatus.ACTIVE) return false;
+    return await this.db.transaction('rw', this.db.pomodoroSessions, this.db.users, async () => {
+      if (!canMutate()) return false;
+      const session = await this.db.pomodoroSessions.get(id);
+      if (!canMutate() || session?.status !== PomodoroSessionStatus.ACTIVE) return false;
 
-        await this.db.pomodoroSessions.update(id, {
-          status: PomodoroSessionStatus.COMPLETED,
-          endTime: Date.now(),
-          rewardEarned,
-        });
-        await this.userService.addBalance(rewardEarned);
-        return true;
+      await this.db.pomodoroSessions.update(id, {
+        status: PomodoroSessionStatus.COMPLETED,
+        endTime: Date.now(),
+        rewardEarned,
       });
-    } catch (error) {
-      console.error('Failed to complete pomodoro session:', error);
-      throw error;
-    }
+      await this.userService.addBalance(rewardEarned);
+      return true;
+    });
   }
 
   async cancelSession(id: string, canMutate: () => boolean = () => true): Promise<void> {
-    try {
-      await this.db.transaction('rw', this.db.pomodoroSessions, async () => {
-        if (!canMutate()) return;
-        const session = await this.db.pomodoroSessions.get(id);
-        if (!canMutate() || session?.status !== PomodoroSessionStatus.ACTIVE) return;
+    await this.db.transaction('rw', this.db.pomodoroSessions, async () => {
+      if (!canMutate()) return;
+      const session = await this.db.pomodoroSessions.get(id);
+      if (!canMutate() || session?.status !== PomodoroSessionStatus.ACTIVE) return;
 
-        await this.db.pomodoroSessions.update(id, {
-          status: PomodoroSessionStatus.CANCELLED,
-          endTime: Date.now(),
-        });
+      await this.db.pomodoroSessions.update(id, {
+        status: PomodoroSessionStatus.CANCELLED,
+        endTime: Date.now(),
       });
-    } catch (error) {
-      console.error('Failed to cancel pomodoro session:', error);
-      throw error;
-    }
+    });
   }
 
   async deleteSession(id: string): Promise<void> {
-    try {
-      await this.db.pomodoroSessions.delete(id);
-    } catch (error) {
-      console.error('Failed to delete pomodoro session:', error);
-      throw error;
-    }
+    await this.db.pomodoroSessions.delete(id);
   }
 }
