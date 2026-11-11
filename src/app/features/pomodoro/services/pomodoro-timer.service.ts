@@ -72,7 +72,7 @@ export class PomodoroTimerService implements OnDestroy {
 
   constructor() {
     void this.track(() => this.restoreActiveSession());
-    void this.requestNotificationPermission();
+    void this.notifications.requestPermission();
 
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', this.handleVisibilityChange);
@@ -225,7 +225,7 @@ export class PomodoroTimerService implements OnDestroy {
       if (!valid() || !(await this.storage.completeSession(id, reward, valid)) || !valid()) return;
 
       await this.notifications
-        .show(COMPLETION_TITLE, { body: this.rewardMessage(reward, engagementType), icon: 'icons/icon-192x192.png' })
+        .show(COMPLETION_TITLE, this.completionNotification(reward, engagementType))
         .catch((err: unknown) => {
           console.error('Failed to show notification:', err);
         });
@@ -264,8 +264,11 @@ export class PomodoroTimerService implements OnDestroy {
     return Number.isFinite(reward) && reward >= 0 ? reward : 0;
   }
 
-  private rewardMessage(reward: number, type: EngagementType): string {
-    return `You earned ${MONEY_FORMAT.format(reward)} ₴ for your ${type} session.`;
+  private completionNotification(reward: number, type: EngagementType): NotificationOptions {
+    return {
+      body: `You earned ${MONEY_FORMAT.format(reward)} ₴ for your ${type} session.`,
+      icon: 'icons/icon-192x192.png',
+    };
   }
 
   private async restoreActiveSession(): Promise<void> {
@@ -310,78 +313,28 @@ export class PomodoroTimerService implements OnDestroy {
     }
   }
 
-  private async requestNotificationPermission(): Promise<void> {
-    try {
-      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-        await Notification.requestPermission();
-      }
-    } catch (e) {
-      console.error('Failed to request notification permission:', e);
-    }
-  }
-
   private async scheduleCompletionNotification(): Promise<void> {
     const valid = this.operationGuard();
+    // The tab may come back, and cancel the notifications, while the rate or the registration is read.
+    const stillInBackground = (): boolean =>
+      valid() && !this.replacementHeld && this.isActive() && document.visibilityState === 'hidden';
     try {
-      const durationMinutes = this.durationMinutes();
       const engagementType = this.engagementType();
-      const reward = await this.calculateReward(durationMinutes, engagementType);
-      // The tab may have come back, and cancelled the notifications, while the rate was read.
-      if (!valid() || this.replacementHeld || document.visibilityState !== 'hidden' || !this.isActive()) return;
-      await this.scheduleNotification(
+      const reward = await this.calculateReward(this.durationMinutes(), engagementType);
+      await this.notifications.schedule(
         COMPLETION_TITLE,
-        this.rewardMessage(reward, engagementType),
+        this.completionNotification(reward, engagementType),
         this.expectedEndTime,
-        valid,
+        stillInBackground,
       );
     } catch (err: unknown) {
       console.error('Failed to schedule notification:', err);
     }
   }
 
-  private async scheduleNotification(
-    title: string,
-    body: string,
-    timestamp: number,
-    valid: () => boolean,
-  ): Promise<void> {
-    if (
-      typeof window === 'undefined' ||
-      !('Notification' in window) ||
-      Notification.permission !== 'granted' ||
-      !('showTrigger' in Notification.prototype) ||
-      !('serviceWorker' in navigator)
-    ) {
-      return;
-    }
-
-    try {
-      const reg = await navigator.serviceWorker.getRegistration();
-      if (reg && valid() && !this.replacementHeld && this.isActive() && document.visibilityState === 'hidden') {
-        await reg.showNotification(title, {
-          body,
-          icon: 'icons/icon-192x192.png',
-          showTrigger: new TimestampTrigger(timestamp),
-        } as NotificationOptions);
-      }
-    } catch (err: unknown) {
-      console.error('Failed to schedule notification:', err);
-    }
-  }
-
   private async cancelScheduledNotifications(): Promise<void> {
-    if (typeof window === 'undefined' || !('Notification' in window) || !('serviceWorker' in navigator)) {
-      return;
-    }
-
     try {
-      const reg = await navigator.serviceWorker.getRegistration();
-      if (reg?.getNotifications) {
-        const notifications = await reg.getNotifications();
-        notifications.forEach((n) => {
-          n.close();
-        });
-      }
+      await this.notifications.closeAll();
     } catch (err: unknown) {
       console.error('Failed to cancel scheduled notifications:', err);
     }

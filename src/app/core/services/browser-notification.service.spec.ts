@@ -132,6 +132,84 @@ describe('BrowserNotificationService', () => {
     });
   });
 
+  describe('schedule', () => {
+    const stubTriggers = (permission: NotificationPermission, withTriggers = true) => {
+      const notification = vi.fn();
+      Object.assign(notification, { permission });
+      notification.prototype = withTriggers ? { showTrigger: null } : {};
+      vi.stubGlobal('Notification', notification);
+      vi.stubGlobal(
+        'TimestampTrigger',
+        class {
+          constructor(readonly timestamp: number) {}
+        },
+      );
+      const showNotification = vi.fn().mockResolvedValue(undefined);
+      const getRegistration = vi.fn().mockResolvedValue({ showNotification });
+      vi.stubGlobal('navigator', { serviceWorker: { getRegistration } });
+      return { showNotification, getRegistration };
+    };
+
+    it('should hand the registration a notification triggered at the given time', async () => {
+      const { showNotification } = stubTriggers('granted');
+
+      await service.schedule('Pomodoro complete', { body: 'Done' }, 1_700_000_000_000);
+
+      expect(showNotification).toHaveBeenCalledWith('Pomodoro complete', {
+        body: 'Done',
+        showTrigger: { timestamp: 1_700_000_000_000 },
+      });
+    });
+
+    it('should schedule nothing when the caller no longer wants it once the registration is read', async () => {
+      const { showNotification, getRegistration } = stubTriggers('granted');
+
+      await service.schedule('Pomodoro complete', {}, 1_700_000_000_000, () => false);
+
+      expect(getRegistration).toHaveBeenCalled();
+      expect(showNotification).not.toHaveBeenCalled();
+    });
+
+    it('should schedule nothing where the browser has no notification triggers', async () => {
+      const { showNotification } = stubTriggers('granted', false);
+
+      await service.schedule('Pomodoro complete', {}, 1_700_000_000_000);
+
+      expect(showNotification).not.toHaveBeenCalled();
+    });
+
+    it('should schedule nothing when permission is not granted', async () => {
+      const { showNotification } = stubTriggers('default');
+
+      await service.schedule('Pomodoro complete', {}, 1_700_000_000_000);
+
+      expect(showNotification).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('closeAll', () => {
+    it('should close every notification of the service worker registration', async () => {
+      vi.stubGlobal('Notification', Object.assign(vi.fn(), { permission: 'granted' }));
+      const shown = [{ close: vi.fn() }, { close: vi.fn() }];
+      vi.stubGlobal('navigator', {
+        serviceWorker: {
+          getRegistration: vi.fn().mockResolvedValue({ getNotifications: vi.fn().mockResolvedValue(shown) }),
+        },
+      });
+
+      await service.closeAll();
+
+      expect(shown.map((notification) => notification.close.mock.calls.length)).toEqual([1, 1]);
+    });
+
+    it('should do nothing when there is no service worker registration', async () => {
+      vi.stubGlobal('Notification', Object.assign(vi.fn(), { permission: 'granted' }));
+      vi.stubGlobal('navigator', { serviceWorker: { getRegistration: vi.fn().mockResolvedValue(undefined) } });
+
+      await expect(service.closeAll()).resolves.toBeUndefined();
+    });
+  });
+
   describe('isSupported', () => {
     it('should be false when the Notification API is missing', () => {
       Reflect.deleteProperty(window, 'Notification');
