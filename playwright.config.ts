@@ -1,6 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
+import { e2ePorts } from './e2e/ports';
 
 const isCI = Boolean(process.env['CI']);
+// 4200 in the main checkout; a linked worktree gets its own port, so parallel sessions never share a server.
+const PORT = e2ePorts(__dirname).devServer;
+const BASE_URL = `http://localhost:${String(PORT)}`;
 
 export default defineConfig({
   testDir: './e2e/src',
@@ -14,7 +18,7 @@ export default defineConfig({
   workers: isCI ? 2 : 6,
   reporter: isCI ? [['list'], ['html', { open: 'never' }]] : 'html',
   use: {
-    baseURL: 'http://localhost:4200',
+    baseURL: BASE_URL,
     trace: 'retain-on-failure',
   },
   projects: [
@@ -24,8 +28,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run start',
-    url: 'http://localhost:4200',
+    command: `npm run start -- --port ${String(PORT)}`,
+    url: BASE_URL,
     reuseExistingServer: !isCI,
   },
 });

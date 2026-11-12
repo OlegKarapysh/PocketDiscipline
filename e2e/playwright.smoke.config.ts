@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { defineConfig } from '@playwright/test';
 import base from '../playwright.config';
+import { e2ePorts } from './ports';
 
 // The smoke run: the tests tagged @smoke (one happy path per feature, and the whole layout audit),
 // against the GitHub Pages build instead of the dev server. `npm run e2e:smoke` builds it with
@@ -10,7 +11,8 @@ import base from '../playwright.config';
 // Paths in a config resolve against its own folder, so everything outside e2e/ is spelled out.
 const ROOT = join(__dirname, '..');
 const BUILD = join(ROOT, 'dist/pocket-discipline/browser');
-const PORT = 4300;
+// 4300 in the main checkout; a linked worktree gets its own port (see ./ports).
+const PORT = e2ePorts(ROOT).smokeServer;
 const BASE_PATH = builtBaseHref();
 // The address the server binds, not `localhost`, which may resolve to another server on ::1.
 const BASE_URL = `http://127.0.0.1:${String(PORT)}${BASE_PATH}`;
