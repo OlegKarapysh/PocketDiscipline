@@ -33,10 +33,6 @@ describe('QuickSpendEventService', () => {
     eventBus = TestBed.inject(EventBusService);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   it('should open QuickSpendDialog when REQUEST_QUICK_SPEND event is emitted', async () => {
     service.initialize();
 

@@ -39,10 +39,6 @@ describe('SpendingAnalyticsService', () => {
     service = TestBed.inject(SpendingAnalyticsService);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   it('should emit analytics summary via liveQuery getAnalytics stream', async () => {
     const today = new Date();
     const year = today.getFullYear();
