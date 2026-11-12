@@ -25,3 +25,9 @@ Keep supporting resources in the canonical skill folder and use paths relative t
 Spec Kit upgrades can replace skill files: reconcile upstream changes in `.agents/skills/`, retain
 project-specific instructions, then regenerate Claude copies. Do not maintain separate skill bodies.
 No edit hook stages Git changes; staging and committing happen only when requested.
+
+Hook scripts live once, in `.agents/scripts/`, and each harness's own config points at them:
+`.claude/settings.json` (Claude Code) and `.agents/hooks.json` (Antigravity).
+`design-system-check.mjs` runs `scripts/check-ui.mjs` on each edited file and before a turn ends.
+`after-edit.mjs` formats each edited file with Prettier and regenerates `.claude/skills/` after a
+canonical skill changes; it is registered for Claude Code only.
