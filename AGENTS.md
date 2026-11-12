@@ -27,8 +27,8 @@ Read these before writing or reviewing code:
   (`core/` must never import `features/`) is rule 8 in the code style guide.
 - Don't add unnecessary packages.
 - **Linting**: after writing or modifying code, run `npm run lint` as a mandatory verification step
-  and fix any resulting errors before completing the task. Use `npm run lint:fix` (Prettier, then
-  ESLint's fixer) for automated fixes; `npm run lint -- --fix` stops at the format check before
+  and fix any resulting errors before completing the task. Use `npm run lint:fix` (the skills
+  sync, Prettier, then ESLint's fixer) for automated fixes; `npm run lint -- --fix` stops at the format check before
   ESLint runs. **Never use `eslint-disable` comments or similar suppression directives to hide
   or bypass lint errors and code style violations. Structurally fix the underlying issue instead.**
 - **UI work**: reuse the shared components in `src/app/shared/components` first, then plain Angular
