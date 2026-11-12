@@ -11,7 +11,7 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/design-system-check.mjs"],
+            "args": ["${CLAUDE_PROJECT_DIR}/.agents/scripts/design-system-check.mjs"],
             "timeout": 30,
             "statusMessage": "Checking the design system"
           }
@@ -24,7 +24,7 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/design-system-check.mjs"],
+            "args": ["${CLAUDE_PROJECT_DIR}/.agents/scripts/design-system-check.mjs"],
             "timeout": 30,
             "statusMessage": "Checking the design system"
           }
