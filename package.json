@@ -16,6 +16,7 @@
     "lint": "npm run lint:skills && npm run lint:ui && npm run lint:format && ng lint",
     "lint:ui": "node scripts/check-ui.mjs",
     "lint:format": "prettier --check .",
+    "lint:fix": "prettier --write . && ng lint --fix",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.spec.json && tsc --noEmit -p tsconfig.e2e.json",
     "verify": "npm run lint && npm run typecheck && npm test -- --watch=false && npm run e2e"
   },
