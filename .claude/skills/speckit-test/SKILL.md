@@ -1,16 +1,15 @@
 ---
 name: "speckit-test"
-description: "Run the project's unit and E2E test suites to verify implementation."
+description: "Run the project's verification gates (lint, typecheck, unit tests, E2E) to verify implementation."
 ---
 
 <!-- Generated from .agents/skills/speckit-test/SKILL.md by npm run skills:sync. Do not edit here. -->
 
 ## Goal
-Execute the project's test suite (`npm run test` and `npm run e2e`) and verify that all tests pass. 
-If tests fail, attempt to fix them or report the failure to the user.
+Run every gate in the definition of done from `AGENTS.md` and verify that all of them pass.
+If a gate fails, attempt to fix it or report the failure to the user.
 
 ## Execution Steps
-1. Run `npm run test -- --watch=false` in the project root.
-2. Run `npm run e2e` in the project root.
-3. If both test suites succeed, output a success message indicating the tests passed.
-4. If either test suite fails, analyze the error output and attempt to fix the underlying code. If you cannot fix it, stop and ask the user for guidance.
+1. Run `npm run verify` in the project root. It runs `npm run lint`, `npm run typecheck`, `npm test -- --watch=false` and `npm run e2e` in order and stops at the first failure.
+2. If it succeeds, output a success message naming the four gates that passed.
+3. If a gate fails, analyze the error output and fix the underlying code (never suppress a lint rule or weaken a test), then run `npm run verify` again. If you cannot fix it, stop and ask the user for guidance.
