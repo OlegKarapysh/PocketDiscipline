@@ -585,6 +585,27 @@ describe('PomodoroTimerService', () => {
       expect(snackBarMock.error).toHaveBeenCalledWith(testError, 'Failed to save completed session reward.');
     });
 
+    it('should not pay a default rate when the rates cannot be read at completion', async () => {
+      const testError = new Error('IndexedDB is gone');
+      rewardRatesMock.getRates.mockRejectedValue(testError);
+
+      await service.startTimer();
+      await vi.advanceTimersByTimeAsync(1500 * 1000);
+
+      expect(storageMock.completeSession).not.toHaveBeenCalled();
+      expect(snackBarMock.error).toHaveBeenCalledWith(testError, 'Failed to save completed session reward.');
+    });
+
+    it('should say so and show no reward when the rates cannot be read', () => {
+      rewardRatesMock.rates$ = new Subject<PomodoroRewardRates>();
+      service = createService([]);
+
+      rewardRatesMock.rates$.error(new Error('IndexedDB is gone'));
+
+      expect(service.reward()).toBeUndefined();
+      expect(snackBarMock.show).toHaveBeenCalledWith('Could not load your pomodoro rewards.');
+    });
+
     it('should fall back to default base reward if rate lookup lacks engagement type', async () => {
       rewardRatesMock.getRates.mockResolvedValue({});
 

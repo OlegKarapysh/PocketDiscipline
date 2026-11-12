@@ -103,7 +103,7 @@ describe('PomodoroRewardSettings', () => {
     expect(saveButton().disabled).toBe(false);
   });
 
-  it('should notify via snackbar and fall back to default rates when rates stream errors', async () => {
+  it('should say so, and show no fields to save over the real rates, when the rates cannot be read', async () => {
     const err = new Error('IndexedDB stream failure');
 
     TestBed.resetTestingModule();
@@ -125,10 +125,8 @@ describe('PomodoroRewardSettings', () => {
     failingFixture.detectChanges();
     await failingFixture.whenStable();
 
-    expect(snackBarMock.error).toHaveBeenCalledWith(err, 'Failed to load pomodoro rewards');
-    const failingInputs = failingFixture.debugElement
-      .queryAll(By.css('input'))
-      .map((input) => (input.nativeElement as HTMLInputElement).value);
-    expect(failingInputs).toEqual(['100', '125']);
+    expect(snackBarMock.show).toHaveBeenCalledWith('Could not load your pomodoro rewards.');
+    expect(failingFixture.debugElement.queryAll(By.css('input'))).toEqual([]);
+    expect(failingFixture.debugElement.query(By.css('.save-button'))).toBeNull();
   });
 });

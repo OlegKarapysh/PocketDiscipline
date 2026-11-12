@@ -63,14 +63,10 @@ describe('PomodoroRewardRateService', () => {
       });
     });
 
-    it('should fall back to default rates when database read fails', async () => {
-      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    it('should fail rather than report the default rates when the database cannot be read', async () => {
       db.close();
 
-      await expect(service.getRates()).resolves.toEqual({
-        [EngagementType.WORK]: 100,
-        [EngagementType.STUDY]: 125,
-      });
+      await expect(service.getRates()).rejects.toThrow();
     });
   });
 

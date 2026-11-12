@@ -18,16 +18,11 @@ export class PomodoroRewardRateService {
 
   // An engagement type without a valid stored rate pays its default.
   async getRates(): Promise<PomodoroRewardRates> {
-    try {
-      const stored = await this.db.pomodoroRewardRates.toArray();
-      const valid = stored.filter(
-        (row) => Object.hasOwn(DEFAULT_RATES, row.engagementType) && this.isValidRate(row.baseReward),
-      );
-      return { ...DEFAULT_RATES, ...Object.fromEntries(valid.map((row) => [row.engagementType, row.baseReward])) };
-    } catch (error) {
-      console.error('Failed to read pomodoro reward rates from database, using defaults:', error);
-      return { ...DEFAULT_RATES };
-    }
+    const stored = await this.db.pomodoroRewardRates.toArray();
+    const valid = stored.filter(
+      (row) => Object.hasOwn(DEFAULT_RATES, row.engagementType) && this.isValidRate(row.baseReward),
+    );
+    return { ...DEFAULT_RATES, ...Object.fromEntries(valid.map((row) => [row.engagementType, row.baseReward])) };
   }
 
   async saveRates(rates: PomodoroRewardRates): Promise<void> {

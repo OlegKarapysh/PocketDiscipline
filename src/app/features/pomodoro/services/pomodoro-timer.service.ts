@@ -55,11 +55,12 @@ export class PomodoroTimerService implements OnDestroy {
   private snackBar = inject(SnackBarService);
   private destroyRef = inject(DestroyRef);
 
+  // A failed read shows no reward rather than a default the user may have changed.
   private readonly rates = toSignal(
     from(this.rewardRates.rates$).pipe(
-      catchError((err: unknown) => {
-        console.error('Failed to watch pomodoro reward rates:', err);
-        return of(DEFAULT_RATES);
+      catchError(() => {
+        this.snackBar.show('Could not load your pomodoro rewards.');
+        return of(undefined);
       }),
     ),
   );

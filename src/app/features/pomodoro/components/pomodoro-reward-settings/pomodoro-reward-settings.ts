@@ -10,7 +10,7 @@ import { SectionCard } from '../../../../shared/components/section-card/section-
 import { SnackBarService } from '../../../../shared/services/snack-bar.service';
 import { moneyAmount } from '../../../../shared/validators/money-amount';
 import type { PomodoroRewardRates } from '../../models/pomodoro-reward-rates.type';
-import { DEFAULT_RATES, PomodoroRewardRateService } from '../../services/pomodoro-reward-rate.service';
+import { PomodoroRewardRateService } from '../../services/pomodoro-reward-rate.service';
 import { ENGAGEMENT_TYPE_LABELS } from '../../constants/engagement-type-labels.const';
 
 type RewardRatesModel = Record<EngagementType, number | null>;
@@ -30,11 +30,12 @@ export class PomodoroRewardSettings {
   readonly labels = ENGAGEMENT_TYPE_LABELS;
   readonly isSaving = signal(false);
 
+  // A failed read shows no fields: defaults in their place would be saved over the real rates.
   readonly rates = toSignal(
     from(this.rewardRates.rates$).pipe(
-      catchError((err: unknown) => {
-        this.snackBar.error(err, 'Failed to load pomodoro rewards');
-        return of(DEFAULT_RATES);
+      catchError(() => {
+        this.snackBar.show('Could not load your pomodoro rewards.');
+        return of(undefined);
       }),
     ),
   );
