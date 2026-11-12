@@ -12,6 +12,7 @@ const HASHED_OFFSETS = 98;
 const SPARE_OFFSET = 99;
 // 4317 is the OTLP port, held exclusively on some machines: `ng serve` fails there with EACCES.
 const RESERVED_OFFSET = 17;
+const MAX_PORT = 65535;
 
 export interface E2ePorts {
   readonly devServer: number;
@@ -43,7 +44,7 @@ function portFromEnv(name: string): number | undefined {
     return undefined;
   }
   const port = Number(value);
-  if (!Number.isInteger(port) || port <= 0) {
+  if (!Number.isInteger(port) || port <= 0 || port > MAX_PORT) {
     throw new Error(`${name} must be a port number, got "${value}".`);
   }
   return port;
