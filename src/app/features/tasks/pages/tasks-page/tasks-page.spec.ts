@@ -29,10 +29,6 @@ describe('TasksPage', () => {
   const tab = (label: string): HTMLElement =>
     [...element().querySelectorAll<HTMLElement>('[role="tab"]')].find((el) => el.textContent.includes(label))!;
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should open on the daily tasks', () => {
     expect(element().querySelector('app-daily-task-list')).toBeTruthy();
     expect(element().querySelector('app-task-list')).toBeNull();

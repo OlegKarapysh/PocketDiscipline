@@ -93,10 +93,6 @@ describe('PomodoroStorageService', () => {
     expect(await Dexie.ignoreTransaction(() => balance())).toBe(INITIAL_BALANCE);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   it('should save and retrieve a session', async () => {
     await service.saveSession(session());
 

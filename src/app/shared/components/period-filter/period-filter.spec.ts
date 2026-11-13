@@ -23,10 +23,6 @@ describe('PeriodFilter', () => {
     component = fixture.componentInstance;
   });
 
-  it('should create the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should emit filterChange when selecting a preset', () => {
     const spy = vi.fn();
     component.filterChange.subscribe(spy);

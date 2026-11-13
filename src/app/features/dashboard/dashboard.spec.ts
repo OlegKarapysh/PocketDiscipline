@@ -50,10 +50,6 @@ describe('Dashboard', () => {
     await fixture.whenStable();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should title the page "Today" with a single page header', () => {
     const headers = (fixture.nativeElement as HTMLElement).querySelectorAll('app-page-header');
     expect(headers.length).toBe(1);

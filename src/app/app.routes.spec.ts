@@ -1,86 +1,51 @@
-import { describe, expect, it } from 'vitest';
+import type { Type } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { routes } from './app.routes';
-import { Dashboard } from './features/dashboard/dashboard';
-import { TasksPage } from './features/tasks/pages/tasks-page/tasks-page';
-import { GoalsPage } from './features/goals/pages/goals-page/goals-page';
-import { POMODORO_ROUTES } from './features/pomodoro/pomodoro.routes';
+import { DataImportPage } from './features/backup/pages/data-import-page/data-import-page';
 import { DailyScoresPage } from './features/daily-scores/pages/daily-scores-page';
-import { Settings } from './features/settings/settings';
-import { JarImportPage } from './features/jar-import/pages/jar-import-page/jar-import-page';
 import { TelegramImportPage } from './features/daily-scores/pages/telegram-import-page/telegram-import-page';
+import { Dashboard } from './features/dashboard/dashboard';
+import { GoalsPage } from './features/goals/pages/goals-page/goals-page';
+import { JarImportPage } from './features/jar-import/pages/jar-import-page/jar-import-page';
+import { PomodoroContainer } from './features/pomodoro/pomodoro-container/pomodoro-container';
+import { CategoryManagement } from './features/rewards/components/category-management/category-management';
+import { RewardsHub } from './features/rewards/pages/rewards-hub/rewards-hub';
+import { Settings } from './features/settings/settings';
+import { TasksPage } from './features/tasks/pages/tasks-page/tasks-page';
 
-describe('App Routes', () => {
-  it('should redirect empty path to /dashboard with full pathMatch', () => {
-    const defaultRoute = routes.find((r) => r.path === '');
-    expect(defaultRoute).toBeDefined();
-    expect(defaultRoute?.redirectTo).toBe('/dashboard');
-    expect(defaultRoute?.pathMatch).toBe('full');
+const PAGES: [url: string, page: Type<unknown>][] = [
+  ['/dashboard', Dashboard],
+  ['/tasks', TasksPage],
+  ['/goals', GoalsPage],
+  ['/pomodoro', PomodoroContainer],
+  ['/daily-scores', DailyScoresPage],
+  ['/rewards', RewardsHub],
+  ['/rewards/categories', CategoryManagement],
+  ['/settings', Settings],
+  ['/settings/data-import', DataImportPage],
+  ['/settings/jar-import', JarImportPage],
+  ['/settings/telegram-import', TelegramImportPage],
+];
+
+describe('App routes', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
   });
 
-  it('should define all main feature paths', () => {
-    const paths = routes.map((r) => r.path);
-    expect(paths).toContain('');
-    expect(paths).toContain('dashboard');
-    expect(paths).toContain('tasks');
-    expect(paths).toContain('goals');
-    expect(paths).toContain('pomodoro');
-    expect(paths).toContain('daily-scores');
-    expect(paths).toContain('settings');
+  it('should open the dashboard from the root URL', async () => {
+    const harness = await RouterTestingHarness.create('/');
+
+    expect(TestBed.inject(Router).url).toBe('/dashboard');
+    expect(harness.routeDebugElement?.componentInstance).toBeInstanceOf(Dashboard);
   });
 
-  it('should lazy-load Dashboard component for dashboard route', async () => {
-    const route = routes.find((r) => r.path === 'dashboard');
-    expect(route?.loadComponent).toBeDefined();
-    const component = await (route?.loadComponent as () => Promise<unknown>)();
-    expect(component).toBe(Dashboard);
-  });
+  it.each(PAGES)('should show the page at %s', async (url, page) => {
+    const harness = await RouterTestingHarness.create(url);
 
-  it('should lazy-load TasksPage component for tasks route', async () => {
-    const route = routes.find((r) => r.path === 'tasks');
-    expect(route?.loadComponent).toBeDefined();
-    const component = await (route?.loadComponent as () => Promise<unknown>)();
-    expect(component).toBe(TasksPage);
-  });
-
-  it('should lazy-load GoalsPage component for goals route', async () => {
-    const route = routes.find((r) => r.path === 'goals');
-    expect(route?.loadComponent).toBeDefined();
-    const component = await (route?.loadComponent as () => Promise<unknown>)();
-    expect(component).toBe(GoalsPage);
-  });
-
-  it('should lazy-load POMODORO_ROUTES for pomodoro route', async () => {
-    const route = routes.find((r) => r.path === 'pomodoro');
-    expect(route?.loadChildren).toBeDefined();
-    const childRoutes = await (route?.loadChildren as () => Promise<unknown>)();
-    expect(childRoutes).toBe(POMODORO_ROUTES);
-  });
-
-  it('should lazy-load DailyScoresPage for daily-scores route', async () => {
-    const route = routes.find((r) => r.path === 'daily-scores');
-    expect(route?.loadComponent).toBeDefined();
-    const component = await (route?.loadComponent as () => Promise<unknown>)();
-    expect(component).toBe(DailyScoresPage);
-  });
-
-  it('should lazy-load Settings component for settings route', async () => {
-    const route = routes.find((r) => r.path === 'settings')?.children?.find((r) => r.path === '');
-    expect(route?.loadComponent).toBeDefined();
-    const component = await (route?.loadComponent as () => Promise<unknown>)();
-    expect(component).toBe(Settings);
-  });
-
-  it('should lazy-load the jar import page under settings', async () => {
-    const route = routes.find((r) => r.path === 'settings')?.children?.find((r) => r.path === 'jar-import');
-    expect(route?.loadComponent).toBeDefined();
-    const component = await (route?.loadComponent as () => Promise<unknown>)();
-    expect(component).toBe(JarImportPage);
-  });
-
-  it('should lazy-load the telegram import page under settings', async () => {
-    const route = routes.find((r) => r.path === 'settings')?.children?.find((r) => r.path === 'telegram-import');
-    expect(route?.loadComponent).toBeDefined();
-    const component = await (route?.loadComponent as () => Promise<unknown>)();
-    expect(component).toBe(TelegramImportPage);
+    expect(TestBed.inject(Router).url).toBe(url);
+    expect(harness.routeDebugElement?.componentInstance).toBeInstanceOf(page);
   });
 });

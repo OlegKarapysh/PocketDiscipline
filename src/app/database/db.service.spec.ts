@@ -69,22 +69,6 @@ describe('DbService', () => {
     vi.restoreAllMocks();
   });
 
-  it('should instantiate DbService with all required tables', () => {
-    expect(service).toBeDefined();
-    expect(service.name).toBe('pocket-discipline-db');
-    expect(service.users).toBeDefined();
-    expect(service.tasks).toBeDefined();
-    expect(service.goals).toBeDefined();
-    expect(service.dailyTasks).toBeDefined();
-    expect(service.dailyScores).toBeDefined();
-    expect(service.pomodoroSessions).toBeDefined();
-    expect(service.dailyTaskCompletions).toBeDefined();
-    expect(service.withdrawals).toBeDefined();
-    expect(service.rewards).toBeDefined();
-    expect(service.rewardCategories).toBeDefined();
-    expect(service.pomodoroRewardRates).toBeDefined();
-  });
-
   it('does not copy stale legacy sessions over an authoritative backed-up profile on ready', async () => {
     await stageVersion8(async (db) => {
       await db.table('users').put({ ...existingUser, lastExportedAt: 0 });

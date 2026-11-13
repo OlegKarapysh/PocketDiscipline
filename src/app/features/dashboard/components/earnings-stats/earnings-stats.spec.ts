@@ -32,10 +32,6 @@ describe('EarningsStats', () => {
     component = fixture.componentInstance;
   });
 
-  it('should create the component', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should display monthly summary details', () => {
     fixture.componentRef.setInput('summary', mockSummary);
     fixture.detectChanges();
